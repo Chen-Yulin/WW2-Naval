@@ -1,0 +1,49 @@
+<Block>
+
+	<Debug>True</Debug>
+
+	<ID>1</ID>
+
+	<Name>NavalGun</Name>
+
+	<Mass>0.5</Mass>
+
+	<Script>WW2NavalAssembly.Gun</Script>
+	
+	<Mesh name="Gun Mesh">
+		<Position x="0.0" y="0.0" z="0.0" />
+		<Rotation x="90.0" y="0" z="0.0" />
+		<Scale x="1.0" y="1.0" z="1.0" />
+	</Mesh>
+	
+	<Texture name="Gun Texture" /> 
+	
+	<Icon>
+		<Position x="-0.3" y="-0.3" z="-1.0" />
+		<Rotation x="-45.0" y="0.0" z="-30.0" />
+		<Scale x="0.4" y="0.4" z="0.4" />
+	</Icon>
+	
+	<Colliders>
+		<CapsuleCollider>
+			<Position x="0.0" y="0.0" z="1.5" />
+			<Rotation x="0.0" y="0.0" z="0.0" />
+			<Capsule direction="Z" radius="0.1" height="3.0" />
+		</CapsuleCollider>
+	</Colliders>
+	 
+	<BasePoint hasAddingPoint="false">
+		<Stickiness enabled="true" radius="0.3" />
+		<!-- Can only have motion if sticky -->
+		<Motion x="false" y="false" z="false" /> <!-- Optional -->
+	</BasePoint>
+	
+	<AddingPoints>
+		<!-- TODO: Insert AddingPoint definitions here. Example:-->
+		<AddingPoint>
+			<Position x="0.0" y="0.0" z="0.0" />
+			<Rotation x="0.0" y="0.0" z="0.0" />
+			<Stickiness enabled="false" radius="0"/>
+		</AddingPoint>
+	</AddingPoints>
+</Block>
