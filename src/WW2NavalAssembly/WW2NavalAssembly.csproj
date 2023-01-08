@@ -50,6 +50,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AssetManager.cs" />
+    <Compile Include="BulletHole.cs" />
     <Compile Include="Chimney.cs" />
     <Compile Include="CustomBlockController.cs" />
     <Compile Include="DefaultArmour.cs" />

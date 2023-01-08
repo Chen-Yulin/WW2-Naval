@@ -240,6 +240,21 @@ namespace WW2NavalAssembly
                 myRigid.velocity *= 1 - eqThick * 0.8f / penetration;
                 penetration -= eqThick;
                 pericedBlock.Push(hit.collider.transform.parent.GetComponent<BlockBehaviour>().BuildingBlock.Guid.GetHashCode());
+
+                if (pericedBlock.Count == 1)
+                {
+                    GameObject hole = new GameObject("hole");
+                    hole.transform.SetParent(hit.collider.transform.parent);
+                    hole.transform.localPosition = Vector3.zero;
+                    hole.transform.localRotation = Quaternion.identity;
+                    hole.transform.localScale = Vector3.one;
+
+                    BulletHole BH = hole.AddComponent<BulletHole>();
+                    BH.hittedCaliber = Caliber;
+                    BH.normal = hit.normal;
+                    BH.position = hit.collider.transform.parent.InverseTransformPoint(hit.point);
+                }
+
                 
                 return true;
             }
@@ -357,7 +372,7 @@ namespace WW2NavalAssembly
         {
             if (transform.position.y < 20f && pericedBlock.Count == 0 && Caliber >= 283)
             {
-                myRigid.velocity = new Vector3(myRigid.velocity.x, myRigid.velocity.y / 1.3f, myRigid.velocity.z);
+                myRigid.velocity = new Vector3(myRigid.velocity.x, myRigid.velocity.y / 1.5f, myRigid.velocity.z);
                 myRigid.AddForce(myRigid.velocity * 0.8f - Vector3.up * 10);
                 penetration *= 0.97f;
             }
