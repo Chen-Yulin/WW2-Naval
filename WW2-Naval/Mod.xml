@@ -1,9 +1,5 @@
 <Mod>
-	<!-- Mod manifest file.
-		 You should at the very least replace the values marked with FIX.
-		 
-		 See the documentation for further information on any of these elements.
-	-->
+
 
 	<!-- General information about the mod. -->
 	<Name>WW2-Naval</Name>
@@ -17,7 +13,7 @@
 	</Description>
 
 	<Icon name="icon"/>
-	<Debug>True</Debug>
+	<Debug>false</Debug>
 	
 	
 	<MultiplayerCompatible>true</MultiplayerCompatible>
@@ -68,7 +64,17 @@
 		<Mesh name="Cannon Mesh" path="Gun/Cannon.obj"/>
 		<Texture name="Cannon Texture" path="Gun\Cannon.png"/>
 
+		<AudioClip name="GunShot Audio" path="Gun\fire.wav" />
+		<AudioClip name="GunExplo Audio" path="Gun\explo.wav" />
+		<AudioClip name="GunPierce Audio" path="Gun\pierce.wav" />
+		<AudioClip name="GunWaterHit Audio" path="Gun\waterhit.wav" />
+
 		<AssetBundle name="CannonHit AB" path="cannonhit.ab"/>
+		<AssetBundle name="WaterHit AB" path="waterhit.ab"/>
+		<AssetBundle name="GunSmoke AB" path="gunsmoke.ab"/>
+		<AssetBundle name="ArmourVis AB" path="armourvis.ab"/>
+		<AssetBundle name="Pierce AB" path="perice.ab"/>
+		<AssetBundle name="Chimney AB" path="smoke.ab"/>
 	</Resources>
 
 

@@ -14,6 +14,7 @@ namespace WW2NavalAssembly
         {
             ModNetworking.Callbacks[GunMsgReceiver.FireMsg] += GunMsgReceiver.Instance.fireKeyMsgReceiver;
             ModNetworking.Callbacks[GunMsgReceiver.ExploMsg] += GunMsgReceiver.Instance.exploMsgReceiver;
+            ModNetworking.Callbacks[GunMsgReceiver.WaterHitMsg] += GunMsgReceiver.Instance.waterHitMsgReceiver;
         }
     }
 }

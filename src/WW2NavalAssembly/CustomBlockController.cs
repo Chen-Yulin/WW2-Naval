@@ -1,0 +1,89 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
+using System.Xml.Serialization;
+using System.Collections;
+
+using Modding.Modules;
+using Modding;
+using Modding.Blocks;
+using UnityEngine;
+using UnityEngine.Networking;
+
+namespace WW2NavalAssembly
+{
+
+    class CustomBlockController : SingleInstance<CustomBlockController>
+    {
+
+        public override string Name { get; } = "Custom Block Controller";
+
+        internal PlayerMachineInfo PMI;
+
+        private void Awake()
+        {
+
+            //加载配置
+            //Events.OnMachineLoaded += LoadConfiguration;
+            Events.OnMachineLoaded += (pmi) => { PMI = pmi; };
+            ////储存配置
+            //Events.OnMachineSave += SaveConfiguration;
+            //添加零件初始化事件委托
+            Events.OnBlockInit += AddSliders;
+
+        }
+        private void AddSliders(Block block)
+        {
+
+            BlockBehaviour blockbehaviour = block.BuildingBlock.InternalObject;
+            AddSliders(blockbehaviour);
+        }
+        private void AddSliders(BlockBehaviour block)
+        {
+            //if (StatMaster.isMP == StatMaster.IsLevelEditorOnly)
+            switch (block.BlockID)
+            {
+                case (int)BlockType.SingleWoodenBlock:
+                    {
+                        if (block.gameObject.GetComponent(typeof(WoodenArmour)) == null)
+                            block.gameObject.AddComponent(typeof(WoodenArmour));
+                        break;
+                    }
+                case (int)BlockType.DoubleWoodenBlock:
+                    {
+                        if (block.gameObject.GetComponent(typeof(WoodenArmour)) == null)
+                            block.gameObject.AddComponent(typeof(WoodenArmour));
+                        break;
+                    }
+                case (int)BlockType.Log:
+                    {
+                        if (block.gameObject.GetComponent(typeof(WoodenArmour)) == null)
+                            block.gameObject.AddComponent(typeof(WoodenArmour));
+                        break;
+                    }
+                case (int)BlockType.Rocket:
+                    {
+                        if (block.gameObject.GetComponent(typeof(DefaultArmour)) == null)
+                            block.gameObject.AddComponent(typeof(DefaultArmour));
+                        if (block.gameObject.GetComponent(typeof(Chimney)) == null)
+                            block.gameObject.AddComponent(typeof(Chimney));
+                        break;
+                    }
+                case (int)BlockType.BuildNode:
+                    {
+                        break;
+                    }
+                case (int)BlockType.BuildEdge:
+                    {
+                        break;
+                    }
+                default:
+                    {
+                        if (block.gameObject.GetComponent(typeof(DefaultArmour)) == null)
+                            block.gameObject.AddComponent(typeof(DefaultArmour));
+                        break;
+                    }
+            }
+        }
+    }
+}

@@ -1,6 +1,6 @@
 <Block>
 
-	<Debug>True</Debug>
+	<Debug>false</Debug>
 
 	<ID>1</ID>
 
@@ -40,10 +40,5 @@
 	
 	<AddingPoints>
 		<!-- TODO: Insert AddingPoint definitions here. Example:-->
-		<AddingPoint>
-			<Position x="0.0" y="0.0" z="0.0" />
-			<Rotation x="0.0" y="0.0" z="0.0" />
-			<Stickiness enabled="false" radius="0"/>
-		</AddingPoint>
 	</AddingPoints>
 </Block>

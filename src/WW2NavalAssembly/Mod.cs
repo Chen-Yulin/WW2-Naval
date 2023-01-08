@@ -12,6 +12,8 @@ namespace WW2NavalAssembly
 			myMod = new GameObject("Morden Air Combat Mod");
 			UnityEngine.Object.DontDestroyOnLoad(myMod);
 
+			myMod.AddComponent<CustomBlockController>();
+			myMod.AddComponent<ModController>();
 			myMod.AddComponent<GunMsgReceiver>();
 			myMod.AddComponent<AssetManager>();
 			myMod.AddComponent<MessageController>();
