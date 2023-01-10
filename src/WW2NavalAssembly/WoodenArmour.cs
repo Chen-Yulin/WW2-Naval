@@ -22,6 +22,8 @@ namespace WW2NavalAssembly
         MeshRenderer VisRender;
 
         public int myseed;
+        public int myPlayerID;
+        public int myGuid;
 
         public void InitVis()
         {
@@ -46,8 +48,17 @@ namespace WW2NavalAssembly
                     }
                 case (int)BlockType.Log:
                     {
-                        Vis.transform.localPosition = new Vector3(0, 0, 1.5f);
-                        Vis.transform.localScale = new Vector3(0.95f, 0.95f, 3);
+                        if (transform.Find("Joint").gameObject.activeSelf)
+                        {
+                            Vis.transform.localPosition = new Vector3(0, 0, 1.5f);
+                            Vis.transform.localScale = new Vector3(0.95f, 0.95f, 3);
+                        }
+                        else
+                        {
+                            Vis.transform.localPosition = new Vector3(0, 0, 1f);
+                            Vis.transform.localScale = new Vector3(0.95f, 0.95f, 2);
+                        }
+                        
                         break;
                     }
                 default:
@@ -56,10 +67,29 @@ namespace WW2NavalAssembly
             Vis.name = "WoodenArmourVis";
             Vis.transform.localRotation = Quaternion.identity;
             VisRender = Vis.GetComponent<MeshRenderer>();
-            Vis.SetActive(false);
+            Vis.layer = 25;
+            Vis.SetActive(true);
+            Color tmpColor1 = VisRender.material.color;
+            VisRender.material.color = new Color(tmpColor1.r, tmpColor1.g, tmpColor1.b, 0f);
         }
 
+        public void SyncBulletHole()
+        {
+            foreach (GunMsgReceiver.bulletHoleInfo info in GunMsgReceiver.Instance.BulletHoleInfo[myPlayerID][myGuid])
+            {
+                GameObject piercedhole = new GameObject("PiercedHole");
+                piercedhole.transform.SetParent(transform);
+                piercedhole.transform.localPosition = Vector3.zero;
+                piercedhole.transform.localRotation = Quaternion.identity;
+                piercedhole.transform.localScale = Vector3.one;
 
+                PiercedHole PH = piercedhole.AddComponent<PiercedHole>();
+                PH.hittedCaliber = info.Caliber;
+                PH.position = info.position;
+                PH.forward = info.forward;
+            }
+            GunMsgReceiver.Instance.BulletHoleInfo[myPlayerID][myGuid].Clear();
+        }
 
         public virtual void SafeAwake()
         {
@@ -67,17 +97,34 @@ namespace WW2NavalAssembly
         }
         public void Awake()
         {
+            myPlayerID = transform.gameObject.GetComponent<BlockBehaviour>().ParentMachine.PlayerID;
+            
             myseed = (int)(UnityEngine.Random.value * 39);
             BB = GetComponent<BlockBehaviour>();
             SafeAwake();
+            
             if (BB.isSimulating) { return; }
         }
         public void Start()
         {
             InitVis();
+            
+            //transform.Find("Shadow").gameObject.layer = 25;
         }
         public void FixedUpdate()
         {
+            if (myGuid == 0 && transform.gameObject.GetComponent<BlockBehaviour>().isSimulating)
+            {
+                myGuid = transform.gameObject.GetComponent<BlockBehaviour>().BuildingBlock.Guid.GetHashCode();
+                try
+                {
+                    if (StatMaster.isClient)
+                    {
+                        GunMsgReceiver.Instance.BulletHoleInfo[myPlayerID].Add(myGuid, new List<GunMsgReceiver.bulletHoleInfo>());
+                    }
+                }
+                catch { }
+            }
             if (ModController.Instance.state == myseed)
             {
                 if (!Vis)
@@ -85,20 +132,28 @@ namespace WW2NavalAssembly
                     Vis = transform.Find("WoodenArmourVis").gameObject;
                     VisRender = Vis.GetComponent<MeshRenderer>();
                 }
-                if (ModController.Instance.showArmour)
-                {
-                    transform.Find("Vis").gameObject.SetActive(false);
-                    Vis.SetActive(true);
-                }
-                else
-                {
-                    transform.Find("Vis").gameObject.SetActive(true);
-                    Vis.SetActive(false);
-                }
+                
                 thickness = Thickness.Value;
                 Color tmpColor = Color.HSVToRGB(Mathf.Clamp(0.5f-thickness / 1000,0,0.5f), 1, 1);
                 VisRender.material.color = new Color(tmpColor.r,tmpColor.g,tmpColor.b, 0.6f);
 
+                if (ModController.Instance.showArmour)
+                {
+                    transform.Find("Vis").gameObject.SetActive(false);
+                    Color tmpColor1 = VisRender.material.color;
+                    VisRender.material.color = new Color(tmpColor1.r, tmpColor1.g, tmpColor1.b, 0.6f);
+                }
+                else
+                {
+                    transform.Find("Vis").gameObject.SetActive(true);
+                    Color tmpColor1 = VisRender.material.color;
+                    VisRender.material.color = new Color(tmpColor1.r, tmpColor1.g, tmpColor1.b, 0f);
+                }
+
+                if (StatMaster.isClient && transform.gameObject.GetComponent<BlockBehaviour>().isSimulating)
+                {
+                    SyncBulletHole();
+                }
             }
 
             

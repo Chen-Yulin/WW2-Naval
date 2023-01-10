@@ -51,6 +51,10 @@ namespace WW2NavalAssembly
                     {
                         return;
                     }
+                    else if (gameObject.name == "FlyingBlock")
+                    {
+                        transform.Find("Rot").Find("Vis").gameObject.SetActive(false);
+                    }
                     else
                     {
                         transform.Find("Vis").gameObject.SetActive(false);
@@ -68,6 +72,10 @@ namespace WW2NavalAssembly
                     else if (gameObject.name == "RopeWinch" || gameObject.name == "Balloon" || gameObject.name == "Spring" || gameObject.name == "SqrBalloon")
                     {
                         return;
+                    }
+                    else if (gameObject.name == "FlyingBlock")
+                    {
+                        transform.Find("Rot").Find("Vis").gameObject.SetActive(true);
                     }
                     else
                     {

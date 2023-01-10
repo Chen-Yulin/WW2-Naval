@@ -9,7 +9,7 @@ namespace WW2NavalAssembly
 		public static GameObject myMod;
 		public override void OnLoad()
 		{
-			myMod = new GameObject("Morden Air Combat Mod");
+			myMod = new GameObject("WW2 Naval Mod");
 			UnityEngine.Object.DontDestroyOnLoad(myMod);
 
 			myMod.AddComponent<CustomBlockController>();
@@ -17,6 +17,7 @@ namespace WW2NavalAssembly
 			myMod.AddComponent<GunMsgReceiver>();
 			myMod.AddComponent<AssetManager>();
 			myMod.AddComponent<MessageController>();
+			myMod.AddComponent<CannonTrackManager>();
 
 			Debug.Log("Hello, this is WW2 naval mod!");
 		}

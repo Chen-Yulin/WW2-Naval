@@ -19,6 +19,9 @@ namespace WW2NavalAssembly
         public static MessageType FireMsg = ModNetworking.CreateMessageType(DataType.Integer, DataType.Integer, DataType.Vector3, DataType.Vector3);// playerID, guid, randomForce, forward
         public static MessageType ExploMsg = ModNetworking.CreateMessageType(DataType.Integer, DataType.Vector3, DataType.Single, DataType.Integer);//PlayerID, position, Caliber
         public static MessageType WaterHitMsg = ModNetworking.CreateMessageType(DataType.Integer, DataType.Vector3, DataType.Single);//PlayerID, position
+        public static MessageType BulletHoleMsg = ModNetworking.CreateMessageType
+                                                    (DataType.Integer, DataType.Integer, DataType.Single, DataType.Vector3, DataType.Vector3);//playerID, guid, caliber, position, forward
+        public static MessageType ReloadMsg = ModNetworking.CreateMessageType(DataType.Integer, DataType.Integer, DataType.Single);
 
         public class firePara
         {
@@ -57,9 +60,25 @@ namespace WW2NavalAssembly
             }
         }
 
+        public class bulletHoleInfo
+        {
+            public float Caliber;
+            public Vector3 position;
+            public Vector3 forward;
+            public bulletHoleInfo(float caliber, Vector3 position, Vector3 forward)
+            {
+                Caliber = caliber;
+                this.position = position;
+                this.forward = forward;
+            }
+        }
+
         public Dictionary<int,firePara>[] Fire = new Dictionary<int,firePara>[16];
         public Queue<exploInfo>[] ExploInfo = new Queue<exploInfo>[16];
         public Queue<waterhitInfo>[] waterHitInfo = new Queue<waterhitInfo>[16];
+        public Dictionary<int, List<bulletHoleInfo>>[] BulletHoleInfo = new Dictionary<int, List<bulletHoleInfo>>[16];
+        public Dictionary<int, bool>[] reloadTimeUpdated = new Dictionary<int,bool>[16];
+        public Dictionary<int, float>[] reloadTime = new Dictionary<int, float>[16];
 
         public GunMsgReceiver()
         {
@@ -68,6 +87,9 @@ namespace WW2NavalAssembly
                 Fire[i] = new Dictionary<int, firePara>();
                 ExploInfo[i] = new Queue<exploInfo>();
                 waterHitInfo[i] = new Queue<waterhitInfo>();
+                BulletHoleInfo[i] = new Dictionary<int, List<bulletHoleInfo>>();
+                reloadTimeUpdated[i] = new Dictionary<int, bool>();
+                reloadTime[i] = new Dictionary<int, float>();
             }
         }
 
@@ -77,11 +99,33 @@ namespace WW2NavalAssembly
         }
         public void fireKeyMsgReceiver(Message msg)
         {
+            if (!StatMaster.isClient)
+            {
+                return;
+            }
             Fire[(int)msg.GetData(0)][(int)msg.GetData(1)] = new firePara(true,(Vector3)msg.GetData(2), (Vector3)msg.GetData(3));
         }
         public void waterHitMsgReceiver(Message msg)
         {
             waterHitInfo[(int)msg.GetData(0)].Enqueue(new waterhitInfo((Vector3)msg.GetData(1), (float)msg.GetData(2)));
+        }
+        public void bulletHoleMsgReceiver(Message msg)
+        {
+            if (!StatMaster.isClient)
+            {
+                return;
+            }
+            BulletHoleInfo[(int)msg.GetData(0)][(int)msg.GetData(1)].Add(new bulletHoleInfo((float)msg.GetData(2), (Vector3)msg.GetData(3), (Vector3)msg.GetData(4)));
+        }
+
+        public void reloadTimeMsgReceiver(Message msg)
+        {
+            if (!StatMaster.isClient)
+            {
+                return;
+            }
+            reloadTimeUpdated[(int)msg.GetData(0)][(int)msg.GetData(1)] = true;
+            reloadTime[(int)msg.GetData(0)][(int)msg.GetData(1)] = (float)msg.GetData(2);
         }
 
 
@@ -102,6 +146,7 @@ namespace WW2NavalAssembly
     public class BulletBehaviour : MonoBehaviour
     {
         public int myPlayerID;
+        public int myGuid;
 
         public float Caliber;
         public bool fire = false;
@@ -185,7 +230,6 @@ namespace WW2NavalAssembly
             AS.SetSpatializerFloat(4, 1000f);
             AS.SetSpatializerFloat(5, 1f);
         }
-
         public bool Perice(RaycastHit hit)
         {
             if (!hit.collider.transform.parent.GetComponent<BlockBehaviour>())
@@ -230,7 +274,7 @@ namespace WW2NavalAssembly
                 return true;
             }
 
-            if (Thickness/Mathf.Cos(angle*Mathf.PI/180) > penetration)
+            if (Thickness / Mathf.Cos(angle * Mathf.PI / 180) > penetration)
             {
                 return false;
             }
@@ -241,21 +285,42 @@ namespace WW2NavalAssembly
                 penetration -= eqThick;
                 pericedBlock.Push(hit.collider.transform.parent.GetComponent<BlockBehaviour>().BuildingBlock.Guid.GetHashCode());
 
-                if (pericedBlock.Count == 1)
+                if (pericedBlock.Count == 1)    // add waterIn behaviour
                 {
-                    GameObject hole = new GameObject("hole");
-                    hole.transform.SetParent(hit.collider.transform.parent);
-                    hole.transform.localPosition = Vector3.zero;
-                    hole.transform.localRotation = Quaternion.identity;
-                    hole.transform.localScale = Vector3.one;
+                    GameObject waterinhole = new GameObject("waterInHole");
+                    waterinhole.transform.SetParent(hit.collider.transform.parent);
+                    waterinhole.transform.localPosition = Vector3.zero;
+                    waterinhole.transform.localRotation = Quaternion.identity;
+                    waterinhole.transform.localScale = Vector3.one;
 
-                    BulletHole BH = hole.AddComponent<BulletHole>();
-                    BH.hittedCaliber = Caliber;
-                    BH.normal = hit.normal;
-                    BH.position = hit.collider.transform.parent.InverseTransformPoint(hit.point);
+                    WaterInHole WH = waterinhole.AddComponent<WaterInHole>();
+                    WH.hittedCaliber = Caliber;
+                    WH.position = hit.collider.transform.parent.InverseTransformPoint(hit.point);
                 }
 
-                
+                string hittedname = hit.collider.transform.parent.name;
+                if (hittedname == "DoubleWoodenBlock" || hittedname == "SingleWoodenBlock" || hittedname == "Log")
+                {   // add hole projector
+                    GameObject piercedhole = new GameObject("PiercedHole");
+                    piercedhole.transform.SetParent(hit.collider.transform.parent);
+                    piercedhole.transform.localPosition = Vector3.zero;
+                    piercedhole.transform.localRotation = Quaternion.identity;
+                    piercedhole.transform.localScale = Vector3.one;
+
+                    PiercedHole PH = piercedhole.AddComponent<PiercedHole>();
+                    PH.hittedCaliber = Caliber;
+                    PH.position = hit.collider.transform.parent.InverseTransformPoint(hit.point);
+                    PH.forward = myRigid.velocity.normalized;
+
+                    if (StatMaster.isMP)
+                    {
+                        ModNetworking.SendToAll(GunMsgReceiver.BulletHoleMsg.CreateMessage( (int) hit.collider.transform.parent.GetComponent<BlockBehaviour>().ParentMachine.PlayerID,
+                                                                                            hit.collider.transform.parent.GetComponent<BlockBehaviour>().BuildingBlock.Guid.GetHashCode(),
+                                                                                            Caliber, PH.position, PH.forward));
+                    }
+                }
+
+
                 return true;
             }
 
@@ -330,6 +395,7 @@ namespace WW2NavalAssembly
                     if (!exploded)
                     {
                         PlayExploHit(hit);
+                        Destroy(gameObject);
                     }
                     
                     break;
@@ -552,17 +618,30 @@ namespace WW2NavalAssembly
 
             penetration *= decay;
         }
-        
     }
     public class Gun:BlockScript
     {
         public int myPlayerID;
         public int myGuid;
+        public int myseed;
 
         public MKey FireKey;
         public MSlider Caliber;
+        public MToggle TrackOn;
 
         GameObject CannonPrefab;
+
+        Transform VisTransform;
+
+        int muzzleStage = 100;
+
+        public float reloadTime;
+        public float currentReloadTime = 0;
+
+        Texture Reload1;
+        Texture Reload2;
+        int iconSize = 30;
+
 
         void InitCannon()
         {
@@ -608,17 +687,25 @@ namespace WW2NavalAssembly
             myPlayerID = BlockBehaviour.ParentMachine.PlayerID;
             FireKey = AddKey("Fire", "Fire", KeyCode.C);
             Caliber = AddSlider("Caliber (mm)", "Caliber", 406, 100, 510);
+            TrackOn = AddToggle("Track Cannon", "TrackCannon", false);
+            Reload1 = ModResource.GetTexture("Reload1 Texture").Texture;
+            Reload2 = ModResource.GetTexture("Reload2 Texture").Texture;
+            myseed = (int)(UnityEngine.Random.value * 39);
         }
         public override void OnSimulateStart()
         {
+            VisTransform = transform.Find("Vis");
             BlockBehaviour.blockJoint.breakForce = float.PositiveInfinity;
             InitCannon();
             myGuid = BlockBehaviour.BuildingBlock.Guid.GetHashCode();
+            reloadTime = 0.4f * Mathf.Sqrt(Caliber.Value) - 3;
             try
             {
                 if (StatMaster.isClient)
                 {
                     GunMsgReceiver.Instance.Fire[myPlayerID].Add(myGuid, new GunMsgReceiver.firePara(false,Vector3.zero,Vector3.zero));
+                    GunMsgReceiver.Instance.reloadTime[myPlayerID].Add(myGuid, 0);
+                    GunMsgReceiver.Instance.reloadTimeUpdated[myPlayerID].Add(myGuid, false);
                 }
             }
             catch { }
@@ -627,11 +714,24 @@ namespace WW2NavalAssembly
         {
             DestroyImmediate(CannonPrefab);
             GunMsgReceiver.Instance.Fire[myPlayerID].Remove(myGuid);
+            GunMsgReceiver.Instance.reloadTime[myPlayerID].Remove(myGuid);
+            GunMsgReceiver.Instance.reloadTimeUpdated[myPlayerID].Remove(myGuid);
         }
         public override void SimulateUpdateHost()
         {
+            if (currentReloadTime < reloadTime)
+            {
+                currentReloadTime += Time.deltaTime;
+                if (ModController.Instance.state == myseed)
+                {
+                    ModNetworking.SendToAll(GunMsgReceiver.ReloadMsg.CreateMessage(myPlayerID, myGuid, currentReloadTime));
+                }
+                return;
+            }
             if (FireKey.IsPressed)
             {
+                currentReloadTime = 0;
+                muzzleStage = 0;
                 gameObject.GetComponent<Rigidbody>().AddForce(-Caliber.Value * transform.forward*5);
                 Vector3 randomForce = new Vector3(UnityEngine.Random.value-0.5f, UnityEngine.Random.value-0.5f, UnityEngine.Random.value-0.5f) * 3 / Mathf.Sqrt(Caliber.Value);
                 randomForce += new Vector3(0, UnityEngine.Random.value - 0.5f,0) * 5 / Mathf.Sqrt(Caliber.Value);
@@ -642,13 +742,32 @@ namespace WW2NavalAssembly
                 Cannon.GetComponent<BulletBehaviour>().randomForce = randomForce;
                 Destroy(Cannon, 10);
 
+                if (!TrackOn.isDefaultValue)
+                {
+                    CannonTrackManager.Instance.AddTrackedCannon(myPlayerID, Cannon);
+                }
+
                 ModNetworking.SendToAll(GunMsgReceiver.FireMsg.CreateMessage(myPlayerID, myGuid, randomForce, transform.forward));
             }
         }
         public override void SimulateUpdateClient()
         {
+            if (GunMsgReceiver.Instance.reloadTimeUpdated[myPlayerID][myGuid])
+            {
+                GunMsgReceiver.Instance.reloadTimeUpdated[myPlayerID][myGuid] = false;
+                currentReloadTime = GunMsgReceiver.Instance.reloadTime[myPlayerID][myGuid];
+            }
+            if (currentReloadTime < reloadTime)
+            {
+                currentReloadTime += Time.deltaTime;
+                return;
+            }
+
+
             if (GunMsgReceiver.Instance.Fire[myPlayerID][myGuid].fire)
             {
+                currentReloadTime = 0;
+                muzzleStage = 0;
                 GunMsgReceiver.Instance.Fire[myPlayerID][myGuid].fire = false;
                 GameObject Cannon = (GameObject)Instantiate(CannonPrefab, transform.position + 3 * transform.forward, 
                                                             Quaternion.LookRotation(GunMsgReceiver.Instance.Fire[myPlayerID][myGuid].forward, Vector3.up));
@@ -656,12 +775,38 @@ namespace WW2NavalAssembly
                 Cannon.GetComponent<BulletBehaviour>().fire = true;
                 Cannon.GetComponent<BulletBehaviour>().randomForce = GunMsgReceiver.Instance.Fire[myPlayerID][myGuid].fireForce;
                 Destroy(Cannon, 10);
+
+                if (!TrackOn.isDefaultValue)
+                {
+                    CannonTrackManager.Instance.AddTrackedCannon(myPlayerID, Cannon);
+                }
+
             }
         }
         public override void SimulateFixedUpdateHost()
         {
+            
+            if (muzzleStage < 7)
+            {
+                muzzleStage++;
+                VisTransform.localPosition = Vector3.Lerp(VisTransform.localPosition, - Caliber.Value / 800 * Vector3.forward, Caliber.Value/800);
+            }
+            else
+            {
+                if (VisTransform.localPosition.z < 0)
+                {
+                    VisTransform.localPosition += new Vector3(0, 0, 0.04f);
+                }
+            }
+            if (currentReloadTime < reloadTime)
+            {
+                return;
+            }
+
             if (FireKey.EmulationPressed())
             {
+                currentReloadTime = 0;
+                muzzleStage = 0;
                 gameObject.GetComponent<Rigidbody>().AddForce(-Caliber.Value * transform.forward * 5);
                 Vector3 randomForce = new Vector3(UnityEngine.Random.value - 0.5f, UnityEngine.Random.value - 0.5f, UnityEngine.Random.value - 0.5f) * 3 / Mathf.Sqrt(Caliber.Value);
                 randomForce += new Vector3(0, UnityEngine.Random.value - 0.5f, 0) * 5 / Mathf.Sqrt(Caliber.Value);
@@ -672,7 +817,47 @@ namespace WW2NavalAssembly
                 Cannon.GetComponent<BulletBehaviour>().randomForce = randomForce;
                 Destroy(Cannon, 10);
 
+                if (!TrackOn.isDefaultValue)
+                {
+                    CannonTrackManager.Instance.AddTrackedCannon(myPlayerID, Cannon);
+                }
+
                 ModNetworking.SendToAll(GunMsgReceiver.FireMsg.CreateMessage(myPlayerID, myGuid, randomForce, transform.forward));
+            }
+        }
+        public override void SimulateFixedUpdateClient()
+        {
+            if (muzzleStage < 7)
+            {
+                muzzleStage++;
+                VisTransform.localPosition = Vector3.Lerp(VisTransform.localPosition, -Caliber.Value / 800 * Vector3.forward, Caliber.Value / 800);
+            }
+            else
+            {
+                if (VisTransform.localPosition.z < 0)
+                {
+                    VisTransform.localPosition += new Vector3(0, 0, 0.04f);
+                }
+            }
+        }
+        public void OnGUI()
+        {
+            if (StatMaster.isMP)
+            {
+                if (PlayerData.localPlayer.networkId != myPlayerID)
+                {
+                    return;
+                }
+            }
+            if (currentReloadTime < reloadTime && (Camera.main.transform.position - transform.position).magnitude < 30)
+            {
+                Vector3 onScreenPosition = Camera.main.WorldToScreenPoint(transform.position);
+                if (onScreenPosition.z >= 0)
+                {
+                    GUI.DrawTexture(new Rect(onScreenPosition.x - iconSize / 2, Camera.main.pixelHeight - onScreenPosition.y - iconSize / 2, iconSize, iconSize), Reload1);
+                    int currIconSize = (int)(iconSize * currentReloadTime / reloadTime);
+                    GUI.DrawTexture(new Rect(onScreenPosition.x - currIconSize / 2, Camera.main.pixelHeight - onScreenPosition.y - currIconSize / 2, currIconSize, currIconSize), Reload2);
+                }
             }
         }
     }

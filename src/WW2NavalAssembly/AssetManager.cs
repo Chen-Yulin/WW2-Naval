@@ -6,6 +6,14 @@ using Modding;
 
 namespace WW2NavalAssembly
 {
+    public class Asset_Projector
+    {
+        public GameObject BulletHole;
+        public Asset_Projector(ModAssetBundle modAssetBundle)
+        {
+            BulletHole = modAssetBundle.LoadAsset<GameObject>("holeProjector");
+        }
+    }
     public class Asset_Chimney
     {
         public GameObject ChimneySmoke;
@@ -77,6 +85,7 @@ namespace WW2NavalAssembly
         public Asset_ArmourVis ArmourVis { get; protected set; }
         public Asset_Pierce Pierce { get; protected set; }
         public Asset_Chimney Chimney { get; protected set; }
+        public Asset_Projector Projector { get; protected set; }
 
         protected void Awake()
         {
@@ -86,6 +95,7 @@ namespace WW2NavalAssembly
             ArmourVis = new Asset_ArmourVis(ModResource.GetAssetBundle("ArmourVis AB"));
             Pierce = new Asset_Pierce(ModResource.GetAssetBundle("Pierce AB"));
             Chimney = new Asset_Chimney(ModResource.GetAssetBundle("Chimney AB"));
+            Projector = new Asset_Projector(ModResource.GetAssetBundle("Projector AB"));
         }
     }
 }

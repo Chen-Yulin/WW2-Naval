@@ -51,7 +51,9 @@
   <ItemGroup>
     <Compile Include="AssetManager.cs" />
     <Compile Include="BulletHole.cs" />
+    <Compile Include="CannonTrackManager.cs" />
     <Compile Include="Chimney.cs" />
+    <Compile Include="Controller.cs" />
     <Compile Include="CustomBlockController.cs" />
     <Compile Include="DefaultArmour.cs" />
     <Compile Include="Gun.cs" />

@@ -12,7 +12,7 @@ namespace WW2NavalAssembly
 {
     class ModController : SingleInstance<ModController>
     {
-        public override string Name { get; } = "MacModController";
+        public override string Name { get; } = "WW2NavalModController";
 
         private Rect windowRect = new Rect(15f, 100f, 280f, 50f);
         private readonly int windowID = ModUtility.GetWindowId();
