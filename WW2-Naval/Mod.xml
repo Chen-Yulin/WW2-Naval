@@ -5,11 +5,11 @@
 	<Name>WW2Naval</Name>
 	<Author>Chen, Yulin</Author> <!-- FIX: Insert your name here. -->
 	<!-- Major.Minor.Build -->
-	<Version>0.0.4</Version>
+	<Version>0.2.0</Version>
 	
 	<Description>
 	A mod for 1/5 scale WW2 naval battel.
-	Version 0.0.4
+	Version 0.2.0
 	</Description>
 
 	<Icon name="icon"/>
@@ -66,8 +66,11 @@
 		<Texture name="Cannon Texture" path="Gun\Cannon.png"/>
 		<Mesh name="pilot Mesh" path="CentralController\pilot.obj"/>
 		<Texture name="pilot Texture" path="CentralController\pilot.png"/>
-		<Texture name="Reload1 Texture" path="Gun\loadCircleOut.png"/>
-		<Texture name="Reload2 Texture" path="Gun\loadCircleIn.png"/>
+		<Texture name="ReloadHEOut Texture" path="Gun\loadCircleOut.png"/>
+		<Texture name="ReloadHEIn Texture" path="Gun\loadCircleIn.png"/>
+		<Texture name="ReloadAPOut Texture" path="Gun\loadCircleOut2.png"/>
+		<Texture name="ReloadAPIn Texture" path="Gun\loadCircleIn2.png"/>
+		<Texture name="LockIconScreen Texture" path="CentralController\aim.png"/>
 
 		<AudioClip name="GunShot Audio" path="Gun\fire.wav" />
 		<AudioClip name="GunExplo Audio" path="Gun\explo.wav" />
@@ -81,6 +84,8 @@
 		<AssetBundle name="Pierce AB" path="perice.ab"/>
 		<AssetBundle name="Chimney AB" path="smoke.ab"/>
 		<AssetBundle name="Projector AB" path="projector.ab"/>
+		<AssetBundle name="WellEffect AB" path="welleffect.ab"/>
+		<AssetBundle name="FireControl AB" path="firecontrol.ab"/>
 	</Resources>
 
 

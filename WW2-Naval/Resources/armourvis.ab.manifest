@@ -1,12 +1,12 @@
 ManifestFileVersion: 0
-CRC: 2522883539
+CRC: 794152335
 Hashes:
   AssetFileHash:
     serializedVersion: 2
-    Hash: 8a7a04165468482ea52c9a5219795c3b
+    Hash: 202df20c8a78fc5d54dde0b3c104f052
   TypeTreeHash:
     serializedVersion: 2
-    Hash: 3432779acd6555d529cc4596fe61073b
+    Hash: 32a0da50f4c5f22c5624d598a44d99c7
 HashAppended: 0
 ClassTypes:
 - Class: 1
@@ -23,6 +23,9 @@ ClassTypes:
   Script: {instanceID: 0}
 - Class: 48
   Script: {instanceID: 0}
+- Class: 64
+  Script: {instanceID: 0}
 Assets:
 - Assets/ArmourVis/SingleVis.prefab
+- Assets/ArmourVis/WellVis.prefab
 Dependencies: []

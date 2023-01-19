@@ -6,6 +6,24 @@ using Modding;
 
 namespace WW2NavalAssembly
 {
+    public class Asset_FireControl
+    {
+        public GameObject FireControl;
+        public Asset_FireControl(ModAssetBundle modAssetBundle)
+        {
+            FireControl = modAssetBundle.LoadAsset<GameObject>("FireControlCanvas");
+        }
+    }
+    public class Asset_WellEffect
+    {
+        public GameObject WellExplo;
+        public GameObject AmmoExplo;
+        public Asset_WellEffect(ModAssetBundle modAssetBundle)
+        {
+            WellExplo = modAssetBundle.LoadAsset<GameObject>("WellExplo");
+            AmmoExplo = modAssetBundle.LoadAsset<GameObject>("AmmoExplo");
+        }
+    }
     public class Asset_Projector
     {
         public GameObject BulletHole;
@@ -33,13 +51,11 @@ namespace WW2NavalAssembly
     public class Asset_ArmourVis
     {
         public GameObject SingleArmour;
-        public GameObject DoubleArmour;
-        public GameObject LogArmour;
+        public GameObject WellArmour;
         public Asset_ArmourVis(ModAssetBundle modAssetBundle)
         {
             SingleArmour = modAssetBundle.LoadAsset<GameObject>("SingleVis");
-            DoubleArmour = modAssetBundle.LoadAsset<GameObject>("DoubleVis");
-            LogArmour = modAssetBundle.LoadAsset<GameObject>("LogVis");
+            WellArmour = modAssetBundle.LoadAsset<GameObject>("WellVis");
         }
     }
     public class Asset_GunSmoke
@@ -86,6 +102,8 @@ namespace WW2NavalAssembly
         public Asset_Pierce Pierce { get; protected set; }
         public Asset_Chimney Chimney { get; protected set; }
         public Asset_Projector Projector { get; protected set; }
+        public Asset_WellEffect WellEffect { get; protected set; }
+        public Asset_FireControl FireControl { get; protected set; }
 
         protected void Awake()
         {
@@ -96,6 +114,8 @@ namespace WW2NavalAssembly
             Pierce = new Asset_Pierce(ModResource.GetAssetBundle("Pierce AB"));
             Chimney = new Asset_Chimney(ModResource.GetAssetBundle("Chimney AB"));
             Projector = new Asset_Projector(ModResource.GetAssetBundle("Projector AB"));
+            WellEffect = new Asset_WellEffect(ModResource.GetAssetBundle("WellEffect AB"));
+            FireControl = new Asset_FireControl(ModResource.GetAssetBundle("FireControl AB"));
         }
     }
 }

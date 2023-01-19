@@ -52,11 +52,15 @@
     <Compile Include="AssetManager.cs" />
     <Compile Include="BulletHole.cs" />
     <Compile Include="CannonTrackManager.cs" />
+    <Compile Include="CannonWell.cs" />
     <Compile Include="Chimney.cs" />
     <Compile Include="Controller.cs" />
     <Compile Include="CustomBlockController.cs" />
     <Compile Include="DefaultArmour.cs" />
+    <Compile Include="FireControlManager.cs" />
+    <Compile Include="Grouper.cs" />
     <Compile Include="Gun.cs" />
+    <Compile Include="MathTool.cs" />
     <Compile Include="MessageController.cs" />
     <Compile Include="Mod.cs" />
     <Compile Include="ModController.cs" />

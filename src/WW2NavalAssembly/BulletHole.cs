@@ -25,33 +25,44 @@ namespace WW2NavalAssembly
         float sqrCaliber;
         Rigidbody rigid;
         WoodenArmour hittedArmour;
+        bool disabled = false;
         public void Awake()
         {
             
         }
         public void Start()
         {
-            sqrCaliber = hittedCaliber * hittedCaliber;
-            HoleVis = new GameObject("RigidObject");
-            HoleVis.transform.SetParent(transform);
-            HoleVis.transform.localPosition = position;
-            HoleVis.transform.rotation = Quaternion.identity;
-            HoleVis.transform.localScale = Vector3.one * hittedCaliber/400;
+            try
+            {
+                sqrCaliber = hittedCaliber * hittedCaliber;
+                HoleVis = new GameObject("RigidObject");
+                HoleVis.transform.SetParent(transform);
+                HoleVis.transform.localPosition = position;
+                HoleVis.transform.rotation = Quaternion.identity;
+                HoleVis.transform.localScale = Vector3.one * hittedCaliber / 400;
 
-            rigid = transform.parent.GetComponent<Rigidbody>();
-            hittedArmour = transform.parent.GetComponent<WoodenArmour>();
+                rigid = transform.parent.GetComponent<Rigidbody>();
+                hittedArmour = transform.parent.GetComponent<WoodenArmour>();
 
-            DCTimeNeeded = (int)( sqrCaliber * Mathf.Clamp(hittedArmour.thickness, 40, 650) / 20000);
+                DCTimeNeeded = (int)(sqrCaliber * Mathf.Clamp(hittedArmour.thickness, 40, 650) / 20000);
+            }
+            catch {
+                disabled = true;
+            }
+
         }
         public void FixedUpdate()
         {
-            
-            if (DCTime < DCTimeNeeded && HoleVis.transform.position.y < 20)
+            if (disabled)
+            {
+                return;
+            }   
+            if (DCTime < DCTimeNeeded && HoleVis.transform.position.y < 20 && HoleVis.transform.position.y > 15)
             {
                 DCTime++;
-                waterIn += sqrCaliber / 200;
+                waterIn += sqrCaliber / 400;
             }
-            else if (DCTime >= DCTimeNeeded)
+            else if (DCTime >= DCTimeNeeded && HoleVis.transform.position.y > 15)
             {
                 waterIn -= 1000;
                 if (waterIn < 0)
@@ -104,7 +115,15 @@ namespace WW2NavalAssembly
             HP.farClipPlane = 0.01f;
             HP.nearClipPlane = 0;
 
-            DCTimeNeeded = (int)(sqrCaliber * Mathf.Clamp(transform.parent.GetComponent<WoodenArmour>().thickness,40,650) / 20000);
+            if (transform.parent.GetComponent<WoodenArmour>())
+            {
+                DCTimeNeeded = (int)(sqrCaliber * Mathf.Clamp(transform.parent.GetComponent<WoodenArmour>().thickness, 40, 650) / 20000);
+            }
+            else
+            {
+                DCTimeNeeded = (int)(sqrCaliber * Mathf.Clamp(transform.parent.GetComponent<CannonWell>().thickness, 40, 650) / 20000);
+            }
+            
         }
         public void FixedUpdate()
         {

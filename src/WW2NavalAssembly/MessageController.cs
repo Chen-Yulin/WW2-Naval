@@ -17,6 +17,10 @@ namespace WW2NavalAssembly
             ModNetworking.Callbacks[GunMsgReceiver.WaterHitMsg] += GunMsgReceiver.Instance.waterHitMsgReceiver;
             ModNetworking.Callbacks[GunMsgReceiver.BulletHoleMsg] += GunMsgReceiver.Instance.bulletHoleMsgReceiver;
             ModNetworking.Callbacks[GunMsgReceiver.ReloadMsg] += GunMsgReceiver.Instance.reloadTimeMsgReceiver;
+            ModNetworking.Callbacks[WellMsgReceicer.hitMsg] += WellMsgReceicer.Instance.ExploMsgReceiver;
+            ModNetworking.Callbacks[LockDataManager.LockMsg] += LockDataManager.Instance.LockDataReceiver;
+            ModNetworking.Callbacks[LockDataManager.CameraMsg] += LockDataManager.Instance.CameraDataReceiver;
+            ModNetworking.Callbacks[BlockPoseReceiver.forwardMsg] += BlockPoseReceiver.Instance.forwardMsgReceiver;
         }
     }
 }

@@ -18,6 +18,11 @@ namespace WW2NavalAssembly
 			myMod.AddComponent<AssetManager>();
 			myMod.AddComponent<MessageController>();
 			myMod.AddComponent<CannonTrackManager>();
+			myMod.AddComponent<Grouper>();
+			myMod.AddComponent<FireControlManager>();
+			myMod.AddComponent<LockDataManager>();
+			myMod.AddComponent<BlockPoseReceiver>();
+			myMod.AddComponent<WellMsgReceicer>();
 
 			Debug.Log("Hello, this is WW2 naval mod!");
 		}

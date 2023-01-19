@@ -39,28 +39,68 @@ namespace WW2NavalAssembly
 
         public GameObject GetTrackCannon(int playerID)
         {
-            while (Cannons[playerID].Peek() == null ||
+            if (Cannons[playerID].Count != 0)
+            {
+                while (Cannons[playerID].Peek() == null ||
                     (Cannons[playerID].Peek().transform.position.y < 20) ||
                     Cannons[playerID].Peek().GetComponent<BulletBehaviour>().exploded)
-            {
-                Cannons[playerID].Dequeue();
+                {
+                    Cannons[playerID].Dequeue();
+                    if (Cannons[playerID].Count == 0)
+                    {
+                        break;
+                    }
+                }
+                if (Cannons[playerID].Count == 0)
+                {
+                    return null;
+                }
+                else
+                {
+                    return Cannons[playerID].Peek();
+                }
+                
             }
-            return Cannons[playerID].Peek();
+            else
+            {
+                return null;
+            }
+            
+            
         }
         
         public GameObject SwitchTrackCannon(int playerID)
         {
-            while (Cannons[playerID].Peek() == null ||
+            if (Cannons[playerID].Count != 0)
+            {
+                while (Cannons[playerID].Peek() == null ||
                     (Cannons[playerID].Peek().transform.position.y < 20) ||
                     Cannons[playerID].Peek().GetComponent<BulletBehaviour>().exploded)
-            {
-                Cannons[playerID].Dequeue();
+                {
+                    Cannons[playerID].Dequeue();
+                    if (Cannons[playerID].Count == 0)
+                    {
+                        break;
+                    }
+                }
+                if (Cannons[playerID].Count > 1)
+                {
+                    Cannons[playerID].Dequeue();
+                }
+                if (Cannons[playerID].Count == 0)
+                {
+                    return null;
+                }
+                else
+                {
+                    return Cannons[playerID].Peek();
+                }
             }
-            if (Cannons[playerID].Count > 1)
+            else
             {
-                Cannons[playerID].Dequeue();
+                return null;
             }
-            return Cannons[playerID].Peek();
+            
         }
 
     }

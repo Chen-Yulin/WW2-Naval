@@ -69,6 +69,14 @@ namespace WW2NavalAssembly
                             block.gameObject.AddComponent(typeof(Chimney));
                         break;
                     }
+                case (int)BlockType.SpinningBlock:
+                    {
+                        if (block.gameObject.GetComponent(typeof(CannonWell)) == null)
+                        {
+                            block.gameObject.AddComponent(typeof(CannonWell));
+                        }
+                        break;
+                    }
                 case (int)BlockType.BuildNode:
                     {
                         break;
