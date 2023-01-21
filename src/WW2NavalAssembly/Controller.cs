@@ -41,9 +41,13 @@ namespace WW2NavalAssembly
         public override string Name { get; } = "LockDataManager";
         public static MessageType LockMsg = ModNetworking.CreateMessageType(DataType.Integer, DataType.Vector3, DataType.Vector3, DataType.Boolean);
         public static MessageType CameraMsg = ModNetworking.CreateMessageType(DataType.Integer, DataType.Vector3, DataType.Vector3);
+        public static MessageType ControllerVelMsg = ModNetworking.CreateMessageType(DataType.Integer, DataType.Vector3);
 
         public LockData[] lockData = new LockData[16];
         public CameraData[] cameraData = new CameraData[16];
+
+        public int[] SpotNum = new int[16];
+        public Vector3[] ControllerVel = new Vector3[16];
         
         public LockDataManager()
         {
@@ -61,10 +65,14 @@ namespace WW2NavalAssembly
         }
         public void CameraDataReceiver(Message msg)
         {
+            Debug.Log("Receive Camera");
             cameraData[(int)msg.GetData(0)].position = (Vector3)msg.GetData(1);
             cameraData[(int)msg.GetData(0)].forward = (Vector3)msg.GetData(2);
             cameraData[(int)msg.GetData(0)].valid = true;
-            //Debug.Log("Receive Camera");
+        }
+        public void ControllerVelReceiver(Message msg)
+        {
+            ControllerVel[(int)msg.GetData(0)] = (Vector3)msg.GetData(1);
         }
     }
 
@@ -72,6 +80,7 @@ namespace WW2NavalAssembly
     {
         public int myPlayerID;
         public int myGuid;
+        public int mySeed;
 
         public MKey TrackCannon;
         public MKey SwitchCannnon;
@@ -99,6 +108,14 @@ namespace WW2NavalAssembly
 
         public int iconSize = 128;
         public Texture LockIconOnScreen;
+
+        public Vector2 BaseRandomError;
+        public float SpotModifier;
+        public float ClosingModifier;
+        public Vector2 RandomError;
+        public float PreYRotation;
+        public float RotationError;
+        public Vector3 myVelocity;
 
         public Camera MainCamera
         {
@@ -227,15 +244,14 @@ namespace WW2NavalAssembly
             }
             return new Dist2PitchResult(esT, angle * 180/Mathf.PI);
         }
+
         public void InitFireControlPanel()
         {
             try
             {
                 Destroy(GameObject.Find("FCCanvas"));
             }
-            catch
-            {
-            }
+            catch{}
             FCCanvas = (GameObject)Instantiate(AssetManager.Instance.FireControl.FireControl);
             FCCanvas.name = "FCCanvas";
             FireControlPanel = FCCanvas.transform.Find("Panel").gameObject;
@@ -256,10 +272,30 @@ namespace WW2NavalAssembly
             Debug.Log("InitGunFireControl");
             foreach (var calibergroup in FireControlManager.Instance.Guns[myPlayerID])
             {
-                if (calibergroup.Value.Count == 0)
-                {
-                    continue;
+                {// determine whether the calibergroup is valid
+                    if (calibergroup.Value.Count == 0)
+                    {
+                        continue;
+                    }
+
+                    int validGun = 0;
+                    foreach (var gun in calibergroup.Value)
+                    {
+                        try
+                        {
+                            if (gun.Value.GetComponent<Gun>().myPlayerID == myPlayerID)
+                            {
+                                validGun++;
+                            }
+                        }
+                        catch { }
+                    }
+                    if (validGun == 0)
+                    {
+                        continue;
+                    }
                 }
+
                 Debug.Log("Caliber:" + calibergroup.Key);
 
                 if (!PitchPredIcon.ContainsKey(calibergroup.Key))
@@ -297,9 +333,17 @@ namespace WW2NavalAssembly
         }
         public void UpdateGunIcon()
         {
+            if (StatMaster.hudHidden)
+            {
+                FCCanvas.SetActive(false);
+            }
+            else
+            {
+                FCCanvas.SetActive(true);
+            }
             if (LockDataManager.Instance.lockData[myPlayerID].valid)
             {
-                Vector2 targetPos = new Vector2(LockDataManager.Instance.lockData[myPlayerID].position.x, LockDataManager.Instance.lockData[myPlayerID].position.z);
+                Vector2 targetPos = new Vector2(LockDataManager.Instance.lockData[myPlayerID].position.x, LockDataManager.Instance.lockData[myPlayerID].position.z) + RandomError;
                 Vector2 targetVel = new Vector2(LockDataManager.Instance.lockData[myPlayerID].velocity.x, LockDataManager.Instance.lockData[myPlayerID].velocity.z);
                 foreach (var fcRes in FCResults)
                 {
@@ -378,12 +422,108 @@ namespace WW2NavalAssembly
         {
             if (StatMaster.isClient)
             {
-                return new Vector2(BlockPoseReceiver.Instance.forward[myPlayerID][myGuid].x, BlockPoseReceiver.Instance.forward[myPlayerID][myGuid].z);
+                return new Vector2(-transform.up.x, -transform.up.z);
+                //return new Vector2(BlockPoseReceiver.Instance.forward[myPlayerID][myGuid].x, BlockPoseReceiver.Instance.forward[myPlayerID][myGuid].z);
             }
             else
             {
                 return new Vector2(-transform.up.x, -transform.up.z);
             }
+        }
+        public void UpdateVelocity()
+        {
+            if (StatMaster.isMP)
+            {
+                if (StatMaster.isClient)
+                {
+                    myVelocity = Vector3.Lerp(myVelocity, LockDataManager.Instance.ControllerVel[myPlayerID], 0.2f);
+                }
+                else
+                {
+                    myVelocity = gameObject.GetComponent<Rigidbody>().velocity;
+                }
+            }
+            else
+            {
+                myVelocity = gameObject.GetComponent<Rigidbody>().velocity;
+            }
+        }
+        public void UpdateRotation()
+        {
+            float nowYRotation = MathTool.Instance.SignedAngle(GetForward(), new Vector2(Vector3.forward.x, Vector3.forward.z));
+            float deltaRotation;
+            if (PreYRotation > 175 && nowYRotation < -175)
+            {
+                deltaRotation = nowYRotation - PreYRotation + 360;
+            }
+            else if (PreYRotation < -175 && nowYRotation > 175)
+            {
+                deltaRotation = PreYRotation - nowYRotation + 360;
+            }
+            else
+            {
+                deltaRotation = Mathf.Abs(nowYRotation - PreYRotation);
+            }
+            //Debug.Log(deltaRotation);
+            PreYRotation = nowYRotation;
+            RotationError += deltaRotation * 5 - 0.3f;
+            RotationError = Mathf.Clamp(RotationError, 0, 25);
+        }
+        public void UpdateSpotModifier()
+        {
+            if (StatMaster.isMP)
+            {
+                if (StatMaster.isClient)
+                {
+                    if (PlayerData.localPlayer.networkId == myPlayerID)
+                    {
+                        SpotModifier *= Mathf.Pow(0.93f, LockDataManager.Instance.SpotNum[myPlayerID]);
+                        LockDataManager.Instance.SpotNum[myPlayerID] = 0;
+                    }
+                }
+                else
+                {
+                    if (myPlayerID == 0)
+                    {
+                        SpotModifier *= Mathf.Pow(0.93f, LockDataManager.Instance.SpotNum[myPlayerID]);
+                        LockDataManager.Instance.SpotNum[myPlayerID] = 0;
+                    }
+                }
+            }
+            else
+            {
+                SpotModifier *= Mathf.Pow(0.93f, LockDataManager.Instance.SpotNum[myPlayerID]);
+                LockDataManager.Instance.SpotNum[myPlayerID] = 0;
+            }
+            
+        }
+        public void UpdateClosingModifier()
+        {
+            ClosingModifier = 1 + (LockDataManager.Instance.lockData[myPlayerID].velocity - myVelocity).magnitude/10;
+        }
+        public void ResetBaseRandomError()
+        {
+            BaseRandomError = new Vector2(UnityEngine.Random.value-0.5f, UnityEngine.Random.value-0.5f);
+            BaseRandomError /= BaseRandomError.magnitude;
+            SpotModifier = 1;
+            ClosingModifier = 1;
+            //Debug.Log(BaseRandomError);
+            //BaseRandomError *= (transform.position - LockDataManager.Instance.lockData[myPlayerID].position).magnitude / 7;
+            //Debug.Log((transform.position - LockDataManager.Instance.lockData[myPlayerID].position).magnitude);
+        }
+        public void UpdateRandomError()
+        {
+            UpdateClosingModifier();
+            UpdateSpotModifier();// update soptModifier
+            //modify baseError 
+            Vector3 OrienVector3 = transform.position - LockDataManager.Instance.lockData[myPlayerID].position;
+            Vector2 OrienVector2 = new Vector2(OrienVector3.x, OrienVector3.z);
+            //Debug.Log(OrienVector2 / 10);
+            float FakeRandom = Mathf.Sign(BaseRandomError.x) * (Mathf.Abs(BaseRandomError.x) % 0.01f) * 50;
+            //Debug.Log(FakeRandom);
+            RandomError =   (BaseRandomError * OrienVector2.magnitude / 30 + OrienVector2/15 * FakeRandom + OrienVector2 / 10) * SpotModifier + 
+                            RotationError * new Vector2(UnityEngine.Random.value-0.5f, UnityEngine.Random.value - 0.5f) * OrienVector2.magnitude/500;
+            RandomError *= ClosingModifier;
         }
 
         public override void SafeAwake()
@@ -394,12 +534,13 @@ namespace WW2NavalAssembly
             SwitchCannnon = AddKey("Switch Tracking Cannon", "SwitchTrackingCannon", KeyCode.RightShift);
             FCPanelSize = AddSlider("Fire Control Size", "FCSize", 1f, 0.2f, 5f);
             Lock = AddKey("Lock", "WW2Lock", KeyCode.X);
-            
+            mySeed = (int)(UnityEngine.Random.value * 10);
         }
         public override void OnSimulateStart()
         {
             myGuid = BlockBehaviour.BuildingBlock.Guid.GetHashCode();
             LockIconOnScreen = ModResource.GetTexture("LockIconScreen Texture").Texture;
+            PreYRotation = MathTool.Instance.SignedAngle(GetForward(), new Vector2(Vector3.forward.x, Vector3.forward.z));
             try
             {
                 if (!StatMaster.isMP || PlayerData.localPlayer.networkId == myPlayerID)
@@ -410,29 +551,21 @@ namespace WW2NavalAssembly
             }
             catch { }
             
-            try
-            {
-                if (StatMaster.isClient)
-                {
-                    BlockPoseReceiver.Instance.forward[myPlayerID].Add(myGuid, Vector3.zero);
-                }
-            }
-            catch { }
 
         }
         public override void OnSimulateStop()
         {
             try
             {
-                Destroy(GameObject.Find("FCCanvas"));
-            }
-            catch
-            {
-            }
-            try
-            {
                 if (!StatMaster.isMP || PlayerData.localPlayer.networkId == myPlayerID)
                 {
+                    try
+                    {
+                        Destroy(GameObject.Find("FCCanvas"));
+                    }
+                    catch
+                    {
+                    }
                     Destroy(FCCanvas);
                     
                     PitchAimIcon.Clear();
@@ -466,17 +599,18 @@ namespace WW2NavalAssembly
         }
         public void OnDestroy()
         {
-            try
-            {
-                Destroy(GameObject.Find("FCCanvas"));
-            }
-            catch
-            {
-            }
+
             try
             {
                 if (!StatMaster.isMP || PlayerData.localPlayer.networkId == myPlayerID)
                 {
+                    try
+                    {
+                        Destroy(GameObject.Find("FCCanvas"));
+                    }
+                    catch
+                    {
+                    }
                     Destroy(FCCanvas);
                     
                     PitchAimIcon.Clear();
@@ -508,15 +642,18 @@ namespace WW2NavalAssembly
         }
         public override void SimulateFixedUpdateAlways()
         {
-            if (StatMaster.isMP)
-            {
-                if (PlayerData.localPlayer.networkId != myPlayerID)
-                {
-                    return;
-                }
-            }
+            UpdateVelocity();
             if (!StatMaster.isMP || PlayerData.localPlayer.networkId == myPlayerID)
             {
+                UpdateRotation();
+                UpdateRandomError();
+                if (StatMaster.isMP)
+                {
+                    if (PlayerData.localPlayer.networkId != myPlayerID)
+                    {
+                        return;
+                    }
+                }
                 if (!FCInitialized)
                 {
                     FCInitialized = true;
@@ -537,6 +674,7 @@ namespace WW2NavalAssembly
                 {
                     if (myPlayerID == 0)
                     {
+                        ResetBaseRandomError();
                         LockDataManager.Instance.cameraData[myPlayerID].valid = true;
                         LockDataManager.Instance.cameraData[myPlayerID].position = Camera.main.ScreenPointToRay(Input.mousePosition).origin;
                         LockDataManager.Instance.cameraData[myPlayerID].forward = Camera.main.ScreenPointToRay(Input.mousePosition).direction;
@@ -544,6 +682,7 @@ namespace WW2NavalAssembly
                 }
                 else
                 {
+                    ResetBaseRandomError();
                     LockDataManager.Instance.cameraData[myPlayerID].valid = true;
                     LockDataManager.Instance.cameraData[myPlayerID].position = Camera.main.ScreenPointToRay(Input.mousePosition).origin;
                     LockDataManager.Instance.cameraData[myPlayerID].forward = Camera.main.ScreenPointToRay(Input.mousePosition).direction;
@@ -556,6 +695,8 @@ namespace WW2NavalAssembly
             {
                 if (PlayerData.localPlayer.networkId == myPlayerID)
                 {
+                    ResetBaseRandomError();
+                    Debug.Log("SendCamera");
                     ModNetworking.SendToAll(LockDataManager.CameraMsg.CreateMessage(myPlayerID, Camera.main.ScreenPointToRay(Input.mousePosition).origin,
                                                                                                 Camera.main.ScreenPointToRay(Input.mousePosition).direction));
                 }
@@ -565,10 +706,14 @@ namespace WW2NavalAssembly
         {
             if (StatMaster.isMP)
             {
-                ModNetworking.SendToAll(BlockPoseReceiver.forwardMsg.CreateMessage(myPlayerID, myGuid, -transform.up));
+                if (ModController.Instance.state % 10 == mySeed)
+                {
+                    ModNetworking.SendToAll(LockDataManager.ControllerVelMsg.CreateMessage(myPlayerID, gameObject.GetComponent<Rigidbody>().velocity));
+                }
             }
             if (LockDataManager.Instance.cameraData[myPlayerID].valid)
             {
+                
                 LockDataManager.Instance.cameraData[myPlayerID].valid = false;
                 Ray cameraRay = new Ray(LockDataManager.Instance.cameraData[myPlayerID].position, LockDataManager.Instance.cameraData[myPlayerID].forward);
                 RaycastHit hit;
@@ -691,10 +836,11 @@ namespace WW2NavalAssembly
                     return;
                 }
             }
+            //GUI.Box(new Rect(100, 200, 200, 50), LockDataManager.Instance.cameraData[0].valid.ToString());
+            //GUI.Box(new Rect(100, 300, 200, 50), LockDataManager.Instance.cameraData[1].valid.ToString());
 
             if (LockDataManager.Instance.lockData[myPlayerID].valid)
             {
-                //GUI.Box(new Rect(100, 200, 200, 50), LockDataManager.Instance.lockData[myPlayerID].position.ToString());
                 GUI.color = Color.green;
                 Vector3 onScreenPosition = Camera.main.WorldToScreenPoint(LockDataManager.Instance.lockData[myPlayerID].position);
                 if (onScreenPosition.z >= 0)

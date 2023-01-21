@@ -164,6 +164,7 @@ namespace WW2NavalAssembly
     {
         public int myPlayerID;
         public int myGuid;
+        
 
         public int CannonType = 0;
 
@@ -184,6 +185,7 @@ namespace WW2NavalAssembly
         public bool APtimerOn;
 
         public bool exploded = false;
+        public bool spotted = false;
 
         public void AddFireSound(Transform t)
         {
@@ -509,6 +511,26 @@ namespace WW2NavalAssembly
         {
             if (transform.position.y < 20f && pericedBlock.Count == 0 && Caliber >= 283)
             {
+                if (!spotted)
+                {
+                    spotted = true;
+                    if ((transform.position - LockDataManager.Instance.lockData[myPlayerID].position).magnitude < 200f)
+                    {
+                        if (StatMaster.isMP)
+                        {
+                            if (myPlayerID == 0)
+                            {
+                                LockDataManager.Instance.SpotNum[myPlayerID]++;
+                            }
+                        }
+                        else
+                        {
+                            LockDataManager.Instance.SpotNum[myPlayerID]++;
+                        }
+                    }
+                }
+                
+
                 myRigid.velocity = new Vector3(myRigid.velocity.x, myRigid.velocity.y / 1.5f, myRigid.velocity.z);
                 myRigid.AddForce(myRigid.velocity * 0.8f - Vector3.up * 10);
                 penetration *= 0.97f;
@@ -547,6 +569,24 @@ namespace WW2NavalAssembly
         }
         public void APDetectWaterClient()
         {
+            if (transform.position.y < 20f)
+            {
+                if (!spotted)
+                {
+                    spotted = true;
+                    if ((transform.position - LockDataManager.Instance.lockData[myPlayerID].position).magnitude < 200f)
+                    {
+                        if (StatMaster.isMP)
+                        {
+                            if (myPlayerID == PlayerData.localPlayer.networkId)
+                            {
+                                LockDataManager.Instance.SpotNum[myPlayerID]++;
+                            }
+                        }
+                    }
+                }
+            }
+
             foreach (GunMsgReceiver.waterhitInfo waterhitInfo in GunMsgReceiver.Instance.waterHitInfo[myPlayerID])
             {
                 GameObject waterhit;
@@ -654,6 +694,24 @@ namespace WW2NavalAssembly
         {
             if (transform.position.y < 20f && !hasHitWater && myRigid.velocity.y < 0)
             {
+                if (!spotted)
+                {
+                    spotted = true;
+                    if ((transform.position - LockDataManager.Instance.lockData[myPlayerID].position).magnitude < 200f)
+                    {
+                        if (StatMaster.isMP)
+                        {
+                            if (myPlayerID == 0)
+                            {
+                                LockDataManager.Instance.SpotNum[myPlayerID]++;
+                            }
+                        }
+                        else
+                        {
+                            LockDataManager.Instance.SpotNum[myPlayerID]++;
+                        }
+                    }
+                }
                 GameObject waterhit;
                 if (Caliber >= 283)
                 {
@@ -911,7 +969,9 @@ namespace WW2NavalAssembly
         {
             if (StatMaster.isClient)
             {
-                float angle = Vector3.Angle(BlockPoseReceiver.Instance.forward[myPlayerID][myGuid], Vector3.up);
+                //float angle = Vector3.Angle(BlockPoseReceiver.Instance.forward[myPlayerID][myGuid], Vector3.up);
+                //return (Mathf.Clamp(90 - angle, 0, 45));
+                float angle = Vector3.Angle(transform.forward, Vector3.up);
                 return (Mathf.Clamp(90 - angle, 0, 45));
             }
             else
@@ -924,7 +984,8 @@ namespace WW2NavalAssembly
         {
             if (StatMaster.isClient)
             {
-                return new Vector2(BlockPoseReceiver.Instance.forward[myPlayerID][myGuid].x, BlockPoseReceiver.Instance.forward[myPlayerID][myGuid].z);
+                //return new Vector2(BlockPoseReceiver.Instance.forward[myPlayerID][myGuid].x, BlockPoseReceiver.Instance.forward[myPlayerID][myGuid].z);
+                return new Vector2(transform.forward.x, transform.forward.z);
             }
             else
             {
@@ -1167,7 +1228,7 @@ namespace WW2NavalAssembly
         {
             if (!FireControl.isDefaultValue && StatMaster.isMP)
             {
-                ModNetworking.SendToAll(BlockPoseReceiver.forwardMsg.CreateMessage(myPlayerID, myGuid, transform.forward));
+                //ModNetworking.SendToAll(BlockPoseReceiver.forwardMsg.CreateMessage(myPlayerID, myGuid, transform.forward));
             }
 
             if (muzzleStage < 7)

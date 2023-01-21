@@ -21,6 +21,7 @@ namespace WW2NavalAssembly
             ModNetworking.Callbacks[LockDataManager.LockMsg] += LockDataManager.Instance.LockDataReceiver;
             ModNetworking.Callbacks[LockDataManager.CameraMsg] += LockDataManager.Instance.CameraDataReceiver;
             ModNetworking.Callbacks[BlockPoseReceiver.forwardMsg] += BlockPoseReceiver.Instance.forwardMsgReceiver;
+            ModNetworking.Callbacks[LockDataManager.ControllerVelMsg] += LockDataManager.Instance.ControllerVelReceiver;
         }
     }
 }
