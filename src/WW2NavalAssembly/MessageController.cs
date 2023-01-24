@@ -15,13 +15,15 @@ namespace WW2NavalAssembly
             ModNetworking.Callbacks[GunMsgReceiver.FireMsg] += GunMsgReceiver.Instance.fireKeyMsgReceiver;
             ModNetworking.Callbacks[GunMsgReceiver.ExploMsg] += GunMsgReceiver.Instance.exploMsgReceiver;
             ModNetworking.Callbacks[GunMsgReceiver.WaterHitMsg] += GunMsgReceiver.Instance.waterHitMsgReceiver;
-            ModNetworking.Callbacks[GunMsgReceiver.BulletHoleMsg] += GunMsgReceiver.Instance.bulletHoleMsgReceiver;
+            ModNetworking.Callbacks[GunMsgReceiver.HitHoleMsg] += GunMsgReceiver.Instance.hitHoleMsgReceiver;
             ModNetworking.Callbacks[GunMsgReceiver.ReloadMsg] += GunMsgReceiver.Instance.reloadTimeMsgReceiver;
             ModNetworking.Callbacks[WellMsgReceicer.hitMsg] += WellMsgReceicer.Instance.ExploMsgReceiver;
             ModNetworking.Callbacks[LockDataManager.LockMsg] += LockDataManager.Instance.LockDataReceiver;
             ModNetworking.Callbacks[LockDataManager.CameraMsg] += LockDataManager.Instance.CameraDataReceiver;
             ModNetworking.Callbacks[BlockPoseReceiver.forwardMsg] += BlockPoseReceiver.Instance.forwardMsgReceiver;
             ModNetworking.Callbacks[LockDataManager.ControllerVelMsg] += LockDataManager.Instance.ControllerVelReceiver;
+            ModNetworking.Callbacks[TorpedoMsgReceiver.TorpedoDataMsg] += TorpedoMsgReceiver.Instance.TorpedoDataMsgReceiver;
+            ModNetworking.Callbacks[TorpedoMsgReceiver.TorpedoGuidMsg] += TorpedoMsgReceiver.Instance.TorpedoGuidMsgReceiver;
         }
     }
 }

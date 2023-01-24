@@ -1,12 +1,12 @@
 ManifestFileVersion: 0
-CRC: 2757367680
+CRC: 631563150
 Hashes:
   AssetFileHash:
     serializedVersion: 2
-    Hash: 3f6e57ddf02607f206a3a7469b3aa3ca
+    Hash: db5a7e0ccbfd34fcad76391d0ee02b42
   TypeTreeHash:
     serializedVersion: 2
-    Hash: 3f32051c48f6e4c51e88ef166f8452c1
+    Hash: 8e73928d58048341e9b2fe1dbcc1debf
 HashAppended: 0
 ClassTypes:
 - Class: 1
@@ -19,9 +19,11 @@ ClassTypes:
   Script: {instanceID: 0}
 - Class: 48
   Script: {instanceID: 0}
-- Class: 119
+- Class: 198
+  Script: {instanceID: 0}
+- Class: 199
   Script: {instanceID: 0}
 Assets:
-- Assets/hithole/torpedoHoleProjector.prefab
-- Assets/hithole/holeProjector.prefab
+- Assets/TorpedoTrail/TorpedoTrail.prefab
+- Assets/TorpedoTrail/TorpedoHit.prefab
 Dependencies: []

@@ -5,11 +5,11 @@
 	<Name>WW2Naval</Name>
 	<Author>Chen, Yulin</Author> <!-- FIX: Insert your name here. -->
 	<!-- Major.Minor.Build -->
-	<Version>0.2.3</Version>
+	<Version>0.4.0</Version>
 	
 	<Description>
 	A mod for 1/5 scale WW2 naval battel.
-	Version 0.2.3
+	Version 0.4.0
 	</Description>
 
 	<Icon name="icon"/>
@@ -28,6 +28,7 @@
 		<!-- <Block path="SomeBlock.xml" /> -->
 		<Block path="NavalGun.xml" />
 		<Block path="Controller.xml" />
+		<Block path="TorpedoLauncher.xml" />
 	</Blocks>
 	
 	<!-- Any entities (level objects) your mod adds to the game.
@@ -71,6 +72,14 @@
 		<Texture name="ReloadAPOut Texture" path="Gun\loadCircleOut2.png"/>
 		<Texture name="ReloadAPIn Texture" path="Gun\loadCircleIn2.png"/>
 		<Texture name="LockIconScreen Texture" path="CentralController\aim.png"/>
+		<Mesh name="TorpedoLauncher Mesh" path="Torpedo\TorpedoLauncher.obj"/>
+		<Texture name="TorpedoLauncher Texture" path="Torpedo\TorpedoLauncher.png"/>
+		<Mesh name="Torpedo Mesh" path="Torpedo\Torpedo.obj"/>
+		<Texture name="Torpedo Texture" path="Torpedo\Torpedo.png"/>
+		<Mesh name="TorpedoFan1 Mesh" path="Torpedo\TorpedoFan1.obj"/>
+		<Texture name="TorpedoFan1 Texture" path="Torpedo\TorpedoFan1.png"/>
+		<Mesh name="TorpedoFan2 Mesh" path="Torpedo\TorpedoFan2.obj"/>
+		<Texture name="TorpedoFan2 Texture" path="Torpedo\TorpedoFan2.png"/>
 
 		<AudioClip name="GunShot Audio" path="Gun\fire.wav" />
 		<AudioClip name="GunExplo Audio" path="Gun\explo.wav" />
@@ -86,6 +95,8 @@
 		<AssetBundle name="Projector AB" path="projector.ab"/>
 		<AssetBundle name="WellEffect AB" path="welleffect.ab"/>
 		<AssetBundle name="FireControl AB" path="firecontrol.ab"/>
+		<AssetBundle name="Sea AB" path="sea.ab"/>
+		<AssetBundle name="TorpedoTrail AB" path="torpedotrail.ab"/>
 	</Resources>
 
 

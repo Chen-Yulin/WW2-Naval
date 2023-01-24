@@ -23,6 +23,8 @@ namespace WW2NavalAssembly
 			myMod.AddComponent<LockDataManager>();
 			myMod.AddComponent<BlockPoseReceiver>();
 			myMod.AddComponent<WellMsgReceicer>();
+			myMod.AddComponent<Sea>();
+			myMod.AddComponent<TorpedoMsgReceiver>();
 
 			Debug.Log("Hello, this is WW2 naval mod!");
 		}

@@ -6,6 +6,24 @@ using Modding;
 
 namespace WW2NavalAssembly
 {
+    public class Asset_TorpedoTrail
+    {
+        public GameObject TorpedoTrail;
+        public GameObject TorpedoHit;
+        public Asset_TorpedoTrail(ModAssetBundle modAssetBundle)
+        {
+            TorpedoTrail = modAssetBundle.LoadAsset<GameObject>("TorpedoTrail");
+            TorpedoHit = modAssetBundle.LoadAsset<GameObject>("TorpedoHit");
+        }
+    }
+    public class Asset_Sea
+    {
+        public GameObject Sea;
+        public Asset_Sea(ModAssetBundle modAssetBundle)
+        {
+            Sea = modAssetBundle.LoadAsset<GameObject>("Sea");
+        }
+    }
     public class Asset_FireControl
     {
         public GameObject FireControl;
@@ -27,9 +45,11 @@ namespace WW2NavalAssembly
     public class Asset_Projector
     {
         public GameObject BulletHole;
+        public GameObject TorpedoHole;
         public Asset_Projector(ModAssetBundle modAssetBundle)
         {
             BulletHole = modAssetBundle.LoadAsset<GameObject>("holeProjector");
+            TorpedoHole = modAssetBundle.LoadAsset<GameObject>("torpedoHoleProjector");
         }
     }
     public class Asset_Chimney
@@ -104,6 +124,8 @@ namespace WW2NavalAssembly
         public Asset_Projector Projector { get; protected set; }
         public Asset_WellEffect WellEffect { get; protected set; }
         public Asset_FireControl FireControl { get; protected set; }
+        public Asset_Sea Sea { get; protected set; }
+        public Asset_TorpedoTrail TorpedoTrail { get; protected set; }
 
         protected void Awake()
         {
@@ -116,6 +138,8 @@ namespace WW2NavalAssembly
             Projector = new Asset_Projector(ModResource.GetAssetBundle("Projector AB"));
             WellEffect = new Asset_WellEffect(ModResource.GetAssetBundle("WellEffect AB"));
             FireControl = new Asset_FireControl(ModResource.GetAssetBundle("FireControl AB"));
+            Sea = new Asset_Sea(ModResource.GetAssetBundle("Sea AB"));
+            TorpedoTrail = new Asset_TorpedoTrail(ModResource.GetAssetBundle("TorpedoTrail AB"));
         }
     }
 }

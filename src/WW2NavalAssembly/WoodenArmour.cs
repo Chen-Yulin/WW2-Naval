@@ -75,18 +75,36 @@ namespace WW2NavalAssembly
 
         public void SyncBulletHole()
         {
-            foreach (GunMsgReceiver.bulletHoleInfo info in GunMsgReceiver.Instance.BulletHoleInfo[myPlayerID][myGuid])
+            foreach (GunMsgReceiver.hitHoleInfo info in GunMsgReceiver.Instance.BulletHoleInfo[myPlayerID][myGuid])
             {
-                GameObject piercedhole = new GameObject("PiercedHole");
-                piercedhole.transform.SetParent(transform);
-                piercedhole.transform.localPosition = Vector3.zero;
-                piercedhole.transform.localRotation = Quaternion.identity;
-                piercedhole.transform.localScale = Vector3.one;
+                if (info.type == 0)
+                {
+                    GameObject piercedhole = new GameObject("PiercedHole");
+                    piercedhole.transform.SetParent(transform);
+                    piercedhole.transform.localPosition = Vector3.zero;
+                    piercedhole.transform.localRotation = Quaternion.identity;
+                    piercedhole.transform.localScale = Vector3.one;
 
-                PiercedHole PH = piercedhole.AddComponent<PiercedHole>();
-                PH.hittedCaliber = info.Caliber;
-                PH.position = info.position;
-                PH.forward = info.forward;
+                    PiercedHole PH = piercedhole.AddComponent<PiercedHole>();
+                    PH.hittedCaliber = info.Caliber;
+                    PH.position = info.position;
+                    PH.forward = info.forward;
+                }
+                else if(info.type == 1)
+                {
+                    GameObject piercedhole = new GameObject("TorpedodHole");
+                    piercedhole.transform.SetParent(transform);
+                    piercedhole.transform.localPosition = Vector3.zero;
+                    piercedhole.transform.localRotation = Quaternion.identity;
+                    piercedhole.transform.localScale = Vector3.one;
+
+                    PiercedHole PH = piercedhole.AddComponent<PiercedHole>();
+                    PH.hittedCaliber = info.Caliber;
+                    PH.position = info.position;
+                    PH.forward = info.forward;
+                    PH.type = 1;
+                }
+
             }
             GunMsgReceiver.Instance.BulletHoleInfo[myPlayerID][myGuid].Clear();
         }
@@ -120,7 +138,7 @@ namespace WW2NavalAssembly
                 {
                     if (StatMaster.isClient)
                     {
-                        GunMsgReceiver.Instance.BulletHoleInfo[myPlayerID].Add(myGuid, new List<GunMsgReceiver.bulletHoleInfo>());
+                        GunMsgReceiver.Instance.BulletHoleInfo[myPlayerID].Add(myGuid, new List<GunMsgReceiver.hitHoleInfo>());
                     }
                 }
                 catch { }

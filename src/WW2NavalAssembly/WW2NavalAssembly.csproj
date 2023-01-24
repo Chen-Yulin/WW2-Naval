@@ -65,7 +65,11 @@
     <Compile Include="Mod.cs" />
     <Compile Include="ModController.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Sea.cs" />
+    <Compile Include="TorpedoBehaviour.cs" />
+    <Compile Include="TorpedoLauncher.cs" />
     <Compile Include="WoodenArmour.cs" />
+    <Compile Include="WWIIUnderWater.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

@@ -47,18 +47,24 @@ namespace WW2NavalAssembly
                     {
                         if (block.gameObject.GetComponent(typeof(WoodenArmour)) == null)
                             block.gameObject.AddComponent(typeof(WoodenArmour));
+                        if (block.gameObject.GetComponent(typeof(WWIIUnderWater)) == null)
+                            block.gameObject.AddComponent(typeof(WWIIUnderWater));
                         break;
                     }
                 case (int)BlockType.DoubleWoodenBlock:
                     {
                         if (block.gameObject.GetComponent(typeof(WoodenArmour)) == null)
                             block.gameObject.AddComponent(typeof(WoodenArmour));
+                        if (block.gameObject.GetComponent(typeof(WWIIUnderWater)) == null)
+                            block.gameObject.AddComponent(typeof(WWIIUnderWater));
                         break;
                     }
                 case (int)BlockType.Log:
                     {
                         if (block.gameObject.GetComponent(typeof(WoodenArmour)) == null)
                             block.gameObject.AddComponent(typeof(WoodenArmour));
+                        if (block.gameObject.GetComponent(typeof(WWIIUnderWater)) == null)
+                            block.gameObject.AddComponent(typeof(WWIIUnderWater));
                         break;
                     }
                 case (int)BlockType.Rocket:

@@ -19,8 +19,9 @@ namespace WW2NavalAssembly
         public static MessageType FireMsg = ModNetworking.CreateMessageType(DataType.Integer, DataType.Integer, DataType.Vector3, DataType.Vector3);// playerID, guid, randomForce, forward
         public static MessageType ExploMsg = ModNetworking.CreateMessageType(DataType.Integer, DataType.Vector3, DataType.Single, DataType.Integer);//PlayerID, position, Caliber
         public static MessageType WaterHitMsg = ModNetworking.CreateMessageType(DataType.Integer, DataType.Vector3, DataType.Single);//PlayerID, position
-        public static MessageType BulletHoleMsg = ModNetworking.CreateMessageType
-                                                    (DataType.Integer, DataType.Integer, DataType.Single, DataType.Vector3, DataType.Vector3);//playerID, guid, caliber, position, forward
+        public static MessageType HitHoleMsg = ModNetworking.CreateMessageType
+                                                    (DataType.Integer, DataType.Integer, DataType.Single, DataType.Vector3, DataType.Vector3, DataType.Integer);
+                                                    //playerID, guid, caliber, position, forward, type(0=gun,1=torpedo)
         public static MessageType ReloadMsg = ModNetworking.CreateMessageType(DataType.Integer, DataType.Integer, DataType.Single);
 
         public class firePara
@@ -60,23 +61,25 @@ namespace WW2NavalAssembly
             }
         }
 
-        public class bulletHoleInfo
+        public class hitHoleInfo
         {
             public float Caliber;
             public Vector3 position;
             public Vector3 forward;
-            public bulletHoleInfo(float caliber, Vector3 position, Vector3 forward)
+            public int type;
+            public hitHoleInfo(float caliber, Vector3 position, Vector3 forward, int type)
             {
                 Caliber = caliber;
                 this.position = position;
                 this.forward = forward;
+                this.type = type;
             }
         }
 
         public Dictionary<int,firePara>[] Fire = new Dictionary<int,firePara>[16];
         public Queue<exploInfo>[] ExploInfo = new Queue<exploInfo>[16];
         public Queue<waterhitInfo>[] waterHitInfo = new Queue<waterhitInfo>[16];
-        public Dictionary<int, List<bulletHoleInfo>>[] BulletHoleInfo = new Dictionary<int, List<bulletHoleInfo>>[16];
+        public Dictionary<int, List<hitHoleInfo>>[] BulletHoleInfo = new Dictionary<int, List<hitHoleInfo>>[16];
         public Dictionary<int, bool>[] reloadTimeUpdated = new Dictionary<int,bool>[16];
         public Dictionary<int, float>[] reloadTime = new Dictionary<int, float>[16];
 
@@ -87,7 +90,7 @@ namespace WW2NavalAssembly
                 Fire[i] = new Dictionary<int, firePara>();
                 ExploInfo[i] = new Queue<exploInfo>();
                 waterHitInfo[i] = new Queue<waterhitInfo>();
-                BulletHoleInfo[i] = new Dictionary<int, List<bulletHoleInfo>>();
+                BulletHoleInfo[i] = new Dictionary<int, List<hitHoleInfo>>();
                 reloadTimeUpdated[i] = new Dictionary<int, bool>();
                 reloadTime[i] = new Dictionary<int, float>();
             }
@@ -108,13 +111,13 @@ namespace WW2NavalAssembly
         {
             waterHitInfo[(int)msg.GetData(0)].Enqueue(new waterhitInfo((Vector3)msg.GetData(1), (float)msg.GetData(2)));
         }
-        public void bulletHoleMsgReceiver(Message msg)
+        public void hitHoleMsgReceiver(Message msg)
         {
             if (!StatMaster.isClient)
             {
                 return;
             }
-            BulletHoleInfo[(int)msg.GetData(0)][(int)msg.GetData(1)].Add(new bulletHoleInfo((float)msg.GetData(2), (Vector3)msg.GetData(3), (Vector3)msg.GetData(4)));
+            BulletHoleInfo[(int)msg.GetData(0)][(int)msg.GetData(1)].Add(new hitHoleInfo((float)msg.GetData(2), (Vector3)msg.GetData(3), (Vector3)msg.GetData(4), (int)msg.GetData(5)));
         }
         public void reloadTimeMsgReceiver(Message msg)
         {
@@ -353,9 +356,9 @@ namespace WW2NavalAssembly
 
                     if (StatMaster.isMP)
                     {
-                        ModNetworking.SendToAll(GunMsgReceiver.BulletHoleMsg.CreateMessage( (int) hit.collider.transform.parent.GetComponent<BlockBehaviour>().ParentMachine.PlayerID,
+                        ModNetworking.SendToAll(GunMsgReceiver.HitHoleMsg.CreateMessage( (int) hit.collider.transform.parent.GetComponent<BlockBehaviour>().ParentMachine.PlayerID,
                                                                                             hit.collider.transform.parent.GetComponent<BlockBehaviour>().BuildingBlock.Guid.GetHashCode(),
-                                                                                            Caliber, PH.position, PH.forward));
+                                                                                            Caliber, PH.position, PH.forward, 0));
                     }
                 }
 
@@ -537,6 +540,8 @@ namespace WW2NavalAssembly
             }
             if (transform.position.y < 20f && !hasHitWater && myRigid.velocity.y<0)
             {
+                
+                myRigid.drag = 11f;
                 GameObject waterhit;
                 if (Caliber >= 283)
                 {
@@ -902,7 +907,7 @@ namespace WW2NavalAssembly
                     if (CannonType == 0) // for AP
                     {
                         APDetectCollisionHost();
-                        if (pericedBlock.Count == 0)
+                        if (pericedBlock.Count == 0 && ModController.Instance.showSea)
                         {
                             APDetectWaterHost();
                         }
@@ -918,7 +923,11 @@ namespace WW2NavalAssembly
                     else
                     {
                         HEDetectCollisionHost();
-                        HEDetectWaterHost();
+                        if (ModController.Instance.showSea)
+                        {
+                            HEDetectWaterHost();
+                        }
+                        
                     }
                     
                 }
@@ -1063,6 +1072,7 @@ namespace WW2NavalAssembly
             InitCannon();
             myGuid = BlockBehaviour.BuildingBlock.Guid.GetHashCode();
             reloadTime = 0.4f * Mathf.Sqrt(Caliber.Value) - 3;
+            currentReloadTime = reloadTime;
             Grouper.Instance.AddGun(myPlayerID, GunGroup.Value, myGuid, gameObject);
             if (!FireControl.isDefaultValue)
             {

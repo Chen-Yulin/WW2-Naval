@@ -459,7 +459,7 @@ namespace WW2NavalAssembly
         }
         public void SyncBulletHole()
         {
-            foreach (GunMsgReceiver.bulletHoleInfo info in GunMsgReceiver.Instance.BulletHoleInfo[myPlayerID][myGuid])
+            foreach (GunMsgReceiver.hitHoleInfo info in GunMsgReceiver.Instance.BulletHoleInfo[myPlayerID][myGuid])
             {
                 GameObject piercedhole = new GameObject("PiercedHole");
                 piercedhole.transform.SetParent(transform);
@@ -504,7 +504,7 @@ namespace WW2NavalAssembly
                 {
                     if (StatMaster.isClient)
                     {
-                        GunMsgReceiver.Instance.BulletHoleInfo[myPlayerID].Add(myGuid, new List<GunMsgReceiver.bulletHoleInfo>());
+                        GunMsgReceiver.Instance.BulletHoleInfo[myPlayerID].Add(myGuid, new List<GunMsgReceiver.hitHoleInfo>());
                     }
                 }
                 catch { }

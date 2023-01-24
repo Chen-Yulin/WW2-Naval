@@ -19,6 +19,8 @@ namespace WW2NavalAssembly
         public float waterIn = 0;
         public int DCTime = 0;
         public int DCTimeNeeded;
+        public int type = 0;
+        public float minWaterIn;
 
         public GameObject HoleVis;
 
@@ -32,6 +34,11 @@ namespace WW2NavalAssembly
         }
         public void Start()
         {
+            if (type == 1)
+            {
+                minWaterIn = 300 * hittedCaliber;
+                waterIn = minWaterIn;
+            }
             try
             {
                 sqrCaliber = hittedCaliber * hittedCaliber;
@@ -65,11 +72,19 @@ namespace WW2NavalAssembly
             else if (DCTime >= DCTimeNeeded && HoleVis.transform.position.y > 15)
             {
                 waterIn -= 1000;
-                if (waterIn < 0)
+                if (type == 0)
                 {
-                    waterIn = 0;
-                    Destroy(transform.gameObject);
+                    if (waterIn < 0)
+                    {
+                        waterIn = 0;
+                        Destroy(transform.gameObject);
+                    }
                 }
+                else if (type == 1)
+                {
+                    waterIn = Mathf.Clamp(waterIn, minWaterIn, float.MaxValue);
+                }
+
             }
 
             if (HoleVis.transform.position.y < 20 && DCTime < DCTimeNeeded)
@@ -80,8 +95,15 @@ namespace WW2NavalAssembly
             {
                 rigid.velocity = new Vector3(rigid.velocity.x, Mathf.Clamp(rigid.velocity.y,-0.5f,0.5f), rigid.velocity.z);
             }
-
-            rigid.AddForce(-Vector3.up * Mathf.Clamp(waterIn / 200,0, Mathf.Clamp(hittedArmour.thickness,40,650)*20));
+            if (type == 0)
+            {
+                rigid.AddForce(-Vector3.up * Mathf.Clamp(waterIn / 200, 0, Mathf.Clamp(hittedArmour.thickness, 40, 650) * 30));
+            }
+            else if (type == 1)
+            {
+                rigid.AddForce(-Vector3.up *waterIn / 20);
+            }
+            
 
         }
     }
@@ -93,6 +115,7 @@ namespace WW2NavalAssembly
         public Vector3 position;
         public int DCTime = 0;
         public int DCTimeNeeded;
+        public int type = 0;
 
         public GameObject HoleProjector;
         public Projector HP;
@@ -105,13 +128,29 @@ namespace WW2NavalAssembly
         public void Start()
         {
             sqrCaliber = hittedCaliber * hittedCaliber;
-            HoleProjector = Instantiate(AssetManager.Instance.Projector.BulletHole);
+            if (type == 0)
+            {
+                HoleProjector = Instantiate(AssetManager.Instance.Projector.BulletHole);
+            }
+            else if (type == 1)
+            {
+                HoleProjector = Instantiate(AssetManager.Instance.Projector.TorpedoHole);
+            }
+            
             HoleProjector.transform.SetParent(transform);
             HoleProjector.transform.localPosition = position;
             HoleProjector.transform.rotation = Quaternion.LookRotation(forward);
             HoleProjector.transform.localScale = Vector3.one;
             HP = HoleProjector.GetComponent<Projector>();
-            HP.orthographicSize = hittedCaliber / 1400;
+            if (type == 0)
+            {
+                HP.orthographicSize = hittedCaliber / 1400;
+            }
+            else if (type == 1)
+            {
+                HP.orthographicSize = hittedCaliber / 400;
+            }
+            
             HP.farClipPlane = 0.01f;
             HP.nearClipPlane = 0;
 
@@ -127,14 +166,22 @@ namespace WW2NavalAssembly
         }
         public void FixedUpdate()
         {
-            if (DCTime < DCTimeNeeded && HoleProjector.transform.position.y < 20)
+            if (type == 0)
             {
-                DCTime++;
+                if (DCTime < DCTimeNeeded && HoleProjector.transform.position.y < 20)
+                {
+                    DCTime++;
+                }
+                else if (DCTime >= DCTimeNeeded)
+                {
+                    Destroy(transform.gameObject);
+                }
             }
-            else if (DCTime >= DCTimeNeeded)
+            else
             {
-                Destroy(transform.gameObject);
+
             }
+            
         }
     }
 }

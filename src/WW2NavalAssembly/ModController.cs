@@ -18,6 +18,7 @@ namespace WW2NavalAssembly
         private readonly int windowID = ModUtility.GetWindowId();
         public bool windowHidden = false;
         public bool showArmour = false;
+        public bool showSea = false;
 
         public int state;
 
@@ -59,6 +60,7 @@ namespace WW2NavalAssembly
         private void MACWindow(int windoID)
         {
             showArmour = GUILayout.Toggle(showArmour, "Show Armour Layout");
+            showSea = GUILayout.Toggle(showSea, "Sea Toggle");
             GUILayout.Label("Press Ctrl+W to hide");
 
             GUI.DragWindow();
