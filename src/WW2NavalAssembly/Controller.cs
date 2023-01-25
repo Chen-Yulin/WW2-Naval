@@ -36,7 +36,7 @@ namespace WW2NavalAssembly
             valid = false;
         }
     }
-    public class LockDataManager : SingleInstance<LockDataManager>
+    public class ControllerDataManager : SingleInstance<ControllerDataManager>
     {
         public override string Name { get; } = "LockDataManager";
         public static MessageType LockMsg = ModNetworking.CreateMessageType(DataType.Integer, DataType.Vector3, DataType.Vector3, DataType.Boolean);
@@ -48,8 +48,9 @@ namespace WW2NavalAssembly
 
         public int[] SpotNum = new int[16];
         public Vector3[] ControllerVel = new Vector3[16];
+        public Vector3[] ControllerPos = new Vector3[16];
         
-        public LockDataManager()
+        public ControllerDataManager()
         {
             for (int i = 0; i < 16; i++)
             {
@@ -101,6 +102,8 @@ namespace WW2NavalAssembly
         public Dictionary<int, GameObject> OrienAimIcon = new Dictionary<int, GameObject>();
         public Dictionary<float, GameObject> PitchPredIcon = new Dictionary<float, GameObject>();
         public Dictionary<float, GameObject> OrienPredIcon = new Dictionary<float, GameObject>();
+        public Dictionary<int, GameObject> TorpedoPreIcon = new Dictionary<int, GameObject>();
+        public Dictionary<int, GameObject> TorpedoAimIcon = new Dictionary<int, GameObject>();
         public Dictionary<float, FCResult> FCResults = new Dictionary<float, FCResult>();
 
         public bool Locking = false;
@@ -193,15 +196,15 @@ namespace WW2NavalAssembly
             }
 
         }
-        public FCResult CalculateFCPara(Vector2 targetPosition, Vector2 velocity, float caliber)
+        public FCResult CalculateGunFCPara(Vector2 targetPosition, Vector2 velocity, float caliber)
         {
             Vector2 myPosition = new Vector2(transform.position.x, transform.position.z);
             float dist = (targetPosition - myPosition).magnitude;
-            Dist2PitchResult pitchRes = CalculatePitchFromDist(dist, caliber);
+            Dist2PitchResult pitchRes = CalculateGunPitchFromDist(dist, caliber);
             if (pitchRes.hasResult)
             {
                 dist = (targetPosition + velocity*pitchRes.time - myPosition).magnitude;
-                pitchRes = CalculatePitchFromDist(dist, caliber);
+                pitchRes = CalculateGunPitchFromDist(dist, caliber);
                 if (pitchRes.hasResult) // valid result
                 {
                     float Orien = MathTool.Instance.SignedAngle(GetForward(), targetPosition + velocity * pitchRes.time - myPosition);
@@ -217,7 +220,21 @@ namespace WW2NavalAssembly
                 return new FCResult(MathTool.Instance.SignedAngle(GetForward(), targetPosition - myPosition));
             }
         }
-        public Dist2PitchResult CalculatePitchFromDist(float dist, float caliber)
+
+        public Vector2 CalculateTorpedoFCPara(Vector2 targetPosition, Vector2 velocity, int type)
+        {
+            float tSpeed = (type == 0 ? 11 : 18);
+            Vector2 myPosition = new Vector2(transform.position.x, transform.position.z);
+            Vector2 predictPosition = targetPosition;
+            float esTime;
+            for (int i = 0; i < 10; i++)
+            {
+                esTime = (predictPosition - myPosition).magnitude / tSpeed;
+                predictPosition = targetPosition + esTime * velocity;
+            }
+            return (predictPosition - myPosition);
+        }
+        public Dist2PitchResult CalculateGunPitchFromDist(float dist, float caliber)
         {
             //Debug.Log("Start Iterating");
             float initialSpeed = Mathf.Sqrt(caliber + 100) * 8.5f;
@@ -266,9 +283,82 @@ namespace WW2NavalAssembly
             FireControlPanel.transform.localScale = height / 980 * Vector3.one * FCPanelSize.Value;
             FireControlPanel.transform.position = new Vector3(width - FireControlPanel.transform.localScale.x * 150, FireControlPanel.transform.localScale.y * 150, 0);
             FireControlPanel.SetActive(true);
-        }
+        }// adjust size and visiable
         public void InitGunFireControl()
         {
+            Debug.Log("InitTorpedoFireControl");
+            
+            GameObject newTorpedoPredIcon0 = (GameObject)Instantiate(FCOrien.transform.Find("TorPredPrefab").gameObject, FCOrien.transform);
+            newTorpedoPredIcon0.name = "TorPred 0";
+            newTorpedoPredIcon0.SetActive(false);
+            if (TorpedoPreIcon.ContainsKey(0))
+            {
+                TorpedoPreIcon[0] = newTorpedoPredIcon0;
+            }
+            else
+            {
+                TorpedoPreIcon.Add(0, newTorpedoPredIcon0);
+            }
+            
+            GameObject newTorpedoPredIcon1 = (GameObject)Instantiate(FCOrien.transform.Find("TorPredPrefab").gameObject, FCOrien.transform);
+            newTorpedoPredIcon1.transform.localScale = new Vector3(1, 0.6f, 1);
+            newTorpedoPredIcon1.name = "TorPred 1";
+            newTorpedoPredIcon1.SetActive(false);
+            if (TorpedoPreIcon.ContainsKey(1))
+            {
+                TorpedoPreIcon[1] = newTorpedoPredIcon1;
+            }
+            else
+            {
+                TorpedoPreIcon.Add(1, newTorpedoPredIcon1);
+            }
+
+
+            foreach (var typeGroup in FireControlManager.Instance.Torpedos[myPlayerID])
+            {
+                Debug.Log("Type" + typeGroup.Key.ToString());
+                // determine whether the torpedoTypeGroup is valid
+                {
+                    if (typeGroup.Value.Count == 0)
+                    {
+                        continue;
+                    }
+
+                    int validTorpedo = 0;
+                    foreach (var torpedo in typeGroup.Value)
+                    {
+                        try
+                        {
+                            if (torpedo.Value.GetComponent<TorpedoLauncher>().myPlayerID == myPlayerID)
+                            {
+                                validTorpedo++;
+                            }
+                        }
+                        catch { }
+                    }
+                    if (validTorpedo == 0)
+                    {
+                        continue;
+                    }
+                }
+                foreach (var TorpedoPair in typeGroup.Value)
+                {
+                    Debug.Log(TorpedoPair.Key);
+                    GameObject newOrienIcon = (GameObject)Instantiate(FCOrien.transform.Find("TorAimPrefab").gameObject, FCOrien.transform);
+                    newOrienIcon.name = "TorAim " + typeGroup.Key;
+                    newOrienIcon.SetActive(true);
+                    if (TorpedoPreIcon.ContainsKey(TorpedoPair.Key))
+                    {
+                        TorpedoAimIcon[TorpedoPair.Key] = newOrienIcon;
+                    }
+                    else
+                    {
+                        TorpedoAimIcon.Add(TorpedoPair.Key, newOrienIcon); // guid, icon
+                    }
+                    
+                }
+            }
+
             Debug.Log("InitGunFireControl");
             foreach (var calibergroup in FireControlManager.Instance.Guns[myPlayerID])
             {
@@ -341,80 +431,146 @@ namespace WW2NavalAssembly
             {
                 FCCanvas.SetActive(true);
             }
-            if (LockDataManager.Instance.lockData[myPlayerID].valid)
+            // Gun
             {
-                Vector2 targetPos = new Vector2(LockDataManager.Instance.lockData[myPlayerID].position.x, LockDataManager.Instance.lockData[myPlayerID].position.z) + RandomError;
-                Vector2 targetVel = new Vector2(LockDataManager.Instance.lockData[myPlayerID].velocity.x, LockDataManager.Instance.lockData[myPlayerID].velocity.z);
-                foreach (var fcRes in FCResults)
+                if (ControllerDataManager.Instance.lockData[myPlayerID].valid)
                 {
-                    FCResult res = CalculateFCPara(targetPos, targetVel, fcRes.Key);
-                    fcRes.Value.Set(res.Orien, res.Pitch, res.hasRes, res.predPosition);
-                }
-                foreach (var PitchPred in PitchPredIcon)
-                {
-                    PitchPred.Value.SetActive(true);
-                    if (FCResults[PitchPred.Key].hasRes)
+                    Vector2 targetPos = new Vector2(ControllerDataManager.Instance.lockData[myPlayerID].position.x, ControllerDataManager.Instance.lockData[myPlayerID].position.z) + RandomError;
+                    Vector2 targetVel = new Vector2(ControllerDataManager.Instance.lockData[myPlayerID].velocity.x, ControllerDataManager.Instance.lockData[myPlayerID].velocity.z);
+                    foreach (var fcRes in FCResults)
                     {
-                        PitchPred.Value.transform.localEulerAngles = new Vector3(0, 0, -FCResults[PitchPred.Key].Pitch);
+                        FCResult res = CalculateGunFCPara(targetPos, targetVel, fcRes.Key);
+                        fcRes.Value.Set(res.Orien, res.Pitch, res.hasRes, res.predPosition);
                     }
-                    else
+                    foreach (var PitchPred in PitchPredIcon)
                     {
-                        PitchPred.Value.transform.localEulerAngles = new Vector3(0, 0, -44);
-                    }
-                    
-                    PitchPred.Value.transform.Find("PredIcon").transform.localPosition = new Vector3(-PitchPred.Key / 5 - 50, 0, 0);
-                }
-                foreach (var OrienPred in OrienPredIcon)
-                {
-                    OrienPred.Value.SetActive(true);
-                    OrienPred.Value.transform.localEulerAngles = new Vector3(0, 0, FCResults[OrienPred.Key].Orien - 90);
-                    
-                    OrienPred.Value.transform.Find("PredIcon").transform.localPosition = new Vector3(-OrienPred.Key / 10 - 50, 0, 0);
-                }
-            }
-            else
-            {
-                foreach (var PitchPred in PitchPredIcon)
-                {
-                    PitchPred.Value.SetActive(false);
-                }
-                foreach (var OrienPred in OrienPredIcon)
-                {
-                    OrienPred.Value.SetActive(false);
-                }
-            }
-            
-            foreach (var GunIcon in PitchAimIcon)
-            {
-                try
-                {
+                        PitchPred.Value.SetActive(true);
+                        if (FCResults[PitchPred.Key].hasRes)
+                        {
+                            PitchPred.Value.transform.localEulerAngles = new Vector3(0, 0, -FCResults[PitchPred.Key].Pitch);
+                        }
+                        else
+                        {
+                            PitchPred.Value.transform.localEulerAngles = new Vector3(0, 0, -44);
+                        }
 
-                    Gun tmpGun = FireControlManager.Instance.GetGun(myPlayerID, GunIcon.Key).GetComponent<Gun>();
-                    GunIcon.Value.transform.eulerAngles = new Vector3(0, 0, -tmpGun.GetFCPitchPara());
-                    GunIcon.Value.transform.Find("GunIcon").transform.localPosition = new Vector3(-tmpGun.Caliber.Value / 5 - 50, 0, 0);
+                        PitchPred.Value.transform.Find("PredIcon").transform.localPosition = new Vector3(-PitchPred.Key / 5 - 50, 0, 0);
+                    }
+                    foreach (var OrienPred in OrienPredIcon)
+                    {
+                        OrienPred.Value.SetActive(true);
+                        OrienPred.Value.transform.localEulerAngles = new Vector3(0, 0, FCResults[OrienPred.Key].Orien - 90);
+
+                        OrienPred.Value.transform.Find("PredIcon").transform.localPosition = new Vector3(-OrienPred.Key / 10 - 50, 0, 0);
+                    }
                 }
-                catch { }
-            }
-            foreach (var GunIcon in OrienAimIcon)
-            {
-                try
+                else
                 {
-                    Gun tmpGun = FireControlManager.Instance.GetGun(myPlayerID, GunIcon.Key).GetComponent<Gun>();
-                    float angle;
-                    if (LockDataManager.Instance.lockData[myPlayerID].valid && FCResults[tmpGun.Caliber.Value].hasRes)
+                    foreach (var PitchPred in PitchPredIcon)
                     {
-                        angle = MathTool.Instance.SignedAngle(GetForward(), tmpGun.GetFCOrienPara()) +
-                                FCResults[tmpGun.Caliber.Value].Orien -
-                                FCResults[tmpGun.Caliber.Value].getTurrentAngle(GetForward(), new Vector2(tmpGun.transform.position.x, tmpGun.transform.position.z));
+                        PitchPred.Value.SetActive(false);
                     }
-                    else
+                    foreach (var OrienPred in OrienPredIcon)
                     {
-                        angle = MathTool.Instance.SignedAngle(GetForward(), tmpGun.GetFCOrienPara());
+                        OrienPred.Value.SetActive(false);
                     }
-                    GunIcon.Value.transform.localEulerAngles = new Vector3(0, 0, angle - 90);
-                    GunIcon.Value.transform.Find("GunIcon").transform.localPosition = new Vector3(-tmpGun.Caliber.Value / 10 - 50, 0, 0);
                 }
-                catch { }
+
+                foreach (var GunIcon in PitchAimIcon)
+                {
+                    try
+                    {
+                        Gun tmpGun = FireControlManager.Instance.GetGun(myPlayerID, GunIcon.Key).GetComponent<Gun>();
+                        GunIcon.Value.transform.eulerAngles = new Vector3(0, 0, -tmpGun.GetFCPitchPara());
+                        GunIcon.Value.transform.Find("GunIcon").transform.localPosition = new Vector3(-tmpGun.Caliber.Value / 5 - 50, 0, 0);
+                    }
+                    catch { }
+                }
+                foreach (var GunIcon in OrienAimIcon)
+                {
+                    try
+                    {
+                        Gun tmpGun = FireControlManager.Instance.GetGun(myPlayerID, GunIcon.Key).GetComponent<Gun>();
+                        float angle;
+                        if (ControllerDataManager.Instance.lockData[myPlayerID].valid && FCResults[tmpGun.Caliber.Value].hasRes)
+                        {
+                            angle = MathTool.Instance.SignedAngle(GetForward(), tmpGun.GetFCOrienPara()) +
+                                    FCResults[tmpGun.Caliber.Value].Orien -
+                                    FCResults[tmpGun.Caliber.Value].getTurrentAngle(GetForward(), new Vector2(tmpGun.transform.position.x, tmpGun.transform.position.z));
+                        }
+                        else
+                        {
+                            angle = MathTool.Instance.SignedAngle(GetForward(), tmpGun.GetFCOrienPara());
+                        }
+                        GunIcon.Value.transform.localEulerAngles = new Vector3(0, 0, angle - 90);
+                        GunIcon.Value.transform.Find("GunIcon").transform.localPosition = new Vector3(-tmpGun.Caliber.Value / 10 - 50, 0, 0);
+                    }
+                    catch { }
+                }
+            }
+            // torpedo
+            {
+                // Update Aim
+                foreach (var TorIcon in TorpedoAimIcon)
+                {
+                    try
+                    {
+                        TorpedoLauncher tmpTor = FireControlManager.Instance.GetTorpedo(myPlayerID, TorIcon.Key).GetComponent<TorpedoLauncher>();
+                        float angle;
+                        angle = MathTool.Instance.SignedAngle(GetForward(), tmpTor.GetFCOrienPara());
+                        TorIcon.Value.transform.eulerAngles = new Vector3(0, 0, angle);
+                        TorIcon.Value.transform.localScale = new Vector3(1, (tmpTor.TorpedoType == 0 ? 1 : 0.6f), 1);
+                    }
+                    catch { }
+                }
+                //Update Prediction
+                if (ControllerDataManager.Instance.lockData[myPlayerID].valid)
+                {
+                    foreach (var typeGroup in FireControlManager.Instance.Torpedos[myPlayerID])
+                    {
+                        
+                        // determine whether the torpedoTypeGroup is valid
+                        {
+                            if (typeGroup.Value.Count == 0)
+                            {
+                                TorpedoPreIcon[typeGroup.Key].SetActive(false);
+                                continue;
+                            }
+
+                            int validTorpedo = 0;
+                            foreach (var torpedo in typeGroup.Value)
+                            {
+                                try
+                                {
+                                    if (torpedo.Value.GetComponent<TorpedoLauncher>().myPlayerID == myPlayerID)
+                                    {
+                                        validTorpedo++;
+                                    }
+                                }
+                                catch { }
+                            }
+                            if (validTorpedo == 0)
+                            {
+                                TorpedoPreIcon[typeGroup.Key].SetActive(false);
+                                continue;
+                            }
+                        }
+                        //Debug.Log(typeGroup.Value.Count + " in " + typeGroup.Key);
+                        TorpedoPreIcon[typeGroup.Key].SetActive(true);
+                        Vector2 preDirection = CalculateTorpedoFCPara(  new Vector2(ControllerDataManager.Instance.lockData[myPlayerID].position.x, ControllerDataManager.Instance.lockData[myPlayerID].position.z),
+                                                                        new Vector2(ControllerDataManager.Instance.lockData[myPlayerID].velocity.x, ControllerDataManager.Instance.lockData[myPlayerID].velocity.z),
+                                                                        typeGroup.Key);
+                        float angle = MathTool.Instance.SignedAngle(GetForward(), preDirection);
+                        TorpedoPreIcon[typeGroup.Key].transform.eulerAngles = new Vector3(0, 0, angle);
+                    }
+                }
+                else
+                {
+                    foreach(var TorPreIcon in TorpedoPreIcon)
+                    {
+                        TorPreIcon.Value.SetActive(false);
+                    }
+                }
                 
             }
         }
@@ -436,7 +592,7 @@ namespace WW2NavalAssembly
             {
                 if (StatMaster.isClient)
                 {
-                    myVelocity = Vector3.Lerp(myVelocity, LockDataManager.Instance.ControllerVel[myPlayerID], 0.2f);
+                    myVelocity = Vector3.Lerp(myVelocity, ControllerDataManager.Instance.ControllerVel[myPlayerID], 0.2f);
                 }
                 else
                 {
@@ -477,29 +633,29 @@ namespace WW2NavalAssembly
                 {
                     if (PlayerData.localPlayer.networkId == myPlayerID)
                     {
-                        SpotModifier *= Mathf.Pow(0.93f, LockDataManager.Instance.SpotNum[myPlayerID]);
-                        LockDataManager.Instance.SpotNum[myPlayerID] = 0;
+                        SpotModifier *= Mathf.Pow(0.93f, ControllerDataManager.Instance.SpotNum[myPlayerID]);
+                        ControllerDataManager.Instance.SpotNum[myPlayerID] = 0;
                     }
                 }
                 else
                 {
                     if (myPlayerID == 0)
                     {
-                        SpotModifier *= Mathf.Pow(0.93f, LockDataManager.Instance.SpotNum[myPlayerID]);
-                        LockDataManager.Instance.SpotNum[myPlayerID] = 0;
+                        SpotModifier *= Mathf.Pow(0.93f, ControllerDataManager.Instance.SpotNum[myPlayerID]);
+                        ControllerDataManager.Instance.SpotNum[myPlayerID] = 0;
                     }
                 }
             }
             else
             {
-                SpotModifier *= Mathf.Pow(0.93f, LockDataManager.Instance.SpotNum[myPlayerID]);
-                LockDataManager.Instance.SpotNum[myPlayerID] = 0;
+                SpotModifier *= Mathf.Pow(0.93f, ControllerDataManager.Instance.SpotNum[myPlayerID]);
+                ControllerDataManager.Instance.SpotNum[myPlayerID] = 0;
             }
             
         }
         public void UpdateClosingModifier()
         {
-            ClosingModifier = 1 + (LockDataManager.Instance.lockData[myPlayerID].velocity - myVelocity).magnitude/10;
+            ClosingModifier = 1 + (ControllerDataManager.Instance.lockData[myPlayerID].velocity - myVelocity).magnitude/10;
         }
         public void ResetBaseRandomError()
         {
@@ -516,7 +672,7 @@ namespace WW2NavalAssembly
             UpdateClosingModifier();
             UpdateSpotModifier();// update soptModifier
             //modify baseError 
-            Vector3 OrienVector3 = transform.position - LockDataManager.Instance.lockData[myPlayerID].position;
+            Vector3 OrienVector3 = transform.position - ControllerDataManager.Instance.lockData[myPlayerID].position;
             Vector2 OrienVector2 = new Vector2(OrienVector3.x, OrienVector3.z);
             //Debug.Log(OrienVector2 / 10);
             float FakeRandom = Mathf.Sign(BaseRandomError.x) * (Mathf.Abs(BaseRandomError.x) % 0.01f) * 50;
@@ -572,6 +728,9 @@ namespace WW2NavalAssembly
                     OrienAimIcon.Clear();
                     PitchPredIcon.Clear();
                     OrienPredIcon.Clear();
+                    TorpedoAimIcon.Clear();
+                    TorpedoPreIcon.Clear();
+                    Debug.Log("Clear Finish");
                 }
             }
             catch { }
@@ -583,23 +742,22 @@ namespace WW2NavalAssembly
                 if (PlayerData.localPlayer.networkId != myPlayerID)
                 {
                     Locking = false;
-                    ModNetworking.SendToAll(LockDataManager.LockMsg.CreateMessage(myPlayerID, Vector3.zero, Vector3.zero, false));
+                    ModNetworking.SendToAll(ControllerDataManager.LockMsg.CreateMessage(myPlayerID, Vector3.zero, Vector3.zero, false));
                 }
                 else
                 {
                     Locking = false;
-                    LockDataManager.Instance.lockData[myPlayerID].valid = false;
+                    ControllerDataManager.Instance.lockData[myPlayerID].valid = false;
                 }
             }
             else
             {
                 Locking = false;
-                LockDataManager.Instance.lockData[myPlayerID].valid = false;
+                ControllerDataManager.Instance.lockData[myPlayerID].valid = false;
             }
         }
         public void OnDestroy()
         {
-
             try
             {
                 if (!StatMaster.isMP || PlayerData.localPlayer.networkId == myPlayerID)
@@ -617,6 +775,9 @@ namespace WW2NavalAssembly
                     OrienAimIcon.Clear();
                     PitchPredIcon.Clear();
                     OrienPredIcon.Clear();
+                    TorpedoAimIcon.Clear();
+                    TorpedoPreIcon.Clear();
+                    Debug.Log("Clear Finish");
                 }
             }
             catch { }
@@ -626,22 +787,23 @@ namespace WW2NavalAssembly
                 if (PlayerData.localPlayer.networkId != myPlayerID)
                 {
                     Locking = false;
-                    ModNetworking.SendToAll(LockDataManager.LockMsg.CreateMessage(myPlayerID, Vector3.zero, Vector3.zero, false));
+                    ModNetworking.SendToAll(ControllerDataManager.LockMsg.CreateMessage(myPlayerID, Vector3.zero, Vector3.zero, false));
                 }
                 else
                 {
                     Locking = false;
-                    LockDataManager.Instance.lockData[myPlayerID].valid = false;
+                    ControllerDataManager.Instance.lockData[myPlayerID].valid = false;
                 }
             }
             else
             {
                 Locking = false;
-                LockDataManager.Instance.lockData[myPlayerID].valid = false;
+                ControllerDataManager.Instance.lockData[myPlayerID].valid = false;
             }
         }
         public override void SimulateFixedUpdateAlways()
         {
+            ControllerDataManager.Instance.ControllerPos[myPlayerID] = transform.position;
             UpdateVelocity();
             if (!StatMaster.isMP || PlayerData.localPlayer.networkId == myPlayerID)
             {
@@ -675,17 +837,17 @@ namespace WW2NavalAssembly
                     if (myPlayerID == 0)
                     {
                         ResetBaseRandomError();
-                        LockDataManager.Instance.cameraData[myPlayerID].valid = true;
-                        LockDataManager.Instance.cameraData[myPlayerID].position = Camera.main.ScreenPointToRay(Input.mousePosition).origin;
-                        LockDataManager.Instance.cameraData[myPlayerID].forward = Camera.main.ScreenPointToRay(Input.mousePosition).direction;
+                        ControllerDataManager.Instance.cameraData[myPlayerID].valid = true;
+                        ControllerDataManager.Instance.cameraData[myPlayerID].position = Camera.main.ScreenPointToRay(Input.mousePosition).origin;
+                        ControllerDataManager.Instance.cameraData[myPlayerID].forward = Camera.main.ScreenPointToRay(Input.mousePosition).direction;
                     }
                 }
                 else
                 {
                     ResetBaseRandomError();
-                    LockDataManager.Instance.cameraData[myPlayerID].valid = true;
-                    LockDataManager.Instance.cameraData[myPlayerID].position = Camera.main.ScreenPointToRay(Input.mousePosition).origin;
-                    LockDataManager.Instance.cameraData[myPlayerID].forward = Camera.main.ScreenPointToRay(Input.mousePosition).direction;
+                    ControllerDataManager.Instance.cameraData[myPlayerID].valid = true;
+                    ControllerDataManager.Instance.cameraData[myPlayerID].position = Camera.main.ScreenPointToRay(Input.mousePosition).origin;
+                    ControllerDataManager.Instance.cameraData[myPlayerID].forward = Camera.main.ScreenPointToRay(Input.mousePosition).direction;
                 }
             }
         }
@@ -697,7 +859,7 @@ namespace WW2NavalAssembly
                 {
                     ResetBaseRandomError();
                     Debug.Log("SendCamera");
-                    ModNetworking.SendToAll(LockDataManager.CameraMsg.CreateMessage(myPlayerID, Camera.main.ScreenPointToRay(Input.mousePosition).origin,
+                    ModNetworking.SendToAll(ControllerDataManager.CameraMsg.CreateMessage(myPlayerID, Camera.main.ScreenPointToRay(Input.mousePosition).origin,
                                                                                                 Camera.main.ScreenPointToRay(Input.mousePosition).direction));
                 }
             }
@@ -708,14 +870,14 @@ namespace WW2NavalAssembly
             {
                 if (ModController.Instance.state % 10 == mySeed)
                 {
-                    ModNetworking.SendToAll(LockDataManager.ControllerVelMsg.CreateMessage(myPlayerID, gameObject.GetComponent<Rigidbody>().velocity));
+                    ModNetworking.SendToAll(ControllerDataManager.ControllerVelMsg.CreateMessage(myPlayerID, gameObject.GetComponent<Rigidbody>().velocity));
                 }
             }
-            if (LockDataManager.Instance.cameraData[myPlayerID].valid)
+            if (ControllerDataManager.Instance.cameraData[myPlayerID].valid)
             {
                 
-                LockDataManager.Instance.cameraData[myPlayerID].valid = false;
-                Ray cameraRay = new Ray(LockDataManager.Instance.cameraData[myPlayerID].position, LockDataManager.Instance.cameraData[myPlayerID].forward);
+                ControllerDataManager.Instance.cameraData[myPlayerID].valid = false;
+                Ray cameraRay = new Ray(ControllerDataManager.Instance.cameraData[myPlayerID].position, ControllerDataManager.Instance.cameraData[myPlayerID].forward);
                 RaycastHit hit;
                 if (Physics.Raycast(cameraRay,out hit,3000))
                 {
@@ -737,25 +899,25 @@ namespace WW2NavalAssembly
                     {
                         try
                         {
-                            ModNetworking.SendToAll(LockDataManager.LockMsg.CreateMessage(myPlayerID, lockingObject.transform.position, lockingObject.GetComponent<Rigidbody>().velocity, true));
+                            ModNetworking.SendToAll(ControllerDataManager.LockMsg.CreateMessage(myPlayerID, lockingObject.transform.position, lockingObject.GetComponent<Rigidbody>().velocity, true));
                         }
                         catch
                         {
                             Locking = false;
-                            ModNetworking.SendToAll(LockDataManager.LockMsg.CreateMessage(myPlayerID, Vector3.zero, Vector3.zero, false));
+                            ModNetworking.SendToAll(ControllerDataManager.LockMsg.CreateMessage(myPlayerID, Vector3.zero, Vector3.zero, false));
                         }
                     }
                     else
                     {
                         try
                         {
-                            LockDataManager.Instance.lockData[myPlayerID].valid = true;
-                            LockDataManager.Instance.lockData[myPlayerID].position = lockingObject.transform.position;
-                            LockDataManager.Instance.lockData[myPlayerID].velocity = lockingObject.GetComponent<Rigidbody>().velocity;
+                            ControllerDataManager.Instance.lockData[myPlayerID].valid = true;
+                            ControllerDataManager.Instance.lockData[myPlayerID].position = lockingObject.transform.position;
+                            ControllerDataManager.Instance.lockData[myPlayerID].velocity = lockingObject.GetComponent<Rigidbody>().velocity;
                         }
                         catch {
                             Locking = false;
-                            LockDataManager.Instance.lockData[myPlayerID].valid = false;
+                            ControllerDataManager.Instance.lockData[myPlayerID].valid = false;
                         }
                     }
                 }
@@ -763,21 +925,21 @@ namespace WW2NavalAssembly
                 {
                     try
                     {
-                        LockDataManager.Instance.lockData[myPlayerID].valid = true;
-                        LockDataManager.Instance.lockData[myPlayerID].position = lockingObject.transform.position;
-                        LockDataManager.Instance.lockData[myPlayerID].velocity = lockingObject.GetComponent<Rigidbody>().velocity;
+                        ControllerDataManager.Instance.lockData[myPlayerID].valid = true;
+                        ControllerDataManager.Instance.lockData[myPlayerID].position = lockingObject.transform.position;
+                        ControllerDataManager.Instance.lockData[myPlayerID].velocity = lockingObject.GetComponent<Rigidbody>().velocity;
                     }
                     catch
                     {
                         Locking = false;
-                        LockDataManager.Instance.lockData[myPlayerID].valid = false;
+                        ControllerDataManager.Instance.lockData[myPlayerID].valid = false;
                     }
                 }
                 
             }
             else
             {
-                ModNetworking.SendToAll(LockDataManager.LockMsg.CreateMessage(myPlayerID, Vector3.zero, Vector3.zero, false));
+                ModNetworking.SendToAll(ControllerDataManager.LockMsg.CreateMessage(myPlayerID, Vector3.zero, Vector3.zero, false));
             }
         }
 
@@ -839,10 +1001,10 @@ namespace WW2NavalAssembly
             //GUI.Box(new Rect(100, 200, 200, 50), LockDataManager.Instance.cameraData[0].valid.ToString());
             //GUI.Box(new Rect(100, 300, 200, 50), LockDataManager.Instance.cameraData[1].valid.ToString());
 
-            if (LockDataManager.Instance.lockData[myPlayerID].valid)
+            if (ControllerDataManager.Instance.lockData[myPlayerID].valid)
             {
                 GUI.color = Color.green;
-                Vector3 onScreenPosition = Camera.main.WorldToScreenPoint(LockDataManager.Instance.lockData[myPlayerID].position);
+                Vector3 onScreenPosition = Camera.main.WorldToScreenPoint(ControllerDataManager.Instance.lockData[myPlayerID].position);
                 if (onScreenPosition.z >= 0)
                     GUI.DrawTexture(new Rect(onScreenPosition.x - iconSize / 2, Camera.main.pixelHeight - onScreenPosition.y - iconSize / 2, iconSize, iconSize), LockIconOnScreen);
             }

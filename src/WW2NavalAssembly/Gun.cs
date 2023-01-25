@@ -12,7 +12,7 @@ using UnityEngine.Networking;
 
 namespace WW2NavalAssembly
 {
-    public class GunMsgReceiver : SingleInstance<GunMsgReceiver>
+    public class WeaponMsgReceiver : SingleInstance<WeaponMsgReceiver>
     {
         public override string Name { get; } = "Gun Msg Receiver";
 
@@ -83,7 +83,7 @@ namespace WW2NavalAssembly
         public Dictionary<int, bool>[] reloadTimeUpdated = new Dictionary<int,bool>[16];
         public Dictionary<int, float>[] reloadTime = new Dictionary<int, float>[16];
 
-        public GunMsgReceiver()
+        public WeaponMsgReceiver()
         {
             for (int i = 0; i < 16; i++)
             {
@@ -356,7 +356,7 @@ namespace WW2NavalAssembly
 
                     if (StatMaster.isMP)
                     {
-                        ModNetworking.SendToAll(GunMsgReceiver.HitHoleMsg.CreateMessage( (int) hit.collider.transform.parent.GetComponent<BlockBehaviour>().ParentMachine.PlayerID,
+                        ModNetworking.SendToAll(WeaponMsgReceiver.HitHoleMsg.CreateMessage( (int) hit.collider.transform.parent.GetComponent<BlockBehaviour>().ParentMachine.PlayerID,
                                                                                             hit.collider.transform.parent.GetComponent<BlockBehaviour>().BuildingBlock.Guid.GetHashCode(),
                                                                                             Caliber, PH.position, PH.forward, 0));
                     }
@@ -421,7 +421,7 @@ namespace WW2NavalAssembly
                         pierceEffect.transform.localScale = Caliber / 400 * Vector3.one;
                         Destroy(pierceEffect, 1);
                         AddPierceSound(pierceEffect.transform);
-                        ModNetworking.SendToAll(GunMsgReceiver.ExploMsg.CreateMessage(myPlayerID, hit.point, Caliber, 1));
+                        ModNetworking.SendToAll(WeaponMsgReceiver.ExploMsg.CreateMessage(myPlayerID, hit.point, Caliber, 1));
 
                         // destroy balloon if directly hitted
                         if (hit.collider.transform.parent.name == "Balloon" || hit.collider.transform.parent.name == "SqrBalloon")
@@ -480,7 +480,7 @@ namespace WW2NavalAssembly
         }
         public void APDetectCollisionClient()
         {
-            foreach (GunMsgReceiver.exploInfo exploInfo in GunMsgReceiver.Instance.ExploInfo[myPlayerID])
+            foreach (WeaponMsgReceiver.exploInfo exploInfo in WeaponMsgReceiver.Instance.ExploInfo[myPlayerID])
             {
                 Vector3 exploPosition = exploInfo.position;
                 switch (exploInfo.type)
@@ -508,7 +508,7 @@ namespace WW2NavalAssembly
                 
                 
             }
-            GunMsgReceiver.Instance.ExploInfo[myPlayerID].Clear();
+            WeaponMsgReceiver.Instance.ExploInfo[myPlayerID].Clear();
         }
         public void APDetectWaterHost()
         {
@@ -517,18 +517,18 @@ namespace WW2NavalAssembly
                 if (!spotted)
                 {
                     spotted = true;
-                    if ((transform.position - LockDataManager.Instance.lockData[myPlayerID].position).magnitude < 200f)
+                    if ((transform.position - ControllerDataManager.Instance.lockData[myPlayerID].position).magnitude < 200f)
                     {
                         if (StatMaster.isMP)
                         {
                             if (myPlayerID == 0)
                             {
-                                LockDataManager.Instance.SpotNum[myPlayerID]++;
+                                ControllerDataManager.Instance.SpotNum[myPlayerID]++;
                             }
                         }
                         else
                         {
-                            LockDataManager.Instance.SpotNum[myPlayerID]++;
+                            ControllerDataManager.Instance.SpotNum[myPlayerID]++;
                         }
                     }
                 }
@@ -569,7 +569,7 @@ namespace WW2NavalAssembly
                 }
                 AddWaterHitSound(waterhit.transform);
                 hasHitWater = true;
-                ModNetworking.SendToAll(GunMsgReceiver.WaterHitMsg.CreateMessage(myPlayerID, new Vector3(transform.position.x, 20, transform.position.z), Caliber));
+                ModNetworking.SendToAll(WeaponMsgReceiver.WaterHitMsg.CreateMessage(myPlayerID, new Vector3(transform.position.x, 20, transform.position.z), Caliber));
             }
         }
         public void APDetectWaterClient()
@@ -579,20 +579,20 @@ namespace WW2NavalAssembly
                 if (!spotted)
                 {
                     spotted = true;
-                    if ((transform.position - LockDataManager.Instance.lockData[myPlayerID].position).magnitude < 200f)
+                    if ((transform.position - ControllerDataManager.Instance.lockData[myPlayerID].position).magnitude < 200f)
                     {
                         if (StatMaster.isMP)
                         {
                             if (myPlayerID == PlayerData.localPlayer.networkId)
                             {
-                                LockDataManager.Instance.SpotNum[myPlayerID]++;
+                                ControllerDataManager.Instance.SpotNum[myPlayerID]++;
                             }
                         }
                     }
                 }
             }
 
-            foreach (GunMsgReceiver.waterhitInfo waterhitInfo in GunMsgReceiver.Instance.waterHitInfo[myPlayerID])
+            foreach (WeaponMsgReceiver.waterhitInfo waterhitInfo in WeaponMsgReceiver.Instance.waterHitInfo[myPlayerID])
             {
                 GameObject waterhit;
                 if (waterhitInfo.Caliber >= 283)
@@ -611,7 +611,7 @@ namespace WW2NavalAssembly
                 AddWaterHitSound(waterhit.transform);
 
             }
-            GunMsgReceiver.Instance.waterHitInfo[myPlayerID].Clear();
+            WeaponMsgReceiver.Instance.waterHitInfo[myPlayerID].Clear();
         }
         public void APPlayExploHit(RaycastHit hit)
         {
@@ -624,7 +624,7 @@ namespace WW2NavalAssembly
             exploded = true;
 
             //send to client
-            ModNetworking.SendToAll(GunMsgReceiver.ExploMsg.CreateMessage(myPlayerID, hit.point, Caliber, 0));
+            ModNetworking.SendToAll(WeaponMsgReceiver.ExploMsg.CreateMessage(myPlayerID, hit.point, Caliber, 0));
 
             try
             {
@@ -668,7 +668,7 @@ namespace WW2NavalAssembly
             exploded = true;
 
             //send to client
-            ModNetworking.SendToAll(GunMsgReceiver.ExploMsg.CreateMessage(myPlayerID, transform.position, Caliber, 0));
+            ModNetworking.SendToAll(WeaponMsgReceiver.ExploMsg.CreateMessage(myPlayerID, transform.position, Caliber, 0));
 
             Collider[] ExploCol = Physics.OverlapSphere(transform.position, Caliber / 300f);
             foreach (Collider hitedCollider in ExploCol)
@@ -702,18 +702,18 @@ namespace WW2NavalAssembly
                 if (!spotted)
                 {
                     spotted = true;
-                    if ((transform.position - LockDataManager.Instance.lockData[myPlayerID].position).magnitude < 200f)
+                    if ((transform.position - ControllerDataManager.Instance.lockData[myPlayerID].position).magnitude < 200f)
                     {
                         if (StatMaster.isMP)
                         {
                             if (myPlayerID == 0)
                             {
-                                LockDataManager.Instance.SpotNum[myPlayerID]++;
+                                ControllerDataManager.Instance.SpotNum[myPlayerID]++;
                             }
                         }
                         else
                         {
-                            LockDataManager.Instance.SpotNum[myPlayerID]++;
+                            ControllerDataManager.Instance.SpotNum[myPlayerID]++;
                         }
                     }
                 }
@@ -734,7 +734,7 @@ namespace WW2NavalAssembly
                 HEDestroyBalloonWater(transform.position);
                 HEPlayExplo(0);
                 Destroy(gameObject,0.1f);
-                ModNetworking.SendToAll(GunMsgReceiver.WaterHitMsg.CreateMessage(myPlayerID, new Vector3(transform.position.x, 20, transform.position.z), Caliber));
+                ModNetworking.SendToAll(WeaponMsgReceiver.WaterHitMsg.CreateMessage(myPlayerID, new Vector3(transform.position.x, 20, transform.position.z), Caliber));
             }
         }
         public void HEDetectCollisionHost()
@@ -785,7 +785,7 @@ namespace WW2NavalAssembly
             exploded = true;
 
             //send to client
-            ModNetworking.SendToAll(GunMsgReceiver.ExploMsg.CreateMessage(myPlayerID, transform.position, Caliber, 0));
+            ModNetworking.SendToAll(WeaponMsgReceiver.ExploMsg.CreateMessage(myPlayerID, transform.position, Caliber, 0));
 
             Collider[] ExploCol = Physics.OverlapSphere(transform.position, Caliber /( 3 * Mathf.Clamp(thickness,Caliber/10,Caliber) ) );
             //Debug.Log(Caliber / (5 * Mathf.Clamp(thickness, 10, Caliber)));
@@ -1042,6 +1042,28 @@ namespace WW2NavalAssembly
             CannonPrefab.SetActive(false);
         }
 
+        public void ClearCannon()
+        {
+            List<GameObject> tmps = new List<GameObject>();
+            for (int i = 0; i < 20; i++)
+            {
+                GameObject tmp = GameObject.Find("NavalCannon" + myPlayerID.ToString());
+                if (tmp)
+                {
+                    tmp.name = "NavalCannon-1";
+                    tmps.Add(tmp);
+                }
+                else
+                {
+                    break;
+                }
+            }
+            foreach (var t in tmps)
+            {
+                Destroy(t);
+            }
+        }
+
         public override void SafeAwake()
         {
             myPlayerID = BlockBehaviour.ParentMachine.PlayerID;
@@ -1082,7 +1104,7 @@ namespace WW2NavalAssembly
             {
                 if (StatMaster.isClient)
                 {
-                    GunMsgReceiver.Instance.Fire[myPlayerID].Add(myGuid, new GunMsgReceiver.firePara(false,Vector3.zero,Vector3.zero));
+                    WeaponMsgReceiver.Instance.Fire[myPlayerID].Add(myGuid, new WeaponMsgReceiver.firePara(false,Vector3.zero,Vector3.zero));
                 }
             }
             catch { }
@@ -1090,7 +1112,7 @@ namespace WW2NavalAssembly
             {
                 if (StatMaster.isClient)
                 {
-                    GunMsgReceiver.Instance.reloadTime[myPlayerID].Add(myGuid, 0);
+                    WeaponMsgReceiver.Instance.reloadTime[myPlayerID].Add(myGuid, 0);
                 }
             }
             catch { }
@@ -1098,7 +1120,7 @@ namespace WW2NavalAssembly
             {
                 if (StatMaster.isClient)
                 {
-                    GunMsgReceiver.Instance.reloadTimeUpdated[myPlayerID].Add(myGuid, false);
+                    WeaponMsgReceiver.Instance.reloadTimeUpdated[myPlayerID].Add(myGuid, false);
                 }
             }
             catch { }
@@ -1113,19 +1135,23 @@ namespace WW2NavalAssembly
         }
         public override void OnSimulateStop()
         {
+            ClearCannon();
             DestroyImmediate(CannonPrefab);
             if (!FireControl.isDefaultValue)
             {
                 FireControlManager.Instance.RemoveGun(myPlayerID,myGuid);
             }
-            GunMsgReceiver.Instance.Fire[myPlayerID].Remove(myGuid);
-            GunMsgReceiver.Instance.reloadTime[myPlayerID].Remove(myGuid);
-            GunMsgReceiver.Instance.reloadTimeUpdated[myPlayerID].Remove(myGuid);
+            WeaponMsgReceiver.Instance.Fire[myPlayerID].Remove(myGuid);
+            WeaponMsgReceiver.Instance.reloadTime[myPlayerID].Remove(myGuid);
+            WeaponMsgReceiver.Instance.reloadTimeUpdated[myPlayerID].Remove(myGuid);
         }
         public void OnDestroy()
         {
             Grouper.Instance.AddGun(myPlayerID, "null", myGuid, gameObject);
-            FireControlManager.Instance.RemoveGun(myPlayerID, myGuid);
+            if (!FireControl.isDefaultValue)
+            {
+                FireControlManager.Instance.RemoveGun(myPlayerID, myGuid);
+            }
         }
         public override void SimulateUpdateHost()
         {
@@ -1146,7 +1172,7 @@ namespace WW2NavalAssembly
                 currentReloadTime += Time.deltaTime;
                 if (ModController.Instance.state == myseed)
                 {
-                    ModNetworking.SendToAll(GunMsgReceiver.ReloadMsg.CreateMessage(myPlayerID, myGuid, currentReloadTime));
+                    ModNetworking.SendToAll(WeaponMsgReceiver.ReloadMsg.CreateMessage(myPlayerID, myGuid, currentReloadTime));
                 }
                 return;
             }
@@ -1160,6 +1186,7 @@ namespace WW2NavalAssembly
                 randomForce += new Vector3(0, UnityEngine.Random.value - 0.5f,0) * 5 / Mathf.Sqrt(Caliber.Value);
 
                 GameObject Cannon = (GameObject)Instantiate(CannonPrefab, transform.position + 3 * transform.forward * transform.localScale.z, transform.rotation);
+                Cannon.name = "NavalCannon" + myPlayerID.ToString();
                 Cannon.SetActive(true);
                 Cannon.GetComponent<BulletBehaviour>().fire = true;
                 Cannon.GetComponent<BulletBehaviour>().randomForce = randomForce;
@@ -1169,7 +1196,7 @@ namespace WW2NavalAssembly
                 CannonType = NextCannonType;
                 if (StatMaster.isMP)
                 {
-                    ModNetworking.SendToAll(GunMsgReceiver.FireMsg.CreateMessage(myPlayerID, myGuid, randomForce, transform.forward));
+                    ModNetworking.SendToAll(WeaponMsgReceiver.FireMsg.CreateMessage(myPlayerID, myGuid, randomForce, transform.forward));
                 }
                 
                 if (!TrackOn.isDefaultValue)
@@ -1197,26 +1224,27 @@ namespace WW2NavalAssembly
                 }
             }
 
-            if (GunMsgReceiver.Instance.reloadTimeUpdated[myPlayerID][myGuid])
+            if (WeaponMsgReceiver.Instance.reloadTimeUpdated[myPlayerID][myGuid])
             {
-                GunMsgReceiver.Instance.reloadTimeUpdated[myPlayerID][myGuid] = false;
-                currentReloadTime = GunMsgReceiver.Instance.reloadTime[myPlayerID][myGuid];
+                WeaponMsgReceiver.Instance.reloadTimeUpdated[myPlayerID][myGuid] = false;
+                currentReloadTime = WeaponMsgReceiver.Instance.reloadTime[myPlayerID][myGuid];
             }
             if (currentReloadTime < reloadTime)
             {
                 currentReloadTime += Time.deltaTime;
             }
 
-            if (GunMsgReceiver.Instance.Fire[myPlayerID][myGuid].fire)
+            if (WeaponMsgReceiver.Instance.Fire[myPlayerID][myGuid].fire)
             {
                 currentReloadTime = 0;
                 muzzleStage = 0;
-                GunMsgReceiver.Instance.Fire[myPlayerID][myGuid].fire = false;
+                WeaponMsgReceiver.Instance.Fire[myPlayerID][myGuid].fire = false;
                 GameObject Cannon = (GameObject)Instantiate(CannonPrefab, transform.position + 3 * transform.forward, 
-                                                            Quaternion.LookRotation(GunMsgReceiver.Instance.Fire[myPlayerID][myGuid].forward, Vector3.up));
+                                                            Quaternion.LookRotation(WeaponMsgReceiver.Instance.Fire[myPlayerID][myGuid].forward, Vector3.up));
+                Cannon.name = "NavalCannon" + myPlayerID.ToString();
                 Cannon.SetActive(true);
                 Cannon.GetComponent<BulletBehaviour>().fire = true;
-                Cannon.GetComponent<BulletBehaviour>().randomForce = GunMsgReceiver.Instance.Fire[myPlayerID][myGuid].fireForce;
+                Cannon.GetComponent<BulletBehaviour>().randomForce = WeaponMsgReceiver.Instance.Fire[myPlayerID][myGuid].fireForce;
                 Cannon.GetComponent<BulletBehaviour>().CannonType = CannonType;
                 Destroy(Cannon, 10);
 
@@ -1267,6 +1295,7 @@ namespace WW2NavalAssembly
                 randomForce += new Vector3(0, UnityEngine.Random.value - 0.5f, 0) * 5 / Mathf.Sqrt(Caliber.Value);
 
                 GameObject Cannon = (GameObject)Instantiate(CannonPrefab, transform.position + 3 * transform.forward * transform.localScale.z, transform.rotation);
+                Cannon.name = "NavalCannon" + myPlayerID.ToString();
                 Cannon.SetActive(true);
                 Cannon.GetComponent<BulletBehaviour>().fire = true;
                 Cannon.GetComponent<BulletBehaviour>().randomForce = randomForce;
@@ -1274,7 +1303,7 @@ namespace WW2NavalAssembly
                 Destroy(Cannon, 10);
                 CannonType = NextCannonType;
 
-                ModNetworking.SendToAll(GunMsgReceiver.FireMsg.CreateMessage(myPlayerID, myGuid, randomForce, transform.forward));
+                ModNetworking.SendToAll(WeaponMsgReceiver.FireMsg.CreateMessage(myPlayerID, myGuid, randomForce, transform.forward));
 
                 if (!TrackOn.isDefaultValue)
                 {

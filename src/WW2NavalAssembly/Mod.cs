@@ -14,13 +14,13 @@ namespace WW2NavalAssembly
 
 			myMod.AddComponent<CustomBlockController>();
 			myMod.AddComponent<ModController>();
-			myMod.AddComponent<GunMsgReceiver>();
+			myMod.AddComponent<WeaponMsgReceiver>();
 			myMod.AddComponent<AssetManager>();
 			myMod.AddComponent<MessageController>();
 			myMod.AddComponent<CannonTrackManager>();
 			myMod.AddComponent<Grouper>();
 			myMod.AddComponent<FireControlManager>();
-			myMod.AddComponent<LockDataManager>();
+			myMod.AddComponent<ControllerDataManager>();
 			myMod.AddComponent<BlockPoseReceiver>();
 			myMod.AddComponent<WellMsgReceicer>();
 			myMod.AddComponent<Sea>();

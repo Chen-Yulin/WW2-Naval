@@ -78,7 +78,7 @@ namespace WW2NavalAssembly
     {
         public int myPlayerID;
         public int parentGuid;
-        public int myGuid;
+        //public int myGuid;
         public int mySeed;
 
         public float Caliber;
@@ -91,6 +91,26 @@ namespace WW2NavalAssembly
         public bool launched = false;
 
         GameObject Trail;
+        public void UpdateVis()
+        {
+            if (StatMaster.isMP)
+            {
+                if (PlayerData.localPlayer.networkId != myPlayerID)
+                {
+                    if ((transform.position - ControllerDataManager.Instance.ControllerPos[0]).magnitude < 100f)
+                    {
+                        Trail.SetActive(true);
+                        transform.localScale = Vector3.one;
+                    }
+                    else
+                    {
+                        Trail.SetActive(false);
+                        transform.localScale = Vector3.zero;
+                    }
+                }
+            }
+            
+        }
         public void AddExploSound(Transform t)
         {
             AudioSource exploAS = t.gameObject.AddComponent<AudioSource>();
@@ -148,7 +168,7 @@ namespace WW2NavalAssembly
             Destroy(hitEffect, 5);
             AddWaterHitSound(hitEffect.transform);
             AddExploSound(transform);
-            Collider[] ExploCol = Physics.OverlapSphere(transform.position, Caliber / 80f);
+            Collider[] ExploCol = Physics.OverlapSphere(transform.position, Caliber / 100f);
             foreach (Collider hitedCollider in ExploCol)
             {
                 if (hitedCollider.transform.parent.GetComponent<Rigidbody>())
@@ -219,7 +239,7 @@ namespace WW2NavalAssembly
 
                     if (StatMaster.isMP)
                     {
-                        ModNetworking.SendToAll(GunMsgReceiver.HitHoleMsg.CreateMessage((int)hit.collider.transform.parent.GetComponent<BlockBehaviour>().ParentMachine.PlayerID,
+                        ModNetworking.SendToAll(WeaponMsgReceiver.HitHoleMsg.CreateMessage((int)hit.collider.transform.parent.GetComponent<BlockBehaviour>().ParentMachine.PlayerID,
                                                                                             hit.collider.transform.parent.GetComponent<BlockBehaviour>().BuildingBlock.Guid.GetHashCode(),
                                                                                             Caliber, PH.position, PH.forward, 1));
                     }
@@ -236,15 +256,13 @@ namespace WW2NavalAssembly
             InitTrail();
             myRigid = GetComponent<Rigidbody>();
 
-            if (!StatMaster.isClient)
+            //myGuid = System.Guid.NewGuid().GetHashCode();
+            if (!TorpedoMsgReceiver.Instance.torpedoData[myPlayerID].ContainsKey(parentGuid))
             {
-                myGuid = System.Guid.NewGuid().GetHashCode();
-                TorpedoMsgReceiver.Instance.torpedoData[myPlayerID].Add(myGuid, new TorpedoMsgReceiver.TorpedoData(transform.position, false));
-                TorpedoMsgReceiver.Instance.torpedoGuid[myPlayerID][parentGuid] = myGuid;
+                TorpedoMsgReceiver.Instance.torpedoData[myPlayerID].Add(parentGuid, new TorpedoMsgReceiver.TorpedoData(transform.position, false));
             }
             else
             {
-                TorpedoMsgReceiver.Instance.torpedoGuid[myPlayerID][parentGuid] = 0;
             }
 
             
@@ -253,20 +271,6 @@ namespace WW2NavalAssembly
 
         public void FixedUpdate()
         {
-            if (StatMaster.isClient)
-            {
-                if (myGuid == 0)
-                {
-                    myGuid = TorpedoMsgReceiver.Instance.torpedoGuid[myPlayerID][parentGuid];
-                    if (myGuid != 0)
-                    {
-                        if (!TorpedoMsgReceiver.Instance.torpedoData[myPlayerID].ContainsKey(myGuid))
-                        {
-                            TorpedoMsgReceiver.Instance.torpedoData[myPlayerID].Add(myGuid, new TorpedoMsgReceiver.TorpedoData());
-                        }
-                    }
-                }
-            }
 
 
             if (fire && !launched)
@@ -275,16 +279,14 @@ namespace WW2NavalAssembly
                 fire = false;
                 myRigid.AddForce(-transform.up * 500);
                 myRigid.angularDrag = 100;
-                if (!StatMaster.isClient)
-                {
-                    ModNetworking.SendToAll(TorpedoMsgReceiver.TorpedoGuidMsg.CreateMessage(myPlayerID, parentGuid, myGuid));
-                }
                 
             }
             if (launched)
             {
+                
                 if (transform.position.y < 20)
                 {
+                    UpdateVis();
                     if (transform.position.y > 20 - depth - 0.2f)
                     {
                         Trail.SetActive(true);
@@ -309,23 +311,23 @@ namespace WW2NavalAssembly
                         {
                             if (DetectCollisionHost())
                             {
-                                ModNetworking.SendToAll(TorpedoMsgReceiver.TorpedoDataMsg.CreateMessage(myPlayerID, myGuid, transform.position, true));
+                                ModNetworking.SendToAll(TorpedoMsgReceiver.TorpedoDataMsg.CreateMessage(myPlayerID, parentGuid, transform.position, true));
                                 Destroy(gameObject);
                             }
                             else if(mySeed == ModController.Instance.state) 
                             {
-                                ModNetworking.SendToAll(TorpedoMsgReceiver.TorpedoDataMsg.CreateMessage(myPlayerID, myGuid, transform.position, false));
+                                ModNetworking.SendToAll(TorpedoMsgReceiver.TorpedoDataMsg.CreateMessage(myPlayerID, parentGuid, transform.position, false));
                             }
 
                         }
                         else
                         {
-                            if (myGuid != 0 && TorpedoMsgReceiver.Instance.torpedoData[myPlayerID][myGuid].updated)
+                            if (TorpedoMsgReceiver.Instance.torpedoData[myPlayerID][parentGuid].updated)
                             {
-                                TorpedoMsgReceiver.Instance.torpedoData[myPlayerID][myGuid].updated = false;
+                                TorpedoMsgReceiver.Instance.torpedoData[myPlayerID][parentGuid].updated = false;
                                 //Debug.Log("Client Torpedo justify");
-                                transform.position = TorpedoMsgReceiver.Instance.torpedoData[myPlayerID][myGuid].position;
-                                if (TorpedoMsgReceiver.Instance.torpedoData[myPlayerID][myGuid].exploded)
+                                transform.position = TorpedoMsgReceiver.Instance.torpedoData[myPlayerID][parentGuid].position;
+                                if (TorpedoMsgReceiver.Instance.torpedoData[myPlayerID][parentGuid].exploded)
                                 {
                                     TorpedoExploClient();
                                     Destroy(gameObject);

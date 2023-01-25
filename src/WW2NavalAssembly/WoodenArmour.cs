@@ -75,7 +75,7 @@ namespace WW2NavalAssembly
 
         public void SyncBulletHole()
         {
-            foreach (GunMsgReceiver.hitHoleInfo info in GunMsgReceiver.Instance.BulletHoleInfo[myPlayerID][myGuid])
+            foreach (WeaponMsgReceiver.hitHoleInfo info in WeaponMsgReceiver.Instance.BulletHoleInfo[myPlayerID][myGuid])
             {
                 if (info.type == 0)
                 {
@@ -106,7 +106,7 @@ namespace WW2NavalAssembly
                 }
 
             }
-            GunMsgReceiver.Instance.BulletHoleInfo[myPlayerID][myGuid].Clear();
+            WeaponMsgReceiver.Instance.BulletHoleInfo[myPlayerID][myGuid].Clear();
         }
 
         public virtual void SafeAwake()
@@ -138,7 +138,7 @@ namespace WW2NavalAssembly
                 {
                     if (StatMaster.isClient)
                     {
-                        GunMsgReceiver.Instance.BulletHoleInfo[myPlayerID].Add(myGuid, new List<GunMsgReceiver.hitHoleInfo>());
+                        WeaponMsgReceiver.Instance.BulletHoleInfo[myPlayerID].Add(myGuid, new List<WeaponMsgReceiver.hitHoleInfo>());
                     }
                 }
                 catch { }

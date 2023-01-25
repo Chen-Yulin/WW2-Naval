@@ -65,8 +65,6 @@ namespace WW2NavalAssembly
             {
                 return null;
             }
-            
-            
         }
         
         public GameObject SwitchTrackCannon(int playerID)

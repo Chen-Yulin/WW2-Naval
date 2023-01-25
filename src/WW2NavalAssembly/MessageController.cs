@@ -12,16 +12,16 @@ namespace WW2NavalAssembly
         public override string Name { get; } = "Message Controller";
         public MessageController()
         {
-            ModNetworking.Callbacks[GunMsgReceiver.FireMsg] += GunMsgReceiver.Instance.fireKeyMsgReceiver;
-            ModNetworking.Callbacks[GunMsgReceiver.ExploMsg] += GunMsgReceiver.Instance.exploMsgReceiver;
-            ModNetworking.Callbacks[GunMsgReceiver.WaterHitMsg] += GunMsgReceiver.Instance.waterHitMsgReceiver;
-            ModNetworking.Callbacks[GunMsgReceiver.HitHoleMsg] += GunMsgReceiver.Instance.hitHoleMsgReceiver;
-            ModNetworking.Callbacks[GunMsgReceiver.ReloadMsg] += GunMsgReceiver.Instance.reloadTimeMsgReceiver;
+            ModNetworking.Callbacks[WeaponMsgReceiver.FireMsg] += WeaponMsgReceiver.Instance.fireKeyMsgReceiver;
+            ModNetworking.Callbacks[WeaponMsgReceiver.ExploMsg] += WeaponMsgReceiver.Instance.exploMsgReceiver;
+            ModNetworking.Callbacks[WeaponMsgReceiver.WaterHitMsg] += WeaponMsgReceiver.Instance.waterHitMsgReceiver;
+            ModNetworking.Callbacks[WeaponMsgReceiver.HitHoleMsg] += WeaponMsgReceiver.Instance.hitHoleMsgReceiver;
+            ModNetworking.Callbacks[WeaponMsgReceiver.ReloadMsg] += WeaponMsgReceiver.Instance.reloadTimeMsgReceiver;
             ModNetworking.Callbacks[WellMsgReceicer.hitMsg] += WellMsgReceicer.Instance.ExploMsgReceiver;
-            ModNetworking.Callbacks[LockDataManager.LockMsg] += LockDataManager.Instance.LockDataReceiver;
-            ModNetworking.Callbacks[LockDataManager.CameraMsg] += LockDataManager.Instance.CameraDataReceiver;
+            ModNetworking.Callbacks[ControllerDataManager.LockMsg] += ControllerDataManager.Instance.LockDataReceiver;
+            ModNetworking.Callbacks[ControllerDataManager.CameraMsg] += ControllerDataManager.Instance.CameraDataReceiver;
             ModNetworking.Callbacks[BlockPoseReceiver.forwardMsg] += BlockPoseReceiver.Instance.forwardMsgReceiver;
-            ModNetworking.Callbacks[LockDataManager.ControllerVelMsg] += LockDataManager.Instance.ControllerVelReceiver;
+            ModNetworking.Callbacks[ControllerDataManager.ControllerVelMsg] += ControllerDataManager.Instance.ControllerVelReceiver;
             ModNetworking.Callbacks[TorpedoMsgReceiver.TorpedoDataMsg] += TorpedoMsgReceiver.Instance.TorpedoDataMsgReceiver;
             ModNetworking.Callbacks[TorpedoMsgReceiver.TorpedoGuidMsg] += TorpedoMsgReceiver.Instance.TorpedoGuidMsgReceiver;
         }

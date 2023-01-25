@@ -45,10 +45,32 @@ namespace WW2NavalAssembly
         Texture ReloadAPIn;
         int iconSize = 30;
 
+        public void UpdateSelfToFC()
+        {
+            if (ModController.Instance.state % 10 == myseed)
+            {
+                AddSelfToFC();
+            }
+        }
+        public void AddSelfToFC()
+        {
+            if (!FireControl.isDefaultValue)
+            {
+                FireControlManager.Instance.AddTorpedo(myPlayerID, TorpedoType, myGuid, gameObject);
+            }
+        }
+        public void RemoveSelfFromFC()
+        {
+            if (!FireControl.isDefaultValue)
+            {
+                FireControlManager.Instance.RemoveTorpedo(myPlayerID, myGuid);
+            }
+        }
         public Vector2 GetFCOrienPara()
         {
             if (StatMaster.isClient)
             {
+                //return new Vector2(BlockPoseReceiver.Instance.forward[myPlayerID][myGuid].x, BlockPoseReceiver.Instance.forward[myPlayerID][myGuid].z);
                 return new Vector2(-transform.up.x, -transform.up.z);
             }
             else
@@ -118,6 +140,28 @@ namespace WW2NavalAssembly
             StaticTorpedoPrefab.SetActive(false);
         }
 
+        public void ClearTorpedo()
+        {
+            List<GameObject> tmps = new List<GameObject>();
+            for (int i = 0; i < 2; i++)
+            {
+                GameObject tmp = GameObject.Find("Torpedo" + myPlayerID.ToString());
+                if (tmp)
+                {
+                    tmp.name = "Torpedo-1";
+                    tmps.Add(tmp);
+                }
+                else
+                {
+                    break;
+                }
+            }
+            foreach (var t in tmps)
+            {
+                Destroy(t);
+            }
+        }
+
         public override void SafeAwake()
         {
             myPlayerID = BlockBehaviour.ParentMachine.PlayerID;
@@ -141,21 +185,20 @@ namespace WW2NavalAssembly
             BlockBehaviour.blockJoint.breakForce = float.PositiveInfinity;
             BlockBehaviour.blockJoint.breakTorque = float.PositiveInfinity;
 
-            InitStaticTorpedo();
-            InitTorpedo();
+            
             
             myGuid = BlockBehaviour.BuildingBlock.Guid.GetHashCode();
             reloadTime = 7f * Mathf.Sqrt(Caliber.Value);
             currentReloadTime = reloadTime;
-            if (!FireControl.isDefaultValue)
-            {
-                FireControlManager.Instance.AddGun(myPlayerID, Caliber.Value, myGuid, gameObject);
-            }
+
+            InitStaticTorpedo();
+            InitTorpedo();
+            AddSelfToFC();
             try
             {
                 if (StatMaster.isClient)
                 {
-                    GunMsgReceiver.Instance.Fire[myPlayerID].Add(myGuid, new GunMsgReceiver.firePara(false, Vector3.zero, Vector3.zero));
+                    WeaponMsgReceiver.Instance.Fire[myPlayerID].Add(myGuid, new WeaponMsgReceiver.firePara(false, Vector3.zero, Vector3.zero));
                 }
             }
             catch { }
@@ -163,7 +206,7 @@ namespace WW2NavalAssembly
             {
                 if (StatMaster.isClient)
                 {
-                    GunMsgReceiver.Instance.reloadTime[myPlayerID].Add(myGuid, 0);
+                    WeaponMsgReceiver.Instance.reloadTime[myPlayerID].Add(myGuid, 0);
                 }
             }
             catch { }
@@ -171,7 +214,7 @@ namespace WW2NavalAssembly
             {
                 if (StatMaster.isClient)
                 {
-                    GunMsgReceiver.Instance.reloadTimeUpdated[myPlayerID].Add(myGuid, false);
+                    WeaponMsgReceiver.Instance.reloadTimeUpdated[myPlayerID].Add(myGuid, false);
                 }
             }
             catch { }
@@ -186,19 +229,18 @@ namespace WW2NavalAssembly
         }
         public override void OnSimulateStop()
         {
+            RemoveSelfFromFC();
+            ClearTorpedo();
             DestroyImmediate(TorpedoPrefab);
-            if (!FireControl.isDefaultValue)
-            {
-                FireControlManager.Instance.RemoveGun(myPlayerID, myGuid);
-            }
-            GunMsgReceiver.Instance.Fire[myPlayerID].Remove(myGuid);
-            GunMsgReceiver.Instance.reloadTime[myPlayerID].Remove(myGuid);
-            GunMsgReceiver.Instance.reloadTimeUpdated[myPlayerID].Remove(myGuid);
+
+            WeaponMsgReceiver.Instance.Fire[myPlayerID].Remove(myGuid);
+            WeaponMsgReceiver.Instance.reloadTime[myPlayerID].Remove(myGuid);
+            WeaponMsgReceiver.Instance.reloadTimeUpdated[myPlayerID].Remove(myGuid);
+            
         }
         public void OnDestroy()
         {
-            Grouper.Instance.AddGun(myPlayerID, "null", myGuid, gameObject);
-            FireControlManager.Instance.RemoveGun(myPlayerID, myGuid);
+            RemoveSelfFromFC();
         }
         public override void SimulateUpdateHost()
         {
@@ -221,7 +263,7 @@ namespace WW2NavalAssembly
                     currentReloadTime += Time.deltaTime;
                     if (ModController.Instance.state == myseed)
                     {
-                        ModNetworking.SendToAll(GunMsgReceiver.ReloadMsg.CreateMessage(myPlayerID, myGuid, currentReloadTime));
+                        ModNetworking.SendToAll(WeaponMsgReceiver.ReloadMsg.CreateMessage(myPlayerID, myGuid, currentReloadTime));
                     }
                 }
                 return;
@@ -235,6 +277,7 @@ namespace WW2NavalAssembly
                 gameObject.GetComponent<Rigidbody>().AddForce(Caliber.Value * transform.up);
 
                 GameObject Cannon = (GameObject)Instantiate(TorpedoPrefab, transform.position + 0.1f * transform.forward, transform.rotation);
+                Cannon.name = "Torpedo" + myPlayerID.ToString();
                 Cannon.SetActive(true);
                 Cannon.GetComponent<TorpedoBehaviour>().fire = true;
                 Cannon.GetComponent<TorpedoBehaviour>().mode = TorpedoType;
@@ -259,7 +302,7 @@ namespace WW2NavalAssembly
 
                 if (StatMaster.isMP)
                 {
-                    ModNetworking.SendToAll(GunMsgReceiver.FireMsg.CreateMessage(myPlayerID, myGuid, Vector3.zero, Cannon.transform.eulerAngles));
+                    ModNetworking.SendToAll(WeaponMsgReceiver.FireMsg.CreateMessage(myPlayerID, myGuid, Vector3.zero, Cannon.transform.eulerAngles));
                 }
             }
         }
@@ -277,10 +320,10 @@ namespace WW2NavalAssembly
                 }
             }
 
-            if (GunMsgReceiver.Instance.reloadTimeUpdated[myPlayerID][myGuid])
+            if (WeaponMsgReceiver.Instance.reloadTimeUpdated[myPlayerID][myGuid])
             {
-                GunMsgReceiver.Instance.reloadTimeUpdated[myPlayerID][myGuid] = false;
-                currentReloadTime = GunMsgReceiver.Instance.reloadTime[myPlayerID][myGuid];
+                WeaponMsgReceiver.Instance.reloadTimeUpdated[myPlayerID][myGuid] = false;
+                currentReloadTime = WeaponMsgReceiver.Instance.reloadTime[myPlayerID][myGuid];
             }
             if (currentReloadTime < reloadTime)
             {
@@ -295,13 +338,14 @@ namespace WW2NavalAssembly
                 StaticTorpedoPrefab.SetActive(true);
             }
 
-            if (GunMsgReceiver.Instance.Fire[myPlayerID][myGuid].fire)
+            if (WeaponMsgReceiver.Instance.Fire[myPlayerID][myGuid].fire)
             {
                 NumLeft--;
                 currentReloadTime = 0;
-                GunMsgReceiver.Instance.Fire[myPlayerID][myGuid].fire = false;
+                WeaponMsgReceiver.Instance.Fire[myPlayerID][myGuid].fire = false;
                 GameObject Cannon = (GameObject)Instantiate(TorpedoPrefab, transform.position + 0.1f * transform.forward,
-                                                            Quaternion.Euler(GunMsgReceiver.Instance.Fire[myPlayerID][myGuid].forward));
+                                                            Quaternion.Euler(WeaponMsgReceiver.Instance.Fire[myPlayerID][myGuid].forward));
+                Cannon.name = "Torpedo" + myPlayerID.ToString();
                 Cannon.SetActive(true);
                 Cannon.GetComponent<TorpedoBehaviour>().fire = true;
                 Cannon.GetComponent<TorpedoBehaviour>().mode = TorpedoType;
@@ -327,6 +371,8 @@ namespace WW2NavalAssembly
         }
         public override void SimulateFixedUpdateHost()
         {
+            UpdateSelfToFC();
+
             if (currentReloadTime < reloadTime)
             {
                 return;
@@ -340,6 +386,7 @@ namespace WW2NavalAssembly
                 gameObject.GetComponent<Rigidbody>().AddForce(Caliber.Value * transform.up);
 
                 GameObject Cannon = (GameObject)Instantiate(TorpedoPrefab, transform.position + 0.1f * transform.forward, transform.rotation);
+                Cannon.name = "Torpedo" + myPlayerID.ToString();
                 Cannon.SetActive(true);
                 Cannon.GetComponent<TorpedoBehaviour>().fire = true;
                 Cannon.GetComponent<TorpedoBehaviour>().mode = TorpedoType;
@@ -361,11 +408,12 @@ namespace WW2NavalAssembly
                     Destroy(Cannon, 27.8f);
                 }
 
-                ModNetworking.SendToAll(GunMsgReceiver.FireMsg.CreateMessage(myPlayerID, myGuid, Vector3.zero, Cannon.transform.eulerAngles));
+                ModNetworking.SendToAll(WeaponMsgReceiver.FireMsg.CreateMessage(myPlayerID, myGuid, Vector3.zero, Cannon.transform.eulerAngles));
             }
         }
         public override void SimulateFixedUpdateClient()
         {
+            UpdateSelfToFC();
         }
         public void OnGUI()
         {
