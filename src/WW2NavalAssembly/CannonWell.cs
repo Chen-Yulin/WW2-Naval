@@ -347,7 +347,7 @@ namespace WW2NavalAssembly
             float WellWidth;
             if (totalCaliber != 0)
             {
-                WellWidth = Mathf.Clamp(myCaliber * numCoeff / 5,1,4);
+                WellWidth = Mathf.Clamp(myCaliber * numCoeff / 5,0.3f,4);
             }
             else
             {

@@ -512,7 +512,7 @@ namespace WW2NavalAssembly
         }
         public void APDetectWaterHost()
         {
-            if (transform.position.y < 20f && pericedBlock.Count == 0 && Caliber >= 283)
+            if (transform.position.y < 20f)
             {
                 if (!spotted)
                 {
@@ -532,8 +532,9 @@ namespace WW2NavalAssembly
                         }
                     }
                 }
-                
-
+            }
+            if (transform.position.y < 20f && pericedBlock.Count == 0 && Caliber >= 283)
+            {
                 myRigid.velocity = new Vector3(myRigid.velocity.x, myRigid.velocity.y / 1.5f, myRigid.velocity.z);
                 myRigid.AddForce(myRigid.velocity * 0.8f - Vector3.up * 10);
                 penetration *= 0.97f;
@@ -572,7 +573,7 @@ namespace WW2NavalAssembly
                 ModNetworking.SendToAll(WeaponMsgReceiver.WaterHitMsg.CreateMessage(myPlayerID, new Vector3(transform.position.x, 20, transform.position.z), Caliber));
             }
         }
-        public void APDetectWaterClient()
+        public void CannonDetectWaterClient()
         {
             if (transform.position.y < 20f)
             {
@@ -615,47 +616,53 @@ namespace WW2NavalAssembly
         }
         public void APPlayExploHit(RaycastHit hit)
         {
-            GameObject explo = (GameObject)Instantiate(AssetManager.Instance.CannonHit.explo, hit.point - myRigid.velocity.normalized * Caliber / 800f, Quaternion.identity);
-            explo.SetActive(true);
-            explo.transform.localScale = Caliber / 400 * Vector3.one;
-            Destroy(explo, 3);
-            AddExploSound(explo.transform);
-
-            exploded = true;
-
-            //send to client
-            ModNetworking.SendToAll(WeaponMsgReceiver.ExploMsg.CreateMessage(myPlayerID, hit.point, Caliber, 0));
-
             try
             {
-                hit.collider.attachedRigidbody.AddForce(transform.forward * myRigid.velocity.magnitude * Caliber / 3, ForceMode.Force);
+                GameObject explo = (GameObject)Instantiate(AssetManager.Instance.CannonHit.explo, hit.point - myRigid.velocity.normalized * Caliber / 800f, Quaternion.identity);
+                explo.SetActive(true);
+                explo.transform.localScale = Caliber / 400 * Vector3.one;
+                Destroy(explo, 3);
+                AddExploSound(explo.transform);
+
+                exploded = true;
+
+                //send to client
+                ModNetworking.SendToAll(WeaponMsgReceiver.ExploMsg.CreateMessage(myPlayerID, hit.point, Caliber, 0));
+
+                try
+                {
+                    hit.collider.attachedRigidbody.AddForce(transform.forward * myRigid.velocity.magnitude * Caliber / 3, ForceMode.Force);
+                }
+                catch { }
+
+                Collider[] ExploCol = Physics.OverlapSphere(hit.point - myRigid.velocity.normalized * Caliber / 800f, Caliber / 300f);
+                foreach (Collider hitedCollider in ExploCol)
+                {
+                    if (hitedCollider.transform.parent.GetComponent<Rigidbody>())
+                    {
+                        hitedCollider.transform.parent.GetComponent<Rigidbody>().AddExplosionForce(5f * Caliber, hit.point, 5f);
+                    }
+
+                    if (pericedBlock.Count != 0)
+                    {
+                        try
+                        {
+                            //Debug.Log(hitedCollider.transform.parent.name);
+                            if (hitedCollider.transform.parent.name == "Balloon" || hitedCollider.transform.parent.name == "SqrBalloon")
+                            {
+                                BreakBallon(hitedCollider.transform.position);
+                            }
+                        }
+                        catch { }
+                    }
+                }
             }
             catch { }
-
-            Collider[] ExploCol = Physics.OverlapSphere(hit.point-myRigid.velocity.normalized* Caliber /800f, Caliber / 300f);
-            foreach (Collider hitedCollider in ExploCol)
-            {
-                if (hitedCollider.transform.parent.GetComponent<Rigidbody>())
-                {
-                    hitedCollider.transform.parent.GetComponent<Rigidbody>().AddExplosionForce(5f * Caliber, hit.point, 5f);
-                }
-
-                if (pericedBlock.Count != 0)
-                {
-                    try
-                    {
-                        //Debug.Log(hitedCollider.transform.parent.name);
-                        if (hitedCollider.transform.parent.name == "Balloon" || hitedCollider.transform.parent.name == "SqrBalloon")
-                        {
-                            BreakBallon(hitedCollider.transform.position);
-                        }
-                    }
-                    catch { }
-                }
-            }
             transform.FindChild("CannonVis").gameObject.SetActive(false);
             Destroy(gameObject.GetComponent<Rigidbody>());
             Destroy(gameObject.GetComponent<BulletBehaviour>());
+
+            
         }
         public void APPlayExploInAir()
         {
@@ -697,7 +704,7 @@ namespace WW2NavalAssembly
         }
         public void HEDetectWaterHost()
         {
-            if (transform.position.y < 20f && !hasHitWater && myRigid.velocity.y < 0)
+            if (transform.position.y < 20f)
             {
                 if (!spotted)
                 {
@@ -717,6 +724,10 @@ namespace WW2NavalAssembly
                         }
                     }
                 }
+            }
+            if (transform.position.y < 20f && !hasHitWater && myRigid.velocity.y < 0)
+            {
+                
                 GameObject waterhit;
                 if (Caliber >= 283)
                 {
@@ -765,7 +776,8 @@ namespace WW2NavalAssembly
                         {
                             tmpThickness = 20;
                         }
-                        HEDestroyBalloon(hit);
+                        penetration -= tmpThickness;
+                        HEDestroyBalloonHit(hit);
                         HEPlayExplo(tmpThickness);
                         Destroy(gameObject,0.1f);
                     }
@@ -776,6 +788,7 @@ namespace WW2NavalAssembly
         }
         public void HEPlayExplo(float thickness)
         {
+            
             GameObject explo = (GameObject)Instantiate(AssetManager.Instance.CannonHit.explo, transform.position, Quaternion.identity);
             explo.SetActive(true);
             explo.transform.localScale = Caliber / 400 * Vector3.one;
@@ -805,11 +818,11 @@ namespace WW2NavalAssembly
             Destroy(gameObject.GetComponent<Rigidbody>());
             Destroy(gameObject.GetComponent<BulletBehaviour>());
         }
-        public void HEDestroyBalloon(RaycastHit hit)
+        public void HEDestroyBalloonHit(RaycastHit hit)
         {
             int armourGuid = hit.collider.transform.parent.GetComponent<BlockBehaviour>().BuildingBlock.Guid.GetHashCode();
             //Debug.Log(armourGuid);
-            Collider[] ExploCol = Physics.OverlapSphere(transform.position, Caliber / 100);
+            Collider[] ExploCol = Physics.OverlapSphere(transform.position, Mathf.Sqrt(Caliber) / 5);
             foreach (Collider hitedCollider in ExploCol)
             {
                 try
@@ -817,7 +830,7 @@ namespace WW2NavalAssembly
                     //Debug.Log(hitedCollider.transform.parent.name);
                     if (hitedCollider.transform.parent.name == "Balloon" || hitedCollider.transform.parent.name == "SqrBalloon")
                     {
-                        bool hasArmourBetween = false;
+                        float ArmourBetween = 0;
                         Ray Ray = new Ray(hit.point, hitedCollider.transform.position-hit.point);
                         RaycastHit[] hitList = Physics.RaycastAll(Ray, (hitedCollider.transform.position - hit.point).magnitude);
                         foreach (RaycastHit raycastHit in hitList)
@@ -825,11 +838,11 @@ namespace WW2NavalAssembly
                             if (raycastHit.collider.transform.parent.GetComponent<BlockBehaviour>().BuildingBlock.Guid.GetHashCode() != armourGuid 
                                 && raycastHit.collider.transform.parent.GetComponent<WoodenArmour>())
                             {
-                                hasArmourBetween = true;
+                                ArmourBetween += raycastHit.collider.transform.parent.GetComponent<WoodenArmour>().thickness;
                             }
                         }
-                        //Debug.Log(hasArmourBetween);
-                        if (hasArmourBetween)
+                        //Debug.Log(ArmourBetween + " VS "+penetration);
+                        if (ArmourBetween > penetration)
                         {
                             continue;
                         }
@@ -875,7 +888,15 @@ namespace WW2NavalAssembly
         public void Start()
         {
             myRigid = gameObject.GetComponent<Rigidbody>();
-            penetration = Caliber * 2;
+            if (CannonType == 0)
+            {
+                penetration = Caliber * 2;
+            }
+            else if (CannonType == 1)
+            {
+                penetration = Caliber * 0.3f;
+            }
+            
             decay = Mathf.Pow(0.5f, 1 / (Mathf.Sqrt(Caliber + 100) * 33f));
             
             TrailRenderer TR = gameObject.GetComponent<TrailRenderer>();
@@ -934,13 +955,20 @@ namespace WW2NavalAssembly
                 else
                 {
                     APDetectCollisionClient();
-                    APDetectWaterClient();
+                    CannonDetectWaterClient();
                     
                 }
                 
             }
+            if (CannonType == 0)
+            {
+                penetration *= decay;
+            }
+            else
+            {
 
-            penetration *= decay;
+            }
+            
         }
     }
     public class Gun:BlockScript

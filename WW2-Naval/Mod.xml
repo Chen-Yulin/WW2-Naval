@@ -5,15 +5,15 @@
 	<Name>WW2Naval</Name>
 	<Author>Chen, Yulin</Author> <!-- FIX: Insert your name here. -->
 	<!-- Major.Minor.Build -->
-	<Version>0.4.3</Version>
+	<Version>0.4.4</Version>
 	
 	<Description>
 	A mod for 1/5 scale WW2 naval battel.
-	Version 0.4.3
+	Version 0.4.4
 	</Description>
 
 	<Icon name="icon"/>
-	<Debug>false</Debug>
+	<Debug>True</Debug>
 	
 	
 	<MultiplayerCompatible>true</MultiplayerCompatible>
@@ -29,6 +29,7 @@
 		<Block path="NavalGun.xml" />
 		<Block path="Controller.xml" />
 		<Block path="TorpedoLauncher.xml" />
+		<Block path="Gunnner.xml" />
 	</Blocks>
 	
 	<!-- Any entities (level objects) your mod adds to the game.
@@ -65,8 +66,8 @@
 		<Texture name="Gun Texture" path="Gun\Gun.png"/>
 		<Mesh name="Cannon Mesh" path="Gun/Cannon.obj"/>
 		<Texture name="Cannon Texture" path="Gun\Cannon.png"/>
-		<Mesh name="pilot Mesh" path="CentralController\pilot.obj"/>
-		<Texture name="pilot Texture" path="CentralController\pilot.png"/>
+		<Mesh name="pilot Mesh" path="CentralController\captain.obj"/>
+		<Texture name="pilot Texture" path="CentralController\captain.png"/>
 		<Texture name="ReloadHEOut Texture" path="Gun\loadCircleOut.png"/>
 		<Texture name="ReloadHEIn Texture" path="Gun\loadCircleIn.png"/>
 		<Texture name="ReloadAPOut Texture" path="Gun\loadCircleOut2.png"/>
@@ -80,6 +81,8 @@
 		<Texture name="TorpedoFan1 Texture" path="Torpedo\TorpedoFan1.png"/>
 		<Mesh name="TorpedoFan2 Mesh" path="Torpedo\TorpedoFan2.obj"/>
 		<Texture name="TorpedoFan2 Texture" path="Torpedo\TorpedoFan2.png"/>
+		<Mesh name="gunner Mesh" path="Gunner\gunner.obj"/>
+		<Texture name="gunner Texture" path="Gunner\gunner.png"/>
 
 		<AudioClip name="GunShot Audio" path="Gun\fire.wav" />
 		<AudioClip name="GunExplo Audio" path="Gun\explo.wav" />

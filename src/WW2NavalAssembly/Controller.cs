@@ -49,13 +49,16 @@ namespace WW2NavalAssembly
         public int[] SpotNum = new int[16];
         public Vector3[] ControllerVel = new Vector3[16];
         public Vector3[] ControllerPos = new Vector3[16];
-        
+
+        public Dictionary<float, Controller.FCResult>[] ControllerFCResult = new Dictionary<float, Controller.FCResult>[16];
+
         public ControllerDataManager()
         {
             for (int i = 0; i < 16; i++)
             {
                 lockData[i] = new LockData();
                 cameraData[i] = new CameraData();
+                ControllerFCResult[i] = new Dictionary<float, Controller.FCResult>();
             }
         }
         public void LockDataReceiver(Message msg)
@@ -442,6 +445,8 @@ namespace WW2NavalAssembly
                         FCResult res = CalculateGunFCPara(targetPos, targetVel, fcRes.Key);
                         fcRes.Value.Set(res.Orien, res.Pitch, res.hasRes, res.predPosition);
                     }
+                    // upload FCResult
+                    ControllerDataManager.Instance.ControllerFCResult[myPlayerID] = FCResults;
                     foreach (var PitchPred in PitchPredIcon)
                     {
                         PitchPred.Value.SetActive(true);

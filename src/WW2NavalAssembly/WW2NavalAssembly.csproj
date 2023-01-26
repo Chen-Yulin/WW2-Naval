@@ -60,6 +60,7 @@
     <Compile Include="FireControlManager.cs" />
     <Compile Include="Grouper.cs" />
     <Compile Include="Gun.cs" />
+    <Compile Include="Gunner.cs" />
     <Compile Include="MathTool.cs" />
     <Compile Include="MessageController.cs" />
     <Compile Include="Mod.cs" />
