@@ -16,9 +16,14 @@ namespace WW2NavalAssembly
     {
         public override string Name { get; } = "GunnerMsgReceiver";
         public static MessageType EmulateMsg = ModNetworking.CreateMessageType(DataType.Integer, DataType.Integer, DataType.Integer, DataType.Integer);
+        public static MessageType TargetMsg = ModNetworking.CreateMessageType(DataType.Integer, DataType.Integer, DataType.Boolean, DataType.Single, DataType.Single, DataType.Single);
 
         public Dictionary<int, int>[] EmulatePitch = new Dictionary<int, int>[16];
         public Dictionary<int, int>[] EmulateOrien = new Dictionary<int, int>[16];
+
+        public Dictionary<int, bool>[] hasTarget = new Dictionary<int, bool>[16];
+        public Dictionary<int, Vector2>[] TargetPredPos = new Dictionary<int, Vector2>[16];
+        public Dictionary<int, float>[] TargrtPitch = new Dictionary<int, float>[16];
 
         public GunnerMsgReceiver()
         {
@@ -26,6 +31,9 @@ namespace WW2NavalAssembly
             {
                 EmulatePitch[i] = new Dictionary<int, int>();
                 EmulateOrien[i] = new Dictionary<int, int>();
+                hasTarget[i] = new Dictionary<int, bool>();
+                TargetPredPos[i] = new Dictionary<int, Vector2>();
+                TargrtPitch[i] = new Dictionary<int, float>();
             }
         }
 
@@ -33,6 +41,12 @@ namespace WW2NavalAssembly
         {
             EmulatePitch[(int)msg.GetData(0)][(int)msg.GetData(1)] = (int)msg.GetData(2);
             EmulateOrien[(int)msg.GetData(0)][(int)msg.GetData(1)] = (int)msg.GetData(3);
+        }
+        public void TargetReceiver(Message msg)
+        {
+            hasTarget[(int)msg.GetData(0)][(int)msg.GetData(1)] = (bool)msg.GetData(2);
+            TargetPredPos[(int)msg.GetData(0)][(int)msg.GetData(1)] = new Vector2((float)msg.GetData(3), (float)msg.GetData(4));
+            TargrtPitch[(int)msg.GetData(0)][(int)msg.GetData(1)] = (float)msg.GetData(5);
         }
 
     }
@@ -102,82 +116,12 @@ namespace WW2NavalAssembly
 
             
         }
+
         public void SendEmulateControl()
         {
-            bool hasChanged = false;
-            if (hasTarget && bindedGuns[0])
-            {                
-                Vector2 GunForward = bindedGuns[0].GetComponent<Gun>().GetFCOrienPara();
-                Vector2 targetVector = targetPos - new Vector2(bindedGuns[0].transform.position.x, bindedGuns[0].transform.position.z);
-                //Debug.Log(MathTool.Instance.SignedAngle(GunForward, targetVector));
-                if (MathTool.Instance.SignedAngle(GunForward, targetVector) > 0.5f)
-                {
-                    if (PreOrienDiection != 1)
-                    {
-                        PreOrienDiection = 1;
-                        hasChanged = true;
-                    }
-                }
-                else if (MathTool.Instance.SignedAngle(GunForward, targetVector) < -0.5f)
-                {
-                    if (PreOrienDiection != -1)
-                    {
-                        PreOrienDiection = -1;
-                        hasChanged = true;
-                    }
-                }
-                else
-                {
-                    if (PreOrienDiection != 0)
-                    {
-                        PreOrienDiection = 0;
-                        hasChanged = true;
-                    }
-                }
-
-
-                if (targetPitch - bindedGuns[0].GetComponent<Gun>().GetFCPitchPara() > 0.25f)
-                {
-                    if (PrePitchDiection != 1)
-                    {
-                        PrePitchDiection = 1;
-                        hasChanged = true;
-                    }
-                }
-                else if (targetPitch - bindedGuns[0].GetComponent<Gun>().GetFCPitchPara() < -0.25f)
-                {
-                    if (PrePitchDiection != -1)
-                    {
-                        PrePitchDiection = -1;
-                        hasChanged = true;
-                    }
-                }
-                else
-                {
-                    if (PrePitchDiection != 0)
-                    {
-                        PrePitchDiection = 0;
-                        hasChanged = true;
-                    }
-                }
-
-            }
-            else
+            if (mySeed == ModController.Instance.state % 10)
             {
-                if (PrePitchDiection != 0)
-                {
-                    PrePitchDiection = 0;
-                    hasChanged = true;
-                }
-                if (PreOrienDiection != 0)
-                {
-                    PreOrienDiection = 0;
-                    hasChanged = true;
-                }
-            }
-            if (hasChanged)
-            {
-                ModNetworking.SendToHost(GunnerMsgReceiver.EmulateMsg.CreateMessage(myPlayerID, myGuid, PrePitchDiection, PreOrienDiection));
+                ModNetworking.SendToHost(GunnerMsgReceiver.TargetMsg.CreateMessage(myPlayerID,myGuid,hasTarget,targetPos.x,targetPos.y,targetPitch));
             }
         }
         public void ReceiveEmulateControl()
@@ -244,6 +188,106 @@ namespace WW2NavalAssembly
                 }
             }
 
+        }
+        public void EmulateControlOnHost()
+        {
+            if (GunnerMsgReceiver.Instance.hasTarget[myPlayerID][myGuid] && bindedGuns[0])
+            {
+                Vector2 GunForward = bindedGuns[0].GetComponent<Gun>().GetFCOrienPara();
+                Vector2 targetVector = GunnerMsgReceiver.Instance.TargetPredPos[myPlayerID][myGuid] - new Vector2(bindedGuns[0].transform.position.x, bindedGuns[0].transform.position.z);
+                //Debug.Log(MathTool.Instance.SignedAngle(GunForward, targetVector));
+                if (MathTool.Instance.SignedAngle(GunForward, targetVector) > 0.5f)
+                {
+                    if (leftEmulateStage == 0)
+                    {
+                        EmulateKeys(new MKey[0], LeftKey, true);
+                        leftEmulateStage++;
+                    }
+                }
+                else
+                {
+                    if (leftEmulateStage == 1)
+                    {
+                        EmulateKeys(new MKey[0], LeftKey, false);
+                        leftEmulateStage--;
+                    }
+                }
+                if (MathTool.Instance.SignedAngle(GunForward, targetVector) < -0.5f)
+                {
+                    if (rightEmulateStage == 0)
+                    {
+                        EmulateKeys(new MKey[0], RightKey, true);
+                        rightEmulateStage++;
+                    }
+
+                }
+                else
+                {
+                    if (rightEmulateStage == 1)
+                    {
+                        EmulateKeys(new MKey[0], RightKey, false);
+                        rightEmulateStage--;
+                    }
+                }
+
+                if (GunnerMsgReceiver.Instance.TargrtPitch[myPlayerID][myGuid] - bindedGuns[0].GetComponent<Gun>().GetFCPitchPara() > 0.25f)
+                {
+                    if (upEmulateStage == 0)
+                    {
+                        EmulateKeys(new MKey[0], UpKey, true);
+                        upEmulateStage++;
+                    }
+                }
+                else
+                {
+                    if (upEmulateStage == 1)
+                    {
+                        EmulateKeys(new MKey[0], UpKey, false);
+                        upEmulateStage--;
+                    }
+                }
+
+                if (GunnerMsgReceiver.Instance.TargrtPitch[myPlayerID][myGuid] - bindedGuns[0].GetComponent<Gun>().GetFCPitchPara() < -0.25f)
+                {
+                    if (downEmulateStage == 0)
+                    {
+                        EmulateKeys(new MKey[0], DownKey, true);
+                        downEmulateStage++;
+                    }
+                }
+                else
+                {
+                    if (downEmulateStage == 1)
+                    {
+                        EmulateKeys(new MKey[0], DownKey, false);
+                        downEmulateStage--;
+                    }
+                }
+
+            }
+            else
+            {
+                if (leftEmulateStage == 1)
+                {
+                    EmulateKeys(new MKey[0], LeftKey, false);
+                    leftEmulateStage--;
+                }
+                if (rightEmulateStage == 1)
+                {
+                    EmulateKeys(new MKey[0], RightKey, false);
+                    rightEmulateStage--;
+                }
+                if (upEmulateStage == 1)
+                {
+                    EmulateKeys(new MKey[0], UpKey, false);
+                    upEmulateStage--;
+                }
+                if (downEmulateStage == 1)
+                {
+                    EmulateKeys(new MKey[0], DownKey, false);
+                    downEmulateStage--;
+                }
+            }
         }
         public void EmulateControl()
         {
@@ -437,7 +481,7 @@ namespace WW2NavalAssembly
             DownKey = AddEmulatorKey("Down Key", "DownKey", KeyCode.H);
             GunGroup = AddText("Gun Group", "GunGroup", "g0");
             myPlayerID = BlockBehaviour.ParentMachine.PlayerID;
-            mySeed = (int)(UnityEngine.Random.value * 39);
+            mySeed = (int)(UnityEngine.Random.value * 10);
         }
         public void Start()
         {
@@ -470,6 +514,27 @@ namespace WW2NavalAssembly
                 GunnerMsgReceiver.Instance.EmulateOrien[myPlayerID].Add(myGuid, 0);
             }
             catch { }
+            try
+            {
+                GunnerMsgReceiver.Instance.TargetPredPos[myPlayerID].Add(myGuid, Vector2.zero);
+            }
+            catch {
+                GunnerMsgReceiver.Instance.TargetPredPos[myPlayerID][myGuid] = Vector2.zero;
+            }
+            try
+            {
+                GunnerMsgReceiver.Instance.hasTarget[myPlayerID].Add(myGuid, false);
+            }
+            catch {
+                GunnerMsgReceiver.Instance.hasTarget[myPlayerID][myGuid] = false;
+            }
+            try
+            {
+                GunnerMsgReceiver.Instance.TargrtPitch[myPlayerID].Add(myGuid, 0);
+            }
+            catch {
+                GunnerMsgReceiver.Instance.TargrtPitch[myPlayerID][myGuid] = 0;
+            }
 
         }
         public override void OnSimulateStop()
@@ -481,7 +546,7 @@ namespace WW2NavalAssembly
                 }
                 else
                 {
-                    ModNetworking.SendToHost(GunnerMsgReceiver.EmulateMsg.CreateMessage(myPlayerID, myGuid, 0, 0));
+                    
                 }
             }
             else
@@ -514,7 +579,7 @@ namespace WW2NavalAssembly
                 }
                 else
                 {
-                    ReceiveEmulateControl();
+                    EmulateControlOnHost();
                 }
             }
             else

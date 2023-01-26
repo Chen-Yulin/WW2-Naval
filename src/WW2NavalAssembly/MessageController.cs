@@ -25,6 +25,7 @@ namespace WW2NavalAssembly
             ModNetworking.Callbacks[TorpedoMsgReceiver.TorpedoDataMsg] += TorpedoMsgReceiver.Instance.TorpedoDataMsgReceiver;
             ModNetworking.Callbacks[TorpedoMsgReceiver.TorpedoGuidMsg] += TorpedoMsgReceiver.Instance.TorpedoGuidMsgReceiver;
             ModNetworking.Callbacks[GunnerMsgReceiver.EmulateMsg] += GunnerMsgReceiver.Instance.EmulateReceiver;
+            ModNetworking.Callbacks[GunnerMsgReceiver.TargetMsg] += GunnerMsgReceiver.Instance.TargetReceiver;
         }
     }
 }

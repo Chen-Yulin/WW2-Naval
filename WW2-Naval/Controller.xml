@@ -1,5 +1,5 @@
 <Block>
-	<Debug>True</Debug>
+	<Debug>false</Debug>
 	<ID>2</ID>
 	<Name>Controller</Name>
 	<Mass>0.3</Mass>
