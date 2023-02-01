@@ -1,12 +1,12 @@
 ManifestFileVersion: 0
-CRC: 2828024848
+CRC: 4032815393
 Hashes:
   AssetFileHash:
     serializedVersion: 2
-    Hash: 68faa8670a3c33d5e67eae0cb3da19b4
+    Hash: 49bd3e9956790f56ad35fb703e1faaea
   TypeTreeHash:
     serializedVersion: 2
-    Hash: 8e73928d58048341e9b2fe1dbcc1debf
+    Hash: 36daabf0a26aaa21fe4dae37acd3e3e0
 HashAppended: 0
 ClassTypes:
 - Class: 1
@@ -17,6 +17,8 @@ ClassTypes:
   Script: {instanceID: 0}
 - Class: 28
   Script: {instanceID: 0}
+- Class: 43
+  Script: {instanceID: 0}
 - Class: 48
   Script: {instanceID: 0}
 - Class: 198
@@ -26,4 +28,5 @@ ClassTypes:
 Assets:
 - Assets/explo/GunSmoke1.prefab
 - Assets/explo/GunSmoke2.prefab
+- Assets/explo/GunSmoke3.prefab
 Dependencies: []

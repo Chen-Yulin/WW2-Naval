@@ -340,29 +340,31 @@ namespace WW2NavalAssembly
                     WH.position = hit.collider.transform.parent.InverseTransformPoint(hit.point);
                 }
 
-                string hittedname = hit.collider.transform.parent.name;
-                if (hittedname == "DoubleWoodenBlock" || hittedname == "SingleWoodenBlock" || hittedname == "Log" || hittedname == "SpinningBlock")
-                {   // add hole projector
-                    GameObject piercedhole = new GameObject("PiercedHole");
-                    piercedhole.transform.SetParent(hit.collider.transform.parent);
-                    piercedhole.transform.localPosition = Vector3.zero;
-                    piercedhole.transform.localRotation = Quaternion.identity;
-                    piercedhole.transform.localScale = Vector3.one;
+                
+                if (Caliber >= 100)
+                {
+                    string hittedname = hit.collider.transform.parent.name;
+                    if (hittedname == "DoubleWoodenBlock" || hittedname == "SingleWoodenBlock" || hittedname == "Log" || hittedname == "SpinningBlock")
+                    {   // add hole projector
+                        GameObject piercedhole = new GameObject("PiercedHole");
+                        piercedhole.transform.SetParent(hit.collider.transform.parent);
+                        piercedhole.transform.localPosition = Vector3.zero;
+                        piercedhole.transform.localRotation = Quaternion.identity;
+                        piercedhole.transform.localScale = Vector3.one;
 
-                    PiercedHole PH = piercedhole.AddComponent<PiercedHole>();
-                    PH.hittedCaliber = Caliber;
-                    PH.position = hit.collider.transform.parent.InverseTransformPoint(hit.point);
-                    PH.forward = myRigid.velocity.normalized;
+                        PiercedHole PH = piercedhole.AddComponent<PiercedHole>();
+                        PH.hittedCaliber = Caliber;
+                        PH.position = hit.collider.transform.parent.InverseTransformPoint(hit.point);
+                        PH.forward = myRigid.velocity.normalized;
 
-                    if (StatMaster.isMP)
-                    {
-                        ModNetworking.SendToAll(WeaponMsgReceiver.HitHoleMsg.CreateMessage( (int) hit.collider.transform.parent.GetComponent<BlockBehaviour>().ParentMachine.PlayerID,
-                                                                                            hit.collider.transform.parent.GetComponent<BlockBehaviour>().BuildingBlock.Guid.GetHashCode(),
-                                                                                            Caliber, PH.position, PH.forward, 0));
+                        if (StatMaster.isMP)
+                        {
+                            ModNetworking.SendToAll(WeaponMsgReceiver.HitHoleMsg.CreateMessage((int)hit.collider.transform.parent.GetComponent<BlockBehaviour>().ParentMachine.PlayerID,
+                                                                                                hit.collider.transform.parent.GetComponent<BlockBehaviour>().BuildingBlock.Guid.GetHashCode(),
+                                                                                                Caliber, PH.position, PH.forward, 0));
+                        }
                     }
                 }
-
-
                 return true;
             }
 
@@ -374,14 +376,20 @@ namespace WW2NavalAssembly
             if (Caliber>=283)
             {
                 gunsmoke = (GameObject)Instantiate(AssetManager.Instance.GunSmoke.gunsmoke1, transform.position, transform.rotation);
-                gunsmoke.transform.localScale = Caliber / 381 * Vector3.one;
+                gunsmoke.transform.localScale = Caliber / 200 * Vector3.one;
+                Destroy(gunsmoke, 3);
+            }
+            else if (Caliber >= 100)
+            {
+                gunsmoke = (GameObject)Instantiate(AssetManager.Instance.GunSmoke.gunsmoke2, transform.position, transform.rotation);
+                gunsmoke.transform.localScale = Caliber / 200 * Vector3.one;
                 Destroy(gunsmoke, 3);
             }
             else
             {
                 gunsmoke = (GameObject)Instantiate(AssetManager.Instance.GunSmoke.gunsmoke2, transform.position, transform.rotation);
-                gunsmoke.transform.localScale = Caliber / 170 * Vector3.one;
-                Destroy(gunsmoke, 3);
+                gunsmoke.transform.localScale = Caliber / 200 * Vector3.one;
+                Destroy(gunsmoke, 2);
             }
             AddFireSound(gunsmoke.transform);
         }
@@ -445,7 +453,7 @@ namespace WW2NavalAssembly
                                     {
                                         CW.Wellpalsy = true;
                                     }
-                                    if (UnityEngine.Random.value < WellExploProb)
+                                    if (UnityEngine.Random.value < WellExploProb * CW.myCaliber/500)
                                     {
                                         CW.WellExplo = true;
                                     }
@@ -489,7 +497,7 @@ namespace WW2NavalAssembly
                         {
                             GameObject explo = (GameObject)Instantiate(AssetManager.Instance.CannonHit.explo, exploPosition, Quaternion.identity);
                             explo.SetActive(true);
-                            explo.transform.localScale = exploInfo.Caliber / 400 * Vector3.one;
+                            explo.transform.localScale = exploInfo.Caliber / 800 * Vector3.one;
                             Destroy(explo, 3);
                             AddExploSound(explo.transform);
                             break;
@@ -510,7 +518,7 @@ namespace WW2NavalAssembly
             }
             WeaponMsgReceiver.Instance.ExploInfo[myPlayerID].Clear();
         }
-        public void APDetectWaterHost()
+        public void CannonDetectWaterHost()
         {
             if (transform.position.y < 20f)
             {
@@ -561,9 +569,16 @@ namespace WW2NavalAssembly
 
                     
                 }
-                else
+                else if (Caliber >= 100)
                 {
                     waterhit = (GameObject)Instantiate(AssetManager.Instance.WaterHit.waterhit2, new Vector3(transform.position.x, 20, transform.position.z), Quaternion.identity);
+                    waterhit.transform.localScale = Caliber / 381 * Vector3.one;
+                    Destroy(waterhit, 3);
+                    Destroy(gameObject, 0.4f);
+                }
+                else
+                {
+                    waterhit = (GameObject)Instantiate(AssetManager.Instance.WaterHit.waterhit3, new Vector3(transform.position.x, 20, transform.position.z), Quaternion.identity);
                     waterhit.transform.localScale = Caliber / 381 * Vector3.one;
                     Destroy(waterhit, 3);
                     Destroy(gameObject, 0.4f);
@@ -602,10 +617,16 @@ namespace WW2NavalAssembly
                     waterhit.transform.localScale = waterhitInfo.Caliber / 381 * Vector3.one;
                     Destroy(waterhit, 3);
                 }
-                else
+                else if (waterhitInfo.Caliber >= 100)
                 {
                     waterhit = (GameObject)Instantiate(AssetManager.Instance.WaterHit.waterhit2, waterhitInfo.position, Quaternion.identity);
                     waterhit.transform.localScale = waterhitInfo.Caliber / 381 * Vector3.one;
+                    Destroy(waterhit, 3);
+                }
+                else
+                {
+                    waterhit = (GameObject)Instantiate(AssetManager.Instance.WaterHit.waterhit3, waterhitInfo.position, Quaternion.identity);
+                    waterhit.transform.localScale = Caliber / 381 * Vector3.one;
                     Destroy(waterhit, 3);
                 }
 
@@ -620,7 +641,7 @@ namespace WW2NavalAssembly
             {
                 GameObject explo = (GameObject)Instantiate(AssetManager.Instance.CannonHit.explo, hit.point - myRigid.velocity.normalized * Caliber / 800f, Quaternion.identity);
                 explo.SetActive(true);
-                explo.transform.localScale = Caliber / 400 * Vector3.one;
+                explo.transform.localScale = Caliber / 800 * Vector3.one;
                 Destroy(explo, 3);
                 AddExploSound(explo.transform);
 
@@ -658,7 +679,11 @@ namespace WW2NavalAssembly
                 }
             }
             catch { }
-            transform.FindChild("CannonVis").gameObject.SetActive(false);
+            if (transform.FindChild("CannonVis"))
+            {
+                transform.FindChild("CannonVis").gameObject.SetActive(false);
+            }
+            
             Destroy(gameObject.GetComponent<Rigidbody>());
             Destroy(gameObject.GetComponent<BulletBehaviour>());
 
@@ -668,7 +693,7 @@ namespace WW2NavalAssembly
         {
             GameObject explo = (GameObject)Instantiate(AssetManager.Instance.CannonHit.explo, transform.position, Quaternion.identity);
             explo.SetActive(true);
-            explo.transform.localScale = Caliber / 400 * Vector3.one;
+            explo.transform.localScale = Caliber / 800 * Vector3.one;
             Destroy(explo, 3);
             AddExploSound(explo.transform);
 
@@ -698,7 +723,10 @@ namespace WW2NavalAssembly
                     catch { }
                 }
             }
-            transform.FindChild("CannonVis").gameObject.SetActive(false);
+            if (transform.FindChild("CannonVis"))
+            {
+                transform.FindChild("CannonVis").gameObject.SetActive(false);
+            }
             Destroy(gameObject.GetComponent<Rigidbody>());
             Destroy(gameObject.GetComponent<BulletBehaviour>());
         }
@@ -791,7 +819,7 @@ namespace WW2NavalAssembly
             
             GameObject explo = (GameObject)Instantiate(AssetManager.Instance.CannonHit.explo, transform.position, Quaternion.identity);
             explo.SetActive(true);
-            explo.transform.localScale = Caliber / 400 * Vector3.one;
+            explo.transform.localScale = Caliber / 800 * Vector3.one;
             Destroy(explo, 3);
             AddExploSound(explo.transform);
 
@@ -814,7 +842,10 @@ namespace WW2NavalAssembly
                 }
                 catch { }
             }
-            transform.FindChild("CannonVis").gameObject.SetActive(false);
+            if (transform.FindChild("CannonVis"))
+            {
+                transform.FindChild("CannonVis").gameObject.SetActive(false);
+            }
             Destroy(gameObject.GetComponent<Rigidbody>());
             Destroy(gameObject.GetComponent<BulletBehaviour>());
         }
@@ -930,7 +961,7 @@ namespace WW2NavalAssembly
                         APDetectCollisionHost();
                         if (pericedBlock.Count == 0 && ModController.Instance.showSea)
                         {
-                            APDetectWaterHost();
+                            CannonDetectWaterHost();
                         }
                         if (APtimerOn)
                         {
@@ -1039,15 +1070,19 @@ namespace WW2NavalAssembly
             RBtmp.mass = 0.2f;
             RBtmp.drag = 0.02f;
             RBtmp.useGravity = true;
-            GameObject CannonVis = new GameObject("CannonVis");
-            CannonVis.transform.SetParent(CannonPrefab.transform);
-            CannonVis.transform.localPosition = Vector3.zero;
-            CannonVis.transform.localRotation = Quaternion.Euler(90f, 0f, 0f);
-            CannonVis.transform.localScale = Vector3.one;
-            MeshFilter MFtmp = CannonVis.AddComponent<MeshFilter>();
-            MFtmp.sharedMesh = ModResource.GetMesh("Cannon Mesh").Mesh;
-            MeshRenderer MRtmp = CannonVis.AddComponent<MeshRenderer>();
-            MRtmp.material.mainTexture = ModResource.GetTexture("Cannon Texture").Texture;
+            if (Caliber.Value >= 100)
+            {
+                GameObject CannonVis = new GameObject("CannonVis");
+                CannonVis.transform.SetParent(CannonPrefab.transform);
+                CannonVis.transform.localPosition = Vector3.zero;
+                CannonVis.transform.localRotation = Quaternion.Euler(90f, 0f, 0f);
+                CannonVis.transform.localScale = Vector3.one * Caliber.Value/120;
+                MeshFilter MFtmp = CannonVis.AddComponent<MeshFilter>();
+                MFtmp.sharedMesh = ModResource.GetMesh("Cannon Mesh").Mesh;
+                MeshRenderer MRtmp = CannonVis.AddComponent<MeshRenderer>();
+                MRtmp.material.mainTexture = ModResource.GetTexture("Cannon Texture").Texture;
+            }
+            
 
             TrailRenderer TRtmp = CannonPrefab.AddComponent<TrailRenderer>();
             TRtmp.autodestruct = false;
@@ -1055,7 +1090,7 @@ namespace WW2NavalAssembly
             TRtmp.receiveShadows = false;
             TRtmp.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
 
-            TRtmp.startWidth = 0.001f * Caliber.Value;
+            TRtmp.startWidth = Mathf.Clamp(0.001f * Caliber.Value, 0.05f,0.5f);
             TRtmp.endWidth = 0f;
 
             TRtmp.material = new Material(Shader.Find("Particles/Additive"));
@@ -1097,7 +1132,7 @@ namespace WW2NavalAssembly
             myPlayerID = BlockBehaviour.ParentMachine.PlayerID;
             FireKey = AddKey("Fire", "Fire", KeyCode.C);
             SwitchKey = AddKey("Switch AP/HE", "SwitchCannonType", KeyCode.R);
-            Caliber = AddSlider("Caliber (mm)", "Caliber", 406, 100, 510);
+            Caliber = AddSlider("Caliber (mm)", "Caliber", 406, 10, 510);
             TrackOn = AddToggle("Track Cannon", "TrackCannon", false);
             FireControl = AddToggle("Fire Control", "FireControl", false);
             GunGroup = AddText("Gun Group", "GunGroup", "g0");
@@ -1121,7 +1156,7 @@ namespace WW2NavalAssembly
             BlockBehaviour.blockJoint.breakTorque = float.PositiveInfinity;
             InitCannon();
             myGuid = BlockBehaviour.BuildingBlock.Guid.GetHashCode();
-            reloadTime = 0.4f * Mathf.Sqrt(Caliber.Value) - 3;
+            reloadTime = Caliber.Value >= 100 ? 0.4f * Mathf.Sqrt(Caliber.Value) - 3 : Caliber.Value/150f + 0.33f;
             currentReloadTime = reloadTime;
             Grouper.Instance.AddGun(myPlayerID, GunGroup.Value, myGuid, gameObject);
             if (!FireControl.isDefaultValue)
@@ -1267,7 +1302,7 @@ namespace WW2NavalAssembly
                 currentReloadTime = 0;
                 muzzleStage = 0;
                 WeaponMsgReceiver.Instance.Fire[myPlayerID][myGuid].fire = false;
-                GameObject Cannon = (GameObject)Instantiate(CannonPrefab, transform.position + 3 * transform.forward, 
+                GameObject Cannon = (GameObject)Instantiate(CannonPrefab, transform.position + 3 * transform.forward * transform.localScale.z, 
                                                             Quaternion.LookRotation(WeaponMsgReceiver.Instance.Fire[myPlayerID][myGuid].forward, Vector3.up));
                 Cannon.name = "NavalCannon" + myPlayerID.ToString();
                 Cannon.SetActive(true);

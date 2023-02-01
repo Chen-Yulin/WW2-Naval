@@ -103,8 +103,6 @@ namespace WW2NavalAssembly
             {
                 rigid.AddForce(-Vector3.up *waterIn / 20);
             }
-            
-
         }
     }
 
@@ -131,6 +129,7 @@ namespace WW2NavalAssembly
             if (type == 0)
             {
                 HoleProjector = Instantiate(AssetManager.Instance.Projector.BulletHole);
+                Destroy(HoleProjector.GetComponent<Projector>(),15);
             }
             else if (type == 1)
             {

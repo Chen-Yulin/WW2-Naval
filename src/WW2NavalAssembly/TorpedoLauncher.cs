@@ -166,7 +166,7 @@ namespace WW2NavalAssembly
         {
             myPlayerID = BlockBehaviour.ParentMachine.PlayerID;
             FireKey = AddKey("Fire", "Fire", KeyCode.C);
-            SwitchKey = AddKey("Switch AP/HE", "SwitchCannonType", KeyCode.R);
+            SwitchKey = AddKey("Switch Speed", "SwitchCannonType", KeyCode.R);
             Caliber = AddSlider("Caliber (mm)", "Caliber", 533, 400, 610);
             Depth0 = AddSlider("Depth 0", "Depth0", 0.5f, 0f, 5f);
             Depth1 = AddSlider("Depth 1", "Depth1", 1.5f, 0f, 5f);

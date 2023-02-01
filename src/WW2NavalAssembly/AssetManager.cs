@@ -82,10 +82,12 @@ namespace WW2NavalAssembly
     {
         public GameObject gunsmoke1;
         public GameObject gunsmoke2;
+        public GameObject gunsmoke3;
         public Asset_GunSmoke(ModAssetBundle modAssetBundle)
         {
             gunsmoke1 = modAssetBundle.LoadAsset<GameObject>("GunSmoke1");
             gunsmoke2 = modAssetBundle.LoadAsset<GameObject>("GunSmoke2");
+            gunsmoke3 = modAssetBundle.LoadAsset<GameObject>("GunSmoke3");
         }
     }
     public class Asset_CannonHit
@@ -100,11 +102,13 @@ namespace WW2NavalAssembly
     {
         public GameObject waterhit1;
         public GameObject waterhit2;
+        public GameObject waterhit3;
         
         public Asset_WaterHit(ModAssetBundle modAssetBundle)
         {
             waterhit1 = modAssetBundle.LoadAsset<GameObject>("waterHit1");
             waterhit2 = modAssetBundle.LoadAsset<GameObject>("waterHit2");
+            waterhit3 = modAssetBundle.LoadAsset<GameObject>("waterHit3");
         }
     }
 

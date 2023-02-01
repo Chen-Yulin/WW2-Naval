@@ -91,6 +91,14 @@ namespace WW2NavalAssembly
                     {
                         break;
                     }
+                //case (int)BlockType.StartingBlock:
+                //    {
+                //        if (block.gameObject.GetComponent(typeof(DefaultArmour)) == null)
+                //            block.gameObject.AddComponent(typeof(DefaultArmour));
+                //        if (block.gameObject.GetComponent(typeof(Aircraft)) == null)
+                //            block.gameObject.AddComponent(typeof(Aircraft));
+                //        break;
+                //    }
                 default:
                     {
                         if (block.gameObject.GetComponent(typeof(DefaultArmour)) == null)

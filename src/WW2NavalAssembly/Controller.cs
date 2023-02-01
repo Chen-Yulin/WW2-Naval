@@ -90,6 +90,7 @@ namespace WW2NavalAssembly
         public MKey SwitchCannnon;
         public MKey Lock;
         public MSlider FCPanelSize;
+        public MSlider TurrentHeight;
 
         public bool TrackOn;
         public Camera _viewCamera;
@@ -246,7 +247,7 @@ namespace WW2NavalAssembly
             float vy;
             float esT = 0;
             float angle = 0;
-            for (int i = 0; i < 8; i++)
+            for (int i = 0; i < 6; i++)
             {
                 vx = initialSpeed * Mathf.Cos(angle);
                 esT = -1 / 0.02f * Mathf.Log(1 - dist * 0.02f / vx);
@@ -262,6 +263,29 @@ namespace WW2NavalAssembly
                 }
                 
             }
+
+            // calculate height offset
+            float modifiedPosition = dist - TurrentHeight.Value / Mathf.Tan(angle + 0.02f);
+            angle = 0;
+            for (int i = 0; i < 8; i++)
+            {
+                vx = initialSpeed * Mathf.Cos(angle);
+                esT = -1 / 0.02f * Mathf.Log(1 - dist * 0.02f / vx);
+                vy = g * esT / (1 - Mathf.Exp(-0.02f * esT)) - g / 0.02f;
+                if (vy / initialSpeed < 0.7f)
+                {
+                    angle = (float)Math.Asin(vy / initialSpeed);
+                    //Debug.Log(angle);
+                }
+                else
+                {
+                    return new Dist2PitchResult();
+                }
+
+            }
+
+
+
             return new Dist2PitchResult(esT, angle * 180/Mathf.PI);
         }
 
@@ -694,6 +718,8 @@ namespace WW2NavalAssembly
             TrackCannon = AddKey("Track Cannon", "TrackCannon", KeyCode.T);
             SwitchCannnon = AddKey("Switch Tracking Cannon", "SwitchTrackingCannon", KeyCode.RightShift);
             FCPanelSize = AddSlider("Fire Control Size", "FCSize", 1f, 0.2f, 5f);
+            TurrentHeight = AddSlider("TurrentHeight", "TurrentHeight", 0.5f, 0f, 2f);
+            
             Lock = AddKey("Lock", "WW2Lock", KeyCode.X);
             mySeed = (int)(UnityEngine.Random.value * 10);
         }
@@ -805,6 +831,11 @@ namespace WW2NavalAssembly
                 Locking = false;
                 ControllerDataManager.Instance.lockData[myPlayerID].valid = false;
             }
+        }
+
+        public override void BuildingFixedUpdate()
+        {
+            ControllerDataManager.Instance.ControllerPos[myPlayerID] = transform.position;
         }
         public override void SimulateFixedUpdateAlways()
         {

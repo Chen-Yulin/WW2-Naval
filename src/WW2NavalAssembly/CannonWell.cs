@@ -67,6 +67,8 @@ namespace WW2NavalAssembly
         public bool Wellpalsy;
         public bool AmmoExplo;
         public bool WellExplo;
+
+
         public float myCaliber = 0;
         public float totalCaliber = 0;
         public float gunNum = 0;
@@ -92,7 +94,15 @@ namespace WW2NavalAssembly
         }
         public void WellExploForce()
         {
-            Collider[] turrent = Physics.OverlapSphere(transform.position + (transform.localScale.z+0.2f) * transform.forward, totalCaliber/800);
+            try
+            {
+                foreach (var joints in gameObject.GetComponent<BlockBehaviour>().jointsToMe)
+                {
+                    joints.breakForce = 1f;
+                }
+            }
+            catch { }
+            Collider[] turrent = Physics.OverlapSphere(transform.position + (transform.localScale.z+0.2f) * transform.forward, Mathf.Clamp(totalCaliber/800,0.5f,1.5f));
             foreach (Collider collider in turrent)
             {
                 try
@@ -101,7 +111,7 @@ namespace WW2NavalAssembly
                 }
                 catch { }
             }
-            gameObject.GetComponent<Rigidbody>().AddForce(-transform.forward * totalCaliber * 200);
+            gameObject.GetComponent<Rigidbody>().AddForce(-transform.forward * totalCaliber * 250);
         }
         public void DisableGun()
         {
@@ -177,6 +187,7 @@ namespace WW2NavalAssembly
                 if (!WellExploEffect.activeSelf)
                 {
                     WellExploEffect.SetActive(true);
+                    Destroy(WellExploEffect, 5);
                     WellExploForce();
                 }
 
@@ -196,9 +207,9 @@ namespace WW2NavalAssembly
                     AmmoExploEffect = (GameObject)Instantiate(AssetManager.Instance.WellEffect.AmmoExplo);
                     AmmoExploEffect.name = "AmmoExploEffect";
                     AmmoExploEffect.transform.position = AmmoVis.transform.position;
-                    AmmoExploEffect.transform.rotation = Quaternion.identity;
                     AmmoExploEffect.transform.localScale = Vector3.one * Mathf.Sqrt(myCaliber) / 20;
                     AmmoExploEffect.SetActive(true);
+                    Destroy(AmmoExploEffect, 3.3f);
                     AmmoExploforce();
                     exploded = true;
                 }
@@ -238,6 +249,7 @@ namespace WW2NavalAssembly
                 disableGun = true;
                 WellMsgReceicer.Instance.WellExplo[myPlayerID][myGuid] = false;
                 WellExploEffect.SetActive(true);
+                Destroy(WellExploEffect, 5);
             }
             if (WellMsgReceicer.Instance.AmmoExplo[myPlayerID][myGuid])
             {
@@ -249,9 +261,9 @@ namespace WW2NavalAssembly
                     AmmoExploEffect = (GameObject)Instantiate(AssetManager.Instance.WellEffect.AmmoExplo);
                     AmmoExploEffect.name = "AmmoExploEffect";
                     AmmoExploEffect.transform.position = AmmoVis.transform.position;
-                    AmmoExploEffect.transform.rotation = Quaternion.identity;
-                    AmmoExploEffect.transform.localScale = Vector3.one * Mathf.Sqrt(myCaliber) / 20;
+                    AmmoExploEffect.transform.localScale = Vector3.one * myCaliber/ 400;
                     AmmoExploEffect.SetActive(true);
+                    Destroy(AmmoExploEffect, 3.3f);
                     AmmoExploforce();
                 }
 
@@ -376,8 +388,8 @@ namespace WW2NavalAssembly
 
             
             WellExploEffect.transform.localPosition = new Vector3(0, 0, (transform.localScale.z - Offset.Value) / transform.lossyScale.z);
-            WellExploEffect.transform.localScale = new Vector3(1f / transform.lossyScale.x, 1f / transform.lossyScale.z, 1f / transform.lossyScale.x) * totalCaliber/400;
-            WellExploEffect.transform.rotation = Quaternion.identity;
+            WellExploEffect.transform.localScale = new Vector3(1f / transform.lossyScale.x, 1f / transform.lossyScale.z, 1f / transform.lossyScale.x) * Mathf.Clamp(totalCaliber/800,0.3f,1.5f);
+            WellExploEffect.transform.eulerAngles = new Vector3(-90, 0, 0);
         }
         public void initLine()
         {
@@ -447,7 +459,7 @@ namespace WW2NavalAssembly
                 WellExploEffect = (GameObject)Instantiate(AssetManager.Instance.WellEffect.WellExplo, transform);
                 WellExploEffect.name = "WellExploEffect";
                 WellExploEffect.transform.localPosition = Vector3.zero;
-                WellExploEffect.transform.rotation = Quaternion.identity;
+                WellExploEffect.transform.eulerAngles = new Vector3(-90, 0, 0);
                 WellExploEffect.transform.localScale = Vector3.one;
                 WellExploEffect.SetActive(false);
             }

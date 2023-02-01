@@ -49,6 +49,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Aircraft.cs" />
     <Compile Include="AssetManager.cs" />
     <Compile Include="BulletHole.cs" />
     <Compile Include="CannonTrackManager.cs" />

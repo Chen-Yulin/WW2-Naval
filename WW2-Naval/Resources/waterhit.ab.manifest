@@ -1,9 +1,9 @@
 ManifestFileVersion: 0
-CRC: 2739362776
+CRC: 2295072468
 Hashes:
   AssetFileHash:
     serializedVersion: 2
-    Hash: f5f7c2b64e4e4b0563f4da0b72c1e077
+    Hash: 0eb1b33aea44311eead112a6ea3cec18
   TypeTreeHash:
     serializedVersion: 2
     Hash: 8e73928d58048341e9b2fe1dbcc1debf
@@ -25,5 +25,6 @@ ClassTypes:
   Script: {instanceID: 0}
 Assets:
 - Assets/explo/waterHit1.prefab
+- Assets/explo/waterHit3.prefab
 - Assets/explo/waterHit2.prefab
 Dependencies: []

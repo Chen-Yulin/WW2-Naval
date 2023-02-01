@@ -25,64 +25,79 @@ namespace WW2NavalAssembly
         }
         public void FixedUpdate()
         {
-            if (ModController.Instance.state == myseed)
+            try
             {
-                if (ModController.Instance.showArmour)
+                if (ModController.Instance.state == myseed)
                 {
-                    if (gameObject.name == "Brace")
+                    if (ModController.Instance.showArmour)
                     {
-                        transform.Find("A").gameObject.GetComponent<MeshRenderer>().enabled = false;
-                        transform.Find("B").gameObject.GetComponent<MeshRenderer>().enabled = false;
-                        transform.Find("Cylinder").gameObject.GetComponent<MeshRenderer>().enabled = false;
-                    }
-                    else if (gameObject.name == "RopeWinch")
-                    {
-                        return;
-                    }
-                    else if (gameObject.name == "Spring")
-                    {
-                        return;
-                    }
-                    else if (gameObject.name == "Balloon")
-                    {
-                        return;
-                    }
-                    else if (gameObject.name == "SqrBalloon")
-                    {
-                        return;
-                    }
-                    else if (gameObject.name == "FlyingBlock")
-                    {
-                        transform.Find("Rot").Find("Vis").gameObject.SetActive(false);
+                        if (gameObject.name == "Brace")
+                        {
+                            transform.Find("A").gameObject.GetComponent<MeshRenderer>().enabled = false;
+                            transform.Find("B").gameObject.GetComponent<MeshRenderer>().enabled = false;
+                            transform.Find("Cylinder").gameObject.GetComponent<MeshRenderer>().enabled = false;
+                        }
+                        else if (gameObject.name == "RopeWinch")
+                        {
+                            return;
+                        }
+                        else if (gameObject.name == "Spring")
+                        {
+                            return;
+                        }
+                        else if (gameObject.name == "Balloon")
+                        {
+                            return;
+                        }
+                        else if (gameObject.name == "SqrBalloon")
+                        {
+                            return;
+                        }
+                        else if (gameObject.name == "FlyingBlock")
+                        {
+                            transform.Find("Rot").Find("Vis").gameObject.SetActive(false);
+                        }
+                        else if (gameObject.name == "SmallWheel")
+                        {
+                            transform.Find("rot").Find("Vis").gameObject.SetActive(false);
+                        }
+                        else
+                        {
+                            transform.Find("Vis").gameObject.SetActive(false);
+                        }
+
                     }
                     else
                     {
-                        transform.Find("Vis").gameObject.SetActive(false);
-                    }
-                    
-                }
-                else
-                {
-                    if (gameObject.name == "Brace")
-                    {
-                        transform.Find("A").gameObject.GetComponent<MeshRenderer>().enabled = true;
-                        transform.Find("B").gameObject.GetComponent<MeshRenderer>().enabled = true;
-                        transform.Find("Cylinder").gameObject.GetComponent<MeshRenderer>().enabled = true;
-                    }
-                    else if (gameObject.name == "RopeWinch" || gameObject.name == "Balloon" || gameObject.name == "Spring" || gameObject.name == "SqrBalloon")
-                    {
-                        return;
-                    }
-                    else if (gameObject.name == "FlyingBlock")
-                    {
-                        transform.Find("Rot").Find("Vis").gameObject.SetActive(true);
-                    }
-                    else
-                    {
-                        transform.Find("Vis").gameObject.SetActive(true);
+                        if (gameObject.name == "Brace")
+                        {
+                            transform.Find("A").gameObject.GetComponent<MeshRenderer>().enabled = true;
+                            transform.Find("B").gameObject.GetComponent<MeshRenderer>().enabled = true;
+                            transform.Find("Cylinder").gameObject.GetComponent<MeshRenderer>().enabled = true;
+                        }
+                        else if (gameObject.name == "RopeWinch" || gameObject.name == "Balloon" || gameObject.name == "Spring" || gameObject.name == "SqrBalloon")
+                        {
+                            return;
+                        }
+                        else if (gameObject.name == "FlyingBlock")
+                        {
+                            transform.Find("Rot").Find("Vis").gameObject.SetActive(true);
+                        }
+                        else if (gameObject.name == "SmallWheel")
+                        {
+                            transform.Find("rot").Find("Vis").gameObject.SetActive(true);
+                        }
+                        else
+                        {
+                            transform.Find("Vis").gameObject.SetActive(true);
+                        }
                     }
                 }
             }
+            catch {
+                Debug.Log( "Error: " + gameObject.name);
+            }
+            
         }
     }
 }
