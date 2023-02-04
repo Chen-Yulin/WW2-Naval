@@ -22,7 +22,7 @@ namespace WW2NavalAssembly
         public static MessageType HitHoleMsg = ModNetworking.CreateMessageType
                                                     (DataType.Integer, DataType.Integer, DataType.Single, DataType.Vector3, DataType.Vector3, DataType.Integer);
                                                     //playerID, guid, caliber, position, forward, type(0=gun,1=torpedo)
-        public static MessageType ReloadMsg = ModNetworking.CreateMessageType(DataType.Integer, DataType.Integer, DataType.Single);
+        public static MessageType ReloadMsg = ModNetworking.CreateMessageType(DataType.Integer, DataType.Integer, DataType.Single, DataType.Boolean, DataType.Boolean, DataType.Integer);
 
         public class firePara
         {
@@ -82,6 +82,9 @@ namespace WW2NavalAssembly
         public Dictionary<int, List<hitHoleInfo>>[] BulletHoleInfo = new Dictionary<int, List<hitHoleInfo>>[16];
         public Dictionary<int, bool>[] reloadTimeUpdated = new Dictionary<int,bool>[16];
         public Dictionary<int, float>[] reloadTime = new Dictionary<int, float>[16];
+        public Dictionary<int, bool>[] CannonType = new Dictionary<int, bool>[16];
+        public Dictionary<int, bool>[] NextCannonType = new Dictionary<int, bool>[16];
+        public Dictionary<int, int>[] CannonNum = new Dictionary<int, int>[16];
 
         public WeaponMsgReceiver()
         {
@@ -93,6 +96,9 @@ namespace WW2NavalAssembly
                 BulletHoleInfo[i] = new Dictionary<int, List<hitHoleInfo>>();
                 reloadTimeUpdated[i] = new Dictionary<int, bool>();
                 reloadTime[i] = new Dictionary<int, float>();
+                CannonType[i] = new Dictionary<int, bool>();
+                NextCannonType[i] = new Dictionary<int, bool>();
+                CannonNum[i] = new Dictionary<int, int>();
             }
         }
         public void exploMsgReceiver(Message msg)
@@ -127,6 +133,9 @@ namespace WW2NavalAssembly
             }
             reloadTimeUpdated[(int)msg.GetData(0)][(int)msg.GetData(1)] = true;
             reloadTime[(int)msg.GetData(0)][(int)msg.GetData(1)] = (float)msg.GetData(2);
+            CannonType[(int)msg.GetData(0)][(int)msg.GetData(1)] = (bool)msg.GetData(3);
+            NextCannonType[(int)msg.GetData(0)][(int)msg.GetData(1)] = (bool)msg.GetData(4);
+            CannonNum[(int)msg.GetData(0)][(int)msg.GetData(1)] = (int)msg.GetData(5);
         }
     }
 
@@ -1235,7 +1244,7 @@ namespace WW2NavalAssembly
                 currentReloadTime += Time.deltaTime;
                 if (ModController.Instance.state == myseed)
                 {
-                    ModNetworking.SendToAll(WeaponMsgReceiver.ReloadMsg.CreateMessage(myPlayerID, myGuid, currentReloadTime));
+                    ModNetworking.SendToAll(WeaponMsgReceiver.ReloadMsg.CreateMessage(myPlayerID, myGuid, currentReloadTime, CannonType, NextCannonType, 0));
                 }
                 return;
             }
@@ -1291,6 +1300,8 @@ namespace WW2NavalAssembly
             {
                 WeaponMsgReceiver.Instance.reloadTimeUpdated[myPlayerID][myGuid] = false;
                 currentReloadTime = WeaponMsgReceiver.Instance.reloadTime[myPlayerID][myGuid];
+                CannonType = WeaponMsgReceiver.Instance.CannonType[myPlayerID][myGuid] ? 0:1;
+                NextCannonType = WeaponMsgReceiver.Instance.NextCannonType[myPlayerID][myGuid] ? 0:1;
             }
             if (currentReloadTime < reloadTime)
             {
@@ -1327,11 +1338,6 @@ namespace WW2NavalAssembly
         }
         public override void SimulateFixedUpdateHost()
         {
-            if (!FireControl.isDefaultValue && StatMaster.isMP)
-            {
-                //ModNetworking.SendToAll(BlockPoseReceiver.forwardMsg.CreateMessage(myPlayerID, myGuid, transform.forward));
-            }
-
             if (muzzleStage < 7)
             {
                 muzzleStage++;

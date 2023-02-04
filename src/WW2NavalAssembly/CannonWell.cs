@@ -388,8 +388,8 @@ namespace WW2NavalAssembly
 
             
             WellExploEffect.transform.localPosition = new Vector3(0, 0, (transform.localScale.z - Offset.Value) / transform.lossyScale.z);
-            WellExploEffect.transform.localScale = new Vector3(1f / transform.lossyScale.x, 1f / transform.lossyScale.z, 1f / transform.lossyScale.x) * Mathf.Clamp(totalCaliber/800,0.3f,1.5f);
-            WellExploEffect.transform.eulerAngles = new Vector3(-90, 0, 0);
+            WellExploEffect.transform.localScale = new Vector3(1f / transform.lossyScale.x, 1f / transform.lossyScale.y, 1f / transform.lossyScale.z) * Mathf.Clamp(totalCaliber/800,0.3f,1.5f);
+            WellExploEffect.transform.eulerAngles = new Vector3(-90, WellExploEffect.transform.localEulerAngles.y, 0);
         }
         public void initLine()
         {
@@ -459,7 +459,7 @@ namespace WW2NavalAssembly
                 WellExploEffect = (GameObject)Instantiate(AssetManager.Instance.WellEffect.WellExplo, transform);
                 WellExploEffect.name = "WellExploEffect";
                 WellExploEffect.transform.localPosition = Vector3.zero;
-                WellExploEffect.transform.eulerAngles = new Vector3(-90, 0, 0);
+                WellExploEffect.transform.localEulerAngles = new Vector3(-90, 0, 0);
                 WellExploEffect.transform.localScale = Vector3.one;
                 WellExploEffect.SetActive(false);
             }
@@ -604,7 +604,12 @@ namespace WW2NavalAssembly
                 {
                     SyncBulletHole();
                 }
-                AdjustPara ();
+                try
+                {
+                    AdjustPara();
+                }
+                catch { }
+                
             }
             if (transform.gameObject.GetComponent<BlockBehaviour>().isSimulating)
             {
