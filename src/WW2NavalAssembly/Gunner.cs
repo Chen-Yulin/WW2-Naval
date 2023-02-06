@@ -330,7 +330,11 @@ namespace WW2NavalAssembly
                 }
                 
                 Vector2 targetVector = GunnerMsgReceiver.Instance.TargetPredPos[myPlayerID][myGuid] - new Vector2(bindedGuns[0].transform.position.x, bindedGuns[0].transform.position.z);
-                bool OutOfSpan = limitValid ? (Vector2.Angle(targetVector, CenterForward) > GunSpan) : false;
+                bool OutOfSpan = limitValid ? (Vector2.Angle(targetVector, CenterForward) > GunSpan ||
+                    (Mathf.Sign(MathTool.Instance.SignedAngle(targetVector, -CenterForward)) == Mathf.Sign(MathTool.Instance.SignedAngle(targetVector, GunForward)) &&
+                        Vector2.Angle(targetVector, -CenterForward) < Vector2.Angle(targetVector, GunForward)
+                        )
+                    ) : false;
                 //Debug.Log(MathTool.Instance.SignedAngle(GunForward, targetVector));
                 if ((!OutOfSpan && MathTool.Instance.SignedAngle(GunForward, targetVector) > OrienFaultTolerance.Value) ||
                     (OutOfSpan && MathTool.Instance.SignedAngle(CenterForward, targetVector) > 0))
