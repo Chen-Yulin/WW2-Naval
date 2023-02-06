@@ -49,6 +49,7 @@ namespace WW2NavalAssembly
         public int[] SpotNum = new int[16];
         public Vector3[] ControllerVel = new Vector3[16];
         public Vector3[] ControllerPos = new Vector3[16];
+        public GameObject[] ControllerObject = new GameObject[16];
 
         public Dictionary<float, Controller.FCResult>[] ControllerFCResult = new Dictionary<float, Controller.FCResult>[16];
 
@@ -59,6 +60,7 @@ namespace WW2NavalAssembly
                 lockData[i] = new LockData();
                 cameraData[i] = new CameraData();
                 ControllerFCResult[i] = new Dictionary<float, Controller.FCResult>();
+                ControllerObject[i] = new GameObject();
             }
         }
         public void LockDataReceiver(Message msg)
@@ -725,9 +727,11 @@ namespace WW2NavalAssembly
         }
         public override void OnSimulateStart()
         {
+            
             myGuid = BlockBehaviour.BuildingBlock.Guid.GetHashCode();
             LockIconOnScreen = ModResource.GetTexture("LockIconScreen Texture").Texture;
             PreYRotation = MathTool.Instance.SignedAngle(GetForward(), new Vector2(Vector3.forward.x, Vector3.forward.z));
+            ControllerDataManager.Instance.ControllerObject[myPlayerID] = gameObject;
             try
             {
                 if (!StatMaster.isMP || PlayerData.localPlayer.networkId == myPlayerID)

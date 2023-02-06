@@ -148,26 +148,38 @@ namespace WW2NavalAssembly
             {
                 return false;
             }
-            foreach (var Blockpair in GunnerDataBase.Instance.HingeInfo[myPlayerID])
-            {
-                
-                foreach (var key in Blockpair.Value.KeyList)
-                {
-                    for (int i = 0; i < key.KeysCount; i++)
-                    {
-                        if (LeftKey.GetKey(0) == key.GetKey(i))
-                        {
-                            //Debug.Log("Detect Hinge:" + Blockpair.Value.BuildingBlock.Guid.ToString());
-                            AngleCenter = new GameObject("Angle Center");
-                            AngleCenter.transform.SetParent(Blockpair.Value.transform);
-                            AngleCenter.transform.localPosition = Vector3.zero;
-                            AngleCenter.transform.eulerAngles = bindedGuns[0].transform.eulerAngles + new Vector3(0, centerAngle, 0);
-                            return true;
-                        }
-                    }
-                }
+            //foreach (var Blockpair in GunnerDataBase.Instance.HingeInfo[myPlayerID])
+            //{
+
+            //    foreach (var key in Blockpair.Value.KeyList)
+            //    {
+            //        for (int i = 0; i < key.KeysCount; i++)
+            //        {
+            //            if (LeftKey.GetKey(0) == key.GetKey(i))
+            //            {
+            //                Debug.Log("Detect Hinge:" + Blockpair.Value.BuildingBlock.Guid.ToString());
+            //                AngleCenter = new GameObject("Angle Center");
+            //                AngleCenter.transform.SetParent(Blockpair.Value.transform);
+            //                AngleCenter.transform.localPosition = Vector3.zero;
+            //                AngleCenter.transform.eulerAngles = bindedGuns[0].transform.eulerAngles + new Vector3(0, centerAngle, 0);
+            //                return true;
+            //            }
+            //        }
+            //    }
+            //}
+
+            try {
+                AngleCenter = new GameObject("Angle Center");
+                AngleCenter.transform.SetParent(ControllerDataManager.Instance.ControllerObject[myPlayerID].transform);
+                AngleCenter.transform.localPosition = Vector3.zero;
+                AngleCenter.transform.eulerAngles = bindedGuns[0].transform.eulerAngles + new Vector3(0, centerAngle, 0);
+                return true;
             }
-            return false;
+            catch {
+                return false;
+            }
+            
+            
         }
         public void RejectSpecific()
         {
@@ -310,7 +322,13 @@ namespace WW2NavalAssembly
             {
                 bool GunReady = true;
                 Vector2 GunForward = bindedGuns[0].GetComponent<Gun>().GetFCOrienPara();
-                Vector2 CenterForward = new Vector2(AngleCenter.transform.forward.x, AngleCenter.transform.forward.z);
+
+                Vector2 CenterForward = new Vector2();
+                if (limitValid)
+                {
+                    CenterForward = new Vector2(AngleCenter.transform.forward.x, AngleCenter.transform.forward.z);
+                }
+                
                 Vector2 targetVector = GunnerMsgReceiver.Instance.TargetPredPos[myPlayerID][myGuid] - new Vector2(bindedGuns[0].transform.position.x, bindedGuns[0].transform.position.z);
                 bool OutOfSpan = limitValid ? (Vector2.Angle(targetVector, CenterForward) > GunSpan) : false;
                 //Debug.Log(MathTool.Instance.SignedAngle(GunForward, targetVector));
@@ -446,9 +464,17 @@ namespace WW2NavalAssembly
             {
                 bool GunReady = true;
                 Vector2 GunForward = bindedGuns[0].GetComponent<Gun>().GetFCOrienPara();
-                Vector2 CenterForward = new Vector2(AngleCenter.transform.forward.x, AngleCenter.transform.forward.z);
+                Vector2 CenterForward = new Vector2();
+                if (limitValid)
+                {
+                    CenterForward = new Vector2(AngleCenter.transform.forward.x, AngleCenter.transform.forward.z);
+                }
                 Vector2 targetVector = targetPos - new Vector2(bindedGuns[0].transform.position.x, bindedGuns[0].transform.position.z);
-                bool OutOfSpan = limitValid ? (Vector2.Angle(targetVector, CenterForward) > GunSpan) : false ;
+                bool OutOfSpan = limitValid ? (Vector2.Angle(targetVector, CenterForward) > GunSpan ||
+                    (   Mathf.Sign(MathTool.Instance.SignedAngle(targetVector,-CenterForward)) == Mathf.Sign(MathTool.Instance.SignedAngle(targetVector,GunForward)) && 
+                        Vector2.Angle(targetVector, -CenterForward) < Vector2.Angle(targetVector, GunForward)
+                        )
+                    ) : false ;
                 //Debug.Log(OutOfSpan+" "+ MathTool.Instance.SignedAngle(CenterForward, targetVector));
                 if ((!OutOfSpan && MathTool.Instance.SignedAngle(GunForward, targetVector) > OrienFaultTolerance.Value) ||
                     (OutOfSpan && MathTool.Instance.SignedAngle(CenterForward, targetVector) > 0))
@@ -782,6 +808,10 @@ namespace WW2NavalAssembly
                 if (Limit.IsActive)
                 {
                     limitValid = GenerateHingeCenter();
+                }
+                else
+                {
+                    limitValid = false;
                 }
             }
 
