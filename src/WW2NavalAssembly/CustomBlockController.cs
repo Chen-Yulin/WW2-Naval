@@ -75,6 +75,14 @@ namespace WW2NavalAssembly
                             block.gameObject.AddComponent(typeof(Chimney));
                         break;
                     }
+                case (int)BlockType.SteeringHinge:
+                    {
+                        if (block.gameObject.GetComponent(typeof(WW2Hinge)) == null)
+                        {
+                            block.gameObject.AddComponent(typeof(WW2Hinge));
+                        }
+                        break;
+                    }
                 case (int)BlockType.SpinningBlock:
                     {
                         if (block.gameObject.GetComponent(typeof(CannonWell)) == null)

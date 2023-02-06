@@ -26,6 +26,7 @@ namespace WW2NavalAssembly
 			myMod.AddComponent<Sea>();
 			myMod.AddComponent<TorpedoMsgReceiver>();
 			myMod.AddComponent<GunnerMsgReceiver>();
+			myMod.AddComponent<GunnerDataBase>();
 
 			Debug.Log("Hello, this is WW2 naval mod!");
 		}

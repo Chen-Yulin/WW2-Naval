@@ -5,11 +5,11 @@
 	<Name>WW2Naval</Name>
 	<Author>Chen, Yulin</Author> <!-- FIX: Insert your name here. -->
 	<!-- Major.Minor.Build -->
-	<Version>0.5.9</Version>
+	<Version>0.5.10</Version>
 	
 	<Description>
 	A mod for 1/5 scale WW2 naval battel.
-	Version 0.5.9
+	Version 0.5.10
 	</Description>
 
 	<Icon name="icon"/>
@@ -83,6 +83,7 @@
 		<Texture name="TorpedoFan2 Texture" path="Torpedo\TorpedoFan2.png"/>
 		<Mesh name="gunner Mesh" path="Gunner\gunner.obj"/>
 		<Texture name="gunner Texture" path="Gunner\gunner.png"/>
+		<Texture name="gunnerAlert Texture" path="Gunner\alert.png"/>
 
 		<AudioClip name="GunShot Audio" path="Gun\fire.wav" />
 		<AudioClip name="GunExplo Audio" path="Gun\explo.wav" />

@@ -1244,7 +1244,9 @@ namespace WW2NavalAssembly
                 currentReloadTime += Time.deltaTime;
                 if (ModController.Instance.state == myseed)
                 {
-                    ModNetworking.SendToAll(WeaponMsgReceiver.ReloadMsg.CreateMessage(myPlayerID, myGuid, currentReloadTime, CannonType, NextCannonType, 0));
+                    ModNetworking.SendToAll(WeaponMsgReceiver.ReloadMsg.CreateMessage(  myPlayerID, myGuid, currentReloadTime, 
+                                                                                        (CannonType == 1)?true:false, 
+                                                                                        (NextCannonType == 1)?true:false, 0));
                 }
                 return;
             }
@@ -1300,8 +1302,8 @@ namespace WW2NavalAssembly
             {
                 WeaponMsgReceiver.Instance.reloadTimeUpdated[myPlayerID][myGuid] = false;
                 currentReloadTime = WeaponMsgReceiver.Instance.reloadTime[myPlayerID][myGuid];
-                CannonType = WeaponMsgReceiver.Instance.CannonType[myPlayerID][myGuid] ? 0:1;
-                NextCannonType = WeaponMsgReceiver.Instance.NextCannonType[myPlayerID][myGuid] ? 0:1;
+                CannonType = WeaponMsgReceiver.Instance.CannonType[myPlayerID][myGuid] ? 1:0;
+                NextCannonType = WeaponMsgReceiver.Instance.NextCannonType[myPlayerID][myGuid] ? 1:0;
             }
             if (currentReloadTime < reloadTime)
             {

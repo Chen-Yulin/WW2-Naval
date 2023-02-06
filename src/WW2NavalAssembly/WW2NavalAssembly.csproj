@@ -71,6 +71,7 @@
     <Compile Include="TorpedoBehaviour.cs" />
     <Compile Include="TorpedoLauncher.cs" />
     <Compile Include="WoodenArmour.cs" />
+    <Compile Include="WW2Hinge.cs" />
     <Compile Include="WWIIUnderWater.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

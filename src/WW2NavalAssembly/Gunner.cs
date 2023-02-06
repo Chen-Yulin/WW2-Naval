@@ -17,6 +17,7 @@ namespace WW2NavalAssembly
         public override string Name { get; } = "GunnerMsgReceiver";
         public static MessageType EmulateMsg = ModNetworking.CreateMessageType(DataType.Integer, DataType.Integer, DataType.Integer, DataType.Integer);
         public static MessageType TargetMsg = ModNetworking.CreateMessageType(DataType.Integer, DataType.Integer, DataType.Boolean, DataType.Single, DataType.Single, DataType.Single);
+        public static MessageType GunnerActiveMsg = ModNetworking.CreateMessageType(DataType.Integer, DataType.Integer, DataType.Boolean);
 
         public Dictionary<int, int>[] EmulatePitch = new Dictionary<int, int>[16];
         public Dictionary<int, int>[] EmulateOrien = new Dictionary<int, int>[16];
@@ -24,6 +25,7 @@ namespace WW2NavalAssembly
         public Dictionary<int, bool>[] hasTarget = new Dictionary<int, bool>[16];
         public Dictionary<int, Vector2>[] TargetPredPos = new Dictionary<int, Vector2>[16];
         public Dictionary<int, float>[] TargrtPitch = new Dictionary<int, float>[16];
+        public Dictionary<int, bool>[] GunnerActive = new Dictionary<int, bool>[16];
 
         public GunnerMsgReceiver()
         {
@@ -34,6 +36,7 @@ namespace WW2NavalAssembly
                 hasTarget[i] = new Dictionary<int, bool>();
                 TargetPredPos[i] = new Dictionary<int, Vector2>();
                 TargrtPitch[i] = new Dictionary<int, float>();
+                GunnerActive[i] = new Dictionary<int, bool>();
             }
         }
 
@@ -48,7 +51,49 @@ namespace WW2NavalAssembly
             TargetPredPos[(int)msg.GetData(0)][(int)msg.GetData(1)] = new Vector2((float)msg.GetData(3), (float)msg.GetData(4));
             TargrtPitch[(int)msg.GetData(0)][(int)msg.GetData(1)] = (float)msg.GetData(5);
         }
+        public void GunnerActiveReceiver(Message msg)
+        {
+            GunnerActive[(int)msg.GetData(0)][(int)msg.GetData(1)] = (bool)msg.GetData(2);
+        }
 
+    }
+
+    public class GunnerDataBase : SingleInstance<GunnerDataBase>
+    {
+        public override string Name { get; } = "Gunner Data Base";
+
+        public Dictionary<int, BlockBehaviour>[] HingeInfo = new Dictionary<int, BlockBehaviour>[16];
+
+        public GunnerDataBase()
+        {
+            for (int i = 0; i < 16; i++)
+            {
+                HingeInfo[i] = new Dictionary<int, BlockBehaviour>();
+            }
+        }
+        public void AddHinge(int playerID, int Guid, BlockBehaviour info)
+        {
+            if (!HingeInfo[playerID].ContainsKey(Guid))
+            {
+                HingeInfo[playerID].Add(Guid, info);
+            }
+            else
+            {
+                HingeInfo[playerID][Guid] = info;
+            }
+        }
+        public void RemoveHinge(int playerID, int Guid)
+        {
+            if (HingeInfo[playerID].ContainsKey(Guid))
+            {
+                HingeInfo[playerID].Remove(Guid);
+            }
+        }
+
+        public void OnGUI()
+        {
+            //GUI.Box(new Rect(100, 200, 200, 50), HingeInfo[0].Count.ToString());
+        }
     }
     class Gunner : BlockScript
     {
@@ -59,32 +104,73 @@ namespace WW2NavalAssembly
         public float bindedCaliber;
         public List<GameObject> bindedGuns = new List<GameObject>();
 
+        public MKey ActiveSwitch;
         public MKey LeftKey;
         public MKey RightKey;
         public MKey UpKey;
         public MKey DownKey;
+        public MKey FireKey;
         public MText GunGroup;
+        public MSlider OrienFaultTolerance;
+        public MSlider ElevationFaultTolerance;
+        public MLimits Limit;
 
         public int leftEmulateStage = 0;
         public int rightEmulateStage = 0;
         public int upEmulateStage = 0;
         public int downEmulateStage = 0;
+        public int fireEmulateStage = 0;
 
         public int PreOrienDiection = 0;
         public int PrePitchDiection = 0;
 
         GameObject[] GunLine = new GameObject[4];
+        GameObject AngleCenter;
 
         public float targetPitch;
         public Vector2 targetPos;
         public bool hasTarget;
+        public bool GunnerActive = true;
+        public float centerAngle;
+        public float GunSpan;
+        public bool limitValid;
 
         public bool initialized = false;
 
+        public Texture GunnerAlertIcon;
+        int iconSize = 30;
+
         public override bool EmulatesAnyKeys { get { return true; } }
+
+        public bool GenerateHingeCenter()
+        {
+            if (!bindedGuns[0])
+            {
+                return false;
+            }
+            foreach (var Blockpair in GunnerDataBase.Instance.HingeInfo[myPlayerID])
+            {
+                
+                foreach (var key in Blockpair.Value.KeyList)
+                {
+                    for (int i = 0; i < key.KeysCount; i++)
+                    {
+                        if (LeftKey.GetKey(0) == key.GetKey(i))
+                        {
+                            //Debug.Log("Detect Hinge:" + Blockpair.Value.BuildingBlock.Guid.ToString());
+                            AngleCenter = new GameObject("Angle Center");
+                            AngleCenter.transform.SetParent(Blockpair.Value.transform);
+                            AngleCenter.transform.localPosition = Vector3.zero;
+                            AngleCenter.transform.eulerAngles = bindedGuns[0].transform.eulerAngles + new Vector3(0, centerAngle, 0);
+                            return true;
+                        }
+                    }
+                }
+            }
+            return false;
+        }
         public void RejectSpecific()
         {
-            
         }
         public void GetFCPara()
         {
@@ -188,16 +274,50 @@ namespace WW2NavalAssembly
                 }
             }
 
+        } // deprecated
+
+        public void StopAllEmulation()
+        {
+            if (leftEmulateStage == 1)
+            {
+                EmulateKeys(new MKey[0], LeftKey, false);
+                leftEmulateStage--;
+            }
+            if (rightEmulateStage == 1)
+            {
+                EmulateKeys(new MKey[0], RightKey, false);
+                rightEmulateStage--;
+            }
+            if (upEmulateStage == 1)
+            {
+                EmulateKeys(new MKey[0], UpKey, false);
+                upEmulateStage--;
+            }
+            if (downEmulateStage == 1)
+            {
+                EmulateKeys(new MKey[0], DownKey, false);
+                downEmulateStage--;
+            }
+            if (fireEmulateStage == 1)
+            {
+                EmulateKeys(new MKey[0], FireKey, false);
+                fireEmulateStage--;
+            }
         }
         public void EmulateControlOnHost()
         {
             if (GunnerMsgReceiver.Instance.hasTarget[myPlayerID][myGuid] && bindedGuns[0])
             {
+                bool GunReady = true;
                 Vector2 GunForward = bindedGuns[0].GetComponent<Gun>().GetFCOrienPara();
+                Vector2 CenterForward = new Vector2(AngleCenter.transform.forward.x, AngleCenter.transform.forward.z);
                 Vector2 targetVector = GunnerMsgReceiver.Instance.TargetPredPos[myPlayerID][myGuid] - new Vector2(bindedGuns[0].transform.position.x, bindedGuns[0].transform.position.z);
+                bool OutOfSpan = limitValid ? (Vector2.Angle(targetVector, CenterForward) > GunSpan) : false;
                 //Debug.Log(MathTool.Instance.SignedAngle(GunForward, targetVector));
-                if (MathTool.Instance.SignedAngle(GunForward, targetVector) > 0.5f)
+                if ((!OutOfSpan && MathTool.Instance.SignedAngle(GunForward, targetVector) > OrienFaultTolerance.Value) ||
+                    (OutOfSpan && MathTool.Instance.SignedAngle(CenterForward, targetVector) > 0))
                 {
+                    GunReady = false;
                     if (leftEmulateStage == 0)
                     {
                         EmulateKeys(new MKey[0], LeftKey, true);
@@ -212,8 +332,10 @@ namespace WW2NavalAssembly
                         leftEmulateStage--;
                     }
                 }
-                if (MathTool.Instance.SignedAngle(GunForward, targetVector) < -0.5f)
+                if ((!OutOfSpan && MathTool.Instance.SignedAngle(GunForward, targetVector) < -OrienFaultTolerance.Value) ||
+                    (OutOfSpan && MathTool.Instance.SignedAngle(CenterForward, targetVector) < 0))
                 {
+                    GunReady = false;
                     if (rightEmulateStage == 0)
                     {
                         EmulateKeys(new MKey[0], RightKey, true);
@@ -230,8 +352,9 @@ namespace WW2NavalAssembly
                     }
                 }
 
-                if (GunnerMsgReceiver.Instance.TargrtPitch[myPlayerID][myGuid] - bindedGuns[0].GetComponent<Gun>().GetFCPitchPara() > 0.25f)
+                if (GunnerMsgReceiver.Instance.TargrtPitch[myPlayerID][myGuid] - bindedGuns[0].GetComponent<Gun>().GetFCPitchPara() > ElevationFaultTolerance.Value)
                 {
+                    GunReady = false;
                     if (upEmulateStage == 0)
                     {
                         EmulateKeys(new MKey[0], UpKey, true);
@@ -247,8 +370,9 @@ namespace WW2NavalAssembly
                     }
                 }
 
-                if (GunnerMsgReceiver.Instance.TargrtPitch[myPlayerID][myGuid] - bindedGuns[0].GetComponent<Gun>().GetFCPitchPara() < -0.25f)
+                if (GunnerMsgReceiver.Instance.TargrtPitch[myPlayerID][myGuid] - bindedGuns[0].GetComponent<Gun>().GetFCPitchPara() < -ElevationFaultTolerance.Value)
                 {
+                    GunReady = false;
                     if (downEmulateStage == 0)
                     {
                         EmulateKeys(new MKey[0], DownKey, true);
@@ -261,6 +385,28 @@ namespace WW2NavalAssembly
                     {
                         EmulateKeys(new MKey[0], DownKey, false);
                         downEmulateStage--;
+                    }
+                }
+
+                if (GunReady)
+                {
+                    if (fireEmulateStage == 0)
+                    {
+                        EmulateKeys(new MKey[0], FireKey, true);
+                        fireEmulateStage++;
+                    }
+                    else
+                    {
+                        EmulateKeys(new MKey[0], FireKey, false);
+                        fireEmulateStage--;
+                    }
+                }
+                else
+                {
+                    if (fireEmulateStage == 1)
+                    {
+                        EmulateKeys(new MKey[0], FireKey, false);
+                        fireEmulateStage--;
                     }
                 }
 
@@ -287,17 +433,27 @@ namespace WW2NavalAssembly
                     EmulateKeys(new MKey[0], DownKey, false);
                     downEmulateStage--;
                 }
+                if (fireEmulateStage == 1)
+                {
+                    EmulateKeys(new MKey[0], FireKey, false);
+                    fireEmulateStage--;
+                }
             }
         }
         public void EmulateControl()
         {
             if (hasTarget && bindedGuns[0])
             {
+                bool GunReady = true;
                 Vector2 GunForward = bindedGuns[0].GetComponent<Gun>().GetFCOrienPara();
+                Vector2 CenterForward = new Vector2(AngleCenter.transform.forward.x, AngleCenter.transform.forward.z);
                 Vector2 targetVector = targetPos - new Vector2(bindedGuns[0].transform.position.x, bindedGuns[0].transform.position.z);
-                //Debug.Log(MathTool.Instance.SignedAngle(GunForward, targetVector));
-                if (MathTool.Instance.SignedAngle(GunForward, targetVector) > 0.5f)
+                bool OutOfSpan = limitValid ? (Vector2.Angle(targetVector, CenterForward) > GunSpan) : false ;
+                //Debug.Log(OutOfSpan+" "+ MathTool.Instance.SignedAngle(CenterForward, targetVector));
+                if ((!OutOfSpan && MathTool.Instance.SignedAngle(GunForward, targetVector) > OrienFaultTolerance.Value) ||
+                    (OutOfSpan && MathTool.Instance.SignedAngle(CenterForward, targetVector) > 0))
                 {
+                    GunReady = false;
                     if (leftEmulateStage == 0)
                     {
                         EmulateKeys(new MKey[0], LeftKey, true);
@@ -312,8 +468,10 @@ namespace WW2NavalAssembly
                         leftEmulateStage --;
                     }
                 }
-                if (MathTool.Instance.SignedAngle(GunForward, targetVector) < -0.5f)
+                if ((!OutOfSpan && MathTool.Instance.SignedAngle(GunForward, targetVector) < -OrienFaultTolerance.Value) ||
+                    (OutOfSpan && MathTool.Instance.SignedAngle(CenterForward, targetVector) < 0))
                 {
+                    GunReady = false;
                     if (rightEmulateStage == 0)
                     {
                         EmulateKeys(new MKey[0], RightKey, true);
@@ -330,8 +488,9 @@ namespace WW2NavalAssembly
                     }
                 }
 
-                if (targetPitch - bindedGuns[0].GetComponent<Gun>().GetFCPitchPara() > 0.25f)
+                if (targetPitch - bindedGuns[0].GetComponent<Gun>().GetFCPitchPara() > ElevationFaultTolerance.Value)
                 {
+                    GunReady = false;
                     if (upEmulateStage == 0)
                     {
                         EmulateKeys(new MKey[0], UpKey, true);
@@ -347,8 +506,9 @@ namespace WW2NavalAssembly
                     }
                 }
 
-                if (targetPitch - bindedGuns[0].GetComponent<Gun>().GetFCPitchPara() < -0.25f)
+                if (targetPitch - bindedGuns[0].GetComponent<Gun>().GetFCPitchPara() < -ElevationFaultTolerance.Value)
                 {
+                    GunReady = false;
                     if (downEmulateStage == 0)
                     {
                         EmulateKeys(new MKey[0], DownKey, true);
@@ -361,6 +521,28 @@ namespace WW2NavalAssembly
                     {
                         EmulateKeys(new MKey[0], DownKey, false);
                         downEmulateStage--;
+                    }
+                }
+
+                if (GunReady)
+                {
+                    if (fireEmulateStage == 0)
+                    {
+                        EmulateKeys(new MKey[0], FireKey, true);
+                        fireEmulateStage++;
+                    }
+                    else
+                    {
+                        EmulateKeys(new MKey[0], FireKey, false);
+                        fireEmulateStage--;
+                    }
+                }
+                else
+                {
+                    if (fireEmulateStage == 1)
+                    {
+                        EmulateKeys(new MKey[0], FireKey, false);
+                        fireEmulateStage--;
                     }
                 }
 
@@ -386,6 +568,11 @@ namespace WW2NavalAssembly
                 {
                     EmulateKeys(new MKey[0], DownKey, false);
                     downEmulateStage--;
+                }
+                if (fireEmulateStage == 1)
+                {
+                    EmulateKeys(new MKey[0], FireKey, false);
+                    fireEmulateStage--;
                 }
             }
             
@@ -475,13 +662,20 @@ namespace WW2NavalAssembly
         }
         public override void SafeAwake()
         {
+            ActiveSwitch = AddKey("Switch Active", "ActiveGunner", KeyCode.None);
+            FireKey = AddEmulatorKey("Fire Key", "FireKey", KeyCode.None);
             LeftKey = AddEmulatorKey("Left Key", "LeftKey", KeyCode.G);
             RightKey = AddEmulatorKey("Right Key", "RightKey", KeyCode.J);
             UpKey = AddEmulatorKey("Up Key", "UpKey", KeyCode.Y);
             DownKey = AddEmulatorKey("Down Key", "DownKey", KeyCode.H);
+            OrienFaultTolerance = AddSlider("Orien Fault Tolerance", "OrienFaultTolerance", 1f, 0f, 5f);
+            ElevationFaultTolerance = AddSlider("Elevation Fault Tolerance", "ElevationFaultTolerance", 0.3f, 0f, 2f);
             GunGroup = AddText("Gun Group", "GunGroup", "g0");
             myPlayerID = BlockBehaviour.ParentMachine.PlayerID;
             mySeed = (int)(UnityEngine.Random.value * 10);
+            GunnerAlertIcon = ModResource.GetTexture("gunnerAlert Texture").Texture;
+            FauxTransform iconInfo = new FauxTransform(new Vector3(0f, 0f, 0f), Quaternion.Euler(-90f, 0f, 0f), Vector3.one * 0.25f);
+            Limit = AddLimits("Limits", "Limits", 90f, 90f, 180f,iconInfo);
         }
         public void Start()
         {
@@ -503,6 +697,9 @@ namespace WW2NavalAssembly
         }
         public override void OnSimulateStart()
         {
+            centerAngle = (-Limit.Min + Limit.Max) / 2;
+            GunSpan = (Limit.Min + Limit.Max) / 2;
+            GunnerActive = true;
             myGuid = BlockBehaviour.BuildingBlock.Guid.GetHashCode();
             try
             {
@@ -535,6 +732,14 @@ namespace WW2NavalAssembly
             catch {
                 GunnerMsgReceiver.Instance.TargrtPitch[myPlayerID][myGuid] = 0;
             }
+            try
+            {
+                GunnerMsgReceiver.Instance.GunnerActive[myPlayerID].Add(myGuid, true);
+            }
+            catch
+            {
+                GunnerMsgReceiver.Instance.GunnerActive[myPlayerID][myGuid] = true;
+            }
 
         }
         public override void OnSimulateStop()
@@ -553,12 +758,31 @@ namespace WW2NavalAssembly
             {
             }
         }
+        public override void SimulateUpdateHost()
+        {
+            if (ActiveSwitch.IsPressed)
+            {
+                GunnerActive = !GunnerActive;
+                if (StatMaster.isMP)
+                {
+                    ModNetworking.SendToAll(GunnerMsgReceiver.GunnerActiveMsg.CreateMessage(myPlayerID, myGuid, GunnerActive));
+                }
+            }
+        }
+        public override void SimulateUpdateClient()
+        {
+            GunnerActive = GunnerMsgReceiver.Instance.GunnerActive[myPlayerID][myGuid];
+        }
         public override void SimulateFixedUpdateAlways()
         {
             if (!initialized)
             {
                 initialized = true;
                 GetMyCaliber();
+                if (Limit.IsActive)
+                {
+                    limitValid = GenerateHingeCenter();
+                }
             }
 
             RejectSpecific();
@@ -567,10 +791,19 @@ namespace WW2NavalAssembly
         }
         public override void SimulateFixedUpdateClient()
         {
+            if (!GunnerActive)
+            {
+                return;
+            }
             SendEmulateControl();
         }
         public override void SendKeyEmulationUpdateHost()
         {
+            if (!GunnerActive)
+            {
+                StopAllEmulation();
+                return;
+            }
             if (StatMaster.isMP)
             {
                 if (myPlayerID == 0)
@@ -587,6 +820,31 @@ namespace WW2NavalAssembly
                 EmulateControl();
             }
             
+        }
+        public void OnGUI()
+        {
+            if (StatMaster.hudHidden)
+            {
+                return;
+            }
+            if (StatMaster.isMP)
+            {
+                if (PlayerData.localPlayer.networkId != myPlayerID)
+                {
+                    return;
+                }
+            }
+            if ((Camera.main.transform.position - transform.position).magnitude < 30 && BlockBehaviour.isSimulating)
+            {
+                Vector3 onScreenPosition = Camera.main.WorldToScreenPoint(transform.position + transform.forward * transform.localScale.z);
+                if (onScreenPosition.z >= 0)
+                {
+                    if (GunnerActive)
+                    {
+                        GUI.DrawTexture(new Rect(onScreenPosition.x - iconSize / 2, Camera.main.pixelHeight - onScreenPosition.y - iconSize / 2, iconSize, iconSize), GunnerAlertIcon);
+                    }
+                }
+            }
         }
     }
 }
