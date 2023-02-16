@@ -1023,6 +1023,7 @@ namespace WW2NavalAssembly
         public MToggle TrackOn;
         public MToggle FireControl;
         public MText GunGroup;
+        public bool triggeredByGunner;
 
         public int CannonType;
         public int NextCannonType;
@@ -1168,6 +1169,11 @@ namespace WW2NavalAssembly
             reloadTime = Caliber.Value >= 100 ? 0.4f * Mathf.Sqrt(Caliber.Value) - 3 : Caliber.Value/150f + 0.33f;
             currentReloadTime = reloadTime;
             Grouper.Instance.AddGun(myPlayerID, GunGroup.Value, myGuid, gameObject);
+            if ((StatMaster.isMP && !StatMaster.isClient) || !StatMaster.isMP)
+            {
+                GunnerDataBase.Instance.AddGun(myPlayerID, myGuid, BlockBehaviour);
+            }
+            
             if (!FireControl.isDefaultValue)
             {
                 FireControlManager.Instance.AddGun(myPlayerID, Caliber.Value, myGuid, gameObject);
@@ -1219,6 +1225,10 @@ namespace WW2NavalAssembly
         }
         public void OnDestroy()
         {
+            if ((StatMaster.isMP && !StatMaster.isClient) || !StatMaster.isMP)
+            {
+                GunnerDataBase.Instance.RemoveGun(myPlayerID, myGuid);
+            }
             Grouper.Instance.AddGun(myPlayerID, "null", myGuid, gameObject);
             if (!FireControl.isDefaultValue)
             {
@@ -1251,8 +1261,13 @@ namespace WW2NavalAssembly
                 return;
             }
 
-            if (FireKey.IsPressed)
+            if (FireKey.IsPressed || triggeredByGunner)
             {
+                if (triggeredByGunner)
+                {
+                    triggeredByGunner = false;
+                }
+                
                 currentReloadTime = 0;
                 muzzleStage = 0;
                 gameObject.GetComponent<Rigidbody>().AddForce(-Caliber.Value * transform.forward*5);

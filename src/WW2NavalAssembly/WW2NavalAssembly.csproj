@@ -50,6 +50,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Aircraft.cs" />
+    <Compile Include="AircraftAssetManager.cs" />
     <Compile Include="AssetManager.cs" />
     <Compile Include="BulletHole.cs" />
     <Compile Include="CannonTrackManager.cs" />

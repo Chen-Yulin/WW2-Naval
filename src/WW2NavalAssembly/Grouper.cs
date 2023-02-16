@@ -17,12 +17,16 @@ namespace WW2NavalAssembly
         public override string Name { get; } = "Grouper";
 
         public Dictionary<string, Dictionary<int,GameObject>>[] GunGroups = new Dictionary<string, Dictionary<int,GameObject>>[16];
+        public Dictionary<string, Dictionary<int, Aircraft>>[] AircraftGroups = new Dictionary<string, Dictionary<int, Aircraft>>[16];
+        public Dictionary<string, KeyValuePair<int, Aircraft>>[] AircraftLeaders = new Dictionary<string, KeyValuePair<int, Aircraft>>[16];
 
         public Grouper()
         {
             for (int i = 0; i < 16; i++)
             {
                 GunGroups[i] = new Dictionary<string, Dictionary<int,GameObject>>();
+                AircraftGroups[i] = new Dictionary<string, Dictionary<int, Aircraft>>();
+                AircraftLeaders[i] = new Dictionary<string, KeyValuePair<int, Aircraft>>();
             }
         }
 
@@ -59,5 +63,79 @@ namespace WW2NavalAssembly
             return GunGroups[playerID][key];
         }
 
+        public void AddAircraft(int playerID, string key, int guid, Aircraft ac)
+        {
+            // AircraftGroups
+            foreach (var groups in AircraftGroups[playerID])
+            {
+                if (groups.Value.ContainsKey(guid))
+                {
+                    groups.Value.Remove(guid);
+                }
+            }
+
+            if (!AircraftGroups[playerID].ContainsKey(key))
+            {
+                AircraftGroups[playerID].Add(key, new Dictionary<int, Aircraft>());
+            }
+            if (AircraftGroups[playerID][key].ContainsKey(guid))
+            {
+                AircraftGroups[playerID][key][guid] = ac;
+            }
+            else
+            {
+                AircraftGroups[playerID][key].Add(guid, ac);
+            }
+
+            // AircraftLeaders
+            if (!ac.AsLeader.isDefaultValue)
+            {
+                try
+                {
+                    foreach (var leader in AircraftLeaders[playerID])
+                    {
+
+                        if (leader.Value.Key == guid)
+                        {
+                            AircraftLeaders[playerID].Remove(leader.Key);
+                        }
+
+                    }
+                }
+                catch { }
+
+                if (!AircraftLeaders[playerID].ContainsKey(key))
+                {
+                    AircraftLeaders[playerID].Add(key, new KeyValuePair<int, Aircraft>(guid, ac));
+                }
+                else
+                {
+                    AircraftLeaders[playerID][key] = new KeyValuePair<int, Aircraft>(guid, ac);
+                }
+            }
+
+        }
+
+        public Dictionary<int, Aircraft> GetAircraft(int playerID, string key)
+        {
+            if (!AircraftGroups[playerID].ContainsKey(key))
+            {
+                AircraftGroups[playerID].Add(key, new Dictionary<int, Aircraft>());
+            }
+
+            return AircraftGroups[playerID][key];
+        }
+
+        public Aircraft GetLeader(int playerID, string key)
+        {
+            if (AircraftLeaders[playerID].ContainsKey(key))
+            {
+                return AircraftLeaders[playerID][key].Value;
+            }
+            else
+            {
+                return null;
+            }
+        }
     }
 }

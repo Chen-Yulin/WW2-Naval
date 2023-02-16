@@ -175,7 +175,7 @@ namespace WW2NavalAssembly
                 }
                 catch { }
             }
-            if (WellExplo)
+            if (WellExplo && WellExploEffect)
             {
                 disableGun = true;
                 //Debug.Log("WellExplo");
