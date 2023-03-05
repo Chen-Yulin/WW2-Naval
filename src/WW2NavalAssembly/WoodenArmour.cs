@@ -21,6 +21,8 @@ namespace WW2NavalAssembly
         GameObject Vis;
         MeshRenderer VisRender;
 
+        public GameObject VisRef { get { return Vis; } }
+
         public int myseed;
         public int myPlayerID;
         public int myGuid;
@@ -126,7 +128,12 @@ namespace WW2NavalAssembly
         public void Start()
         {
             InitVis();
-            
+            if (!Vis)
+            {
+                Vis = transform.Find("WoodenArmourVis").gameObject;
+                VisRender = Vis.GetComponent<MeshRenderer>();
+            }
+
             //transform.Find("Shadow").gameObject.layer = 25;
         }
         public void FixedUpdate()
@@ -143,29 +150,22 @@ namespace WW2NavalAssembly
                 }
                 catch { }
             }
+
+            
+
+            thickness = Thickness.Value;
+            Color tmpColor = Color.HSVToRGB(Mathf.Clamp(0.5f - thickness / 1000, 0, 0.5f), 1, 1);
+            VisRender.material.color = new Color(tmpColor.r, tmpColor.g, tmpColor.b, ModController.Instance.showArmour? 0.6f : 0f);
+
             if (ModController.Instance.state == myseed)
             {
-                if (!Vis)
-                {
-                    Vis = transform.Find("WoodenArmourVis").gameObject;
-                    VisRender = Vis.GetComponent<MeshRenderer>();
-                }
-                
-                thickness = Thickness.Value;
-                Color tmpColor = Color.HSVToRGB(Mathf.Clamp(0.5f-thickness / 1000,0,0.5f), 1, 1);
-                VisRender.material.color = new Color(tmpColor.r,tmpColor.g,tmpColor.b, 0.6f);
-
                 if (ModController.Instance.showArmour)
                 {
                     transform.Find("Vis").gameObject.SetActive(false);
-                    Color tmpColor1 = VisRender.material.color;
-                    VisRender.material.color = new Color(tmpColor1.r, tmpColor1.g, tmpColor1.b, 0.6f);
                 }
                 else
                 {
                     transform.Find("Vis").gameObject.SetActive(true);
-                    Color tmpColor1 = VisRender.material.color;
-                    VisRender.material.color = new Color(tmpColor1.r, tmpColor1.g, tmpColor1.b, 0f);
                 }
 
                 if (StatMaster.isClient && transform.gameObject.GetComponent<BlockBehaviour>().isSimulating)

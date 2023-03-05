@@ -26,8 +26,8 @@ namespace WW2NavalAssembly
         public bool disablePixelLights = true;
         public int textureSize = 256;
         public float clipPlaneOffset = 0.07f;
-        public LayerMask reflectLayers = -1;
-        public LayerMask refractLayers = -1;
+        public LayerMask reflectLayers = -8388609;
+        public LayerMask refractLayers = -8388609;
 
 
         private Dictionary<Camera, Camera> m_ReflectionCameras = new Dictionary<Camera, Camera>(); // Camera -> Camera table
@@ -432,6 +432,7 @@ namespace WW2NavalAssembly
                 preShowSea = true;
                 SeaPlane = (GameObject)Instantiate(AssetManager.Instance.Sea.Sea);
                 SeaPlane.transform.position = new Vector3(0, 20, 0);
+                SeaPlane.transform.localScale = new Vector3(8000, 1, 8000);
                 SeaPlane.AddComponent<Water>().waterMode = Water.WaterMode.Reflective;
                 SeaPlane.SetActive(true);
             }

@@ -265,15 +265,38 @@ namespace WW2NavalAssembly
         }
         public bool Perice(RaycastHit hit)
         {
-            if (!hit.collider.transform.parent.GetComponent<BlockBehaviour>())
+            try
+            {
+                if (!(hit.collider.transform.parent.parent.name == "Engine"))
+                {
+                    if (!hit.collider.transform.parent.GetComponent<BlockBehaviour>())
+                    {
+                        Debug.Log("not a block");
+                        return false;
+                    }
+                }
+
+                if (hit.collider.transform.parent.parent.name == "Engine")
+                {
+                    if (pericedBlock.Contains(hit.collider.transform.parent.parent.GetComponent<BlockBehaviour>().BuildingBlock.Guid.GetHashCode()))
+                    {
+                        return true;
+                    }
+                }
+                else
+                {
+                    if (pericedBlock.Contains(hit.collider.transform.parent.GetComponent<BlockBehaviour>().BuildingBlock.Guid.GetHashCode()))
+                    {
+                        return true;
+                    }
+                }
+            }
+            catch
             {
                 return false;
             }
 
-            if (pericedBlock.Contains(hit.collider.transform.parent.GetComponent<BlockBehaviour>().BuildingBlock.Guid.GetHashCode()))
-            {
-                return true;
-            }
+            
 
             float angle = Vector3.Angle(hit.normal, -myRigid.velocity);
             if (angle > 10 && angle < 20)
@@ -308,7 +331,11 @@ namespace WW2NavalAssembly
 
                 //Debug.Log(CylinderUp);
                 //Debug.Log(hit.normal);
-                if ((hit.normal - CylinderUp).magnitude < 0.01f || (hit.normal - CylinderUp).magnitude > 1.99f)
+                if (hit.collider.name == "TurrentVis")
+                {
+                    Thickness = 1f;
+                }
+                else if ((hit.normal - CylinderUp).magnitude < 0.01f || (hit.normal - CylinderUp).magnitude > 1.99f)
                 {
                     Thickness = 20f;
                 }
@@ -334,7 +361,15 @@ namespace WW2NavalAssembly
                 float eqThick = Thickness / Mathf.Cos(angle * Mathf.PI / 180);
                 myRigid.velocity *= 1 - eqThick * 0.8f / penetration;
                 penetration -= eqThick;
-                pericedBlock.Push(hit.collider.transform.parent.GetComponent<BlockBehaviour>().BuildingBlock.Guid.GetHashCode());
+                if (hit.collider.transform.parent.parent.name == "Engine")
+                {
+                    pericedBlock.Push(hit.collider.transform.parent.parent.GetComponent<BlockBehaviour>().BuildingBlock.Guid.GetHashCode());
+                }
+                else
+                {
+                    pericedBlock.Push(hit.collider.transform.parent.GetComponent<BlockBehaviour>().BuildingBlock.Guid.GetHashCode());
+                }
+                
 
                 if (pericedBlock.Count == 1 && hit.collider.transform.parent.name != "SpinningBlock")    // add waterIn behaviour
                 {
@@ -423,7 +458,7 @@ namespace WW2NavalAssembly
                 hitList = list.ToArray();
                 foreach (RaycastHit hit in hitList)
                 {
-                    if (hit.collider.isTrigger && hit.collider.name != "AmmoVis" && hit.collider.name != "WellArmourVis")
+                    if (hit.collider.isTrigger && hit.collider.name != "AmmoVis" && hit.collider.name != "WellArmourVis" && hit.collider.name != "TurrentVis")
                     {
                         continue;
                     }
@@ -474,7 +509,19 @@ namespace WW2NavalAssembly
                                         CW.AmmoExplo = true;
                                     }
                                 }
+                                if (hit.collider.name == "TurrentVis")
+                                {
+                                    if (UnityEngine.Random.value < AmmoExploProb * 2)
+                                    {
+                                        CW.TurrentPalsy = true;
+                                    }
+                                }
                             }
+                        }
+
+                        if (hit.collider.transform.parent.parent.name == "Engine")
+                        {
+                            hit.collider.transform.parent.parent.GetComponent<Engine>().CannonDamage(Caliber);
                         }
 
                         // add force
@@ -860,38 +907,43 @@ namespace WW2NavalAssembly
         }
         public void HEDestroyBalloonHit(RaycastHit hit)
         {
-            int armourGuid = hit.collider.transform.parent.GetComponent<BlockBehaviour>().BuildingBlock.Guid.GetHashCode();
-            //Debug.Log(armourGuid);
-            Collider[] ExploCol = Physics.OverlapSphere(transform.position, Mathf.Sqrt(Caliber) / 5);
-            foreach (Collider hitedCollider in ExploCol)
+            try
             {
-                try
+                int armourGuid = hit.collider.transform.parent.GetComponent<BlockBehaviour>().BuildingBlock.Guid.GetHashCode();
+                //Debug.Log(armourGuid);
+                Collider[] ExploCol = Physics.OverlapSphere(transform.position, Mathf.Sqrt(Caliber) / 5);
+                foreach (Collider hitedCollider in ExploCol)
                 {
-                    //Debug.Log(hitedCollider.transform.parent.name);
-                    if (hitedCollider.transform.parent.name == "Balloon" || hitedCollider.transform.parent.name == "SqrBalloon")
+                    try
                     {
-                        float ArmourBetween = 0;
-                        Ray Ray = new Ray(hit.point, hitedCollider.transform.position-hit.point);
-                        RaycastHit[] hitList = Physics.RaycastAll(Ray, (hitedCollider.transform.position - hit.point).magnitude);
-                        foreach (RaycastHit raycastHit in hitList)
+                        //Debug.Log(hitedCollider.transform.parent.name);
+                        if (hitedCollider.transform.parent.name == "Balloon" || hitedCollider.transform.parent.name == "SqrBalloon")
                         {
-                            if (raycastHit.collider.transform.parent.GetComponent<BlockBehaviour>().BuildingBlock.Guid.GetHashCode() != armourGuid 
-                                && raycastHit.collider.transform.parent.GetComponent<WoodenArmour>())
+                            float ArmourBetween = 0;
+                            Ray Ray = new Ray(hit.point, hitedCollider.transform.position - hit.point);
+                            RaycastHit[] hitList = Physics.RaycastAll(Ray, (hitedCollider.transform.position - hit.point).magnitude);
+                            foreach (RaycastHit raycastHit in hitList)
                             {
-                                ArmourBetween += raycastHit.collider.transform.parent.GetComponent<WoodenArmour>().thickness;
+                                if (raycastHit.collider.transform.parent.GetComponent<BlockBehaviour>().BuildingBlock.Guid.GetHashCode() != armourGuid
+                                    && raycastHit.collider.transform.parent.GetComponent<WoodenArmour>())
+                                {
+                                    ArmourBetween += raycastHit.collider.transform.parent.GetComponent<WoodenArmour>().thickness;
+                                }
                             }
+                            //Debug.Log(ArmourBetween + " VS "+penetration);
+                            if (ArmourBetween > penetration)
+                            {
+                                continue;
+                            }
+
+                            BreakBallon(hitedCollider.transform.position);
                         }
-                        //Debug.Log(ArmourBetween + " VS "+penetration);
-                        if (ArmourBetween > penetration)
-                        {
-                            continue;
-                        }
-                        
-                        BreakBallon(hitedCollider.transform.position);
                     }
+                    catch { }
                 }
-                catch { }
             }
+            catch { }
+            
         }
         public void HEDestroyBalloonWater(Vector3 position)
         {
@@ -927,6 +979,7 @@ namespace WW2NavalAssembly
         }
         public void Start()
         {
+            name = "Gun";
             myRigid = gameObject.GetComponent<Rigidbody>();
             if (CannonType == 0)
             {
@@ -1036,6 +1089,7 @@ namespace WW2NavalAssembly
 
         public float reloadTime;
         public float currentReloadTime = 0;
+        public float reloadefficiency = 0;
 
         Texture ReloadHEOut;
         Texture ReloadHEIn;
@@ -1152,6 +1206,10 @@ namespace WW2NavalAssembly
             ReloadAPIn = ModResource.GetTexture("ReloadAPIn Texture").Texture;
             myseed = (int)(UnityEngine.Random.value * 10);
         }
+        public void Start()
+        {
+            name = "Gun";
+        }
         public override void BuildingUpdate()
         {
             if (ModController.Instance.state % 10 == myseed)
@@ -1251,7 +1309,7 @@ namespace WW2NavalAssembly
 
             if (currentReloadTime < reloadTime)
             {
-                currentReloadTime += Time.deltaTime;
+                currentReloadTime += Time.deltaTime * reloadefficiency;
                 if (ModController.Instance.state == myseed)
                 {
                     ModNetworking.SendToAll(WeaponMsgReceiver.ReloadMsg.CreateMessage(  myPlayerID, myGuid, currentReloadTime, 
@@ -1322,7 +1380,7 @@ namespace WW2NavalAssembly
             }
             if (currentReloadTime < reloadTime)
             {
-                currentReloadTime += Time.deltaTime;
+                currentReloadTime += Time.deltaTime * reloadefficiency;
             }
 
             if (WeaponMsgReceiver.Instance.Fire[myPlayerID][myGuid].fire)

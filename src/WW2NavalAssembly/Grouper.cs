@@ -90,19 +90,16 @@ namespace WW2NavalAssembly
             // AircraftLeaders
             if (!ac.AsLeader.isDefaultValue)
             {
-                try
+                foreach (var leader in AircraftLeaders[playerID])
                 {
-                    foreach (var leader in AircraftLeaders[playerID])
+
+                    if (leader.Value.Key == guid)
                     {
-
-                        if (leader.Value.Key == guid)
-                        {
-                            AircraftLeaders[playerID].Remove(leader.Key);
-                        }
-
+                        AircraftLeaders[playerID].Remove(leader.Key);
+                        break;
                     }
+
                 }
-                catch { }
 
                 if (!AircraftLeaders[playerID].ContainsKey(key))
                 {

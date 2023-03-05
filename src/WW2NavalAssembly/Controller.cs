@@ -93,6 +93,9 @@ namespace WW2NavalAssembly
         public MKey Lock;
         public MSlider FCPanelSize;
         public MSlider TurrentHeight;
+        public MToggle CommandAircraft;
+        public MKey ReturnKey;
+        public MKey TakeOffKey;
 
         public bool TrackOn;
         public Camera _viewCamera;
@@ -115,8 +118,9 @@ namespace WW2NavalAssembly
         public bool Locking = false;
         public GameObject lockingObject;
 
-        public int iconSize = 128;
+        public int iconSize = 160;
         public Texture LockIconOnScreen;
+        public Texture LockIconOnScreen2;
 
         public Vector2 BaseRandomError;
         public float SpotModifier;
@@ -125,6 +129,8 @@ namespace WW2NavalAssembly
         public float PreYRotation;
         public float RotationError;
         public Vector3 myVelocity;
+
+        public bool preControlAircraft = false;
 
         public Camera MainCamera
         {
@@ -154,6 +160,7 @@ namespace WW2NavalAssembly
             }
         }
 
+        // for Gun
         public class Dist2PitchResult
         {
             public bool hasResult;
@@ -198,7 +205,7 @@ namespace WW2NavalAssembly
             }
             public float getTurrentAngle(Vector2 forward, Vector2 turrentPos)
             {
-                return MathTool.Instance.SignedAngle(forward, predPosition - turrentPos);
+                return MathTool.SignedAngle(forward, predPosition - turrentPos);
             }
 
         }
@@ -213,17 +220,17 @@ namespace WW2NavalAssembly
                 pitchRes = CalculateGunPitchFromDist(dist, caliber);
                 if (pitchRes.hasResult) // valid result
                 {
-                    float Orien = MathTool.Instance.SignedAngle(GetForward(), targetPosition + velocity * pitchRes.time - myPosition);
+                    float Orien = MathTool.SignedAngle(GetForward(), targetPosition + velocity * pitchRes.time - myPosition);
                     return new FCResult(Orien, pitchRes.pitch, targetPosition + velocity * pitchRes.time);
                 }
                 else
                 {
-                    return new FCResult(MathTool.Instance.SignedAngle(GetForward(), targetPosition-myPosition));
+                    return new FCResult(MathTool.SignedAngle(GetForward(), targetPosition-myPosition));
                 }
             }
             else
             {
-                return new FCResult(MathTool.Instance.SignedAngle(GetForward(), targetPosition - myPosition));
+                return new FCResult(MathTool.SignedAngle(GetForward(), targetPosition - myPosition));
             }
         }
 
@@ -525,13 +532,13 @@ namespace WW2NavalAssembly
                         float angle;
                         if (ControllerDataManager.Instance.lockData[myPlayerID].valid && FCResults[tmpGun.Caliber.Value].hasRes)
                         {
-                            angle = MathTool.Instance.SignedAngle(GetForward(), tmpGun.GetFCOrienPara()) +
+                            angle = MathTool.SignedAngle(GetForward(), tmpGun.GetFCOrienPara()) +
                                     FCResults[tmpGun.Caliber.Value].Orien -
                                     FCResults[tmpGun.Caliber.Value].getTurrentAngle(GetForward(), new Vector2(tmpGun.transform.position.x, tmpGun.transform.position.z));
                         }
                         else
                         {
-                            angle = MathTool.Instance.SignedAngle(GetForward(), tmpGun.GetFCOrienPara());
+                            angle = MathTool.SignedAngle(GetForward(), tmpGun.GetFCOrienPara());
                         }
                         GunIcon.Value.transform.localEulerAngles = new Vector3(0, 0, angle - 90);
                         GunIcon.Value.transform.Find("GunIcon").transform.localPosition = new Vector3(-tmpGun.Caliber.Value / 10 - 50, 0, 0);
@@ -548,7 +555,7 @@ namespace WW2NavalAssembly
                     {
                         TorpedoLauncher tmpTor = FireControlManager.Instance.GetTorpedo(myPlayerID, TorIcon.Key).GetComponent<TorpedoLauncher>();
                         float angle;
-                        angle = MathTool.Instance.SignedAngle(GetForward(), tmpTor.GetFCOrienPara());
+                        angle = MathTool.SignedAngle(GetForward(), tmpTor.GetFCOrienPara());
                         TorIcon.Value.transform.eulerAngles = new Vector3(0, 0, angle);
                         TorIcon.Value.transform.localScale = new Vector3(1, (tmpTor.TorpedoType == 0 ? 1 : 0.6f), 1);
                     }
@@ -591,7 +598,7 @@ namespace WW2NavalAssembly
                         Vector2 preDirection = CalculateTorpedoFCPara(  new Vector2(ControllerDataManager.Instance.lockData[myPlayerID].position.x, ControllerDataManager.Instance.lockData[myPlayerID].position.z),
                                                                         new Vector2(ControllerDataManager.Instance.lockData[myPlayerID].velocity.x, ControllerDataManager.Instance.lockData[myPlayerID].velocity.z),
                                                                         typeGroup.Key);
-                        float angle = MathTool.Instance.SignedAngle(GetForward(), preDirection);
+                        float angle = MathTool.SignedAngle(GetForward(), preDirection);
                         TorpedoPreIcon[typeGroup.Key].transform.eulerAngles = new Vector3(0, 0, angle);
                     }
                 }
@@ -637,7 +644,7 @@ namespace WW2NavalAssembly
         }
         public void UpdateRotation()
         {
-            float nowYRotation = MathTool.Instance.SignedAngle(GetForward(), new Vector2(Vector3.forward.x, Vector3.forward.z));
+            float nowYRotation = MathTool.SignedAngle(GetForward(), new Vector2(Vector3.forward.x, Vector3.forward.z));
             float deltaRotation;
             if (PreYRotation > 175 && nowYRotation < -175)
             {
@@ -708,10 +715,28 @@ namespace WW2NavalAssembly
             //Debug.Log(OrienVector2 / 10);
             float FakeRandom = Mathf.Sign(BaseRandomError.x) * (Mathf.Abs(BaseRandomError.x) % 0.01f) * 50;
             //Debug.Log(FakeRandom);
-            RandomError =   (BaseRandomError * OrienVector2.magnitude / 30 + OrienVector2/15 * FakeRandom + OrienVector2 / 10) * SpotModifier + 
+            RandomError =   (BaseRandomError * Mathf.Sqrt(OrienVector2.magnitude)/2 + OrienVector2/15 * FakeRandom + OrienVector2 / 10) * SpotModifier + 
                             RotationError * new Vector2(UnityEngine.Random.value-0.5f, UnityEngine.Random.value - 0.5f) * OrienVector2.magnitude/500;
-            RandomError *= ClosingModifier;
+            RandomError  = (RandomError + (ClosingModifier-1) * new Vector2(UnityEngine.Random.value - 0.5f, UnityEngine.Random.value - 0.5f) * 2) * ClosingModifier;
         }
+
+        // For Aircraft
+        public void ControlMapper(bool control) // in build update
+        {
+            if (control != preControlAircraft)
+            {
+                preControlAircraft = control;
+
+                ReturnKey.DisplayInMapper = control;
+                TakeOffKey.DisplayInMapper = control;
+            }
+        }
+        public void UploadForward()
+        {
+            Vector3 forward = -transform.up;
+            FlightDataBase.Instance.DeckForward[myPlayerID] = new Vector2(forward.x,forward.z).normalized;
+        }
+
 
         public override void SafeAwake()
         {
@@ -721,16 +746,27 @@ namespace WW2NavalAssembly
             SwitchCannnon = AddKey("Switch Tracking Cannon", "SwitchTrackingCannon", KeyCode.RightShift);
             FCPanelSize = AddSlider("Fire Control Size", "FCSize", 1f, 0.2f, 5f);
             TurrentHeight = AddSlider("TurrentHeight", "TurrentHeight", 0.5f, 0f, 2f);
-            
+            CommandAircraft = AddToggle("Command Aircraft", "Command Aircraft", false);
             Lock = AddKey("Lock", "WW2Lock", KeyCode.X);
+            ReturnKey = AddKey("Aircraft Return", "ReturnKey", KeyCode.Backspace);
+            TakeOffKey = AddKey("Aircraft Take Off", "TakeOffKey", KeyCode.Q);
+
+            ControlMapper(!preControlAircraft);
+
+            
             mySeed = (int)(UnityEngine.Random.value * 10);
+        }
+        public void Start()
+        {
+            gameObject.name = "Captain";
         }
         public override void OnSimulateStart()
         {
             
             myGuid = BlockBehaviour.BuildingBlock.Guid.GetHashCode();
             LockIconOnScreen = ModResource.GetTexture("LockIconScreen Texture").Texture;
-            PreYRotation = MathTool.Instance.SignedAngle(GetForward(), new Vector2(Vector3.forward.x, Vector3.forward.z));
+            LockIconOnScreen2 = ModResource.GetTexture("LockIconScreen2 Texture").Texture;
+            PreYRotation = MathTool.SignedAngle(GetForward(), new Vector2(Vector3.forward.x, Vector3.forward.z));
             ControllerDataManager.Instance.ControllerObject[myPlayerID] = gameObject;
             try
             {
@@ -836,7 +872,11 @@ namespace WW2NavalAssembly
                 ControllerDataManager.Instance.lockData[myPlayerID].valid = false;
             }
         }
-
+        public override void BuildingUpdate()
+        {
+            UploadForward();
+            ControlMapper(!CommandAircraft.isDefaultValue);
+        }
         public override void BuildingFixedUpdate()
         {
             ControllerDataManager.Instance.ControllerPos[myPlayerID] = transform.position;
@@ -867,6 +907,10 @@ namespace WW2NavalAssembly
                 }
             }
 
+        }
+        public override void SimulateUpdateAlways()
+        {
+            UploadForward();
         }
         public override void SimulateUpdateHost()
         {
@@ -919,7 +963,13 @@ namespace WW2NavalAssembly
                 ControllerDataManager.Instance.cameraData[myPlayerID].valid = false;
                 Ray cameraRay = new Ray(ControllerDataManager.Instance.cameraData[myPlayerID].position, ControllerDataManager.Instance.cameraData[myPlayerID].forward);
                 RaycastHit hit;
-                if (Physics.Raycast(cameraRay,out hit,3000))
+                bool hashit = Physics.Raycast(cameraRay, out hit, 3000);
+                BlockBehaviour hitBB = null;
+                if (hashit)
+                {
+                    hitBB = hit.collider.transform.parent.gameObject.GetComponent<BlockBehaviour>();
+                }
+                if (hashit && hitBB && hitBB.isSimulating)
                 {
                     Debug.Log("true");
                     Locking = true;
@@ -979,6 +1029,10 @@ namespace WW2NavalAssembly
             }
             else
             {
+                if (myPlayerID == 0)
+                {
+                    ControllerDataManager.Instance.lockData[0] = new LockData();
+                }
                 ModNetworking.SendToAll(ControllerDataManager.LockMsg.CreateMessage(myPlayerID, Vector3.zero, Vector3.zero, false));
             }
         }
@@ -1046,7 +1100,15 @@ namespace WW2NavalAssembly
                 GUI.color = Color.green;
                 Vector3 onScreenPosition = Camera.main.WorldToScreenPoint(ControllerDataManager.Instance.lockData[myPlayerID].position);
                 if (onScreenPosition.z >= 0)
+                {
                     GUI.DrawTexture(new Rect(onScreenPosition.x - iconSize / 2, Camera.main.pixelHeight - onScreenPosition.y - iconSize / 2, iconSize, iconSize), LockIconOnScreen);
+                    //RandomError = (BaseRandomError * Mathf.Sqrt(OrienVector2.magnitude) / 2 + OrienVector2 / 15 * FakeRandom + OrienVector2 / 10) * SpotModifier +
+                    //RotationError * new Vector2(UnityEngine.Random.value - 0.5f, UnityEngine.Random.value - 0.5f) * OrienVector2.magnitude / 500;
+                    //RandomError = (RandomError + (ClosingModifier - 1) * new Vector2(UnityEngine.Random.value - 0.5f, UnityEngine.Random.value - 0.5f) * 12) * ClosingModifier;
+                    int newSize =  (int) Mathf.Clamp(( ((3*SpotModifier+RotationError*0.2f + (ClosingModifier-1)*0.2f)*ClosingModifier +1) * 24),24,128);
+                    GUI.DrawTexture(new Rect(onScreenPosition.x - newSize / 2, Camera.main.pixelHeight - onScreenPosition.y - newSize / 2, newSize, newSize), LockIconOnScreen2);
+                }
+                    
             }
         }
     }

@@ -69,9 +69,10 @@ namespace WW2NavalAssembly
     class PropellerBehaviour : MonoBehaviour
     {
         public bool Direction;
+        public float Speed = 10;
         public void Update()
         {
-            transform.localEulerAngles += new Vector3(0, (Direction? 10:-10), 0);
+            transform.localEulerAngles += new Vector3(0, (Direction? Speed:-Speed), 0);
         }
     }
     class TorpedoBehaviour : MonoBehaviour
@@ -321,20 +322,6 @@ namespace WW2NavalAssembly
                             }
 
                         }
-                        else
-                        {
-                            if (TorpedoMsgReceiver.Instance.torpedoData[myPlayerID][parentGuid].updated)
-                            {
-                                TorpedoMsgReceiver.Instance.torpedoData[myPlayerID][parentGuid].updated = false;
-                                //Debug.Log("Client Torpedo justify");
-                                transform.position = TorpedoMsgReceiver.Instance.torpedoData[myPlayerID][parentGuid].position;
-                                if (TorpedoMsgReceiver.Instance.torpedoData[myPlayerID][parentGuid].exploded)
-                                {
-                                    TorpedoExploClient();
-                                    Destroy(gameObject);
-                                }
-                            }
-                        }
                     }
                     else
                     {
@@ -343,7 +330,20 @@ namespace WW2NavalAssembly
                             Destroy(gameObject);
                         }
                     }
-
+                }
+                if (StatMaster.isMP || StatMaster.isClient)
+                {
+                    if (TorpedoMsgReceiver.Instance.torpedoData[myPlayerID][parentGuid].updated)
+                    {
+                        TorpedoMsgReceiver.Instance.torpedoData[myPlayerID][parentGuid].updated = false;
+                        //Debug.Log("Client Torpedo justify");
+                        transform.position = TorpedoMsgReceiver.Instance.torpedoData[myPlayerID][parentGuid].position;
+                        if (TorpedoMsgReceiver.Instance.torpedoData[myPlayerID][parentGuid].exploded)
+                        {
+                            TorpedoExploClient();
+                            Destroy(gameObject);
+                        }
+                    }
                 }
             }
 

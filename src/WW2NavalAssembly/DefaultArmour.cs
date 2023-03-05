@@ -53,6 +53,27 @@ namespace WW2NavalAssembly
                         {
                             return;
                         }
+                        // mod-related
+                        else if (gameObject.name == "Aircraft")
+                        {
+                            return;
+                        }
+                        else if (gameObject.name == "Gun")
+                        {
+                            return;
+                        }
+                        else if (gameObject.name == "Gunner")
+                        {
+                            return;
+                        }
+                        else if (gameObject.name == "Captain")
+                        {
+                            return;
+                        }
+                        else if (gameObject.name == "Engine")
+                        {
+                            return;
+                        }
                         else if (gameObject.name == "FlyingBlock")
                         {
                             transform.Find("Rot").Find("Vis").gameObject.SetActive(false);

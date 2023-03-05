@@ -36,7 +36,7 @@ namespace WW2NavalAssembly
         {
             if (type == 1)
             {
-                minWaterIn = 300 * hittedCaliber;
+                minWaterIn = 600 * hittedCaliber;
                 waterIn = minWaterIn;
             }
             try

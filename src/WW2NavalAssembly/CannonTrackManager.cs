@@ -43,7 +43,7 @@ namespace WW2NavalAssembly
             {
                 while (Cannons[playerID].Peek() == null ||
                     (Cannons[playerID].Peek().transform.position.y < 20) ||
-                    Cannons[playerID].Peek().GetComponent<BulletBehaviour>().exploded)
+                    (Cannons[playerID].Peek().GetComponent<BulletBehaviour>()? Cannons[playerID].Peek().GetComponent<BulletBehaviour>().exploded : true))
                 {
                     Cannons[playerID].Dequeue();
                     if (Cannons[playerID].Count == 0)

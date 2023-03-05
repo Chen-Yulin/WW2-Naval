@@ -388,7 +388,7 @@ namespace WW2NavalAssembly
                     {
                         if (LeftKey.message[0] == key.message[0])
                         {
-                            Debug.Log("Detect Orien Hinge:" + Blockpair.Value.BuildingBlock.Guid.ToString());
+                            //Debug.Log("Detect Orien Hinge:" + Blockpair.Value.BuildingBlock.Guid.ToString());
                             OrienHinge.Add(Blockpair.Value.GetComponent<SteeringWheel>());
                             find = true;
                             break;
@@ -400,7 +400,7 @@ namespace WW2NavalAssembly
                         {
                             if (LeftKey.GetKey(0) == key.GetKey(i))
                             {
-                                Debug.Log("Detect Orien Hinge:" + Blockpair.Value.BuildingBlock.Guid.ToString());
+                                //Debug.Log("Detect Orien Hinge:" + Blockpair.Value.BuildingBlock.Guid.ToString());
                                 OrienHinge.Add(Blockpair.Value.GetComponent<SteeringWheel>());
                                 find = true;
                                 break;
@@ -411,7 +411,7 @@ namespace WW2NavalAssembly
                     {
                         if (UpKey.message[0] == key.message[0])
                         {
-                            Debug.Log("Detect Pitch Hinge:" + Blockpair.Value.BuildingBlock.Guid.ToString());
+                            //Debug.Log("Detect Pitch Hinge:" + Blockpair.Value.BuildingBlock.Guid.ToString());
                             PitchHinge.Add(Blockpair.Value.GetComponent<SteeringWheel>());
                             find = true;
                             break;
@@ -422,7 +422,7 @@ namespace WW2NavalAssembly
                         {
                             if (UpKey.GetKey(0) == key.GetKey(i))
                             {
-                                Debug.Log("Detect Pitch Hinge:" + Blockpair.Value.BuildingBlock.Guid.ToString());
+                                //Debug.Log("Detect Pitch Hinge:" + Blockpair.Value.BuildingBlock.Guid.ToString());
                                 PitchHinge.Add(Blockpair.Value.GetComponent<SteeringWheel>());
                                 find = true;
                                 break;
@@ -447,7 +447,7 @@ namespace WW2NavalAssembly
                     {
                         if (FireKey.message[0] == key.message[0])
                         {
-                            Debug.Log("Detect Fire Gun:" + GunPair.Value.BuildingBlock.Guid.ToString());
+                            //Debug.Log("Detect Fire Gun:" + GunPair.Value.BuildingBlock.Guid.ToString());
                             FireGun.Add(GunPair.Value.GetComponent<Gun>());
                             find = true;
                             break;
@@ -459,7 +459,7 @@ namespace WW2NavalAssembly
                         {
                             if (FireKey.GetKey(0) == key.GetKey(i))
                             {
-                                Debug.Log("Detect Fire Gun:" + GunPair.Value.BuildingBlock.Guid.ToString());
+                                //Debug.Log("Detect Fire Gun:" + GunPair.Value.BuildingBlock.Guid.ToString());
                                 FireGun.Add(GunPair.Value.GetComponent<Gun>());
                                 find = true;
                                 break;
@@ -697,13 +697,13 @@ namespace WW2NavalAssembly
                 
                 Vector2 targetVector = GunnerMsgReceiver.Instance.TargetPredPos[myPlayerID][myGuid] - new Vector2(bindedGuns[0].transform.position.x, bindedGuns[0].transform.position.z);
                 bool OutOfSpan = OrienLimitValid ? (Vector2.Angle(targetVector, CenterForward) > GunSpan ||
-                    (Mathf.Sign(MathTool.Instance.SignedAngle(targetVector, -CenterForward)) == Mathf.Sign(MathTool.Instance.SignedAngle(targetVector, GunForward)) &&
+                    (Mathf.Sign(MathTool.SignedAngle(targetVector, -CenterForward)) == Mathf.Sign(MathTool.SignedAngle(targetVector, GunForward)) &&
                         Vector2.Angle(targetVector, -CenterForward) < Vector2.Angle(targetVector, GunForward)
                         )
                     ) : false;
-                float OrienDelta = MathTool.Instance.SignedAngle(GunForward, targetVector);
+                float OrienDelta = MathTool.SignedAngle(GunForward, targetVector);
                 float PitchDelta = GunnerMsgReceiver.Instance.TargrtPitch[myPlayerID][myGuid] - bindedGuns[0].GetComponent<Gun>().GetFCPitchPara();
-                float TargetOrien = MathTool.Instance.SignedAngle(CenterForward, targetVector);
+                float TargetOrien = MathTool.SignedAngle(CenterForward, targetVector);
 
                 ControlTurrent(true, OutOfSpan, OrienDelta, TargetOrien, PitchDelta);
             }
@@ -725,13 +725,13 @@ namespace WW2NavalAssembly
         //        }
         //        Vector2 targetVector = targetPos - new Vector2(bindedGuns[0].transform.position.x, bindedGuns[0].transform.position.z);
         //        bool OutOfSpan = limitValid ? (Vector2.Angle(targetVector, CenterForward) > GunSpan ||
-        //            (   Mathf.Sign(MathTool.Instance.SignedAngle(targetVector,-CenterForward)) == Mathf.Sign(MathTool.Instance.SignedAngle(targetVector,GunForward)) && 
+        //            (   Mathf.Sign(MathTool.SignedAngle(targetVector,-CenterForward)) == Mathf.Sign(MathTool.SignedAngle(targetVector,GunForward)) && 
         //                Vector2.Angle(targetVector, -CenterForward) < Vector2.Angle(targetVector, GunForward)
         //                )
         //            ) : false ;
-        //        //Debug.Log(OutOfSpan+" "+ MathTool.Instance.SignedAngle(CenterForward, targetVector));
-        //        if ((!OutOfSpan && MathTool.Instance.SignedAngle(GunForward, targetVector) > OrienFaultTolerance.Value) ||
-        //            (OutOfSpan && MathTool.Instance.SignedAngle(CenterForward, targetVector) > 0))
+        //        //Debug.Log(OutOfSpan+" "+ MathTool.SignedAngle(CenterForward, targetVector));
+        //        if ((!OutOfSpan && MathTool.SignedAngle(GunForward, targetVector) > OrienFaultTolerance.Value) ||
+        //            (OutOfSpan && MathTool.SignedAngle(CenterForward, targetVector) > 0))
         //        {
         //            GunReady = false;
         //            if (leftEmulateStage == 0)
@@ -748,8 +748,8 @@ namespace WW2NavalAssembly
         //                leftEmulateStage --;
         //            }
         //        }
-        //        if ((!OutOfSpan && MathTool.Instance.SignedAngle(GunForward, targetVector) < -OrienFaultTolerance.Value) ||
-        //            (OutOfSpan && MathTool.Instance.SignedAngle(CenterForward, targetVector) < 0))
+        //        if ((!OutOfSpan && MathTool.SignedAngle(GunForward, targetVector) < -OrienFaultTolerance.Value) ||
+        //            (OutOfSpan && MathTool.SignedAngle(CenterForward, targetVector) < 0))
         //        {
         //            GunReady = false;
         //            if (rightEmulateStage == 0)
@@ -871,14 +871,14 @@ namespace WW2NavalAssembly
                 }
                 Vector2 targetVector = targetPos - new Vector2(bindedGuns[0].transform.position.x, bindedGuns[0].transform.position.z);
                 bool OutOfSpan = OrienLimitValid ? (Vector2.Angle(targetVector, CenterForward) > GunSpan ||
-                    (Mathf.Sign(MathTool.Instance.SignedAngle(targetVector, -CenterForward)) == Mathf.Sign(MathTool.Instance.SignedAngle(targetVector, GunForward)) &&
+                    (Mathf.Sign(MathTool.SignedAngle(targetVector, -CenterForward)) == Mathf.Sign(MathTool.SignedAngle(targetVector, GunForward)) &&
                         Vector2.Angle(targetVector, -CenterForward) < Vector2.Angle(targetVector, GunForward)
                         )
                     ) : false;
-                //Debug.Log(OutOfSpan+" "+ MathTool.Instance.SignedAngle(CenterForward, targetVector));
-                float OrienDelta = MathTool.Instance.SignedAngle(GunForward, targetVector);
+                //Debug.Log(OutOfSpan+" "+ MathTool.SignedAngle(CenterForward, targetVector));
+                float OrienDelta = MathTool.SignedAngle(GunForward, targetVector);
                 float PitchDelta = targetPitch - bindedGuns[0].GetComponent<Gun>().GetFCPitchPara();
-                float TargetOrien = MathTool.Instance.SignedAngle(CenterForward, targetVector);
+                float TargetOrien = MathTool.SignedAngle(CenterForward, targetVector);
 
                 ControlTurrent(true, OutOfSpan, OrienDelta, TargetOrien, PitchDelta);
             }
@@ -990,6 +990,7 @@ namespace WW2NavalAssembly
         }
         public void Start()
         {
+            name = "Gunner";
             initLine();
         }
         public void OnDestroy()

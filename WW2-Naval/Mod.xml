@@ -5,15 +5,15 @@
 	<Name>WW2Naval</Name>
 	<Author>Chen, Yulin</Author> <!-- FIX: Insert your name here. -->
 	<!-- Major.Minor.Build -->
-	<Version>0.5.17</Version>
+	<Version>0.6.5</Version>
 	
 	<Description>
 	A mod for 1/5 scale WW2 naval battel.
-	Version 0.5.17
+	Version 0.6.5
 	</Description>
 
 	<Icon name="icon"/>
-	<Debug>True</Debug>
+	<Debug>false</Debug>
 	
 	
 	<MultiplayerCompatible>true</MultiplayerCompatible>
@@ -31,6 +31,7 @@
 		<Block path="TorpedoLauncher.xml" />
 		<Block path="Gunnner.xml" />
 		<Block path="Aircraft.xml" />
+		<Block path="Engine.xml" />
 	</Blocks>
 	
 	<!-- Any entities (level objects) your mod adds to the game.
@@ -74,6 +75,7 @@
 		<Texture name="ReloadAPOut Texture" path="Gun\loadCircleOut2.png"/>
 		<Texture name="ReloadAPIn Texture" path="Gun\loadCircleIn2.png"/>
 		<Texture name="LockIconScreen Texture" path="CentralController\aim.png"/>
+		<Texture name="LockIconScreen2 Texture" path="CentralController\aim2.png"/>
 		<Mesh name="TorpedoLauncher Mesh" path="Torpedo\TorpedoLauncher.obj"/>
 		<Texture name="TorpedoLauncher Texture" path="Torpedo\TorpedoLauncher.png"/>
 		<Mesh name="Torpedo Mesh" path="Torpedo\Torpedo.obj"/>
@@ -85,6 +87,26 @@
 		<Mesh name="gunner Mesh" path="Gunner\gunner.obj"/>
 		<Texture name="gunner Texture" path="Gunner\gunner.png"/>
 		<Texture name="gunnerAlert Texture" path="Gunner\alert.png"/>
+		<Mesh name="Engine Mesh" path="Engine\Engine.obj"/>
+		<Texture name="Engine Texture" path="Engine\Engine.png"/>
+		<Mesh name="Engine-Sleeve Mesh" path="Engine\sleeve.obj"/>
+		<Mesh name="Engine-Sleeve2 Mesh" path="Engine\sleeve2.obj"/>
+		<Texture name="Engine-Sleeve2 Texture" path="Engine\Sleeve2.png"/>
+		<Mesh name="Engine-Axle Mesh" path="Engine\Axle.obj"/>
+		<Texture name="Engine-Axle Texture" path="Engine\Axle.png"/>
+		<Mesh name="Engine-Prop Mesh" path="Engine\Propeller.obj"/>
+		<Texture name="Engine-Prop Texture" path="Engine\Propeller.png"/>
+		<Texture name="Engine-Meter Texture" path="Engine\meter.png"/>
+		<Texture name="Engine-Indicator Texture" path="Engine\Indicator.png"/>
+		<Texture name="Engine-Speed Texture" path="Engine\speed.png"/>
+		<Mesh name="SkyBall" path="SkyBall.obj"/>
+		<Texture name="BlueSky" path="Sky\BlueSky.png"/>
+		<Texture name="Night" path="Sky\Night.png"/>
+		<Texture name="Sunrise1" path="Sky\Sunrise1.png"/>
+		<Texture name="Sunrise2" path="Sky\Sunrise2.png"/>
+		<Texture name="Sunset1" path="Sky\Sunset1.png"/>
+		<Texture name="Sunset2" path="Sky\Sunset2.png"/>
+
 
 		<AudioClip name="GunShot Audio" path="Gun\fire.wav" />
 		<AudioClip name="GunExplo Audio" path="Gun\explo.wav" />
@@ -102,6 +124,7 @@
 		<AssetBundle name="FireControl AB" path="firecontrol.ab"/>
 		<AssetBundle name="Sea AB" path="sea.ab"/>
 		<AssetBundle name="TorpedoTrail AB" path="torpedotrail.ab"/>
+		<AssetBundle name="Sky AB" path="sky.ab"/>
 
 		<!-- AirCraft -->
 		<Mesh name="A-Zero-0 Mesh" path="Aircraft\R\ZERO\ZERO 0.obj"/>

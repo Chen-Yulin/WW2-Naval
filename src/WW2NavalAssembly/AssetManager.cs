@@ -6,6 +6,17 @@ using Modding;
 
 namespace WW2NavalAssembly
 {
+    public class Asset_Sky
+    {
+        public Material[] Sky = new Material[20];
+        public Asset_Sky(ModAssetBundle modAssetBundle)
+        {
+            for (int i = 0; i < 6; i++)
+            {
+                Sky[i] = modAssetBundle.LoadAsset<Material>("Sky0" + i.ToString());
+            }
+        }
+    }
     public class Asset_TorpedoTrail
     {
         public GameObject TorpedoTrail;
@@ -130,6 +141,7 @@ namespace WW2NavalAssembly
         public Asset_FireControl FireControl { get; protected set; }
         public Asset_Sea Sea { get; protected set; }
         public Asset_TorpedoTrail TorpedoTrail { get; protected set; }
+        public Asset_Sky Sky { get; protected set; }
 
         protected void Awake()
         {
@@ -144,6 +156,7 @@ namespace WW2NavalAssembly
             FireControl = new Asset_FireControl(ModResource.GetAssetBundle("FireControl AB"));
             Sea = new Asset_Sea(ModResource.GetAssetBundle("Sea AB"));
             TorpedoTrail = new Asset_TorpedoTrail(ModResource.GetAssetBundle("TorpedoTrail AB"));
+            Sky = new Asset_Sky(ModResource.GetAssetBundle("Sky AB"));
         }
     }
 }

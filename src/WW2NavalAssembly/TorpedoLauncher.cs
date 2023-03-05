@@ -179,6 +179,10 @@ namespace WW2NavalAssembly
             ReloadAPIn = ModResource.GetTexture("ReloadAPIn Texture").Texture;
             myseed = (int)(UnityEngine.Random.value * 10);
         }
+        public void Start()
+        {
+            name = "Torpedo Launcher";
+        }
         public override void OnSimulateStart()
         {
             VisTransform = transform.Find("Vis");
@@ -263,7 +267,7 @@ namespace WW2NavalAssembly
                     currentReloadTime += Time.deltaTime;
                     if (ModController.Instance.state == myseed)
                     {
-                        ModNetworking.SendToAll(WeaponMsgReceiver.ReloadMsg.CreateMessage(myPlayerID, myGuid, currentReloadTime, TorpedoType, false, NumLeft));
+                        ModNetworking.SendToAll(WeaponMsgReceiver.ReloadMsg.CreateMessage(myPlayerID, myGuid, currentReloadTime, TorpedoType == 1, false, NumLeft));
                     }
                 }
                 return;
@@ -324,7 +328,7 @@ namespace WW2NavalAssembly
             {
                 WeaponMsgReceiver.Instance.reloadTimeUpdated[myPlayerID][myGuid] = false;
                 currentReloadTime = WeaponMsgReceiver.Instance.reloadTime[myPlayerID][myGuid];
-                TorpedoType = WeaponMsgReceiver.Instance.CannonType[myPlayerID][myGuid]?0:1;
+                TorpedoType = WeaponMsgReceiver.Instance.CannonType[myPlayerID][myGuid]?1:0;
                 NumLeft = WeaponMsgReceiver.Instance.CannonNum[myPlayerID][myGuid];
             }
             if (currentReloadTime < reloadTime)

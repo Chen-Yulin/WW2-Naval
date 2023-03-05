@@ -24,7 +24,7 @@ namespace WW2NavalAssembly
         public MText Group;
         public MToggle AsLeader;
         public MKey SwitchActive;
-        public MKey ReturnKey;
+        
 
         public int myseed;
         public int myPlayerID;
@@ -297,7 +297,7 @@ namespace WW2NavalAssembly
             InitGroupLine();
 
             SwitchActive = AddKey("Switch Active", "SwitchActive", KeyCode.Alpha1);
-            ReturnKey = AddKey("Return", "ReturnKey", KeyCode.Backspace);
+            
             Group = AddText("Group", "AircraftGroup", "1");
             AsLeader = AddToggle("As Leader", "AsLeader", false);
 
@@ -322,6 +322,10 @@ namespace WW2NavalAssembly
                 "Zero",
                 "F4U",
             });
+        }
+        public void Start()
+        {
+            name = "Aircraft";
         }
         public override void BuildingUpdate()
         {
@@ -417,12 +421,10 @@ namespace WW2NavalAssembly
                 if (preIsLeader)
                 {
                     SwitchActive.DisplayInMapper = true;
-                    ReturnKey.DisplayInMapper = true;
                 }
                 else
                 {
                     SwitchActive.DisplayInMapper = false;
-                    ReturnKey.DisplayInMapper = false;
                 }
             }
 
