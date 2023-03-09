@@ -513,7 +513,7 @@ namespace WW2NavalAssembly
                                 {
                                     if (UnityEngine.Random.value < AmmoExploProb * 2)
                                     {
-                                        CW.TurrentPalsy = true;
+                                        //CW.TurrentPalsy = true;
                                     }
                                 }
                             }
@@ -1089,7 +1089,7 @@ namespace WW2NavalAssembly
 
         public float reloadTime;
         public float currentReloadTime = 0;
-        public float reloadefficiency = 0;
+        public float reloadefficiency = 1;
 
         Texture ReloadHEOut;
         Texture ReloadHEIn;
