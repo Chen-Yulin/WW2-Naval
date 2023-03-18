@@ -199,6 +199,7 @@ namespace WW2NavalAssembly
         public bool exploded = false;
         public bool spotted = false;
 
+
         public void AddFireSound(Transform t)
         {
             AudioSource fireAS = t.gameObject.AddComponent<AudioSource> ();
@@ -267,25 +268,39 @@ namespace WW2NavalAssembly
         {
             try
             {
+                if (hit.collider.name == "TurrentVis")
+                {
+                    return true;
+                }
+            }
+            catch { }
+            try
+            {
                 if (!(hit.collider.transform.parent.parent.name == "Engine"))
                 {
-                    if (!hit.collider.transform.parent.GetComponent<BlockBehaviour>())
+                    
+                    if (!hit.collider.transform.parent.GetComponent<BlockBehaviour>() && !hit.collider.transform.GetComponent<BlockBehaviour>())
                     {
                         Debug.Log("not a block");
                         return false;
                     }
-                }
-
-                if (hit.collider.transform.parent.parent.name == "Engine")
-                {
-                    if (pericedBlock.Contains(hit.collider.transform.parent.parent.GetComponent<BlockBehaviour>().BuildingBlock.Guid.GetHashCode()))
+                    if (hit.collider.transform.parent.GetComponent<BlockBehaviour>())
                     {
-                        return true;
+                        if (pericedBlock.Contains(hit.collider.transform.parent.GetComponent<BlockBehaviour>().BuildingBlock.Guid.GetHashCode()))
+                        {
+                            return true;
+                        }
+                    }else if (hit.collider.transform.GetComponent<BlockBehaviour>())
+                    {
+                        if (pericedBlock.Contains(hit.collider.transform.GetComponent<BlockBehaviour>().BuildingBlock.Guid.GetHashCode()))
+                        {
+                            return true;
+                        }
                     }
                 }
                 else
                 {
-                    if (pericedBlock.Contains(hit.collider.transform.parent.GetComponent<BlockBehaviour>().BuildingBlock.Guid.GetHashCode()))
+                    if (pericedBlock.Contains(hit.collider.transform.parent.parent.GetComponent<BlockBehaviour>().BuildingBlock.Guid.GetHashCode()))
                     {
                         return true;
                     }
@@ -321,7 +336,7 @@ namespace WW2NavalAssembly
             {
                 Thickness = hit.collider.transform.parent.GetComponent<WoodenArmour>().thickness;
             }
-            else if(hit.collider.transform.parent.GetComponent<DefaultArmour>())
+            else if(hit.collider.transform.parent.GetComponent<DefaultArmour>() || hit.collider.transform.GetComponent<DefaultArmour>())
             {
                 Thickness = 20;
             }
@@ -513,7 +528,7 @@ namespace WW2NavalAssembly
                                 {
                                     if (UnityEngine.Random.value < AmmoExploProb * 2)
                                     {
-                                        //CW.TurrentPalsy = true;
+                                        CW.TurrentPalsy = true;
                                     }
                                 }
                             }
@@ -1089,7 +1104,7 @@ namespace WW2NavalAssembly
 
         public float reloadTime;
         public float currentReloadTime = 0;
-        public float reloadefficiency = 1;
+        public float reloadefficiency = 0;
 
         Texture ReloadHEOut;
         Texture ReloadHEIn;

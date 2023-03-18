@@ -128,6 +128,9 @@ namespace WW2NavalAssembly
     {
         public override string Name { get; } = "Asset Manager";
 
+        public Material TransparentMat;
+        public Material[] TurrentMat = new Material[8];
+        public Material[] ArmorMat = new Material[66];
         public Asset_CannonHit CannonHit { get; protected set; }
         public Asset_WaterHit WaterHit { get; protected set; }
 
@@ -157,6 +160,34 @@ namespace WW2NavalAssembly
             Sea = new Asset_Sea(ModResource.GetAssetBundle("Sea AB"));
             TorpedoTrail = new Asset_TorpedoTrail(ModResource.GetAssetBundle("TorpedoTrail AB"));
             Sky = new Asset_Sky(ModResource.GetAssetBundle("Sky AB"));
+
+            float colorValue = 1;
+            for (int i = 0; i < 8; i++)
+            {
+                TurrentMat[i] = new Material(Shader.Find("Unlit/Color"));
+                TurrentMat[i].color = new Color(colorValue, colorValue, colorValue, 1);
+                colorValue /= 2;
+            }
+            for (int i = 0; i < 66; i++)
+            {
+                if (i==0)
+                {
+                    ArmorMat[i] = new Material(ArmourVis.SingleArmour.GetComponent<MeshRenderer>().material);
+                }
+                else
+                {
+                    ArmorMat[i] = new Material(ArmorMat[i - 1]);
+                }
+                float thickness = (i+0.5f) *10;
+                Color tmpColor = Color.HSVToRGB(Mathf.Clamp(0.5f - thickness / 1000, 0, 0.5f), 1, 1);
+                ArmorMat[i].color = new Color(tmpColor.r, tmpColor.g, tmpColor.b, 0.6f);
+            }
+            TransparentMat = ArmorMat[0];
+            TransparentMat.color = new Color(0, 0, 0, 0);
+            
+            
+            
+            
         }
     }
 }

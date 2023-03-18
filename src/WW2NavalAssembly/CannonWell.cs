@@ -20,6 +20,7 @@ namespace WW2NavalAssembly
         public Dictionary<int, bool>[] WellExplo = new Dictionary<int, bool>[16];
         public Dictionary<int, bool>[] AmmoExplo = new Dictionary<int, bool>[16];
         public Dictionary<int, bool>[] WellPalsy = new Dictionary<int, bool>[16];
+        public Dictionary<int, bool>[] TurrentPalsy = new Dictionary<int, bool>[16];
         public WellMsgReceicer()
         {
             for (int i = 0; i < 16; i++)
@@ -27,6 +28,7 @@ namespace WW2NavalAssembly
                 WellExplo[i] = new Dictionary<int, bool>();
                 AmmoExplo[i] = new Dictionary<int, bool>();
                 WellPalsy[i] = new Dictionary<int, bool>();
+                TurrentPalsy[i] = new Dictionary<int, bool>();
             }
         }
 
@@ -40,6 +42,10 @@ namespace WW2NavalAssembly
             {
                 AmmoExplo[(int)msg.GetData(0)][(int)msg.GetData(1)] = true;
             }
+            else if ((int)msg.GetData(2) == 3)
+            {
+                TurrentPalsy[(int)msg.GetData(0)][(int)msg.GetData(1)] = true;
+            }
             else
             {
                 WellPalsy[(int)msg.GetData(0)][(int)msg.GetData(1)] = true;
@@ -50,24 +56,31 @@ namespace WW2NavalAssembly
     public class CannonWell : MonoBehaviour
     {
         public BlockBehaviour BB { get; internal set; }
+        public MToggle UseWell;
         public MSlider Thickness;
         public MSlider Depth;
         public MSlider Offset;
+        public MSlider AmmoResize;
         public MText GunGroup;
         public float thickness;
         public GameObject WellVis;
+        public GameObject TurrentVis;
         GameObject AmmoVis;
         MeshRenderer WellVisRender;
         MeshRenderer AmmoVisRender;
+        MeshRenderer TurrentVisRender;
 
         public int myseed;
         public int myPlayerID;
         public int myGuid;
 
         public bool Wellpalsy;
+        public bool TurrentPalsy;
         public bool AmmoExplo;
         public bool WellExplo;
 
+        public int TurrentPalsyCount = 0;
+        public int TurrentHP = 1;
 
         public float myCaliber = 0;
         public float totalCaliber = 0;
@@ -80,6 +93,56 @@ namespace WW2NavalAssembly
         GameObject WellExploEffect;
         GameObject AmmoExploEffect;
 
+        bool initialized = false;
+        bool visInitialized = false;
+
+        public void SetReloadEfficiency(float percent, bool initial = false)
+        {
+            if (initial)
+            {
+
+            }
+            else
+            {
+                Color tmpColor = TurrentVisRender.material.color;
+                TurrentVisRender.material.color = new Color(tmpColor.r / 2, tmpColor.g / 2, tmpColor.b / 2, ModController.Instance.showArmour ? 1f : 0f);
+            }
+            try
+            {
+                Dictionary<int, GameObject> gunlist = Grouper.Instance.GetGun(myPlayerID, GunGroup.Value);
+                int num = 0;
+                if (gunlist.Count != 0)
+                {
+                    foreach (var gunObject in gunlist)
+                    {
+                        if (num > 3)
+                        {
+                            break;
+                        }
+                        if (!gunObject.Value)
+                        {
+                            continue;
+                        }
+                        if (initial)
+                        {
+                            float efficiency = 1;
+                            if (!UseWell.isDefaultValue)
+                            {
+                                efficiency = Mathf.Clamp(8 / Mathf.Sqrt(gunObject.Value.GetComponent<Gun>().Caliber.Value), 0, 1);
+                            }
+                            gunObject.Value.GetComponent<Gun>().reloadefficiency = efficiency;
+                        }
+                        else
+                        {
+                            gunObject.Value.GetComponent<Gun>().reloadefficiency *= percent;
+                        }
+
+                        num++;
+                    }
+                }
+            }
+            catch { }
+        }
         public void AmmoExploforce()
         {
             Collider[] explo = Physics.OverlapSphere(AmmoVis.transform.position, Mathf.Sqrt(myCaliber) * 2);
@@ -143,6 +206,17 @@ namespace WW2NavalAssembly
         }
         public void DetectHitHost()
         {
+            if (TurrentPalsy)
+            {
+                if (StatMaster.isMP)
+                {
+                    ModNetworking.SendToAll(WellMsgReceicer.hitMsg.CreateMessage(myPlayerID, myGuid, 3));
+                }
+                TurrentPalsy = false;
+                TurrentHP /= 2;
+                TurrentPalsyCount++;
+                SetReloadEfficiency(0.5f);
+            }
             if (Wellpalsy)
             {
                 //Debug.Log("WellPalsy");
@@ -243,6 +317,13 @@ namespace WW2NavalAssembly
                     }
                 }
                 catch { }
+            }
+            if (WellMsgReceicer.Instance.TurrentPalsy[myPlayerID][myGuid])
+            {
+                WellMsgReceicer.Instance.TurrentPalsy[myPlayerID][myGuid] = false;
+                TurrentHP /= 2;
+                TurrentPalsyCount++;
+                SetReloadEfficiency(0.5f);
             }
             if (WellMsgReceicer.Instance.WellExplo[myPlayerID][myGuid])
             {
@@ -363,7 +444,9 @@ namespace WW2NavalAssembly
             }
             else
             {
-                WellWidth = 0;
+                WellVis.SetActive(false);
+                AmmoVis.SetActive(false);
+                WellWidth = 0.01f;
             }
 
 
@@ -382,9 +465,27 @@ namespace WW2NavalAssembly
             {
                 AmmoThickness = 0.5f;
             }
-            AmmoVis.transform.localPosition = new Vector3(0, 0, (transform.localScale.z - Offset.Value - Depth.Value - AmmoThickness / 2) / transform.lossyScale.z);
-            AmmoVis.transform.localScale = new Vector3(totalCaliber / (450 * transform.lossyScale.x) * 1.1f, AmmoThickness / (2 * transform.lossyScale.z), totalCaliber / (450 * transform.lossyScale.y) * 1.1f);
+            float resize = Mathf.Clamp(Mathf.Sqrt(AmmoResize.Value * AmmoResize.Value + 1) + AmmoResize.Value, 0.618f, 1.618f);
+            AmmoVis.transform.localPosition = new Vector3(0, 0, (transform.localScale.z - Offset.Value - Depth.Value - AmmoThickness * resize * resize / 2) / transform.lossyScale.z);
+            
+            AmmoVis.transform.localScale = new Vector3(Mathf.Clamp(totalCaliber / (450 * transform.lossyScale.x) * 1.1f / resize, 0.01f, 10f),
+                                                        AmmoThickness * resize * resize / (2 * transform.lossyScale.z),
+                                                        Mathf.Clamp(totalCaliber / (450 * transform.lossyScale.y) * 1.1f / resize, 0.01f, 10f));
 
+            float TurrentThickness = Mathf.Clamp(Mathf.Sqrt(myCaliber) / 20,0.01f,10);
+
+            if (UseWell.isDefaultValue)
+            {
+                TurrentVis.transform.localPosition = new Vector3(0, 0, (transform.localScale.z - Offset.Value) / transform.lossyScale.z);
+                TurrentVis.transform.localScale = new Vector3(WellVis.transform.localScale.x / 2.5f, TurrentThickness / (transform.lossyScale.z), WellVis.transform.localScale.z / 2.5f);
+            }
+            else
+            {
+                TurrentThickness *= 1.5f;
+                TurrentVis.transform.localPosition = new Vector3(0, 0, (transform.localScale.z - Offset.Value) / transform.lossyScale.z);
+                TurrentVis.transform.localScale = new Vector3(WellVis.transform.localScale.x / 1.2f, TurrentThickness / (transform.lossyScale.z), WellVis.transform.localScale.z / 1.2f);
+            }
+            
 
 
             WellExploEffect.transform.localPosition = new Vector3(0, 0, (transform.localScale.z - Offset.Value) / transform.lossyScale.z);
@@ -424,13 +525,26 @@ namespace WW2NavalAssembly
                 WellVis.SetActive(true);
                 AmmoVis = transform.Find("AmmoVis").gameObject;
                 AmmoVis.SetActive(true);
+                TurrentVis = transform.Find("TurrentVis").gameObject;
+                TurrentVis.SetActive(true);
+
             }
             else
             {
                 WellVis = (GameObject)Instantiate(AssetManager.Instance.ArmourVis.WellArmour, transform);
                 WellVis.name = "WellArmourVis";
+                //Destroy(WellVis.GetComponent<MeshCollider>());
                 AmmoVis = (GameObject)Instantiate(AssetManager.Instance.ArmourVis.WellArmour, transform);
                 AmmoVis.name = "AmmoVis";
+                //Destroy(WellVis.GetComponent<MeshCollider>());
+                TurrentVis = new GameObject("TurrentVis");
+                TurrentVis.transform.SetParent(transform);
+                TurrentVis.AddComponent<MeshFilter>().sharedMesh = ModResource.GetMesh("Turrent Mesh").Mesh;
+                TurrentVis.AddComponent<MeshRenderer>();
+                MeshCollider TurrentCollider = TurrentVis.AddComponent<MeshCollider>();
+                TurrentCollider.sharedMesh = ModResource.GetMesh("Turrent Mesh").Mesh;
+                TurrentCollider.convex = true;
+                TurrentCollider.isTrigger = true;
             }
 
             WellVis.transform.localPosition = new Vector3(0, 0, 0.5f);
@@ -439,8 +553,7 @@ namespace WW2NavalAssembly
             WellVisRender = WellVis.GetComponent<MeshRenderer>();
             WellVis.layer = 25;
             WellVis.SetActive(true);
-            Color tmpColor1 = WellVisRender.material.color;
-            WellVisRender.material.color = new Color(tmpColor1.r, tmpColor1.g, tmpColor1.b, 0f);
+            WellVisRender.material = AssetManager.Instance.TransparentMat;
 
 
             AmmoVis.transform.localPosition = new Vector3(0, 0, 0.5f);
@@ -449,8 +562,15 @@ namespace WW2NavalAssembly
             AmmoVisRender = AmmoVis.GetComponent<MeshRenderer>();
             AmmoVis.layer = 25;
             AmmoVis.SetActive(true);
-            tmpColor1 = AmmoVisRender.material.color;
-            AmmoVisRender.material.color = new Color(tmpColor1.r, tmpColor1.g, tmpColor1.b, 0f);
+            AmmoVisRender.material = AssetManager.Instance.TransparentMat;
+
+            TurrentVis.transform.localPosition = new Vector3(0, 0, 0.5f);
+            TurrentVis.transform.localScale = new Vector3(1f, 1f, 1f);
+            TurrentVis.transform.localRotation = Quaternion.Euler(90, 0, 0);
+            TurrentVisRender = TurrentVis.GetComponent<MeshRenderer>();
+            TurrentVis.layer = 25;
+            TurrentVis.SetActive(true);
+            TurrentVisRender.material = AssetManager.Instance.TransparentMat;
         }
         public void InitEffect()
         {
@@ -492,7 +612,9 @@ namespace WW2NavalAssembly
             Thickness = BB.AddSlider("WW2-Naval Thickness", "WW2Thickness", 20f, 10f, 650f);
             Depth = BB.AddSlider("Cannon Well Depth", "WW2Depth", 3, 1, 6);
             Offset = BB.AddSlider("Cannon Well Offset", "WW2DepthOffset", 1f, 0f, 2f);
+            AmmoResize = BB.AddSlider("Ammo Resize", "AmmoResize", 0f, -0.5f, 0.5f);
             GunGroup = BB.AddText("Gun Group", "GunGroup", "g0");
+            UseWell = BB.AddToggle("Use Well", "UseWell", true);
         }
         public void Awake()
         {
@@ -506,6 +628,8 @@ namespace WW2NavalAssembly
         }
         public void Start()
         {
+            initialized = false;
+            visInitialized = false;
             InitVis();
             initLine();
             InitEffect();
@@ -546,6 +670,14 @@ namespace WW2NavalAssembly
                 }
             }
             catch { }
+            try
+            {
+                if (StatMaster.isClient)
+                {
+                    WellMsgReceicer.Instance.TurrentPalsy[myPlayerID].Add(myGuid, false);
+                }
+            }
+            catch { }
 
             //transform.Find("Shadow").gameObject.layer = 25;
         }
@@ -575,30 +707,27 @@ namespace WW2NavalAssembly
                     WellVisRender = WellVis.GetComponent<MeshRenderer>();
                     AmmoVis = transform.Find("AmmoVis").gameObject;
                     AmmoVisRender = AmmoVis.GetComponent<MeshRenderer>();
+                    TurrentVis = transform.Find("TurrentVis").gameObject;
+                    TurrentVisRender = TurrentVis.GetComponent<MeshRenderer>();
                 }
 
                 thickness = Thickness.Value;
-                Color tmpColor = Color.HSVToRGB(Mathf.Clamp(0.5f - thickness / 1000, 0, 0.5f), 1, 1);
-                WellVisRender.material.color = new Color(tmpColor.r, tmpColor.g, tmpColor.b, 0.6f);
-                tmpColor = Color.HSVToRGB(Mathf.Clamp(0.5f - 13 / 1000, 0, 0.5f), 1, 1);
-                AmmoVisRender.material.color = new Color(tmpColor.r, tmpColor.g, tmpColor.b, 0.6f);
+                
 
                 if (ModController.Instance.showArmour)
                 {
                     transform.Find("Vis").gameObject.SetActive(false);
-                    Color tmpColor1 = WellVisRender.material.color;
-                    WellVisRender.material.color = new Color(tmpColor1.r, tmpColor1.g, tmpColor1.b, 0.6f);
-                    tmpColor1 = AmmoVisRender.material.color;
-                    AmmoVisRender.material.color = new Color(tmpColor1.r, tmpColor1.g, tmpColor1.b, 0.6f);
+                    WellVisRender.material = AssetManager.Instance.ArmorMat[Mathf.Clamp((int)(thickness / 10f),0,65)];
+                    AmmoVisRender.material = AssetManager.Instance.ArmorMat[1];
+                    TurrentVisRender.material = AssetManager.Instance.TurrentMat[Mathf.Clamp(TurrentPalsyCount,0,7)];
 
                 }
                 else
                 {
                     transform.Find("Vis").gameObject.SetActive(true);
-                    Color tmpColor1 = WellVisRender.material.color;
-                    WellVisRender.material.color = new Color(tmpColor1.r, tmpColor1.g, tmpColor1.b, 0f);
-                    tmpColor1 = AmmoVisRender.material.color;
-                    AmmoVisRender.material.color = new Color(tmpColor1.r, tmpColor1.g, tmpColor1.b, 0f);
+                    WellVisRender.material = AssetManager.Instance.TransparentMat;
+                    AmmoVisRender.material = AssetManager.Instance.TransparentMat;
+                    TurrentVisRender.material = AssetManager.Instance.TransparentMat;
                 }
                 if (StatMaster.isClient && transform.gameObject.GetComponent<BlockBehaviour>().isSimulating)
                 {
@@ -613,6 +742,34 @@ namespace WW2NavalAssembly
             }
             if (transform.gameObject.GetComponent<BlockBehaviour>().isSimulating)
             {
+                if (!initialized)
+                {
+                    initialized = true;
+                    SetReloadEfficiency(1, true);
+                }
+                else if (!visInitialized && initialized)
+                {
+                    visInitialized = true;
+                    if (!UseWell.isDefaultValue)
+                    {
+                        WellVis.SetActive(false);
+                        AmmoVis.SetActive(false);
+                    }
+                    else
+                    {
+                        WellVis.SetActive(true);
+                        AmmoVis.SetActive(true);
+                    }
+                    AdjustPara();
+                    if (gunNum == 0)
+                    {
+                        WellVis.SetActive(false);
+                        AmmoVis.SetActive(false);
+                        TurrentVis.SetActive(false);
+                    }
+                }
+                
+
                 if (!StatMaster.isClient)
                 {
                     DetectHitHost();
@@ -620,6 +777,23 @@ namespace WW2NavalAssembly
                 else
                 {
                     DetectHitClient();
+                }
+
+            }
+            else
+            {
+                if (ModController.Instance.state == myseed)
+                {
+                    if (!UseWell.isDefaultValue || totalCaliber == 0)
+                    {
+                        WellVis.SetActive(false);
+                        AmmoVis.SetActive(false);
+                    }
+                    else
+                    {
+                        WellVis.SetActive(true);
+                        AmmoVis.SetActive(true);
+                    }
                 }
 
             }

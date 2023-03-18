@@ -209,6 +209,10 @@ namespace WW2NavalAssembly
             }
 
         }
+        public float GetCurrentSpeed()
+        {
+            return Vector3.Dot(GetComponent<Rigidbody>().velocity, -transform.up);
+        }
         public FCResult CalculateGunFCPara(Vector2 targetPosition, Vector2 velocity, float caliber)
         {
             Vector2 myPosition = new Vector2(transform.position.x, transform.position.z);

@@ -71,8 +71,7 @@ namespace WW2NavalAssembly
             VisRender = Vis.GetComponent<MeshRenderer>();
             Vis.layer = 25;
             Vis.SetActive(true);
-            Color tmpColor1 = VisRender.material.color;
-            VisRender.material.color = new Color(tmpColor1.r, tmpColor1.g, tmpColor1.b, 0f);
+            VisRender.material = AssetManager.Instance.TransparentMat;
         }
 
         public void SyncBulletHole()
@@ -154,18 +153,18 @@ namespace WW2NavalAssembly
             
 
             thickness = Thickness.Value;
-            Color tmpColor = Color.HSVToRGB(Mathf.Clamp(0.5f - thickness / 1000, 0, 0.5f), 1, 1);
-            VisRender.material.color = new Color(tmpColor.r, tmpColor.g, tmpColor.b, ModController.Instance.showArmour? 0.6f : 0f);
 
             if (ModController.Instance.state == myseed)
             {
                 if (ModController.Instance.showArmour)
                 {
                     transform.Find("Vis").gameObject.SetActive(false);
+                    VisRender.material = AssetManager.Instance.ArmorMat[Mathf.Clamp((int)(thickness / 10f), 0, 65)];
                 }
                 else
                 {
                     transform.Find("Vis").gameObject.SetActive(true);
+                    VisRender.material = AssetManager.Instance.TransparentMat;
                 }
 
                 if (StatMaster.isClient && transform.gameObject.GetComponent<BlockBehaviour>().isSimulating)

@@ -23,13 +23,13 @@ namespace WW2NavalAssembly
             public bool valid;
             public float HPPercent;
             public float TapPosition;
-            public float TargetVel;
+            public float ThrustPercent;
             public EngineData(float HPPercent, float TapPosition, float TargetVel)
             {
                 valid = true;
                 this.HPPercent = HPPercent;
                 this.TapPosition = TapPosition;
-                this.TargetVel = TargetVel;
+                this.ThrustPercent = TargetVel;
             }
             public EngineData()
             {
@@ -65,16 +65,19 @@ namespace WW2NavalAssembly
         public MSlider AxlePosY;
         public MSlider AxleLength;
         public MSlider AxlePitch;
-        public MSlider MaximumSpeed;
+        public MSlider ThrustValue;
+        public MSlider PropellerSize;
 
         public Rigidbody myRigid;
         public float Mass;
 
         public GameObject MyVis;
+        public GameObject MyVisAnchor;
         public GameObject Sleeve;
         public GameObject Sleeve2;
         public GameObject Axle;
         public GameObject Propeller;
+        public GameObject Trail;
         PropellerBehaviour PropellerPB;
 
         public GameObject StablePivot;
@@ -90,13 +93,48 @@ namespace WW2NavalAssembly
         public Material ArmMat;
 
         public float TapPosition = 0;
-        public float TargetVelocity = 0;
+        //public float TargetVelocity = 0;
 
         Texture Meter;
         Texture Indicator;
         Texture Speed;
         int iconSize = 64;
 
+        public float preVel;
+        public float Accel;
+        public float forceModifier = 1;
+        public float myforce = 0;
+
+        public float ThrustPercentage = 0;
+
+        public void UpdateAccel()
+        {
+            float Vel = GetCurrentSpeed();
+            Accel = (Vel - preVel) / Time.fixedDeltaTime;
+            preVel = Vel;
+        }
+
+        public void InitTrail()
+        {
+            Trail = (GameObject)Instantiate(AssetManager.Instance.TorpedoTrail.TorpedoTrail, transform);
+            Trail.name = "Trail";
+            Trail.transform.localPosition = Vector3.zero;
+            Trail.transform.localScale = new Vector3(3,3,0.01f);
+            Trail.GetComponent<ParticleSystem>().startLifetime = 4;
+            Trail.SetActive(false);
+        }
+        public void UpdateTrail()
+        {
+            if (ModController.Instance.showSea)
+            {
+                Trail.transform.position = new Vector3(Propeller.transform.position.x, 20, Propeller.transform.position.z);
+                Trail.SetActive(true);
+            }
+            else
+            {
+                Trail.SetActive(false);
+            }
+        }
         public void CannonDamage(float caliber)
         {
             HP -= caliber * DamageCoeff;
@@ -107,27 +145,63 @@ namespace WW2NavalAssembly
         }
         public float GetCurrentSpeed()
         {
-            return Vector3.Dot(myRigid.velocity, -transform.up);
-        }
-        public void CalculateTargetVelocity()
-        {
-            if (TargetVelocity > TapPosition / 4 * MaximumSpeed.Value/1.94f)
+            float captainSpeed = 0;
+            float mySpeed = Vector3.Dot(myRigid.velocity, -transform.up);
+            try
             {
-                TargetVelocity -= 0.008f;
+                captainSpeed = ControllerDataManager.Instance.ControllerObject[myPlayerID].GetComponent<Controller>().GetCurrentSpeed();
+            }
+            catch 
+            {
+                return mySpeed;
+            }
+            if (Mathf.Abs(captainSpeed-mySpeed)>5)
+            {
+                return mySpeed;
             }
             else
             {
-                TargetVelocity += 0.005f;
+                return captainSpeed;
+            }
+            
+        }
+        //public void CalculateTargetVelocity()
+        //{
+        //    if (TargetVelocity >= TapPosition / 4 * ThrustValue.Value/1.94f + 0.008f)
+        //    {
+        //        TargetVelocity -= 0.008f;
+        //    }
+        //    else if (TargetVelocity <= TapPosition / 4 * ThrustValue.Value / 1.94f - 0.005f)
+        //    {
+        //        TargetVelocity += 0.005f;
+        //    }
+        //}
+
+        public void CalculateThrustPercentage()
+        {
+            if (ThrustPercentage >= TapPosition / 4 + 0.008f)
+            {
+                ThrustPercentage -= 0.0005f/PropellerSize.Value;
+            }
+            else if (ThrustPercentage <= TapPosition / 4 - 0.005f)
+            {
+                ThrustPercentage += 0.0004f/PropellerSize.Value;
             }
         }
         public void Thrust()
         {
-            CalculateTargetVelocity();
-            float myVel = GetCurrentSpeed();
-            float PBSpeed = Mathf.Sign(TargetVelocity) * Mathf.Sqrt(Mathf.Abs(TargetVelocity * HPPercent)) * 4;
+            //UpdateAccel();
+            //CalculateTargetVelocity();
+            CalculateThrustPercentage();
+
+            //float myVel = preVel;
+            //float targetAccel = TargetVelocity * HPPercent > preVel?  0.5f: -0.8f;
+            //forceModifier += Mathf.Clamp((TargetVelocity * HPPercent - myVel)/10f,-0.005f,0.005f);
+            //myforce += (TargetVelocity - myVel)*5;
+
+            float PBSpeed = Mathf.Sign(ThrustPercentage*20) * Mathf.Sqrt(Mathf.Abs(ThrustPercentage *20 * HPPercent)) * 4;
             PropellerPB.Speed = Mathf.Abs(PBSpeed)<1f?0:PBSpeed;
-            myRigid.AddForceAtPosition(-MyVis.transform.up * (TargetVelocity * HPPercent - myVel) * InitialHP * 2 * Mass, Sleeve.transform.position);
-            
+            myRigid.AddForceAtPosition(-MyVisAnchor.transform.up * ThrustPercentage*ThrustValue.Value*HPPercent*PropellerSize.Value, Sleeve.transform.position);
         }
         public void UpdateArmVis()
         {
@@ -143,9 +217,15 @@ namespace WW2NavalAssembly
                 }
             }
         }
+        public void UpdateThrustRange()
+        {
+            Vector3 scale = transform.localScale;
+            ThrustValue.SetRange(0, scale.x * scale.y * scale.z * 1000);
+            ThrustValue.Value =  Mathf.Clamp(ThrustValue.Value,0,ThrustValue.Max);
+        }
         public void UpdateAxlePosition()
         {
-            MyVis.transform.localEulerAngles = new Vector3(AxlePitch.Value, 0, 0);
+            MyVisAnchor.transform.localEulerAngles = new Vector3(AxlePitch.Value, 0, 0);
             MyVis.transform.localScale = new Vector3(1 / transform.lossyScale.x, 1 / transform.lossyScale.y, 1 / transform.lossyScale.z);
             Sleeve.transform.localPosition = new Vector3(AxlePosX.Value, 0, AxlePosY.Value);
             Sleeve.transform.localScale = new Vector3(1, transform.lossyScale.y, 1);
@@ -156,6 +236,7 @@ namespace WW2NavalAssembly
             Axle.transform.localScale = new Vector3(1, AxleLength.Value/5.8f, 1);
 
             Propeller.transform.localPosition = new Vector3(AxlePosX.Value, AxleLength.Value, AxlePosY.Value);
+            Propeller.transform.localScale = Vector3.one * PropellerSize.Value;
         }
         public void InitMaterial()
         {
@@ -172,10 +253,22 @@ namespace WW2NavalAssembly
                 MyVis.transform.localRotation = Quaternion.identity;
                 MyVis.transform.localScale = new Vector3(1 / transform.lossyScale.x, 1 / transform.lossyScale.y, 1 / transform.lossyScale.z);
 
-                if (!MyVis.transform.Find("Sleeve"))
+                if (!MyVis.transform.Find("Anchor"))
+                {
+                    MyVisAnchor = new GameObject("Anchor");
+                    MyVisAnchor.transform.SetParent(MyVis.transform);
+                    MyVisAnchor.transform.localPosition = Vector3.zero;
+                    MyVisAnchor.transform.localRotation = Quaternion.identity;
+                }
+                else
+                {
+                    MyVisAnchor = MyVis.transform.Find("Anchor").gameObject;
+                }
+
+                if (!MyVisAnchor.transform.Find("Sleeve"))
                 {
                     Sleeve = new GameObject("Sleeve");
-                    Sleeve.transform.SetParent(MyVis.transform);
+                    Sleeve.transform.SetParent(MyVisAnchor.transform);
                     Sleeve.transform.localPosition = Vector3.zero;
                     Sleeve.transform.localRotation = Quaternion.identity;
 
@@ -184,12 +277,12 @@ namespace WW2NavalAssembly
                 }
                 else
                 {
-                    Sleeve = MyVis.transform.Find("Sleeve").gameObject;
+                    Sleeve = MyVisAnchor.transform.Find("Sleeve").gameObject;
                 }
-                if (!MyVis.transform.Find("Sleeve2"))
+                if (!MyVisAnchor.transform.Find("Sleeve2"))
                 {
                     Sleeve2 = new GameObject("Sleeve2");
-                    Sleeve2.transform.SetParent(MyVis.transform);
+                    Sleeve2.transform.SetParent(MyVisAnchor.transform);
                     Sleeve2.transform.localPosition = Vector3.zero;
                     Sleeve2.transform.localRotation = Quaternion.identity;
 
@@ -198,12 +291,12 @@ namespace WW2NavalAssembly
                 }
                 else
                 {
-                    Sleeve2 = MyVis.transform.Find("Sleeve2").gameObject;
+                    Sleeve2 = MyVisAnchor.transform.Find("Sleeve2").gameObject;
                 }
-                if (!MyVis.transform.Find("Axle"))
+                if (!MyVisAnchor.transform.Find("Axle"))
                 {
                     Axle = new GameObject("Axle");
-                    Axle.transform.SetParent(MyVis.transform);
+                    Axle.transform.SetParent(MyVisAnchor.transform);
                     Axle.transform.localPosition = Vector3.zero;
                     Axle.transform.localRotation = Quaternion.identity;
                     Axle.transform.localScale = Vector3.one;
@@ -213,12 +306,12 @@ namespace WW2NavalAssembly
                 }
                 else
                 {
-                    Axle = MyVis.transform.Find("Axle").gameObject;
+                    Axle = MyVisAnchor.transform.Find("Axle").gameObject;
                 }
-                if (!MyVis.transform.Find("Propeller"))
+                if (!MyVisAnchor.transform.Find("Propeller"))
                 {
                     Propeller = new GameObject("Propeller");
-                    Propeller.transform.SetParent(MyVis.transform);
+                    Propeller.transform.SetParent(MyVisAnchor.transform);
                     Propeller.transform.localPosition = Vector3.zero;
                     Propeller.transform.localRotation = Quaternion.identity;
                     Propeller.transform.localScale = Vector3.one;
@@ -228,7 +321,7 @@ namespace WW2NavalAssembly
                 }
                 else
                 {
-                    Propeller = MyVis.transform.Find("Propeller").gameObject;
+                    Propeller = MyVisAnchor.transform.Find("Propeller").gameObject;
                 }
 
             }
@@ -243,23 +336,26 @@ namespace WW2NavalAssembly
         public void InitStable()
         {
             InitStablePivot();
+            GameObject keel;
+            keel = gameObject.GetComponent<ConfigurableJoint>().connectedBody.gameObject;
+            
 
             SoftJointLimitSpring SJLS = new SoftJointLimitSpring();
-            SJLS.spring = 100000f;
+            SJLS.spring = 1000000f;
             SoftJointLimit HigherSJL = new SoftJointLimit();
             HigherSJL.limit = 0.01f;
             SoftJointLimit LowerSJL = new SoftJointLimit();
             LowerSJL.limit = -0.01f;
 
-            ConfigurableJoint CJ0 = gameObject.AddComponent<ConfigurableJoint>();
-            CJ0.connectedBody = StablePivot.GetComponent<Rigidbody>();
-            CJ0.axis = new Vector3(1, -1, 0);
-            CJ0.secondaryAxis = new Vector3(0, 1, 0);
+            ConfigurableJoint CJ0 = StablePivot.AddComponent<ConfigurableJoint>();
+            CJ0.connectedBody = keel.GetComponent<Rigidbody>();
+            CJ0.axis = new Vector3(1, 0, -1);
+            CJ0.secondaryAxis = new Vector3(0, 0, 1);
             CJ0.xMotion = ConfigurableJointMotion.Free;
             CJ0.yMotion = ConfigurableJointMotion.Free;
             CJ0.zMotion = ConfigurableJointMotion.Free;
-            CJ0.angularXMotion = ConfigurableJointMotion.Limited;
-            CJ0.angularYMotion = ConfigurableJointMotion.Limited;
+            CJ0.angularXMotion = ConfigurableJointMotion.Locked;
+            CJ0.angularYMotion = ConfigurableJointMotion.Locked;
             CJ0.angularZMotion = ConfigurableJointMotion.Free;
 
             CJ0.highAngularXLimit = HigherSJL;
@@ -269,15 +365,15 @@ namespace WW2NavalAssembly
             CJ0.angularXLimitSpring = SJLS;
             CJ0.angularYZLimitSpring = SJLS;
 
-            ConfigurableJoint CJ1 = gameObject.AddComponent<ConfigurableJoint>();
-            CJ1.connectedBody = StablePivot.GetComponent<Rigidbody>();
-            CJ1.axis = new Vector3(-1, -1, 0);
-            CJ1.secondaryAxis = new Vector3(0, 1, 0);
+            ConfigurableJoint CJ1 = StablePivot.AddComponent<ConfigurableJoint>();
+            CJ1.connectedBody = keel.GetComponent<Rigidbody>();
+            CJ1.axis = new Vector3(-1, 0, -1);
+            CJ1.secondaryAxis = new Vector3(0, 0, 1);
             CJ1.xMotion = ConfigurableJointMotion.Free;
             CJ1.yMotion = ConfigurableJointMotion.Free;
             CJ1.zMotion = ConfigurableJointMotion.Free;
-            CJ1.angularXMotion = ConfigurableJointMotion.Limited;
-            CJ1.angularYMotion = ConfigurableJointMotion.Limited;
+            CJ1.angularXMotion = ConfigurableJointMotion.Locked;
+            CJ1.angularYMotion = ConfigurableJointMotion.Locked;
             CJ1.angularZMotion = ConfigurableJointMotion.Free;
 
             CJ1.highAngularXLimit = HigherSJL;
@@ -290,9 +386,12 @@ namespace WW2NavalAssembly
 
         public void InitStablePivot()
         {
+            GameObject keel;
+            keel = gameObject.GetComponent<ConfigurableJoint>().connectedBody.gameObject;
             StablePivot = new GameObject("Stable Pivot");
             StablePivot.transform.SetParent(transform.parent);
             StablePivot.transform.position = transform.position;
+            StablePivot.transform.localScale = new Vector3(transform.localScale.x, transform.localScale.z, transform.localScale.y);
             Rigidbody SPRigid = StablePivot.AddComponent<Rigidbody>();
             //StablePivot.AddComponent<MeshFilter>().mesh = ModResource.GetMesh("Engine Mesh").Mesh;
             //StablePivot.AddComponent<MeshRenderer>();
@@ -310,18 +409,19 @@ namespace WW2NavalAssembly
         }
         public void SendEngineData()
         {
-            ModNetworking.SendToAll(EngineMsgReceiver.EngineStateMsg.CreateMessage(myPlayerID, myGuid, HPPercent, TapPosition, TargetVelocity));
+            ModNetworking.SendToAll(EngineMsgReceiver.EngineStateMsg.CreateMessage(myPlayerID, myGuid, HPPercent, TapPosition, ThrustPercentage));
         }
 
         public override void SafeAwake()
         {
             ForwardKey = AddKey("Forward", "Forward", KeyCode.UpArrow);
             BackKey = AddKey("Backward", "Backward", KeyCode.DownArrow);
-            MaximumSpeed = AddSlider("Max Speed(knot)", "MaxSpeed", 25f, 0f, 40f);
+            ThrustValue = AddSlider("Thrust", "EngineThrust", 1000f, 0f, 1000f);
             AxleLength = AddSlider("Axle Length", "AxleLength", 15f, 5f, 50f);
             AxlePosX = AddSlider("Axle Position X", "AxlePosX", 0f, -1f, 1f);
             AxlePosY = AddSlider("Axle Position Y", "Axle Position Y", 0.5f, 0f, 1f);
             AxlePitch = AddSlider("Axle Pitch", "Axle Pitch", 0f, -10f, 10f);
+            PropellerSize = AddSlider("Propeller Size", "PropellerSize", 1f, 0.5f, 2f);
             myPlayerID = BlockBehaviour.ParentMachine.PlayerID;
             InitVis();
             InitMaterial();
@@ -337,6 +437,8 @@ namespace WW2NavalAssembly
         public override void BuildingUpdate()
         {
             UpdateAxlePosition();
+            UpdateThrustRange();
+            
         }
         public void Update()
         {
@@ -344,6 +446,11 @@ namespace WW2NavalAssembly
         }
         public override void OnSimulateStart()
         {
+            preVel = 0;
+            ConfigurableJoint myJoint = gameObject.GetComponent<ConfigurableJoint>();
+            myJoint.angularXMotion = ConfigurableJointMotion.Locked;
+            myJoint.angularYMotion = ConfigurableJointMotion.Locked;
+            myJoint.angularZMotion = ConfigurableJointMotion.Locked;
             myGuid = BlockBehaviour.BuildingBlock.Guid.GetHashCode();
             myseed = 5;
             if (!StatMaster.isClient)
@@ -353,7 +460,6 @@ namespace WW2NavalAssembly
 
                 myRigid = GetComponent<Rigidbody>();
                 Mass = GetComponent<BlockBehaviour>().ParentMachine.Mass;
-                InitStable();
             }
 
             PropellerPB = Propeller.AddComponent<PropellerBehaviour>();
@@ -372,7 +478,7 @@ namespace WW2NavalAssembly
                 }
                 catch { }
             }
-            
+            InitTrail();
         }
         public override void SimulateUpdateHost()
         {
@@ -387,6 +493,7 @@ namespace WW2NavalAssembly
                 TapPosition = Mathf.Clamp(TapPosition, -1, 4);
                 SendEngineData();
             }
+            UpdateTrail();
         }
         public override void SimulateUpdateClient()
         {
@@ -396,19 +503,34 @@ namespace WW2NavalAssembly
                 HPPercent = EngineMsgReceiver.Instance.engineData[myPlayerID][myGuid].HPPercent;
                 HP = HPPercent * InitialHP;
                 ArmMat.SetColor("_TintColor", new Color(HPPercent, HPPercent, HPPercent, 1));
-                TargetVelocity = EngineMsgReceiver.Instance.engineData[myPlayerID][myGuid].TargetVel;
+                ThrustPercentage = EngineMsgReceiver.Instance.engineData[myPlayerID][myGuid].ThrustPercent;
                 TapPosition = EngineMsgReceiver.Instance.engineData[myPlayerID][myGuid].TapPosition;
             }
+            UpdateTrail();
         }
         public override void SimulateFixedUpdateHost()
         {
             Thrust();
-            KeepStable();
+            if (frameCount < 5)
+            {
+                frameCount++;
+            }
+            else if(frameCount == 5)
+            {
+                InitStable();
+                frameCount++;
+            }
+            else
+            {
+                KeepStable();
+            }
+
+            
         }
         public override void SimulateFixedUpdateClient()
         {
-            CalculateTargetVelocity();
-            float PBSpeed = Mathf.Sign(TargetVelocity) * Mathf.Sqrt(Mathf.Abs(TargetVelocity * HPPercent)) * 4;
+            CalculateThrustPercentage();
+            float PBSpeed = Mathf.Sign(ThrustPercentage * 20) * Mathf.Sqrt(Mathf.Abs(ThrustPercentage * 20 * HPPercent)) * 4;
             PropellerPB.Speed = Mathf.Abs(PBSpeed) < 1f ? 0 : PBSpeed;
         }
         public void OnGUI()
@@ -433,7 +555,7 @@ namespace WW2NavalAssembly
                     GUI.DrawTexture(new Rect(onScreenPosition.x - iconSize / 2, Camera.main.pixelHeight - onScreenPosition.y - iconSize / 2 - iconSize/5*TapPosition, iconSize, iconSize), Indicator);
                     GUI.DrawTexture(new Rect(onScreenPosition.x - iconSize / 2, 
                                     Camera.main.pixelHeight - onScreenPosition.y - iconSize / 2 + 4*iconSize / 5, 
-                                    iconSize, -iconSize * TargetVelocity * HPPercent / (MaximumSpeed.Value/1.98f)*1.6f), Speed);
+                                    iconSize, -iconSize * ThrustPercentage * HPPercent*1.6f), Speed);
                 }
             }
         }

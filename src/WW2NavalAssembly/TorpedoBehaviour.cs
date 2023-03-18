@@ -152,6 +152,7 @@ namespace WW2NavalAssembly
             Trail = (GameObject)Instantiate(AssetManager.Instance.TorpedoTrail.TorpedoTrail, transform);
             Trail.name = "Trail";
             Trail.transform.localPosition = Vector3.zero;
+            Trail.transform.localScale = Vector3.one;
             Trail.SetActive(false);
         }
         public void BreakBallon(Vector3 position)
@@ -209,7 +210,12 @@ namespace WW2NavalAssembly
                 }
                 if (hit.collider.transform.parent.GetComponent<WoodenArmour>() && hit.collider.transform.parent.GetComponent<BlockBehaviour>().isSimulating)
                 {
-                    
+                    foreach (var joints in hit.collider.transform.parent.GetComponents<ConfigurableJoint>())
+                    {
+                        joints.breakForce = float.PositiveInfinity;
+                        joints.breakTorque = float.PositiveInfinity;
+                    }
+
                     TorpedoExploHost(hit);
 
 
