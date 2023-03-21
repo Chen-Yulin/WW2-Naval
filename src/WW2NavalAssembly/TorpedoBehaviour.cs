@@ -152,7 +152,7 @@ namespace WW2NavalAssembly
             Trail = (GameObject)Instantiate(AssetManager.Instance.TorpedoTrail.TorpedoTrail, transform);
             Trail.name = "Trail";
             Trail.transform.localPosition = Vector3.zero;
-            Trail.transform.localScale = Vector3.one;
+            Trail.transform.localScale = new Vector3(1,1,1f);
             Trail.SetActive(false);
         }
         public void BreakBallon(Vector3 position)
@@ -298,7 +298,7 @@ namespace WW2NavalAssembly
                     if (transform.position.y > 20 - depth - 0.2f)
                     {
                         Trail.SetActive(true);
-                        Trail.transform.position = new Vector3(Trail.transform.position.x, 19.7f, Trail.transform.position.z);
+                        Trail.transform.position = new Vector3(Trail.transform.position.x, 20f, Trail.transform.position.z);
                     }
                     
                     myRigid.drag = 5;

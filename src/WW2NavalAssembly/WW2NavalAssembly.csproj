@@ -75,6 +75,7 @@
     <Compile Include="Sea.cs" />
     <Compile Include="TorpedoBehaviour.cs" />
     <Compile Include="TorpedoLauncher.cs" />
+    <Compile Include="WaveMaker.cs" />
     <Compile Include="WoodenArmour.cs" />
     <Compile Include="WW2Hinge.cs" />
     <Compile Include="WWIIUnderWater.cs" />

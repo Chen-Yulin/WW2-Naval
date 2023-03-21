@@ -119,13 +119,13 @@ namespace WW2NavalAssembly
             Trail = (GameObject)Instantiate(AssetManager.Instance.TorpedoTrail.TorpedoTrail, transform);
             Trail.name = "Trail";
             Trail.transform.localPosition = Vector3.zero;
-            Trail.transform.localScale = new Vector3(3,3,0.01f);
+            Trail.transform.localScale = new Vector3(3,3,3f);
             Trail.GetComponent<ParticleSystem>().startLifetime = 4;
             Trail.SetActive(false);
         }
         public void UpdateTrail()
         {
-            if (ModController.Instance.showSea)
+            if (ModController.Instance.showSea && frameCount >5)
             {
                 Trail.transform.position = new Vector3(Propeller.transform.position.x, 20, Propeller.transform.position.z);
                 Trail.SetActive(true);
@@ -181,11 +181,26 @@ namespace WW2NavalAssembly
         {
             if (ThrustPercentage >= TapPosition / 4 + 0.008f)
             {
-                ThrustPercentage -= 0.0005f/PropellerSize.Value;
+                if (frameCount>500)
+                {
+                    ThrustPercentage -= 0.0005f / PropellerSize.Value;
+                }
+                else
+                {
+                    ThrustPercentage = TapPosition / 4;
+                }
+                
             }
             else if (ThrustPercentage <= TapPosition / 4 - 0.005f)
             {
-                ThrustPercentage += 0.0004f/PropellerSize.Value;
+                if (frameCount > 500)
+                {
+                    ThrustPercentage += 0.0004f / PropellerSize.Value;
+                }
+                else
+                {
+                    ThrustPercentage = TapPosition / 4;
+                }
             }
         }
         public void Thrust()
@@ -523,6 +538,7 @@ namespace WW2NavalAssembly
             else
             {
                 KeepStable();
+                frameCount++;
             }
 
             

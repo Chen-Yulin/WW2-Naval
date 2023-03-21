@@ -1,9 +1,9 @@
 ManifestFileVersion: 0
-CRC: 4270740074
+CRC: 3820294793
 Hashes:
   AssetFileHash:
     serializedVersion: 2
-    Hash: 269ae06c6a6808de38f3c05c610a3611
+    Hash: a9724417662f5d7db83cd76571c9f191
   TypeTreeHash:
     serializedVersion: 2
     Hash: 36daabf0a26aaa21fe4dae37acd3e3e0
@@ -27,5 +27,6 @@ ClassTypes:
   Script: {instanceID: 0}
 Assets:
 - Assets/TorpedoTrail/TorpedoTrail.prefab
+- Assets/TorpedoTrail/shipWave.prefab
 - Assets/TorpedoTrail/TorpedoHit.prefab
 Dependencies: []

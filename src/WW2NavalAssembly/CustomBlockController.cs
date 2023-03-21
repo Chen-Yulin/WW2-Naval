@@ -51,6 +51,8 @@ namespace WW2NavalAssembly
                             block.gameObject.AddComponent(typeof(WWIIUnderWater));
                         if (block.gameObject.GetComponent(typeof(FlightDeck)) == null)
                             block.gameObject.AddComponent(typeof(FlightDeck));
+                        if (block.gameObject.GetComponent(typeof(WaveMaker)) == null)
+                            block.gameObject.AddComponent(typeof(WaveMaker));
                         break;
                     }
                 case (int)BlockType.DoubleWoodenBlock:
@@ -61,6 +63,8 @@ namespace WW2NavalAssembly
                             block.gameObject.AddComponent(typeof(WWIIUnderWater));
                         if (block.gameObject.GetComponent(typeof(FlightDeck)) == null)
                             block.gameObject.AddComponent(typeof(FlightDeck));
+                        if (block.gameObject.GetComponent(typeof(WaveMaker)) == null)
+                            block.gameObject.AddComponent(typeof(WaveMaker));
                         break;
                     }
                 case (int)BlockType.Log:
@@ -71,6 +75,8 @@ namespace WW2NavalAssembly
                             block.gameObject.AddComponent(typeof(WWIIUnderWater));
                         if (block.gameObject.GetComponent(typeof(FlightDeck)) == null)
                             block.gameObject.AddComponent(typeof(FlightDeck));
+                        if (block.gameObject.GetComponent(typeof(WaveMaker)) == null)
+                            block.gameObject.AddComponent(typeof(WaveMaker));
                         break;
                     }
                 case (int)BlockType.Rocket:

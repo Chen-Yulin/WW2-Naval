@@ -21,10 +21,12 @@ namespace WW2NavalAssembly
     {
         public GameObject TorpedoTrail;
         public GameObject TorpedoHit;
+        public GameObject ShipWave;
         public Asset_TorpedoTrail(ModAssetBundle modAssetBundle)
         {
             TorpedoTrail = modAssetBundle.LoadAsset<GameObject>("TorpedoTrail");
             TorpedoHit = modAssetBundle.LoadAsset<GameObject>("TorpedoHit");
+            ShipWave = modAssetBundle.LoadAsset<GameObject>("shipWave");
         }
     }
     public class Asset_Sea
