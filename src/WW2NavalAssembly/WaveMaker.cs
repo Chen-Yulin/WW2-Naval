@@ -28,7 +28,7 @@ namespace WW2NavalAssembly
 
         public void UpdateWave()
         {
-            Vector3 position = ShipWave.transform.position;
+            Vector3 position = Wave.transform.position;
             ShipWave.transform.position = new Vector3(position.x, 20.05f, position.z);
             ShipWave.transform.eulerAngles = Vector3.zero;
         }

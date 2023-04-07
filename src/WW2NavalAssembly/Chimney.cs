@@ -33,7 +33,7 @@ namespace WW2NavalAssembly
         {
             Smoke = (GameObject)Instantiate(AssetManager.Instance.Chimney.ChimneySmoke, transform);
             Smoke.transform.localPosition = Vector3.zero;
-            Smoke.transform.rotation = Quaternion.Euler(270,0,0);
+            Smoke.transform.localRotation = Quaternion.Euler(90,0,0);
             Smoke.SetActive(false);
             SmokePS = Smoke.GetComponent<ParticleSystem>();
         }

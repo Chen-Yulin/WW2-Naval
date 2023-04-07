@@ -116,18 +116,18 @@ namespace WW2NavalAssembly
 
         public void InitTrail()
         {
-            Trail = (GameObject)Instantiate(AssetManager.Instance.TorpedoTrail.TorpedoTrail, transform);
+            Trail = (GameObject)Instantiate(AssetManager.Instance.TorpedoTrail.ShipWave, transform);
             Trail.name = "Trail";
             Trail.transform.localPosition = Vector3.zero;
             Trail.transform.localScale = new Vector3(3,3,3f);
-            Trail.GetComponent<ParticleSystem>().startLifetime = 4;
+            Trail.transform.Find("particle").gameObject.GetComponent<ParticleSystem>().startLifetime = 4;
             Trail.SetActive(false);
         }
         public void UpdateTrail()
         {
             if (ModController.Instance.showSea && frameCount >5)
             {
-                Trail.transform.position = new Vector3(Propeller.transform.position.x, 20, Propeller.transform.position.z);
+                Trail.transform.position = new Vector3(Propeller.transform.position.x, 20.05f, Propeller.transform.position.z);
                 Trail.SetActive(true);
             }
             else
@@ -353,6 +353,11 @@ namespace WW2NavalAssembly
             InitStablePivot();
             GameObject keel;
             keel = gameObject.GetComponent<ConfigurableJoint>().connectedBody.gameObject;
+            try
+            {
+                keel.GetComponent<Rigidbody>().mass += 4f;
+            }
+            catch { }
             
 
             SoftJointLimitSpring SJLS = new SoftJointLimitSpring();
@@ -397,6 +402,26 @@ namespace WW2NavalAssembly
 
             CJ1.angularXLimitSpring = SJLS;
             CJ1.angularYZLimitSpring = SJLS;
+
+            try
+            {
+                foreach (ConfigurableJoint joint in keel.GetComponent<BlockBehaviour>().jointsToMe)
+                {
+                    try
+                    {
+                        if (joint.name == "Brace")
+                        {
+                            joint.breakForce = float.MaxValue;
+                            joint.breakTorque = float.MaxValue;
+                        }
+                    }
+                    catch { }
+
+
+                }
+            }
+            catch { }
+
         }
 
         public void InitStablePivot()
@@ -545,6 +570,7 @@ namespace WW2NavalAssembly
         }
         public override void SimulateFixedUpdateClient()
         {
+            frameCount++;
             CalculateThrustPercentage();
             float PBSpeed = Mathf.Sign(ThrustPercentage * 20) * Mathf.Sqrt(Mathf.Abs(ThrustPercentage * 20 * HPPercent)) * 4;
             PropellerPB.Speed = Mathf.Abs(PBSpeed) < 1f ? 0 : PBSpeed;

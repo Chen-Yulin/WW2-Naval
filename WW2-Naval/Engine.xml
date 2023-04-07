@@ -2,7 +2,7 @@
 	<Debug>false</Debug>
 	<ID>6</ID>
 	<Name>Engine</Name>
-	<Mass>5</Mass>
+	<Mass>1</Mass>
 
 	<Script>WW2NavalAssembly.Engine</Script>
 	

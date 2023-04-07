@@ -512,7 +512,7 @@ namespace WW2NavalAssembly
         {
             if (!AsLeader.isDefaultValue)
             {
-                GUI.Box(new Rect(100, 200, 200, 50), myGroup.Count.ToString());
+                //GUI.Box(new Rect(100, 200, 200, 50), myGroup.Count.ToString());
             }
             
         }

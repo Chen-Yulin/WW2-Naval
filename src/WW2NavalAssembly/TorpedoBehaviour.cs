@@ -210,11 +210,23 @@ namespace WW2NavalAssembly
                 }
                 if (hit.collider.transform.parent.GetComponent<WoodenArmour>() && hit.collider.transform.parent.GetComponent<BlockBehaviour>().isSimulating)
                 {
-                    foreach (var joints in hit.collider.transform.parent.GetComponents<ConfigurableJoint>())
+                    try
                     {
-                        joints.breakForce = float.PositiveInfinity;
-                        joints.breakTorque = float.PositiveInfinity;
+                        foreach (var joints in hit.collider.transform.parent.GetComponent<BlockBehaviour>().jointsToMe)
+                        {
+                            joints.breakForce = float.PositiveInfinity;
+                            joints.breakTorque = float.PositiveInfinity;
+                        }
+                        foreach (var joints in hit.collider.transform.parent.GetComponent<BlockBehaviour>().iJointTo)
+                        {
+                            joints.breakForce = float.PositiveInfinity;
+                            joints.breakTorque = float.PositiveInfinity;
+                        }
                     }
+                    catch
+                    {
+                    }
+                    
 
                     TorpedoExploHost(hit);
 

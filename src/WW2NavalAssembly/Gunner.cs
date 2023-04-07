@@ -136,6 +136,7 @@ namespace WW2NavalAssembly
         public MText GunGroup;
         public MSlider OrienFaultTolerance;
         public MSlider ElevationFaultTolerance;
+        public MSlider TurningSpeed;
         public MLimits Limit;
 
         public int leftEmulateStage = 0;
@@ -981,6 +982,7 @@ namespace WW2NavalAssembly
             DownKey = AddEmulatorKey("Down Key", "DownKey", KeyCode.H);
             OrienFaultTolerance = AddSlider("Orien Fault Tolerance", "OrienFaultTolerance", 1f, 0f, 5f);
             ElevationFaultTolerance = AddSlider("Elevation Fault Tolerance", "ElevationFaultTolerance", 0.3f, 0f, 2f);
+            TurningSpeed = AddSlider("Speed", "TurningSpeed", 1f, 0.1f, 1f);
             GunGroup = AddText("Gun Group", "GunGroup", "g0");
             myPlayerID = BlockBehaviour.ParentMachine.PlayerID;
             mySeed = (int)(UnityEngine.Random.value * 10);
@@ -1094,7 +1096,7 @@ namespace WW2NavalAssembly
             {
                 initialized = true;
                 GetMyCaliber();
-                turningSpeed = 1 / Mathf.Clamp(bindedCaliber, 40, 510) * 50;
+                turningSpeed = 1 / Mathf.Clamp(bindedCaliber, 40, 510) * 50 * Mathf.Clamp(TurningSpeed.Value,0.1f,1f);
                 FindHinge();
                 FindGun();
                 if (OrienHinge.Count != 0)

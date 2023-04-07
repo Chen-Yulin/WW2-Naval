@@ -612,48 +612,46 @@ namespace WW2NavalAssembly
                     }
                 }
             }
-            if (transform.position.y < 20f && pericedBlock.Count == 0 && Caliber >= 283)
+            if (transform.position.y < 20f && pericedBlock.Count == 0)
             {
-                myRigid.velocity = new Vector3(myRigid.velocity.x, myRigid.velocity.y / 1.5f, myRigid.velocity.z);
-                myRigid.AddForce(myRigid.velocity * 0.8f - Vector3.up * 10);
-                penetration *= 0.97f;
+                if (!hasHitWater)
+                {
+                    penetration *= 0.7f;
+                }
+                myRigid.velocity = new Vector3(myRigid.velocity.x, myRigid.velocity.y / (1+Mathf.Sqrt(Caliber)/40), myRigid.velocity.z);
+                myRigid.AddForce(myRigid.velocity * 0.8f - Vector3.up * 8);
+                penetration *= 0.8f + Mathf.Clamp(Mathf.Sqrt(Caliber) / 200,0,0.15f);
+                if (myRigid.velocity.magnitude <= 5f)
+                {
+                    Destroy(gameObject);
+                }
             }
             if (transform.position.y < 20f && !hasHitWater && myRigid.velocity.y<0)
             {
                 
-                myRigid.drag = 11f;
+                myRigid.drag = 11f/Mathf.Sqrt(Caliber)*20;
                 GameObject waterhit;
                 if (Caliber >= 283)
                 {
                     waterhit = (GameObject)Instantiate(AssetManager.Instance.WaterHit.waterhit1, new Vector3(transform.position.x, 20, transform.position.z), Quaternion.identity);
                     waterhit.transform.localScale = Caliber / 381 * Vector3.one;
                     Destroy(waterhit, 3);
-
-                    if (Vector3.Angle(Vector3.up, myRigid.velocity) > 100 && UnityEngine.Random.value > 0.5f) 
-                    {
-                        Destroy(gameObject, 0.5f);
-                    }
-                    else
-                    {
-                        Destroy(gameObject, 0.2f);
-                    }
-
-                    
                 }
                 else if (Caliber >= 100)
                 {
                     waterhit = (GameObject)Instantiate(AssetManager.Instance.WaterHit.waterhit2, new Vector3(transform.position.x, 20, transform.position.z), Quaternion.identity);
                     waterhit.transform.localScale = Caliber / 381 * Vector3.one;
                     Destroy(waterhit, 3);
-                    Destroy(gameObject, 0.4f);
                 }
                 else
                 {
                     waterhit = (GameObject)Instantiate(AssetManager.Instance.WaterHit.waterhit3, new Vector3(transform.position.x, 20, transform.position.z), Quaternion.identity);
                     waterhit.transform.localScale = Caliber / 381 * Vector3.one;
                     Destroy(waterhit, 3);
-                    Destroy(gameObject, 0.4f);
                 }
+
+
+
                 AddWaterHitSound(waterhit.transform);
                 hasHitWater = true;
                 ModNetworking.SendToAll(WeaponMsgReceiver.WaterHitMsg.CreateMessage(myPlayerID, new Vector3(transform.position.x, 20, transform.position.z), Caliber));
