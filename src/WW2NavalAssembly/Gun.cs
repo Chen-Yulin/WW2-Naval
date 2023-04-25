@@ -1089,6 +1089,7 @@ namespace WW2NavalAssembly
         public MToggle TrackOn;
         public MToggle FireControl;
         public MText GunGroup;
+        public MMenu DefaultCannon;
         public bool triggeredByGunner;
 
         public int CannonType;
@@ -1213,6 +1214,11 @@ namespace WW2NavalAssembly
             TrackOn = AddToggle("Track Cannon", "TrackCannon", false);
             FireControl = AddToggle("Fire Control", "FireControl", false);
             GunGroup = AddText("Gun Group", "GunGroup", "g0");
+            DefaultCannon = AddMenu("Default Cannon", 0, new List<string>
+            {
+                "AP",
+                "HE"
+            });
             ReloadHEOut = ModResource.GetTexture("ReloadHEOut Texture").Texture;
             ReloadHEIn = ModResource.GetTexture("ReloadHEIn Texture").Texture;
             ReloadAPOut = ModResource.GetTexture("ReloadAPOut Texture").Texture;
@@ -1239,6 +1245,8 @@ namespace WW2NavalAssembly
             myGuid = BlockBehaviour.BuildingBlock.Guid.GetHashCode();
             reloadTime = Caliber.Value >= 100 ? 0.4f * Mathf.Sqrt(Caliber.Value) - 3 : Caliber.Value/150f + 0.33f;
             currentReloadTime = reloadTime;
+            CannonType = DefaultCannon.Value;
+            NextCannonType = CannonType;
             Grouper.Instance.AddGun(myPlayerID, GunGroup.Value, myGuid, gameObject);
             if ((StatMaster.isMP && !StatMaster.isClient) || !StatMaster.isMP)
             {
