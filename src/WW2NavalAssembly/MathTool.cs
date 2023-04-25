@@ -15,6 +15,12 @@ namespace WW2NavalAssembly
     
     public static class MathTool
     {
+        public static Vector2 GetRotatePosition(Vector2 targetPosition, Vector2 centerPosition, float angle)
+        {
+            float endX = (targetPosition.x - centerPosition.x) * Mathf.Cos(angle * Mathf.Deg2Rad) - (targetPosition.y - centerPosition.y) * Mathf.Sin(angle * Mathf.Deg2Rad) + centerPosition.x;
+            float endY = (targetPosition.y - centerPosition.y) * Mathf.Cos(angle * Mathf.Deg2Rad) + (targetPosition.x - targetPosition.x) * Mathf.Sin(angle * Mathf.Deg2Rad) + centerPosition.y;
+            return new Vector2(endX, endY);
+        }
         public static void AxisLookAt(Transform tr_self, Vector3 lookPos, Vector3 directionAxis, float speed)
         {
             var rotation = tr_self.rotation;

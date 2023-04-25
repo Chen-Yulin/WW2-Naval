@@ -21,7 +21,7 @@ namespace WW2NavalAssembly
             ModNetworking.Callbacks[ControllerDataManager.LockMsg] += ControllerDataManager.Instance.LockDataReceiver;
             ModNetworking.Callbacks[ControllerDataManager.CameraMsg] += ControllerDataManager.Instance.CameraDataReceiver;
             ModNetworking.Callbacks[BlockPoseReceiver.forwardMsg] += BlockPoseReceiver.Instance.forwardMsgReceiver;
-            ModNetworking.Callbacks[ControllerDataManager.ControllerVelMsg] += ControllerDataManager.Instance.ControllerVelReceiver;
+            ModNetworking.Callbacks[ControllerDataManager.ControllerSyncMsg] += ControllerDataManager.Instance.ControllerSyncReceiver;
             ModNetworking.Callbacks[TorpedoMsgReceiver.TorpedoDataMsg] += TorpedoMsgReceiver.Instance.TorpedoDataMsgReceiver;
             ModNetworking.Callbacks[TorpedoMsgReceiver.TorpedoGuidMsg] += TorpedoMsgReceiver.Instance.TorpedoGuidMsgReceiver;
             ModNetworking.Callbacks[GunnerMsgReceiver.EmulateMsg] += GunnerMsgReceiver.Instance.EmulateReceiver;
