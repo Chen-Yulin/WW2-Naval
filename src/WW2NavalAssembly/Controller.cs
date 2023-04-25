@@ -12,6 +12,31 @@ using UnityEngine.Networking;
 
 namespace WW2NavalAssembly
 {
+    public class GunOffsetData
+    {
+        public float pitchOffset;
+        public float OrienOffset;
+        public void Reset()
+        {
+            pitchOffset = 0;
+            OrienOffset = 0;
+        }
+        public GunOffsetData()
+        {
+            pitchOffset = 0;
+            OrienOffset = 0;
+        }
+        public void ChangePitch(bool up)
+        {
+            pitchOffset += 0.05f * (up?1:-1);
+            pitchOffset = Mathf.Clamp(pitchOffset, -2, 2);
+        }
+        public void ChangeOrien(bool right)
+        {
+            OrienOffset += 0.05f * (right ? 1 : -1);
+            OrienOffset = Mathf.Clamp(OrienOffset, -2, 2);
+        }
+    }
     public class LockData
     {
         public Vector3 position;
@@ -91,6 +116,10 @@ namespace WW2NavalAssembly
         public MKey TrackCannon;
         public MKey SwitchCannnon;
         public MKey Lock;
+        public MKey OffsetUp;
+        public MKey OffsetDown;
+        public MKey OffsetLeft;
+        public MKey OffsetRight;
         public MSlider FCPanelSize;
         public MSlider TurrentHeight;
         public MToggle CommandAircraft;
@@ -107,6 +136,7 @@ namespace WW2NavalAssembly
         public GameObject FireControlPanel;
         public GameObject FCPitch;
         public GameObject FCOrien;
+        public GameObject FCOffset;
         public Dictionary<int, GameObject> PitchAimIcon = new Dictionary<int, GameObject>();
         public Dictionary<int, GameObject> OrienAimIcon = new Dictionary<int, GameObject>();
         public Dictionary<float, GameObject> PitchPredIcon = new Dictionary<float, GameObject>();
@@ -114,6 +144,7 @@ namespace WW2NavalAssembly
         public Dictionary<int, GameObject> TorpedoPreIcon = new Dictionary<int, GameObject>();
         public Dictionary<int, GameObject> TorpedoAimIcon = new Dictionary<int, GameObject>();
         public Dictionary<float, FCResult> FCResults = new Dictionary<float, FCResult>();
+        public GameObject OffsetIcon;
 
         public bool Locking = false;
         public GameObject lockingObject;
@@ -131,6 +162,8 @@ namespace WW2NavalAssembly
         public Vector3 myVelocity;
 
         public bool preControlAircraft = false;
+
+        public GunOffsetData offsetData = new GunOffsetData();
 
         public Camera MainCamera
         {
@@ -315,6 +348,8 @@ namespace WW2NavalAssembly
             FireControlPanel.SetActive(false);
             FCPitch = FireControlPanel.transform.Find("PitchController").gameObject;
             FCOrien = FireControlPanel.transform.Find("OrienController").gameObject;
+            FCOffset = FireControlPanel.transform.Find("Offset").gameObject;
+            OffsetIcon = FCOffset.transform.Find("AimPrefab").Find("GunIcon").gameObject;
         }
         public void AdjustFCPanel()
         {
@@ -326,7 +361,7 @@ namespace WW2NavalAssembly
         }// adjust size and visiable
         public void InitGunFireControl()
         {
-            Debug.Log("InitTorpedoFireControl");
+            //Debug.Log("InitTorpedoFireControl");
             
             GameObject newTorpedoPredIcon0 = (GameObject)Instantiate(FCOrien.transform.Find("TorPredPrefab").gameObject, FCOrien.transform);
             newTorpedoPredIcon0.name = "TorPred 0";
@@ -356,7 +391,7 @@ namespace WW2NavalAssembly
 
             foreach (var typeGroup in FireControlManager.Instance.Torpedos[myPlayerID])
             {
-                Debug.Log("Type" + typeGroup.Key.ToString());
+                //Debug.Log("Type" + typeGroup.Key.ToString());
                 // determine whether the torpedoTypeGroup is valid
                 {
                     if (typeGroup.Value.Count == 0)
@@ -383,7 +418,7 @@ namespace WW2NavalAssembly
                 }
                 foreach (var TorpedoPair in typeGroup.Value)
                 {
-                    Debug.Log(TorpedoPair.Key);
+                    //Debug.Log(TorpedoPair.Key);
                     GameObject newOrienIcon = (GameObject)Instantiate(FCOrien.transform.Find("TorAimPrefab").gameObject, FCOrien.transform);
                     newOrienIcon.name = "TorAim " + typeGroup.Key;
                     newOrienIcon.SetActive(true);
@@ -399,7 +434,7 @@ namespace WW2NavalAssembly
                 }
             }
 
-            Debug.Log("InitGunFireControl");
+            //Debug.Log("InitGunFireControl");
             foreach (var calibergroup in FireControlManager.Instance.Guns[myPlayerID])
             {
                 {// determine whether the calibergroup is valid
@@ -426,7 +461,7 @@ namespace WW2NavalAssembly
                     }
                 }
 
-                Debug.Log("Caliber:" + calibergroup.Key);
+                //Debug.Log("Caliber:" + calibergroup.Key);
 
                 if (!PitchPredIcon.ContainsKey(calibergroup.Key))
                 {
@@ -449,7 +484,7 @@ namespace WW2NavalAssembly
 
                 foreach (var gunPair in calibergroup.Value)
                 {
-                    Debug.Log(gunPair.Key);
+                    //Debug.Log(gunPair.Key);
                     GameObject newPitchIcon = (GameObject)Instantiate(FCPitch.transform.Find("AimPrefab").gameObject, FCPitch.transform);
                     newPitchIcon.name = "Aim " + calibergroup.Key;
                     newPitchIcon.SetActive(true);
@@ -461,6 +496,12 @@ namespace WW2NavalAssembly
                 }
             }
         }
+        /// <summary>
+        /// Calculate the orien and pitch angle for the gun
+        /// Display the aim icon and current position for the gun
+        /// Calculate torpedo orien angle for the torpedo
+        /// Display the aim icon and current position for the torpedo
+        /// </summary>
         public void UpdateGunIcon()
         {
             if (StatMaster.hudHidden)
@@ -480,10 +521,17 @@ namespace WW2NavalAssembly
                     foreach (var fcRes in FCResults)
                     {
                         FCResult res = CalculateGunFCPara(targetPos, targetVel, fcRes.Key);
-                        fcRes.Value.Set(res.Orien, res.Pitch, res.hasRes, res.predPosition);
+
+                        Vector2 myPos = MathTool.Get2DCoordinate(transform.position);
+                        Vector2 predPositionAfterOffset = MathTool.GetRotatePosition(res.predPosition, myPos, -offsetData.OrienOffset);
+
+                        fcRes.Value.Set(res.Orien-offsetData.OrienOffset, res.Pitch+offsetData.pitchOffset, res.hasRes, predPositionAfterOffset);
                     }
+
                     // upload FCResult
                     ControllerDataManager.Instance.ControllerFCResult[myPlayerID] = FCResults;
+
+                    //update prediction icon
                     foreach (var PitchPred in PitchPredIcon)
                     {
                         PitchPred.Value.SetActive(true);
@@ -505,6 +553,8 @@ namespace WW2NavalAssembly
 
                         OrienPred.Value.transform.Find("PredIcon").transform.localPosition = new Vector3(-OrienPred.Key / 10 - 50, 0, 0);
                     }
+                    
+                    
                 }
                 else
                 {
@@ -549,6 +599,7 @@ namespace WW2NavalAssembly
                     }
                     catch { }
                 }
+                OffsetIcon.transform.localPosition = new Vector3(offsetData.OrienOffset * 25, offsetData.pitchOffset * 25, 0);
             }
             // torpedo
             {
@@ -754,6 +805,10 @@ namespace WW2NavalAssembly
             Lock = AddKey("Lock", "WW2Lock", KeyCode.X);
             ReturnKey = AddKey("Aircraft Return", "ReturnKey", KeyCode.Backspace);
             TakeOffKey = AddKey("Aircraft Take Off", "TakeOffKey", KeyCode.Q);
+            OffsetUp = AddKey("Offset Up", "OffsetUp", KeyCode.None);
+            OffsetDown = AddKey("Offset Down", "OffsetDown", KeyCode.None);
+            OffsetLeft = AddKey("Offset Left", "OffsetLeft", KeyCode.None);
+            OffsetRight = AddKey("Offset Right", "OffsetRight", KeyCode.None);
 
             ControlMapper(!preControlAircraft);
 
@@ -887,6 +942,24 @@ namespace WW2NavalAssembly
         }
         public override void SimulateFixedUpdateAlways()
         {
+            // offset key response
+            if (OffsetUp.IsHeld)
+            {
+                offsetData.ChangePitch(true);
+            }
+            if (OffsetDown.IsHeld)
+            {
+                offsetData.ChangePitch(false);
+            }
+            if (OffsetLeft.IsHeld)
+            {
+                offsetData.ChangeOrien(false);
+            }
+            if (OffsetRight.IsHeld)
+            {
+                offsetData.ChangeOrien(true);
+            }
+
             ControllerDataManager.Instance.ControllerPos[myPlayerID] = transform.position;
             UpdateVelocity();
             if (!StatMaster.isMP || PlayerData.localPlayer.networkId == myPlayerID)
@@ -918,12 +991,15 @@ namespace WW2NavalAssembly
         }
         public override void SimulateUpdateHost()
         {
+            
+
             if (Lock.IsPressed)
             {
                 if (StatMaster.isMP)
                 {
                     if (myPlayerID == 0)
                     {
+                        offsetData.Reset();
                         ResetBaseRandomError();
                         ControllerDataManager.Instance.cameraData[myPlayerID].valid = true;
                         ControllerDataManager.Instance.cameraData[myPlayerID].position = Camera.main.ScreenPointToRay(Input.mousePosition).origin;
@@ -932,6 +1008,7 @@ namespace WW2NavalAssembly
                 }
                 else
                 {
+                    offsetData.Reset();
                     ResetBaseRandomError();
                     ControllerDataManager.Instance.cameraData[myPlayerID].valid = true;
                     ControllerDataManager.Instance.cameraData[myPlayerID].position = Camera.main.ScreenPointToRay(Input.mousePosition).origin;
@@ -945,6 +1022,7 @@ namespace WW2NavalAssembly
             {
                 if (PlayerData.localPlayer.networkId == myPlayerID)
                 {
+                    offsetData.Reset();
                     ResetBaseRandomError();
                     Debug.Log("SendCamera");
                     ModNetworking.SendToAll(ControllerDataManager.CameraMsg.CreateMessage(myPlayerID, Camera.main.ScreenPointToRay(Input.mousePosition).origin,
