@@ -66,7 +66,7 @@ namespace WW2NavalAssembly
         public override string Name { get; } = "LockDataManager";
         public static MessageType LockMsg = ModNetworking.CreateMessageType(DataType.Integer, DataType.Vector3, DataType.Vector3, DataType.Boolean);
         public static MessageType CameraMsg = ModNetworking.CreateMessageType(DataType.Integer, DataType.Vector3, DataType.Vector3);
-        public static MessageType ControllerVelMsg = ModNetworking.CreateMessageType(DataType.Integer, DataType.Vector3);
+        public static MessageType ControllerSyncMsg = ModNetworking.CreateMessageType(DataType.Integer, DataType.Vector3, DataType.Single,DataType.Single);//velocity, pitchOffset, OrienOffset
 
         public LockData[] lockData = new LockData[16];
         public CameraData[] cameraData = new CameraData[16];
@@ -75,6 +75,10 @@ namespace WW2NavalAssembly
         public Vector3[] ControllerVel = new Vector3[16];
         public Vector3[] ControllerPos = new Vector3[16];
         public GameObject[] ControllerObject = new GameObject[16];
+
+        public float[] pitchOffset = new float[16];
+        public float[] orienOffset = new float[16];
+        public bool[] synchronized = new bool[16];
 
         public Dictionary<float, Controller.FCResult>[] ControllerFCResult = new Dictionary<float, Controller.FCResult>[16];
 
@@ -86,6 +90,7 @@ namespace WW2NavalAssembly
                 cameraData[i] = new CameraData();
                 ControllerFCResult[i] = new Dictionary<float, Controller.FCResult>();
                 ControllerObject[i] = new GameObject();
+                synchronized[i] = false;
             }
         }
         public void LockDataReceiver(Message msg)
@@ -101,9 +106,12 @@ namespace WW2NavalAssembly
             cameraData[(int)msg.GetData(0)].forward = (Vector3)msg.GetData(2);
             cameraData[(int)msg.GetData(0)].valid = true;
         }
-        public void ControllerVelReceiver(Message msg)
+        public void ControllerSyncReceiver(Message msg)
         {
             ControllerVel[(int)msg.GetData(0)] = (Vector3)msg.GetData(1);
+            pitchOffset[(int)msg.GetData(0)] = (float)msg.GetData(2);
+            orienOffset[(int)msg.GetData(0)] = (float)msg.GetData(3);
+            synchronized[(int)msg.GetData(0)] = true;
         }
     }
 
@@ -959,6 +967,15 @@ namespace WW2NavalAssembly
             {
                 offsetData.ChangeOrien(true);
             }
+            if (StatMaster.isClient)
+            {
+                if (ControllerDataManager.Instance.synchronized[myPlayerID])
+                {
+                    ControllerDataManager.Instance.synchronized[myPlayerID] = false;
+                    offsetData.OrienOffset = ControllerDataManager.Instance.orienOffset[myPlayerID];
+                    offsetData.pitchOffset = ControllerDataManager.Instance.pitchOffset[myPlayerID];
+                }
+            }
 
             ControllerDataManager.Instance.ControllerPos[myPlayerID] = transform.position;
             UpdateVelocity();
@@ -1036,7 +1053,8 @@ namespace WW2NavalAssembly
             {
                 if (ModController.Instance.state % 10 == mySeed)
                 {
-                    ModNetworking.SendToAll(ControllerDataManager.ControllerVelMsg.CreateMessage(myPlayerID, gameObject.GetComponent<Rigidbody>().velocity));
+                    ModNetworking.SendToAll(ControllerDataManager.ControllerSyncMsg.CreateMessage(myPlayerID, gameObject.GetComponent<Rigidbody>().velocity,
+                                                                                                    offsetData.pitchOffset,offsetData.OrienOffset));
                 }
             }
             if (ControllerDataManager.Instance.cameraData[myPlayerID].valid)
