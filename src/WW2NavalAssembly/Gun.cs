@@ -725,27 +725,7 @@ namespace WW2NavalAssembly
                 }
                 catch { }
 
-                Collider[] ExploCol = Physics.OverlapSphere(hit.point - myRigid.velocity.normalized * Caliber / 800f, Caliber / 300f);
-                foreach (Collider hitedCollider in ExploCol)
-                {
-                    if (hitedCollider.transform.parent.GetComponent<Rigidbody>())
-                    {
-                        hitedCollider.transform.parent.GetComponent<Rigidbody>().AddExplosionForce(5f * Caliber, hit.point, 5f);
-                    }
-
-                    if (pericedBlock.Count != 0)
-                    {
-                        try
-                        {
-                            //Debug.Log(hitedCollider.transform.parent.name);
-                            if (hitedCollider.transform.parent.name == "Balloon" || hitedCollider.transform.parent.name == "SqrBalloon")
-                            {
-                                BreakBallon(hitedCollider.transform.position);
-                            }
-                        }
-                        catch { }
-                    }
-                }
+                ExploDestroyBalloon(Caliber / 20, hit.point);
             }
             catch { }
             if (transform.FindChild("CannonVis"))
@@ -771,27 +751,7 @@ namespace WW2NavalAssembly
             //send to client
             ModNetworking.SendToAll(WeaponMsgReceiver.ExploMsg.CreateMessage(myPlayerID, transform.position, Caliber, 0));
 
-            Collider[] ExploCol = Physics.OverlapSphere(transform.position, Caliber / 300f);
-            foreach (Collider hitedCollider in ExploCol)
-            {
-                if (hitedCollider.transform.parent.GetComponent<Rigidbody>())
-                {
-                    hitedCollider.transform.parent.GetComponent<Rigidbody>().AddExplosionForce(5f * Caliber, transform.position, 7f);
-                }
-
-                if (pericedBlock.Count != 0)
-                {
-                    try
-                    {
-                        //Debug.Log(hitedCollider.transform.parent.name);
-                        if (hitedCollider.transform.parent.name == "Balloon" || hitedCollider.transform.parent.name == "SqrBalloon")
-                        {
-                            BreakBallon(hitedCollider.transform.position);
-                        }
-                    }
-                    catch { }
-                }
-            }
+            ExploDestroyBalloon(Caliber / 20, transform.position);
             if (transform.FindChild("CannonVis"))
             {
                 transform.FindChild("CannonVis").gameObject.SetActive(false);
@@ -989,6 +949,53 @@ namespace WW2NavalAssembly
                 }
                 catch { }
             }
+        }
+        public void ExploDestroyBalloon(float exploPenetration, Vector3 pos)
+        {
+            try
+            {
+                //Debug.Log(armourGuid);
+                Collider[] ExploCol = Physics.OverlapSphere(transform.position, Mathf.Sqrt(Caliber) / 5);
+                foreach (Collider hitedCollider in ExploCol)
+                {
+                    try
+                    {
+                        
+                        //Debug.Log(hitedCollider.transform.parent.name);
+                        if (hitedCollider.transform.parent.name == "Balloon" || hitedCollider.transform.parent.name == "SqrBalloon")
+                        {
+                            float ArmourBetween = 0;
+                            Ray Ray = new Ray(pos, hitedCollider.transform.position - pos);
+                            RaycastHit[] hitList = Physics.RaycastAll(Ray, (hitedCollider.transform.position - pos).magnitude);
+                            foreach (RaycastHit raycastHit in hitList)
+                            {
+                                //Debug.Log(raycastHit.rigidbody.name);
+                                if (!pericedBlock.Contains(raycastHit.collider.transform.parent.GetComponent<BlockBehaviour>().BuildingBlock.Guid.GetHashCode())
+                                    && raycastHit.collider.transform.parent.GetComponent<WoodenArmour>())
+                                {
+                                    Debug.Log(raycastHit.collider.transform.parent.GetComponent<WoodenArmour>().thickness);
+                                    ArmourBetween += raycastHit.collider.transform.parent.GetComponent<WoodenArmour>().thickness;
+                                }
+                            }
+                            //Debug.Log(ArmourBetween + " VS "+exploPenetration);
+                            if (ArmourBetween > exploPenetration)
+                            {
+                                continue;
+                            }
+                            else
+                            {
+                                BreakBallon(hitedCollider.transform.position);
+                            }
+                            
+                        }else if (hitedCollider.transform.parent.GetComponent<Rigidbody>())
+                        {
+                            hitedCollider.transform.parent.GetComponent<Rigidbody>().AddExplosionForce(5f * Caliber, pos, Mathf.Sqrt(Caliber) / 5);
+                        }
+                    }
+                    catch { }
+                }
+            }
+            catch { }
         }
         public void Start()
         {
