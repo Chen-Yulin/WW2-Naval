@@ -537,14 +537,8 @@ namespace WW2NavalAssembly
                 AmmoVis = (GameObject)Instantiate(AssetManager.Instance.ArmourVis.WellArmour, transform);
                 AmmoVis.name = "AmmoVis";
                 //Destroy(WellVis.GetComponent<MeshCollider>());
-                TurrentVis = new GameObject("TurrentVis");
-                TurrentVis.transform.SetParent(transform);
-                TurrentVis.AddComponent<MeshFilter>().sharedMesh = ModResource.GetMesh("Turrent Mesh").Mesh;
-                TurrentVis.AddComponent<MeshRenderer>();
-                MeshCollider TurrentCollider = TurrentVis.AddComponent<MeshCollider>();
-                TurrentCollider.sharedMesh = ModResource.GetMesh("Turrent Mesh").Mesh;
-                TurrentCollider.convex = true;
-                TurrentCollider.isTrigger = true;
+                TurrentVis = (GameObject)Instantiate(AssetManager.Instance.ArmourVis.TurrentArmour, transform);
+                TurrentVis.name = "TurrentVis";
             }
 
             WellVis.transform.localPosition = new Vector3(0, 0, 0.5f);

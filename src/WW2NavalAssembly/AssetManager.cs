@@ -85,10 +85,12 @@ namespace WW2NavalAssembly
     {
         public GameObject SingleArmour;
         public GameObject WellArmour;
+        public GameObject TurrentArmour;
         public Asset_ArmourVis(ModAssetBundle modAssetBundle)
         {
             SingleArmour = modAssetBundle.LoadAsset<GameObject>("SingleVis");
             WellArmour = modAssetBundle.LoadAsset<GameObject>("WellVis");
+            TurrentArmour = modAssetBundle.LoadAsset<GameObject>("TurrentVis");
         }
     }
     public class Asset_GunSmoke

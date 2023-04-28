@@ -5,11 +5,11 @@
 	<Name>WW2Naval</Name>
 	<Author>Chen, Yulin</Author> <!-- FIX: Insert your name here. -->
 	<!-- Major.Minor.Build -->
-	<Version>0.6.18</Version>
+	<Version>0.6.19</Version>
 	
 	<Description>
 	A mod for 1/5 scale WW2 naval battel.
-    Version 0.6.18 - compatible with besiege 1.25
+    Version 0.6.19 - compatible with besiege 1.25
 	</Description>
 
 	<Icon name="icon"/>
@@ -100,7 +100,7 @@
 		<Texture name="Engine-Indicator Texture" path="Engine\Indicator.png"/>
 		<Texture name="Engine-Speed Texture" path="Engine\speed.png"/>
 		<Mesh name="SkyBall" path="SkyBall.obj"/>
-		<Mesh name="Turrent Mesh" path="frustum.obj" readable="true"/>
+		<Mesh name="Turrent Mesh" path="Turrent\frustum.obj"/>
 		<Texture name="BlueSky" path="Sky\BlueSky.png"/>
 		<Texture name="Night" path="Sky\Night.png"/>
 		<Texture name="Sunrise1" path="Sky\Sunrise1.png"/>
