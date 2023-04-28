@@ -22,3 +22,4 @@ S:\SteamLibrary\steamapps\common\Besiege\Besiege_Data\Mods\WW2-Naval Project\src
 S:\SteamLibrary\steamapps\common\Besiege\Besiege_Data\Mods\WW2-Naval Project\src\WW2NavalAssembly\obj\Debug\WW2NavalAssembly.csproj.CopyComplete
 S:\SteamLibrary\steamapps\common\Besiege\Besiege_Data\Mods\WW2-Naval Project\src\WW2NavalAssembly\obj\Debug\WW2NavalAssembly.dll
 S:\SteamLibrary\steamapps\common\Besiege\Besiege_Data\Mods\WW2-Naval Project\src\WW2NavalAssembly\obj\Debug\WW2NavalAssembly.pdb
+S:\SteamLibrary\steamapps\common\Besiege\Besiege_Data\Mods\WW2-Naval Project\src\WW2NavalAssembly\bin\Debug\UnityEngine.xml
