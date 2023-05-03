@@ -950,12 +950,12 @@ namespace WW2NavalAssembly
                 catch { }
             }
         }
-        public void ExploDestroyBalloon(float exploPenetration, Vector3 pos)
+        public void ExploDestroyBalloon(float exploPenetration, Vector3 pos, bool AP = true)
         {
             try
             {
                 //Debug.Log(armourGuid);
-                Collider[] ExploCol = Physics.OverlapSphere(transform.position, Mathf.Sqrt(Caliber) / 5);
+                Collider[] ExploCol = Physics.OverlapSphere(transform.position, Mathf.Sqrt(Caliber) / (AP?8f:5f));
                 foreach (Collider hitedCollider in ExploCol)
                 {
                     try
@@ -1463,8 +1463,8 @@ namespace WW2NavalAssembly
                 currentReloadTime = 0;
                 muzzleStage = 0;
                 gameObject.GetComponent<Rigidbody>().AddForce(-Caliber.Value * transform.forward * 5);
-                Vector3 randomForce = new Vector3(UnityEngine.Random.value - 0.5f, UnityEngine.Random.value - 0.5f, UnityEngine.Random.value - 0.5f) * 3 / Mathf.Sqrt(Caliber.Value);
-                randomForce += new Vector3(0, UnityEngine.Random.value - 0.5f, 0) * 5 / Mathf.Sqrt(Caliber.Value);
+                Vector3 randomForce = new Vector3(UnityEngine.Random.value - 0.5f, UnityEngine.Random.value - 0.5f, UnityEngine.Random.value - 0.5f) * 3 / 14f;
+                randomForce += new Vector3(0, UnityEngine.Random.value - 0.5f, 0) * 5 / 14f;
 
                 GameObject Cannon = (GameObject)Instantiate(CannonPrefab, transform.position + 3 * transform.forward * transform.localScale.z, transform.rotation);
                 Cannon.name = "NavalCannon" + myPlayerID.ToString();
