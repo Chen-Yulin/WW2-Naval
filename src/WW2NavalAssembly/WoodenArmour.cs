@@ -44,16 +44,10 @@ namespace WW2NavalAssembly
                     }
                 case (int)BlockType.DoubleWoodenBlock:
                     {
-                        Vis.transform.localPosition = new Vector3(0, 0, 1f);
-                        Vis.transform.localScale = new Vector3(0.95f, 0.95f, 2);
-                        break;
-                    }
-                case (int)BlockType.Log:
-                    {
-                        if (transform.Find("Joint").gameObject.activeSelf)
+                        if (transform.Find("Vis").Find("HalfVis").GetComponent<MeshRenderer>().enabled)
                         {
-                            Vis.transform.localPosition = new Vector3(0, 0, 1.5f);
-                            Vis.transform.localScale = new Vector3(0.95f, 0.95f, 3);
+                            Vis.transform.localPosition = new Vector3(0, 0, 0.5f);
+                            Vis.transform.localScale = new Vector3(0.95f, 0.95f, 1);
                         }
                         else
                         {
@@ -61,6 +55,20 @@ namespace WW2NavalAssembly
                             Vis.transform.localScale = new Vector3(0.95f, 0.95f, 2);
                         }
                         
+                        break;
+                    }
+                case (int)BlockType.Log:
+                    {
+                        if (transform.Find("Vis").Find("HalfVis").GetComponent<MeshRenderer>().enabled)
+                        {
+                            Vis.transform.localPosition = new Vector3(0, 0, 1f);
+                            Vis.transform.localScale = new Vector3(0.95f, 0.95f, 2);
+                        }
+                        else
+                        {
+                            Vis.transform.localPosition = new Vector3(0, 0, 1.5f);
+                            Vis.transform.localScale = new Vector3(0.95f, 0.95f, 3);
+                        }
                         break;
                     }
                 default:
