@@ -193,8 +193,8 @@ namespace WW2NavalAssembly
 
         Stack<int> pericedBlock = new Stack<int> ();
 
-        public int APtimer = 0;
-        public bool APtimerOn;
+        public int timer = 0;
+        public bool timerOn;
 
         public bool exploded = false;
         public bool spotted = false;
@@ -268,164 +268,170 @@ namespace WW2NavalAssembly
         {
             try
             {
-                if (hit.collider.name == "TurrentVis")
+                try
                 {
-                    return true;
-                }
-            }
-            catch { }
-            try
-            {
-                if (!(hit.collider.transform.parent.parent.name == "Engine"))
-                {
-                    
-                    if (!hit.collider.transform.parent.GetComponent<BlockBehaviour>() && !hit.collider.transform.GetComponent<BlockBehaviour>())
-                    {
-                        Debug.Log("not a block");
-                        return false;
-                    }
-                    if (hit.collider.transform.parent.GetComponent<BlockBehaviour>())
-                    {
-                        if (pericedBlock.Contains(hit.collider.transform.parent.GetComponent<BlockBehaviour>().BuildingBlock.Guid.GetHashCode()))
-                        {
-                            return true;
-                        }
-                    }else if (hit.collider.transform.GetComponent<BlockBehaviour>())
-                    {
-                        if (pericedBlock.Contains(hit.collider.transform.GetComponent<BlockBehaviour>().BuildingBlock.Guid.GetHashCode()))
-                        {
-                            return true;
-                        }
-                    }
-                }
-                else
-                {
-                    if (pericedBlock.Contains(hit.collider.transform.parent.parent.GetComponent<BlockBehaviour>().BuildingBlock.Guid.GetHashCode()))
+                    if (hit.collider.name == "TurrentVis")
                     {
                         return true;
                     }
                 }
-            }
-            catch
-            {
-                return false;
-            }
-
-            
-
-            float angle = Vector3.Angle(hit.normal, -myRigid.velocity);
-            if (angle > 10 && angle < 20)
-            {
-                angle -= (angle - 10) / 2;
-            }
-            else if (angle >= 20 && angle < 70)
-            {
-                angle -= 5;
-            }
-            else if (angle >= 70)
-            {
-                if (UnityEngine.Random.value<(angle-70)/20)
+                catch { }
+                try
                 {
-                    return false;
-                }
-                angle -= 3;
-            }
+                    if (!(hit.collider.transform.parent.parent.name == "Engine"))
+                    {
 
-            float Thickness;
-            if (hit.collider.transform.parent.GetComponent<WoodenArmour>())
-            {
-                Thickness = hit.collider.transform.parent.GetComponent<WoodenArmour>().thickness;
-            }
-            else if(hit.collider.transform.parent.GetComponent<DefaultArmour>() || hit.collider.transform.GetComponent<DefaultArmour>())
-            {
-                Thickness = 20;
-            }
-            else if (hit.collider.transform.parent.GetComponent<CannonWell>())
-            {
-                Vector3 CylinderUp = hit.collider.transform.parent.GetComponent<CannonWell>().WellVis.transform.up;
-
-                //Debug.Log(CylinderUp);
-                //Debug.Log(hit.normal);
-                if (hit.collider.name == "TurrentVis")
-                {
-                    Thickness = 1f;
-                }
-                else if ((hit.normal - CylinderUp).magnitude < 0.01f || (hit.normal - CylinderUp).magnitude > 1.99f)
-                {
-                    Thickness = 20f;
-                }
-                else
-                {
-                    Thickness = hit.collider.transform.parent.GetComponent<CannonWell>().thickness;
-                }
-
-                
-
-            }
-            else
-            {
-                return true;
-            }
-
-            if (Thickness / Mathf.Cos(angle * Mathf.PI / 180) > penetration)
-            {
-                return false;
-            }
-            else
-            {
-                float eqThick = Thickness / Mathf.Cos(angle * Mathf.PI / 180);
-                myRigid.velocity *= 1 - eqThick * 0.8f / penetration;
-                penetration -= eqThick;
-                if (hit.collider.transform.parent.parent.name == "Engine")
-                {
-                    pericedBlock.Push(hit.collider.transform.parent.parent.GetComponent<BlockBehaviour>().BuildingBlock.Guid.GetHashCode());
-                }
-                else
-                {
-                    pericedBlock.Push(hit.collider.transform.parent.GetComponent<BlockBehaviour>().BuildingBlock.Guid.GetHashCode());
-                }
-                
-
-                if (pericedBlock.Count == 1 && hit.collider.transform.parent.name != "SpinningBlock")    // add waterIn behaviour
-                {
-                    GameObject waterinhole = new GameObject("waterInHole");
-                    waterinhole.transform.SetParent(hit.collider.transform.parent);
-                    waterinhole.transform.localPosition = Vector3.zero;
-                    waterinhole.transform.localRotation = Quaternion.identity;
-                    waterinhole.transform.localScale = Vector3.one;
-
-                    WaterInHole WH = waterinhole.AddComponent<WaterInHole>();
-                    WH.hittedCaliber = Caliber;
-                    WH.position = hit.collider.transform.parent.InverseTransformPoint(hit.point);
-                }
-
-                
-                if (Caliber >= 100)
-                {
-                    string hittedname = hit.collider.transform.parent.name;
-                    if (hittedname == "DoubleWoodenBlock" || hittedname == "SingleWoodenBlock" || hittedname == "Log" || hittedname == "SpinningBlock")
-                    {   // add hole projector
-                        GameObject piercedhole = new GameObject("PiercedHole");
-                        piercedhole.transform.SetParent(hit.collider.transform.parent);
-                        piercedhole.transform.localPosition = Vector3.zero;
-                        piercedhole.transform.localRotation = Quaternion.identity;
-                        piercedhole.transform.localScale = Vector3.one;
-
-                        PiercedHole PH = piercedhole.AddComponent<PiercedHole>();
-                        PH.hittedCaliber = Caliber;
-                        PH.position = hit.collider.transform.parent.InverseTransformPoint(hit.point);
-                        PH.forward = myRigid.velocity.normalized;
-
-                        if (StatMaster.isMP)
+                        if (!hit.collider.transform.parent.GetComponent<BlockBehaviour>() && !hit.collider.transform.GetComponent<BlockBehaviour>())
                         {
-                            ModNetworking.SendToAll(WeaponMsgReceiver.HitHoleMsg.CreateMessage((int)hit.collider.transform.parent.GetComponent<BlockBehaviour>().ParentMachine.PlayerID,
-                                                                                                hit.collider.transform.parent.GetComponent<BlockBehaviour>().BuildingBlock.Guid.GetHashCode(),
-                                                                                                Caliber, PH.position, PH.forward, 0));
+                            Debug.Log("not a block");
+                            return false;
+                        }
+                        if (hit.collider.transform.parent.GetComponent<BlockBehaviour>())
+                        {
+                            if (pericedBlock.Contains(hit.collider.transform.parent.GetComponent<BlockBehaviour>().BuildingBlock.Guid.GetHashCode()))
+                            {
+                                return true;
+                            }
+                        }
+                        else if (hit.collider.transform.GetComponent<BlockBehaviour>())
+                        {
+                            if (pericedBlock.Contains(hit.collider.transform.GetComponent<BlockBehaviour>().BuildingBlock.Guid.GetHashCode()))
+                            {
+                                return true;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        if (pericedBlock.Contains(hit.collider.transform.parent.parent.GetComponent<BlockBehaviour>().BuildingBlock.Guid.GetHashCode()))
+                        {
+                            return true;
                         }
                     }
                 }
-                return true;
+                catch
+                {
+                    return false;
+                }
+
+
+
+                float angle = Vector3.Angle(hit.normal, -myRigid.velocity);
+                if (angle > 10 && angle < 20)
+                {
+                    angle -= (angle - 10) / 2;
+                }
+                else if (angle >= 20 && angle < 70)
+                {
+                    angle -= 5;
+                }
+                else if (angle >= 70)
+                {
+                    if (UnityEngine.Random.value < (angle - 70) / 20)
+                    {
+                        return false;
+                    }
+                    angle -= 3;
+                }
+
+                float Thickness;
+                if (hit.collider.transform.parent.GetComponent<WoodenArmour>())
+                {
+                    Thickness = hit.collider.transform.parent.GetComponent<WoodenArmour>().thickness;
+                }
+                else if (hit.collider.transform.parent.GetComponent<DefaultArmour>() || hit.collider.transform.GetComponent<DefaultArmour>())
+                {
+                    Thickness = 20;
+                }
+                else if (hit.collider.transform.parent.GetComponent<CannonWell>())
+                {
+                    Vector3 CylinderUp = hit.collider.transform.parent.GetComponent<CannonWell>().WellVis.transform.up;
+
+                    //Debug.Log(CylinderUp);
+                    //Debug.Log(hit.normal);
+                    if (hit.collider.name == "TurrentVis")
+                    {
+                        Thickness = 1f;
+                    }
+                    else if ((hit.normal - CylinderUp).magnitude < 0.01f || (hit.normal - CylinderUp).magnitude > 1.99f)
+                    {
+                        Thickness = 20f;
+                    }
+                    else
+                    {
+                        Thickness = hit.collider.transform.parent.GetComponent<CannonWell>().thickness;
+                    }
+
+
+
+                }
+                else
+                {
+                    return true;
+                }
+
+                if (Thickness / Mathf.Cos(angle * Mathf.PI / 180) > penetration)
+                {
+                    return false;
+                }
+                else
+                {
+                    float eqThick = Thickness / Mathf.Cos(angle * Mathf.PI / 180);
+                    myRigid.velocity *= 1 - eqThick * 0.8f / penetration;
+                    penetration -= eqThick;
+                    if (hit.collider.transform.parent.parent.name == "Engine")
+                    {
+                        pericedBlock.Push(hit.collider.transform.parent.parent.GetComponent<BlockBehaviour>().BuildingBlock.Guid.GetHashCode());
+                    }
+                    else
+                    {
+                        pericedBlock.Push(hit.collider.transform.parent.GetComponent<BlockBehaviour>().BuildingBlock.Guid.GetHashCode());
+                    }
+
+
+                    if (pericedBlock.Count == 1 && hit.collider.transform.parent.name != "SpinningBlock")    // add waterIn behaviour
+                    {
+                        GameObject waterinhole = new GameObject("waterInHole");
+                        waterinhole.transform.SetParent(hit.collider.transform.parent);
+                        waterinhole.transform.localPosition = Vector3.zero;
+                        waterinhole.transform.localRotation = Quaternion.identity;
+                        waterinhole.transform.localScale = Vector3.one;
+
+                        WaterInHole WH = waterinhole.AddComponent<WaterInHole>();
+                        WH.hittedCaliber = Caliber;
+                        WH.position = hit.collider.transform.parent.InverseTransformPoint(hit.point);
+                    }
+
+
+                    if (Caliber >= 100)
+                    {
+                        string hittedname = hit.collider.transform.parent.name;
+                        if (hittedname == "DoubleWoodenBlock" || hittedname == "SingleWoodenBlock" || hittedname == "Log" || hittedname == "SpinningBlock")
+                        {   // add hole projector
+                            GameObject piercedhole = new GameObject("PiercedHole");
+                            piercedhole.transform.SetParent(hit.collider.transform.parent);
+                            piercedhole.transform.localPosition = Vector3.zero;
+                            piercedhole.transform.localRotation = Quaternion.identity;
+                            piercedhole.transform.localScale = Vector3.one;
+
+                            PiercedHole PH = piercedhole.AddComponent<PiercedHole>();
+                            PH.hittedCaliber = Caliber;
+                            PH.position = hit.collider.transform.parent.InverseTransformPoint(hit.point);
+                            PH.forward = myRigid.velocity.normalized;
+
+                            if (StatMaster.isMP)
+                            {
+                                ModNetworking.SendToAll(WeaponMsgReceiver.HitHoleMsg.CreateMessage((int)hit.collider.transform.parent.GetComponent<BlockBehaviour>().ParentMachine.PlayerID,
+                                                                                                    hit.collider.transform.parent.GetComponent<BlockBehaviour>().BuildingBlock.Guid.GetHashCode(),
+                                                                                                    Caliber, PH.position, PH.forward, 0));
+                            }
+                        }
+                    }
+                    return true;
+                }
             }
+            catch { return false; }
+            
 
 
         }
@@ -461,7 +467,7 @@ namespace WW2NavalAssembly
             damager.AddComponent<Rigidbody>().velocity = new Vector3(0, 20, 0);
             Destroy(damager, 0.01f);
         }
-        public void APDetectCollisionHost()
+        public void CannonDetectCollisionHost(bool AP = true)
         {
             Ray CannonRay = new Ray(transform.position, myRigid.velocity);
             RaycastHit[] hitList = Physics.RaycastAll(CannonRay, myRigid.velocity.magnitude * Time.fixedDeltaTime);
@@ -477,7 +483,7 @@ namespace WW2NavalAssembly
                     {
                         continue;
                     }
-                    APtimerOn = true;
+                    timerOn = true;
 
                     // pericing
 
@@ -549,7 +555,7 @@ namespace WW2NavalAssembly
                     }
                     if (!exploded)
                     {
-                        APPlayExploHit(hit);
+                        PlayExploHit(hit, AP);
                         Destroy(gameObject);
                     }
                     
@@ -557,7 +563,7 @@ namespace WW2NavalAssembly
                 }
             }
         }
-        public void APDetectCollisionClient()
+        public void CannonDetectCollisionClient()
         {
             foreach (WeaponMsgReceiver.exploInfo exploInfo in WeaponMsgReceiver.Instance.ExploInfo[myPlayerID])
             {
@@ -579,6 +585,15 @@ namespace WW2NavalAssembly
                             pierceEffect.transform.localScale = Caliber / 400 * Vector3.one;
                             Destroy(pierceEffect, 1);
                             AddPierceSound(pierceEffect.transform);
+                            break;
+                        }
+                    case 2:
+                        {
+                            GameObject explo = (GameObject)Instantiate(AssetManager.Instance.CannonHit.explo, exploPosition, Quaternion.identity);
+                            explo.SetActive(true);
+                            explo.transform.localScale = exploInfo.Caliber / 400 * Vector3.one;
+                            Destroy(explo, 3);
+                            AddExploSound(explo.transform);
                             break;
                         }
                     default:
@@ -704,20 +719,20 @@ namespace WW2NavalAssembly
             }
             WeaponMsgReceiver.Instance.waterHitInfo[myPlayerID].Clear();
         }
-        public void APPlayExploHit(RaycastHit hit)
+        private void PlayExploHit(RaycastHit hit, bool AP = true)
         {
             try
             {
                 GameObject explo = (GameObject)Instantiate(AssetManager.Instance.CannonHit.explo, hit.point - myRigid.velocity.normalized * Caliber / 800f, Quaternion.identity);
                 explo.SetActive(true);
-                explo.transform.localScale = Caliber / 800 * Vector3.one;
+                explo.transform.localScale = Caliber / 800 * (AP ? 1 : 2) * Vector3.one;
                 Destroy(explo, 3);
                 AddExploSound(explo.transform);
 
                 exploded = true;
 
                 //send to client
-                ModNetworking.SendToAll(WeaponMsgReceiver.ExploMsg.CreateMessage(myPlayerID, hit.point, Caliber, 0));
+                ModNetworking.SendToAll(WeaponMsgReceiver.ExploMsg.CreateMessage(myPlayerID, hit.point, Caliber, AP?0:2));
 
                 try
                 {
@@ -725,7 +740,7 @@ namespace WW2NavalAssembly
                 }
                 catch { }
 
-                ExploDestroyBalloon(Caliber / 20, hit.point);
+                ExploDestroyBalloon(hit.point, AP);
             }
             catch { }
             if (transform.FindChild("CannonVis"))
@@ -738,20 +753,20 @@ namespace WW2NavalAssembly
 
             
         }
-        public void APPlayExploInAir()
+        private void PlayExploInAir(bool AP = true)
         {
             GameObject explo = (GameObject)Instantiate(AssetManager.Instance.CannonHit.explo, transform.position, Quaternion.identity);
             explo.SetActive(true);
-            explo.transform.localScale = Caliber / 800 * Vector3.one;
+            explo.transform.localScale = Caliber / 800 * (AP?1:2) * Vector3.one;
             Destroy(explo, 3);
             AddExploSound(explo.transform);
 
             exploded = true;
 
             //send to client
-            ModNetworking.SendToAll(WeaponMsgReceiver.ExploMsg.CreateMessage(myPlayerID, transform.position, Caliber, 0));
+            ModNetworking.SendToAll(WeaponMsgReceiver.ExploMsg.CreateMessage(myPlayerID, transform.position, Caliber, AP?0:2));
 
-            ExploDestroyBalloon(Caliber / 20, transform.position);
+            ExploDestroyBalloon(transform.position, AP);
             if (transform.FindChild("CannonVis"))
             {
                 transform.FindChild("CannonVis").gameObject.SetActive(false);
@@ -799,159 +814,14 @@ namespace WW2NavalAssembly
                 Destroy(waterhit, 3);
                 AddWaterHitSound(waterhit.transform);
                 hasHitWater = true;
-                HEDestroyBalloonWater(transform.position);
-                HEPlayExplo(0);
+                PlayExploInAir(false);
                 Destroy(gameObject,0.1f);
                 ModNetworking.SendToAll(WeaponMsgReceiver.WaterHitMsg.CreateMessage(myPlayerID, new Vector3(transform.position.x, 20, transform.position.z), Caliber));
             }
         }
-        public void HEDetectCollisionHost()
+        private void ExploDestroyBalloon(Vector3 pos, bool AP = true)
         {
-            Ray CannonRay = new Ray(transform.position, myRigid.velocity);
-            RaycastHit[] hitList = Physics.RaycastAll(CannonRay, myRigid.velocity.magnitude * Time.fixedDeltaTime);
-
-            if (hitList.Length != 0)
-            {
-                List<RaycastHit> list = new List<RaycastHit>(hitList);
-                list.Sort((RaycastHit a, RaycastHit b) => (base.gameObject.transform.position - a.point).magnitude.CompareTo((base.gameObject.transform.position - b.point).magnitude));
-                hitList = list.ToArray();
-                foreach (RaycastHit hit in hitList)
-                {
-                    if (hit.collider.isTrigger)
-                    {
-                        continue;
-                    }
-
-                    if (!exploded)
-                    {
-                        transform.position = hit.point;
-                        float tmpThickness;
-                        try
-                        {
-                            tmpThickness = hit.collider.transform.parent.GetComponent<WoodenArmour>().thickness;
-                        }catch
-                        {
-                            tmpThickness = 20;
-                        }
-                        penetration -= tmpThickness;
-                        HEDestroyBalloonHit(hit);
-                        HEPlayExplo(tmpThickness);
-                        Destroy(gameObject,0.1f);
-                    }
-
-                    break;
-                }
-            }
-        }
-        public void HEPlayExplo(float thickness)
-        {
-            
-            GameObject explo = (GameObject)Instantiate(AssetManager.Instance.CannonHit.explo, transform.position, Quaternion.identity);
-            explo.SetActive(true);
-            explo.transform.localScale = Caliber / 800 * Vector3.one;
-            Destroy(explo, 3);
-            AddExploSound(explo.transform);
-
-            exploded = true;
-
-            //send to client
-            ModNetworking.SendToAll(WeaponMsgReceiver.ExploMsg.CreateMessage(myPlayerID, transform.position, Caliber, 0));
-
-            Collider[] ExploCol = Physics.OverlapSphere(transform.position, Caliber /( 3 * Mathf.Clamp(thickness,Caliber/10,Caliber) ) );
-            //Debug.Log(Caliber / (5 * Mathf.Clamp(thickness, 10, Caliber)));
-            foreach (Collider hitedCollider in ExploCol)
-            {
-                try
-                {
-                    //Debug.Log(hitedCollider.gameObject.transform.parent.name);
-                    if (hitedCollider.transform.parent.GetComponent<Rigidbody>())
-                    {
-                        hitedCollider.transform.parent.GetComponent<Rigidbody>().AddExplosionForce(1000f * Caliber / (5 * Mathf.Clamp(thickness, Caliber / 10, Caliber)), transform.position, Caliber / (5 * Mathf.Clamp(thickness, Caliber / 10, Caliber)));
-                    }
-                }
-                catch { }
-            }
-            if (transform.FindChild("CannonVis"))
-            {
-                transform.FindChild("CannonVis").gameObject.SetActive(false);
-            }
-            Destroy(gameObject.GetComponent<Rigidbody>());
-            Destroy(gameObject.GetComponent<BulletBehaviour>());
-        }
-        public void HEDestroyBalloonHit(RaycastHit hit)
-        {
-            try
-            {
-                int armourGuid = hit.collider.transform.parent.GetComponent<BlockBehaviour>().BuildingBlock.Guid.GetHashCode();
-                //Debug.Log(armourGuid);
-                Collider[] ExploCol = Physics.OverlapSphere(transform.position, Mathf.Sqrt(Caliber) / 5);
-                foreach (Collider hitedCollider in ExploCol)
-                {
-                    try
-                    {
-                        //Debug.Log(hitedCollider.transform.parent.name);
-                        if (hitedCollider.transform.parent.name == "Balloon" || hitedCollider.transform.parent.name == "SqrBalloon")
-                        {
-                            float ArmourBetween = 0;
-                            Ray Ray = new Ray(hit.point, hitedCollider.transform.position - hit.point);
-                            RaycastHit[] hitList = Physics.RaycastAll(Ray, (hitedCollider.transform.position - hit.point).magnitude);
-                            foreach (RaycastHit raycastHit in hitList)
-                            {
-                                if (raycastHit.collider.transform.parent.GetComponent<BlockBehaviour>().BuildingBlock.Guid.GetHashCode() != armourGuid
-                                    && raycastHit.collider.transform.parent.GetComponent<WoodenArmour>())
-                                {
-                                    ArmourBetween += raycastHit.collider.transform.parent.GetComponent<WoodenArmour>().thickness;
-                                }
-                            }
-                            //Debug.Log(ArmourBetween + " VS "+penetration);
-                            if (ArmourBetween > penetration)
-                            {
-                                continue;
-                            }
-
-                            BreakBallon(hitedCollider.transform.position);
-                        }
-                    }
-                    catch { }
-                }
-            }
-            catch { }
-            
-        }
-        public void HEDestroyBalloonWater(Vector3 position)
-        {
-            Collider[] ExploCol = Physics.OverlapSphere(transform.position, Caliber / 100);
-            foreach (Collider hitedCollider in ExploCol)
-            {
-                try
-                {
-                    //Debug.Log(hitedCollider.transform.parent.name);
-                    if (hitedCollider.transform.parent.name == "Balloon" || hitedCollider.transform.parent.name == "SqrBalloon")
-                    {
-                        bool hasArmourBetween = false;
-                        Ray Ray = new Ray(position, hitedCollider.transform.position - position);
-                        RaycastHit[] hitList = Physics.RaycastAll(Ray, (hitedCollider.transform.position - position).magnitude);
-                        foreach (RaycastHit raycastHit in hitList)
-                        {
-                            if (raycastHit.collider.transform.parent.GetComponent<WoodenArmour>())
-                            {
-                                hasArmourBetween = true;
-                            }
-                        }
-                        //Debug.Log(hasArmourBetween);
-                        if (hasArmourBetween)
-                        {
-                            continue;
-                        }
-
-                        BreakBallon(hitedCollider.transform.position);
-                    }
-                }
-                catch { }
-            }
-        }
-        public void ExploDestroyBalloon(float exploPenetration, Vector3 pos, bool AP = true)
-        {
+            float exploPenetration = Caliber / 20f * (AP ? 1f : 1.5f);
             try
             {
                 //Debug.Log(armourGuid);
@@ -973,7 +843,7 @@ namespace WW2NavalAssembly
                                 if (!pericedBlock.Contains(raycastHit.collider.transform.parent.GetComponent<BlockBehaviour>().BuildingBlock.Guid.GetHashCode())
                                     && raycastHit.collider.transform.parent.GetComponent<WoodenArmour>())
                                 {
-                                    Debug.Log(raycastHit.collider.transform.parent.GetComponent<WoodenArmour>().thickness);
+                                    //Debug.Log(raycastHit.collider.transform.parent.GetComponent<WoodenArmour>().thickness);
                                     ArmourBetween += raycastHit.collider.transform.parent.GetComponent<WoodenArmour>().thickness;
                                 }
                             }
@@ -989,7 +859,7 @@ namespace WW2NavalAssembly
                             
                         }else if (hitedCollider.transform.parent.GetComponent<Rigidbody>())
                         {
-                            hitedCollider.transform.parent.GetComponent<Rigidbody>().AddExplosionForce(5f * Caliber, pos, Mathf.Sqrt(Caliber) / 5);
+                            hitedCollider.transform.parent.GetComponent<Rigidbody>().AddExplosionForce((AP?5f:8f) * Caliber, pos, Mathf.Sqrt(Caliber) / (AP ? 8f : 5f));
                         }
                     }
                     catch { }
@@ -1007,7 +877,7 @@ namespace WW2NavalAssembly
             }
             else if (CannonType == 1)
             {
-                penetration = Caliber * 0.3f;
+                penetration = Caliber * 0.5f;
             }
             
             decay = Mathf.Pow(0.5f, 1 / (Mathf.Sqrt(Caliber + 100) * 33f));
@@ -1040,34 +910,42 @@ namespace WW2NavalAssembly
                 {
                     if (CannonType == 0) // for AP
                     {
-                        APDetectCollisionHost();
+                        CannonDetectCollisionHost();
                         if (pericedBlock.Count == 0 && ModController.Instance.showSea)
                         {
                             CannonDetectWaterHost();
                         }
-                        if (APtimerOn)
+                        if (timerOn)
                         {
-                            APtimer++;
+                            timer++;
                         }
-                        if (APtimer > 5f && !exploded)
+                        if (timer > 5f && !exploded)
                         {
-                            APPlayExploInAir();
+                            PlayExploInAir();
                         }
                     }
                     else
                     {
-                        HEDetectCollisionHost();
+                        CannonDetectCollisionHost(false);
                         if (ModController.Instance.showSea)
                         {
                             HEDetectWaterHost();
                         }
-                        
+                        if (timerOn)
+                        {
+                            timer++;
+                        }
+                        if (timer > 3f && !exploded)
+                        {
+                            PlayExploInAir(false);
+                        }
+
                     }
                     
                 }
                 else
                 {
-                    APDetectCollisionClient();
+                    CannonDetectCollisionClient();
                     CannonDetectWaterClient();
                     
                 }
@@ -1079,7 +957,7 @@ namespace WW2NavalAssembly
             }
             else
             {
-
+                penetration *= decay;
             }
             
         }

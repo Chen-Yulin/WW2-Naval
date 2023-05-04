@@ -1168,14 +1168,19 @@ namespace WW2NavalAssembly
                 {
                     TargetCannon = CannonTrackManager.Instance.SwitchTrackCannon(myPlayerID);
                 }
-                if (TargetCannon && 
+                try
+                {
+                    if (TargetCannon &&
                     !(TargetCannon.transform.position.y < 20) &&
                     !TargetCannon.GetComponent<BulletBehaviour>().exploded)
-                {
-                    SingleInstanceFindOnly<MouseOrbit>.Instance.isActive = false;
-                    MainCamera.transform.position = Vector3.Lerp(MainCamera.transform.position, TargetCannon.transform.position - 30f * TargetCannon.transform.forward,0.2f);
-                    MainCamera.transform.rotation = TargetCannon.transform.rotation;
+                    {
+                        SingleInstanceFindOnly<MouseOrbit>.Instance.isActive = false;
+                        MainCamera.transform.position = Vector3.Lerp(MainCamera.transform.position, TargetCannon.transform.position - 30f * TargetCannon.transform.forward, 0.2f);
+                        MainCamera.transform.rotation = TargetCannon.transform.rotation;
+                    }
                 }
+                catch { }
+                
             }
             else
             {
