@@ -911,7 +911,7 @@ namespace WW2NavalAssembly
                     if (CannonType == 0) // for AP
                     {
                         CannonDetectCollisionHost();
-                        if (pericedBlock.Count == 0 && ModController.Instance.showSea)
+                        if (ModController.Instance.showSea)
                         {
                             CannonDetectWaterHost();
                         }
@@ -927,7 +927,7 @@ namespace WW2NavalAssembly
                     else
                     {
                         CannonDetectCollisionHost(false);
-                        if (ModController.Instance.showSea)
+                        if (pericedBlock.Count == 0 && ModController.Instance.showSea)
                         {
                             HEDetectWaterHost();
                         }
