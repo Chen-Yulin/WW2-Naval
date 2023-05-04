@@ -33,6 +33,7 @@ namespace WW2NavalAssembly
 
         public float smoothAmount = 100;
     }
+
     class ModController : SingleInstance<ModController>
     {
         public override string Name { get; } = "WW2NavalModController";
@@ -42,9 +43,11 @@ namespace WW2NavalAssembly
         public bool windowHidden = false;
         public bool showArmour = false;
         public bool showSea = false;
+        public bool deleteFog = false;
         public bool useSkyBox = false;
         public int skyboxSelector = 0;
         public bool skychanged = false;
+        public bool preFog = false;
 
         public int state;
 
@@ -52,7 +55,10 @@ namespace WW2NavalAssembly
         public GameObject skybox;
         public Material[] matArray = new Material[2];
 
-
+        public void SetFog(bool a)
+        {
+            GameObject.Find("Main Camera").transform.Find("Fog Volume").gameObject.SetActive(a);
+        }
         private void Awake()
         {
 
@@ -155,6 +161,12 @@ namespace WW2NavalAssembly
                 }
             }
 
+            if (preFog != deleteFog)
+            {
+                preFog = deleteFog;
+                SetFog(!deleteFog);
+            }
+
 
             if (Input.GetKey(KeyCode.LeftControl))
             {
@@ -201,6 +213,7 @@ namespace WW2NavalAssembly
             {
                 showArmour = GUILayout.Toggle(showArmour, "Show Armour Layout");
                 showSea = GUILayout.Toggle(showSea, "Sea Toggle");
+                deleteFog = GUILayout.Toggle(deleteFog, "Delete Fog");
                 ToggleIndent("Use SkyBox", 20, ref useSkyBox, delegate
                 {
                     GUILayout.BeginVertical("box", new GUILayoutOption[0]);
