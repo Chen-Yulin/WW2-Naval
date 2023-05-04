@@ -12,9 +12,14 @@ using UnityEngine.Networking;
 
 namespace WW2NavalAssembly
 {
-    
     public static class MathTool
     {
+        public static float GetArea(Vector3 v3)
+        {
+            float[] a = new float[] { v3.x, v3.y, v3.z };
+            Array.Sort(a);
+            return a[2] * a[1];
+        }
         public static Vector2 GetRotatePosition(Vector2 targetPosition, Vector2 centerPosition, float angle)
         {
             float endX = (targetPosition.x - centerPosition.x) * Mathf.Cos(angle * Mathf.Deg2Rad) - (targetPosition.y - centerPosition.y) * Mathf.Sin(angle * Mathf.Deg2Rad) + centerPosition.x;
