@@ -55,9 +55,14 @@ namespace WW2NavalAssembly
         }
         public void FixedUpdate()
         {
-            body.drag = (shellWaterIn + carbinWaterIn) / 160000f;
-            ApplyFore();
-            RemoveCarbinWater();
+            try
+            {
+
+                body.drag = (shellWaterIn + carbinWaterIn) / 160000f;
+                ApplyFore();
+                RemoveCarbinWater();
+            }
+            catch { }
             
         }
     }
@@ -114,26 +119,31 @@ namespace WW2NavalAssembly
         }
         public void FixedUpdate()
         {
-            if (disabled)
+            try
             {
-                return;
-            }   
-            if (DCTime < DCTimeNeeded && Hole.transform.position.y < 20 && Hole.transform.position.y > 15)
-            {
-                DCTime++;
-                if (holeType == 0)
+                if (disabled)
                 {
-                    wc.AddShellWater(sqrCaliber / 400f * (type == 0?1:10));
+                    return;
                 }
-                else
+                if (DCTime < DCTimeNeeded && Hole.transform.position.y < 20 && Hole.transform.position.y > 15)
                 {
-                    wc.AddCarbinWater(sqrCaliber / 400f);
+                    DCTime++;
+                    if (holeType == 0)
+                    {
+                        wc.AddShellWater(sqrCaliber / 400f * (type == 0 ? 1 : 10));
+                    }
+                    else
+                    {
+                        wc.AddCarbinWater(sqrCaliber / 400f);
+                    }
+                }
+                else if (DCTime >= DCTimeNeeded)
+                {
+                    Destroy(transform.gameObject);
                 }
             }
-            else if (DCTime >= DCTimeNeeded)
-            {
-                Destroy(transform.gameObject);
-            }
+            catch { }
+            
         }
     }
 
