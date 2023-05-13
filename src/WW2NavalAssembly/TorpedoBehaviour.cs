@@ -237,7 +237,7 @@ namespace WW2NavalAssembly
                     waterinhole.transform.localRotation = Quaternion.identity;
                     waterinhole.transform.localScale = Vector3.one;
 
-                    ShellWaterInHole WH = waterinhole.AddComponent<ShellWaterInHole>();
+                    WaterInHole WH = waterinhole.AddComponent<WaterInHole>();
                     WH.hittedCaliber = Caliber;
                     WH.position = hit.collider.transform.parent.InverseTransformPoint(hit.point);
                     WH.type = 1;

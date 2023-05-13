@@ -389,17 +389,26 @@ namespace WW2NavalAssembly
                     }
 
 
-                    if (pericedBlock.Count == 1 && hit.collider.transform.parent.name != "SpinningBlock")    // add waterIn behaviour
+                    if (hit.collider.transform.parent.name != "SpinningBlock")    // add waterIn behaviour
                     {
+                        
                         GameObject waterinhole = new GameObject("waterInHole");
                         waterinhole.transform.SetParent(hit.collider.transform.parent);
                         waterinhole.transform.localPosition = Vector3.zero;
                         waterinhole.transform.localRotation = Quaternion.identity;
                         waterinhole.transform.localScale = Vector3.one;
 
-                        ShellWaterInHole WH = waterinhole.AddComponent<ShellWaterInHole>();
+                        WaterInHole WH = waterinhole.AddComponent<WaterInHole>();
                         WH.hittedCaliber = Caliber;
                         WH.position = hit.collider.transform.parent.InverseTransformPoint(hit.point);
+                        if (pericedBlock.Count == 1)
+                        {
+                            WH.holeType = 0;
+                        }
+                        else
+                        {
+                            WH.holeType = 1;
+                        }
                     }
 
 

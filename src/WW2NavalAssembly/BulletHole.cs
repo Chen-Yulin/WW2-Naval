@@ -19,7 +19,7 @@ namespace WW2NavalAssembly
         public float carbinWaterIn;
         public Rigidbody body;
 
-        private float _coeff = 1000;
+        private float _coeff = 50000;
         private float _drainRate = 0.999f;
 
         public void AddShellWater(float water)
@@ -30,9 +30,13 @@ namespace WW2NavalAssembly
         {
             carbinWaterIn = Mathf.Clamp(carbinWaterIn + water, 0, size - shellWaterIn);
         }
-        public void RemoveCarbinWater()
+        private void RemoveCarbinWater()
         {
             carbinWaterIn *= _drainRate;
+        }
+        private void ApplyFore()
+        {
+            body.AddForce((shellWaterIn + carbinWaterIn) / 100f * Vector3.down);
         }
 
         public void Awake()
@@ -51,115 +55,25 @@ namespace WW2NavalAssembly
         }
         public void FixedUpdate()
         {
-            body.AddForce((shellWaterIn + carbinWaterIn) * Vector3.down);
+            body.drag = (shellWaterIn + carbinWaterIn) / 160000f;
+            ApplyFore();
+            RemoveCarbinWater();
+            
         }
     }
-    public class CarbinWaterInHole : MonoBehaviour
+
+    public class WaterInHole : MonoBehaviour
     {
+        public int holeType = 0; // 0 for shell, 1 for carbin
         public float hittedCaliber;
         public Vector3 position;
         public float waterIn = 0;
         public int DCTime = 0;
         public int DCTimeNeeded;
-        public int type = 0;
-        public float minWaterIn;
+        public int type = 0; // 0 for cannon, 1 for torpedo
 
-        public GameObject HoleVis;
-
-        float sqrCaliber;
-        Rigidbody rigid;
-        WoodenArmour hittedArmour;
-        bool disabled = false;
-        public void Awake()
-        {
-
-        }
-        public void Start()
-        {
-            if (type == 1)
-            {
-                minWaterIn = 600 * hittedCaliber;
-                waterIn = minWaterIn;
-            }
-            try
-            {
-                sqrCaliber = hittedCaliber * hittedCaliber;
-                HoleVis = new GameObject("RigidObject");
-                HoleVis.transform.SetParent(transform);
-                HoleVis.transform.localPosition = position;
-                HoleVis.transform.rotation = Quaternion.identity;
-                HoleVis.transform.localScale = Vector3.one * hittedCaliber / 400;
-
-                rigid = transform.parent.GetComponent<Rigidbody>();
-                hittedArmour = transform.parent.GetComponent<WoodenArmour>();
-
-                DCTimeNeeded = (int)(sqrCaliber * Mathf.Clamp(hittedArmour.thickness, 40, 650) / 20000);
-            }
-            catch
-            {
-                disabled = true;
-            }
-
-        }
-        public void FixedUpdate()
-        {
-            if (disabled)
-            {
-                return;
-            }
-            if (DCTime < DCTimeNeeded && HoleVis.transform.position.y < 20 && HoleVis.transform.position.y > 15)
-            {
-                DCTime++;
-                waterIn += sqrCaliber / 400;
-            }
-            else if (DCTime >= DCTimeNeeded && HoleVis.transform.position.y > 15)
-            {
-                waterIn -= 1000;
-                if (type == 0)
-                {
-                    if (waterIn < 0)
-                    {
-                        waterIn = 0;
-                        Destroy(transform.gameObject);
-                    }
-                }
-                else if (type == 1)
-                {
-                    waterIn = Mathf.Clamp(waterIn, minWaterIn, float.MaxValue);
-                }
-
-            }
-
-            if (HoleVis.transform.position.y < 20 && DCTime < DCTimeNeeded)
-            {
-                rigid.AddForce(-rigid.velocity * 20);
-            }
-            if (HoleVis.transform.position.y < 20)
-            {
-                rigid.velocity = new Vector3(rigid.velocity.x, Mathf.Clamp(rigid.velocity.y, -0.5f, 0.5f), rigid.velocity.z);
-            }
-            if (type == 0)
-            {
-                rigid.AddForce(-Vector3.up * Mathf.Clamp(waterIn / 200, 0, Mathf.Clamp(hittedArmour.thickness, 40, 650) * 30));
-            }
-            else if (type == 1)
-            {
-                rigid.AddForce(-Vector3.up * waterIn / 20);
-            }
-        }
-    }
-
-    public class ShellWaterInHole : MonoBehaviour
-    {
-        public float hittedCaliber;
-        public Vector3 position;
-        public float waterIn = 0;
-        public int DCTime = 0;
-        public int DCTimeNeeded;
-        public int type = 0;
-        public float minWaterIn;
-
-        public GameObject HoleVis;
+        public GameObject Hole;
+        private WaterCarbin wc;
 
         float sqrCaliber;
         Rigidbody rigid;
@@ -171,24 +85,27 @@ namespace WW2NavalAssembly
         }
         public void Start()
         {
-            if (type == 1)
-            {
-                minWaterIn = 600 * hittedCaliber;
-                waterIn = minWaterIn;
-            }
             try
             {
                 sqrCaliber = hittedCaliber * hittedCaliber;
-                HoleVis = new GameObject("RigidObject");
-                HoleVis.transform.SetParent(transform);
-                HoleVis.transform.localPosition = position;
-                HoleVis.transform.rotation = Quaternion.identity;
-                HoleVis.transform.localScale = Vector3.one * hittedCaliber / 400;
+                Hole = new GameObject("Hole");
+                Hole.transform.SetParent(transform);
+                Hole.transform.localPosition = position;
+                Hole.transform.rotation = Quaternion.identity;
+                Hole.transform.localScale = Vector3.one * hittedCaliber / 400;
 
                 rigid = transform.parent.GetComponent<Rigidbody>();
                 hittedArmour = transform.parent.GetComponent<WoodenArmour>();
+                DCTimeNeeded = (int)(sqrCaliber * 50f / 20000f);
 
-                DCTimeNeeded = (int)(sqrCaliber * Mathf.Clamp(hittedArmour.thickness, 40, 650) / 20000);
+                // add waterCarbin component
+                wc = transform.parent.GetComponent<WaterCarbin>();
+                if (!wc)
+                {
+                    wc = transform.parent.gameObject.AddComponent<WaterCarbin>();
+                }
+
+                
             }
             catch {
                 disabled = true;
@@ -201,44 +118,21 @@ namespace WW2NavalAssembly
             {
                 return;
             }   
-            if (DCTime < DCTimeNeeded && HoleVis.transform.position.y < 20 && HoleVis.transform.position.y > 15)
+            if (DCTime < DCTimeNeeded && Hole.transform.position.y < 20 && Hole.transform.position.y > 15)
             {
                 DCTime++;
-                waterIn += sqrCaliber / 400;
-            }
-            else if (DCTime >= DCTimeNeeded && HoleVis.transform.position.y > 15)
-            {
-                waterIn -= 1000;
-                if (type == 0)
+                if (holeType == 0)
                 {
-                    if (waterIn < 0)
-                    {
-                        waterIn = 0;
-                        Destroy(transform.gameObject);
-                    }
+                    wc.AddShellWater(sqrCaliber / 400f * (type == 0?1:10));
                 }
-                else if (type == 1)
+                else
                 {
-                    waterIn = Mathf.Clamp(waterIn, minWaterIn, float.MaxValue);
+                    wc.AddCarbinWater(sqrCaliber / 400f);
                 }
-
             }
-
-            if (HoleVis.transform.position.y < 20 && DCTime < DCTimeNeeded)
+            else if (DCTime >= DCTimeNeeded)
             {
-                rigid.AddForce(-rigid.velocity * 20);
-            }
-            if (HoleVis.transform.position.y < 20)
-            {
-                rigid.velocity = new Vector3(rigid.velocity.x, Mathf.Clamp(rigid.velocity.y,-0.5f,0.5f), rigid.velocity.z);
-            }
-            if (type == 0)
-            {
-                rigid.AddForce(-Vector3.up * Mathf.Clamp(waterIn / 200, 0, Mathf.Clamp(hittedArmour.thickness, 40, 650) * 30));
-            }
-            else if (type == 1)
-            {
-                rigid.AddForce(-Vector3.up *waterIn / 20);
+                Destroy(transform.gameObject);
             }
         }
     }
