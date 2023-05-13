@@ -294,8 +294,9 @@ namespace WW2NavalAssembly
         }
         public Dist2PitchResult CalculateGunPitchFromDist(float dist, float caliber)
         {
+            float cannonDrag = 5000f / (caliber*caliber);
             //Debug.Log("Start Iterating");
-            float initialSpeed = Mathf.Sqrt(caliber + 100) * 8.5f;
+            float initialSpeed = 200f;
             float g = 32.4f;
             float vx;
             float vy;
@@ -304,8 +305,8 @@ namespace WW2NavalAssembly
             for (int i = 0; i < 6; i++)
             {
                 vx = initialSpeed * Mathf.Cos(angle);
-                esT = -1 / 0.02f * Mathf.Log(1 - dist * 0.02f / vx);
-                vy = g * esT / (1 - Mathf.Exp(-0.02f * esT)) - g / 0.02f;
+                esT = -1 / cannonDrag * Mathf.Log(1 - dist * cannonDrag / vx);
+                vy = g * esT / (1 - Mathf.Exp(-cannonDrag * esT)) - g / cannonDrag;
                 if (vy/initialSpeed < 0.7f)
                 {
                     angle = (float)Math.Asin(vy / initialSpeed);
@@ -319,13 +320,13 @@ namespace WW2NavalAssembly
             }
 
             // calculate height offset
-            float modifiedPosition = dist - TurrentHeight.Value / Mathf.Tan(angle + 0.02f);
+            float modifiedPosition = dist - TurrentHeight.Value / Mathf.Tan(angle + 0.01f);
             angle = 0;
             for (int i = 0; i < 8; i++)
             {
                 vx = initialSpeed * Mathf.Cos(angle);
-                esT = -1 / 0.02f * Mathf.Log(1 - dist * 0.02f / vx);
-                vy = g * esT / (1 - Mathf.Exp(-0.02f * esT)) - g / 0.02f;
+                esT = -1 / cannonDrag * Mathf.Log(1 - dist * cannonDrag / vx);
+                vy = g * esT / (1 - Mathf.Exp(-cannonDrag * esT)) - g / cannonDrag;
                 if (vy / initialSpeed < 0.7f)
                 {
                     angle = (float)Math.Asin(vy / initialSpeed);

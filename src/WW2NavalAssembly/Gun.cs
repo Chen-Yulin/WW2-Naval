@@ -880,7 +880,7 @@ namespace WW2NavalAssembly
                 penetration = Caliber * 0.5f;
             }
             
-            decay = Mathf.Pow(0.5f, 1 / (Mathf.Sqrt(Caliber + 100) * 33f));
+            decay = Mathf.Pow(0.5f, 1 / (Mathf.Sqrt(Caliber + 100) * 30f));
             
             TrailRenderer TR = gameObject.GetComponent<TrailRenderer>();
             if (CannonType == 0)
@@ -899,7 +899,7 @@ namespace WW2NavalAssembly
             {
                 if (!thrustOn)
                 {
-                    myRigid.velocity = transform.forward * Mathf.Sqrt(Caliber+100)*8.5f;
+                    myRigid.velocity = transform.forward * 200f;
                     thrustOn = true;
                     PlayGunShot();
                 } // add initial speed
@@ -954,6 +954,7 @@ namespace WW2NavalAssembly
             if (CannonType == 0)
             {
                 penetration *= decay;
+                //Debug.Log(penetration);
             }
             else
             {
@@ -1031,7 +1032,7 @@ namespace WW2NavalAssembly
             BBtmp.myPlayerID = myPlayerID;
             Rigidbody RBtmp = CannonPrefab.AddComponent<Rigidbody>();
             RBtmp.mass = 0.2f;
-            RBtmp.drag = 0.02f;
+            RBtmp.drag = Caliber.Value>100? 5000f/(Caliber.Value* Caliber.Value) : 1-Caliber.Value/200f;
             RBtmp.useGravity = true;
             if (Caliber.Value >= 100)
             {
