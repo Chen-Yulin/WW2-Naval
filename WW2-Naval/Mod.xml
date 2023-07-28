@@ -5,11 +5,11 @@
 	<Name>WW2Naval</Name>
 	<Author>Chen, Yulin</Author> <!-- FIX: Insert your name here. -->
 	<!-- Major.Minor.Build -->
-	<Version>0.6.21</Version>
+	<Version>0.6.22</Version>
 	
 	<Description>
-    Version 0.6.21
-	add fog toggle, modify HE cannon
+    Version 0.6.22
+	modify cannon trajectory, water in
 	</Description>
 
 	<Icon name="icon"/>

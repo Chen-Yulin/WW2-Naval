@@ -1138,7 +1138,8 @@ namespace WW2NavalAssembly
             BlockBehaviour.blockJoint.breakTorque = float.PositiveInfinity;
             InitCannon();
             myGuid = BlockBehaviour.BuildingBlock.Guid.GetHashCode();
-            reloadTime = Caliber.Value >= 100 ? 0.4f * Mathf.Sqrt(Caliber.Value) - 3 : Caliber.Value/150f + 0.33f;
+            reloadTime = Caliber.Value >= 100 ? 0.4f * Mathf.Sqrt(Caliber.Value) - 3 : 
+                                                (2.8f * Mathf.Sin(Mathf.PI/160f * (Mathf.Pow(Caliber.Value,1.5f)/10f - 80))+2.9f)/4f;
             currentReloadTime = reloadTime;
             CannonType = DefaultCannon.Value;
             NextCannonType = CannonType;
