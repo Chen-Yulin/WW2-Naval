@@ -225,6 +225,7 @@ namespace WW2NavalAssembly
             public float Pitch;
             public bool hasRes;
             public Vector2 predPosition;
+            public float timer = 0;
             public FCResult(float orien)
             {
                 Orien = orien;
@@ -254,11 +255,11 @@ namespace WW2NavalAssembly
         {
             return Vector3.Dot(GetComponent<Rigidbody>().velocity, -transform.up);
         }
-        public FCResult CalculateGunFCPara(Vector2 targetPosition, Vector2 velocity, float caliber)
+        public FCResult CalculateGunFCPara(Vector2 targetPosition, Vector2 velocity, float caliber, float i_speed = 200f)
         {
             Vector2 myPosition = new Vector2(transform.position.x, transform.position.z);
             float dist = (targetPosition - myPosition).magnitude;
-            Dist2PitchResult pitchRes = CalculateGunPitchFromDist(dist, caliber);
+            Dist2PitchResult pitchRes = CalculateGunPitchFromDist(dist, caliber, i_speed);
             if (pitchRes.hasResult)
             {
                 dist = (targetPosition + velocity*pitchRes.time - myPosition).magnitude;
@@ -292,24 +293,29 @@ namespace WW2NavalAssembly
             }
             return (predictPosition - myPosition);
         }
-        public Dist2PitchResult CalculateGunPitchFromDist(float dist, float caliber)
+        public Dist2PitchResult CalculateGunPitchFromDist(float dist, float caliber, float i_speed = 200f)
         {
             float cannonDrag = 5000f / (caliber*caliber);
             //Debug.Log("Start Iterating");
-            float initialSpeed = 200f;
+            float initialSpeed = i_speed;
             float g = 32.4f;
             float vx;
             float vy;
+            float sy;// gravity direction positive
             float esT = 0;
             float angle = 0;
             for (int i = 0; i < 6; i++)
             {
                 vx = initialSpeed * Mathf.Cos(angle);
+                vy = -initialSpeed * Mathf .Sin(angle);
                 esT = -1 / cannonDrag * Mathf.Log(1 - dist * cannonDrag / vx);
-                vy = g * esT / (1 - Mathf.Exp(-cannonDrag * esT)) - g / cannonDrag;
+                sy = -Mathf.Exp(-cannonDrag * esT) * 
+                    ((cannonDrag * Mathf.Exp(cannonDrag * esT) - cannonDrag) * vy + ((cannonDrag * esT - 1) * Mathf.Exp(cannonDrag * esT) + 1) * g)
+                    / (cannonDrag * cannonDrag) + TurrentHeight.Value;
                 if (vy/initialSpeed < 0.7f)
                 {
-                    angle = (float)Math.Asin(vy / initialSpeed);
+                    float pre_sy = dist*Mathf.Tan(angle);
+                    angle = (float)Math.Atan((pre_sy - sy)/dist);
                     //Debug.Log(angle);
                 }
                 else
@@ -318,29 +324,6 @@ namespace WW2NavalAssembly
                 }
                 
             }
-
-            // calculate height offset
-            float modifiedPosition = dist - TurrentHeight.Value / Mathf.Tan(angle + 0.01f);
-            angle = 0;
-            for (int i = 0; i < 8; i++)
-            {
-                vx = initialSpeed * Mathf.Cos(angle);
-                esT = -1 / cannonDrag * Mathf.Log(1 - dist * cannonDrag / vx);
-                vy = g * esT / (1 - Mathf.Exp(-cannonDrag * esT)) - g / cannonDrag;
-                if (vy / initialSpeed < 0.7f)
-                {
-                    angle = (float)Math.Asin(vy / initialSpeed);
-                    //Debug.Log(angle);
-                }
-                else
-                {
-                    return new Dist2PitchResult();
-                }
-
-            }
-
-
-
             return new Dist2PitchResult(esT, angle * 180/Mathf.PI);
         }
 
@@ -809,7 +792,7 @@ namespace WW2NavalAssembly
             TrackCannon = AddKey("Track Cannon", "TrackCannon", KeyCode.T);
             SwitchCannnon = AddKey("Switch Tracking Cannon", "SwitchTrackingCannon", KeyCode.RightShift);
             FCPanelSize = AddSlider("Fire Control Size", "FCSize", 1f, 0.2f, 5f);
-            TurrentHeight = AddSlider("TurrentHeight", "TurrentHeight", 0.5f, 0f, 2f);
+            TurrentHeight = AddSlider("TurrentHeight", "TurrentHeight", 0.5f, -100f, 100f);
             CommandAircraft = AddToggle("Command Aircraft", "Command Aircraft", false);
             Lock = AddKey("Lock", "WW2Lock", KeyCode.X);
             ReturnKey = AddKey("Aircraft Return", "ReturnKey", KeyCode.Backspace);
