@@ -28,12 +28,12 @@ namespace WW2NavalAssembly
         }
         public void ChangePitch(bool up)
         {
-            pitchOffset += 0.05f * (up?1:-1);
+            pitchOffset += 0.02f * (up?1:-1);
             pitchOffset = Mathf.Clamp(pitchOffset, -2, 2);
         }
         public void ChangeOrien(bool right)
         {
-            OrienOffset += 0.05f * (right ? 1 : -1);
+            OrienOffset += 0.02f * (right ? 1 : -1);
             OrienOffset = Mathf.Clamp(OrienOffset, -2, 2);
         }
     }
@@ -297,7 +297,7 @@ namespace WW2NavalAssembly
         {
             float cannonDrag = 5000f / (caliber*caliber);
             //Debug.Log("Start Iterating");
-            float initialSpeed = i_speed;
+            float initialSpeed = 130 + 0.08f*(caliber + 50) + ((18000) / (caliber + 100));
             float g = 32.4f;
             float vx;
             float vy;
@@ -515,9 +515,9 @@ namespace WW2NavalAssembly
                         FCResult res = CalculateGunFCPara(targetPos, targetVel, fcRes.Key);
 
                         Vector2 myPos = MathTool.Get2DCoordinate(transform.position);
-                        Vector2 predPositionAfterOffset = MathTool.GetRotatePosition(res.predPosition, myPos, -offsetData.OrienOffset);
+                        Vector2 predPositionAfterOffset = MathTool.GetRotatePosition(res.predPosition, myPos, -offsetData.OrienOffset * 3);
 
-                        fcRes.Value.Set(res.Orien-offsetData.OrienOffset, res.Pitch+offsetData.pitchOffset, res.hasRes, predPositionAfterOffset);
+                        fcRes.Value.Set(res.Orien-offsetData.OrienOffset * 3, res.Pitch+offsetData.pitchOffset * 3, res.hasRes, predPositionAfterOffset);
                     }
 
                     // upload FCResult

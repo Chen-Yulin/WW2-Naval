@@ -908,7 +908,7 @@ namespace WW2NavalAssembly
             {
                 if (!thrustOn)
                 {
-                    myRigid.velocity = transform.forward * 200f;
+                    myRigid.velocity = transform.forward * (130 + 0.08f * (Caliber + 50) + ((18000) / (Caliber + 100)));
                     thrustOn = true;
                     PlayGunShot();
                 } // add initial speed
