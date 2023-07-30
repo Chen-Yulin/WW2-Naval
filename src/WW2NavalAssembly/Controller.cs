@@ -295,7 +295,7 @@ namespace WW2NavalAssembly
         }
         public Dist2PitchResult CalculateGunPitchFromDist(float dist, float caliber, float i_speed = 200f)
         {
-            float cannonDrag = 5000f / (caliber*caliber);
+            float cannonDrag = caliber > 100 ? 5000f / (caliber * caliber) : 1 - caliber / 200f;
             //Debug.Log("Start Iterating");
             float initialSpeed = 130 + 0.08f*(caliber + 50) + ((18000) / (caliber + 100));
             float g = 32.4f;

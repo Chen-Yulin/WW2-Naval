@@ -986,6 +986,7 @@ namespace WW2NavalAssembly
         public MText GunGroup;
         public MMenu DefaultCannon;
         public bool triggeredByGunner;
+        public float timeFaze;
 
         public int CannonType;
         public int NextCannonType;

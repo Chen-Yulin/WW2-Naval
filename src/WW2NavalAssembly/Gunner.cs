@@ -151,6 +151,7 @@ namespace WW2NavalAssembly
         GameObject[] GunLine = new GameObject[4];
         GameObject AngleCenter;
 
+        public float targetTime;
         public float targetPitch;
         public Vector2 targetPos;
         public bool hasTarget;
@@ -530,6 +531,7 @@ namespace WW2NavalAssembly
                     {
                         targetPitch = ControllerDataManager.Instance.ControllerFCResult[myPlayerID][bindedCaliber].Pitch;
                         targetPos = ControllerDataManager.Instance.ControllerFCResult[myPlayerID][bindedCaliber].predPosition;
+                        targetTime = ControllerDataManager.Instance.ControllerFCResult[myPlayerID][bindedCaliber].timer;
                         hasTarget = true;
                     }
                     else

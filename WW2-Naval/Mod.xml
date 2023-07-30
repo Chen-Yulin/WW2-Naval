@@ -5,11 +5,11 @@
 	<Name>WW2Naval</Name>
 	<Author>Chen, Yulin</Author> <!-- FIX: Insert your name here. -->
 	<!-- Major.Minor.Build -->
-	<Version>0.6.22</Version>
+	<Version>0.6.23</Version>
 	
 	<Description>
-    Version 0.6.22
-	modify cannon trajectory, water in
+    Version 0.6.23
+	modify cannon initial speed, trajectory calculation, fire rate
 	</Description>
 
 	<Icon name="icon"/>
