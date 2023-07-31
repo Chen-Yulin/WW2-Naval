@@ -1014,12 +1014,12 @@ namespace WW2NavalAssembly
                 //float angle = Vector3.Angle(BlockPoseReceiver.Instance.forward[myPlayerID][myGuid], Vector3.up);
                 //return (Mathf.Clamp(90 - angle, 0, 45));
                 float angle = Vector3.Angle(transform.forward, Vector3.up);
-                return (Mathf.Clamp(90 - angle, 0, 45));
+                return (Mathf.Clamp(90 - angle, -89, 89));
             }
             else
             {
                 float angle = Vector3.Angle(transform.forward, Vector3.up);
-                return (Mathf.Clamp(90 - angle, 0, 45));
+                return (Mathf.Clamp(90 - angle, -89, 89));
             }
         }
         public Vector2 GetFCOrienPara()

@@ -156,9 +156,11 @@ namespace WW2NavalAssembly
         public Vector2 targetPos;
         public bool hasTarget;
         public bool GunnerActive = true;
-        public float centerAngle;
-        public float GunSpan;
+        public float OrienCenterAngle;
+        public float OrienGunSpan;
         public bool OrienLimitValid;
+        public float PitchCenterAngle;
+        public float PitchGunSpan;
 
         public float turningSpeed = 1;
 
@@ -169,6 +171,23 @@ namespace WW2NavalAssembly
 
         public override bool EmulatesAnyKeys { get { return true; } }
 
+        public void LimitHinge(SteeringWheel sw)
+        {
+            float num4;
+            float num5;
+            if (sw.Flipped)
+            {
+                num4 = 0f - sw.LimitsSlider.Min;
+                num5 = sw.LimitsSlider.Max;
+            }
+            else
+            {
+                num4 = 0f - sw.LimitsSlider.Max;
+                num5 = sw.LimitsSlider.Min;
+            }
+
+            sw.AngleToBe = ((sw.AngleToBe < num4) ? num4 : ((!(sw.AngleToBe > num5)) ? sw.AngleToBe : num5));
+        }
         public void SetWW2Hinge(bool flag)
         {
             foreach (var sw in OrienHinge)
@@ -230,6 +249,9 @@ namespace WW2NavalAssembly
                 {
                     sw.AngleToBe += (sw.Flipped) ? mySpeed : -mySpeed;
                 }
+
+                LimitHinge(sw);
+
             }
         }
         public void TurnDown(float delta)
@@ -275,6 +297,8 @@ namespace WW2NavalAssembly
                 {
                     sw.AngleToBe += (!sw.Flipped) ? mySpeed : -mySpeed;
                 }
+                
+                LimitHinge(sw);
             }
         }
         public void TurnLeft(float delta, bool OutOfSpan)
@@ -321,8 +345,8 @@ namespace WW2NavalAssembly
                 }
                 if (OrienLimitValid)
                 {
-                    float tmpCenter = centerAngle * (sw.transform.up.y > 0 ? 1 : -1) * (same ? 1 : -1);
-                    sw.AngleToBe = Mathf.Clamp(sw.AngleToBe, tmpCenter - GunSpan, tmpCenter + GunSpan);
+                    float tmpCenter = OrienCenterAngle * (sw.transform.up.y > 0 ? 1 : -1) * (same ? 1 : -1);
+                    sw.AngleToBe = Mathf.Clamp(sw.AngleToBe, tmpCenter - OrienGunSpan, tmpCenter + OrienGunSpan);
                 }
                 
 
@@ -372,8 +396,8 @@ namespace WW2NavalAssembly
                 }
                 if (OrienLimitValid)
                 {
-                    float tmpCenter = centerAngle * (sw.transform.up.y > 0 ? 1 : -1) * (same ? 1 : -1);
-                    sw.AngleToBe = Mathf.Clamp(sw.AngleToBe, tmpCenter - GunSpan, tmpCenter + GunSpan);
+                    float tmpCenter = OrienCenterAngle * (sw.transform.up.y > 0 ? 1 : -1) * (same ? 1 : -1);
+                    sw.AngleToBe = Mathf.Clamp(sw.AngleToBe, tmpCenter - OrienGunSpan, tmpCenter + OrienGunSpan);
                 }
                 
 
@@ -509,7 +533,7 @@ namespace WW2NavalAssembly
                 AngleCenter = new GameObject("Angle Center");
                 AngleCenter.transform.SetParent(ControllerDataManager.Instance.ControllerObject[myPlayerID].transform);
                 AngleCenter.transform.localPosition = Vector3.zero;
-                AngleCenter.transform.eulerAngles = bindedGuns[0].transform.eulerAngles + new Vector3(0, centerAngle * (same?1:-1), 0);
+                AngleCenter.transform.eulerAngles = bindedGuns[0].transform.eulerAngles + new Vector3(0, OrienCenterAngle * (same?1:-1), 0);
                 return true;
             }
             catch {
@@ -699,7 +723,7 @@ namespace WW2NavalAssembly
                 }
                 
                 Vector2 targetVector = GunnerMsgReceiver.Instance.TargetPredPos[myPlayerID][myGuid] - new Vector2(bindedGuns[0].transform.position.x, bindedGuns[0].transform.position.z);
-                bool OutOfSpan = OrienLimitValid ? (Vector2.Angle(targetVector, CenterForward) > GunSpan ||
+                bool OutOfSpan = OrienLimitValid ? (Vector2.Angle(targetVector, CenterForward) > OrienGunSpan ||
                     (Mathf.Sign(MathTool.SignedAngle(targetVector, -CenterForward)) == Mathf.Sign(MathTool.SignedAngle(targetVector, GunForward)) &&
                         Vector2.Angle(targetVector, -CenterForward) < Vector2.Angle(targetVector, GunForward)
                         )
@@ -873,7 +897,7 @@ namespace WW2NavalAssembly
                     CenterForward = new Vector2(AngleCenter.transform.forward.x, AngleCenter.transform.forward.z);
                 }
                 Vector2 targetVector = targetPos - new Vector2(bindedGuns[0].transform.position.x, bindedGuns[0].transform.position.z);
-                bool OutOfSpan = OrienLimitValid ? (Vector2.Angle(targetVector, CenterForward) > GunSpan ||
+                bool OutOfSpan = OrienLimitValid ? (Vector2.Angle(targetVector, CenterForward) > OrienGunSpan ||
                     (Mathf.Sign(MathTool.SignedAngle(targetVector, -CenterForward)) == Mathf.Sign(MathTool.SignedAngle(targetVector, GunForward)) &&
                         Vector2.Angle(targetVector, -CenterForward) < Vector2.Angle(targetVector, GunForward)
                         )
@@ -1107,8 +1131,8 @@ namespace WW2NavalAssembly
                     {
                         OrienLimitValid = true;
 
-                        centerAngle = (-OrienHinge[0].LimitsSlider.Min + OrienHinge[0].LimitsSlider.Max) / 2;
-                        GunSpan = (OrienHinge[0].LimitsSlider.Min + OrienHinge[0].LimitsSlider.Max) / 2;
+                        OrienCenterAngle = (-OrienHinge[0].LimitsSlider.Min + OrienHinge[0].LimitsSlider.Max) / 2;
+                        OrienGunSpan = (OrienHinge[0].LimitsSlider.Min + OrienHinge[0].LimitsSlider.Max) / 2;
                         OrienLimitValid = GenerateHingeCenter();
                     }
                     else
@@ -1120,6 +1144,14 @@ namespace WW2NavalAssembly
                 else
                 {
                     OrienLimitValid = false;
+                }
+                if (PitchHinge.Count != 0)
+                {
+                    if (PitchHinge[0].LimitsSlider.IsActive)
+                    {
+                        PitchCenterAngle = (-PitchHinge[0].LimitsSlider.Min + PitchHinge[0].LimitsSlider.Max) / 2;
+                        PitchGunSpan = (PitchHinge[0].LimitsSlider.Min + PitchHinge[0].LimitsSlider.Max) / 2;
+                    }
                 }
             }
 

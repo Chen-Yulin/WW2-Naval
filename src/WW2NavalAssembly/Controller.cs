@@ -312,7 +312,7 @@ namespace WW2NavalAssembly
                 sy = -Mathf.Exp(-cannonDrag * esT) * 
                     ((cannonDrag * Mathf.Exp(cannonDrag * esT) - cannonDrag) * vy + ((cannonDrag * esT - 1) * Mathf.Exp(cannonDrag * esT) + 1) * g)
                     / (cannonDrag * cannonDrag) + TurrentHeight.Value;
-                if (vy/initialSpeed < 0.7f)
+                if (vy/initialSpeed > -0.7f)
                 {
                     float pre_sy = dist*Mathf.Tan(angle);
                     angle = (float)Math.Atan((pre_sy - sy)/dist);
