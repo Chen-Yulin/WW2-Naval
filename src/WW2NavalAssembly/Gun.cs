@@ -468,12 +468,12 @@ namespace WW2NavalAssembly
             }
             AddFireSound(gunsmoke.transform);
         }
-        public void HurtBalloon(GameObject balloon, Vector3 pos)
+        public void HurtBalloon(GameObject balloon, Vector3 pos, bool AP)
         {
             BalloonLife life = balloon.GetComponent<BalloonLife>();
             if (life)
             {
-                life.CutLife(Caliber);
+                life.CutLife(Caliber, AP);
                 if (!life.isAlive())
                 {
                     BreakBalloon(pos);
@@ -527,7 +527,7 @@ namespace WW2NavalAssembly
                             && !damagedBallon.Contains(hit.collider.transform.parent.GetComponent<BlockBehaviour>().BuildingBlock.Guid.GetHashCode()))
                         {
                             damagedBallon.Push(hit.collider.transform.parent.GetComponent<BlockBehaviour>().BuildingBlock.Guid.GetHashCode());
-                            HurtBalloon(hit.collider.transform.parent.gameObject, hit.collider.transform.position);
+                            HurtBalloon(hit.collider.transform.parent.gameObject, hit.collider.transform.position, AP);
                             //BreakBalloon(hit.collider.transform.position);
                         }
 
@@ -888,7 +888,7 @@ namespace WW2NavalAssembly
                             else
                             {
                                 damagedBallon.Push(hitedCollider.transform.parent.gameObject.GetComponent<BlockBehaviour>().BuildingBlock.Guid.GetHashCode());
-                                HurtBalloon(hitedCollider.transform.parent.gameObject, hitedCollider.transform.position);
+                                HurtBalloon(hitedCollider.transform.parent.gameObject, hitedCollider.transform.position, AP);
                                 //BreakBalloon(hitedCollider.transform.position);
                             }
 

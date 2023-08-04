@@ -21,9 +21,9 @@ namespace WW2NavalAssembly
             return life > 0;
         }
 
-        public void CutLife(float Caliber)
+        public void CutLife(float Caliber, bool AP)
         {
-            life -= Caliber;
+            life -= Caliber * (AP?1:3);
         }
         
     }

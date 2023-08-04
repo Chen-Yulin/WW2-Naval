@@ -28,13 +28,13 @@ namespace WW2NavalAssembly
         }
         public void ChangePitch(bool up)
         {
-            pitchOffset += 0.02f * (up?1:-1);
-            pitchOffset = Mathf.Clamp(pitchOffset, -2, 2);
+            pitchOffset += 0.06f * (up?1:-1);
+            pitchOffset = Mathf.Clamp(pitchOffset, -6, 6);
         }
         public void ChangeOrien(bool right)
         {
-            OrienOffset += 0.02f * (right ? 1 : -1);
-            OrienOffset = Mathf.Clamp(OrienOffset, -2, 2);
+            OrienOffset += 0.06f * (right ? 1 : -1);
+            OrienOffset = Mathf.Clamp(OrienOffset, -6, 6);
         }
     }
     public class LockData
@@ -515,9 +515,9 @@ namespace WW2NavalAssembly
                         FCResult res = CalculateGunFCPara(targetPos, targetVel, fcRes.Key);
 
                         Vector2 myPos = MathTool.Get2DCoordinate(transform.position);
-                        Vector2 predPositionAfterOffset = MathTool.GetRotatePosition(res.predPosition, myPos, -offsetData.OrienOffset * 3);
+                        Vector2 predPositionAfterOffset = MathTool.GetRotatePosition(res.predPosition, myPos, -offsetData.OrienOffset);
 
-                        fcRes.Value.Set(res.Orien-offsetData.OrienOffset * 3, res.Pitch+offsetData.pitchOffset * 3, res.hasRes, predPositionAfterOffset);
+                        fcRes.Value.Set(res.Orien-offsetData.OrienOffset, res.Pitch+offsetData.pitchOffset, res.hasRes, predPositionAfterOffset);
                     }
 
                     // upload FCResult
@@ -591,7 +591,7 @@ namespace WW2NavalAssembly
                     }
                     catch { }
                 }
-                OffsetIcon.transform.localPosition = new Vector3(offsetData.OrienOffset * 25, offsetData.pitchOffset * 25, 0);
+                OffsetIcon.transform.localPosition = new Vector3(offsetData.OrienOffset * 8, offsetData.pitchOffset * 8, 0);
             }
             // torpedo
             {
