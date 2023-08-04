@@ -5,11 +5,11 @@
 	<Name>WW2Naval</Name>
 	<Author>Chen, Yulin</Author> <!-- FIX: Insert your name here. -->
 	<!-- Major.Minor.Build -->
-	<Version>0.6.24</Version>
+	<Version>0.6.25</Version>
 	
 	<Description>
-    Version 0.6.24
-	fix pitch control bug
+    Version 0.6.25
+	add health for balloon
 	</Description>
 
 	<Icon name="icon"/>
