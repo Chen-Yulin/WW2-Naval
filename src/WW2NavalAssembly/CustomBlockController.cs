@@ -103,6 +103,14 @@ namespace WW2NavalAssembly
                         }
                         break;
                     }
+                case (int)BlockType.SqrBalloon:
+                    {
+                        if (block.gameObject.GetComponent(typeof(BalloonLife)) == null)
+                        {
+                            block.gameObject.AddComponent(typeof(BalloonLife));
+                        }
+                        break;
+                    }
                 //case (int)BlockType.Brace:
                 //    {
                 //        if (block.gameObject.GetComponent(typeof(DefaultArmour)) == null)

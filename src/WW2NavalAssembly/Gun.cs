@@ -192,6 +192,7 @@ namespace WW2NavalAssembly
 
 
         Stack<int> pericedBlock = new Stack<int> ();
+        Stack<int> damagedBallon = new Stack<int> ();
 
         public int timer = 0;
         public bool timerOn;
@@ -467,7 +468,23 @@ namespace WW2NavalAssembly
             }
             AddFireSound(gunsmoke.transform);
         }
-        public void BreakBallon(Vector3 position)
+        public void HurtBalloon(GameObject balloon, Vector3 pos)
+        {
+            BalloonLife life = balloon.GetComponent<BalloonLife>();
+            if (life)
+            {
+                life.CutLife(Caliber);
+                if (!life.isAlive())
+                {
+                    BreakBalloon(pos);
+                }
+            }
+            else
+            {
+                BreakBalloon(pos);
+            }
+        }
+        public void BreakBalloon(Vector3 position)
         {
             GameObject damager = new GameObject("damager");
             damager.transform.position = position;
@@ -506,9 +523,12 @@ namespace WW2NavalAssembly
                         ModNetworking.SendToAll(WeaponMsgReceiver.ExploMsg.CreateMessage(myPlayerID, hit.point, Caliber, 1));
 
                         // destroy balloon if directly hitted
-                        if (hit.collider.transform.parent.name == "Balloon" || hit.collider.transform.parent.name == "SqrBalloon")
+                        if ((hit.collider.transform.parent.name == "Balloon" || hit.collider.transform.parent.name == "SqrBalloon")
+                            && !damagedBallon.Contains(hit.collider.transform.parent.GetComponent<BlockBehaviour>().BuildingBlock.Guid.GetHashCode()))
                         {
-                            BreakBallon(hit.collider.transform.position);
+                            damagedBallon.Push(hit.collider.transform.parent.GetComponent<BlockBehaviour>().BuildingBlock.Guid.GetHashCode());
+                            HurtBalloon(hit.collider.transform.parent.gameObject, hit.collider.transform.position);
+                            //BreakBalloon(hit.collider.transform.position);
                         }
 
                         // well or ammo damage
@@ -557,7 +577,10 @@ namespace WW2NavalAssembly
                         // add force
                         try
                         {
-                            hit.collider.attachedRigidbody.AddForce(transform.forward * myRigid.velocity.magnitude * Caliber / 4, ForceMode.Force);
+                            if (!(hit.collider.transform.parent.name == "Balloon" || hit.collider.transform.parent.name == "SqrBalloon"))
+                            {
+                                hit.collider.attachedRigidbody.AddForce(transform.forward * myRigid.velocity.magnitude * Caliber / 4, ForceMode.Force);
+                            }
                         }
                         catch { }
                         continue;
@@ -839,9 +862,10 @@ namespace WW2NavalAssembly
                 {
                     try
                     {
-                        
+
                         //Debug.Log(hitedCollider.transform.parent.name);
-                        if (hitedCollider.transform.parent.name == "Balloon" || hitedCollider.transform.parent.name == "SqrBalloon")
+                        if ((hitedCollider.transform.parent.name == "Balloon" || hitedCollider.transform.parent.name == "SqrBalloon")
+                            && damagedBallon.Count == 0)
                         {
                             float ArmourBetween = 0;
                             Ray Ray = new Ray(pos, hitedCollider.transform.position - pos);
@@ -863,12 +887,18 @@ namespace WW2NavalAssembly
                             }
                             else
                             {
-                                BreakBallon(hitedCollider.transform.position);
+                                damagedBallon.Push(hitedCollider.transform.parent.gameObject.GetComponent<BlockBehaviour>().BuildingBlock.Guid.GetHashCode());
+                                HurtBalloon(hitedCollider.transform.parent.gameObject, hitedCollider.transform.position);
+                                //BreakBalloon(hitedCollider.transform.position);
                             }
-                            
-                        }else if (hitedCollider.transform.parent.GetComponent<Rigidbody>())
+
+                        }
+                        else if (hitedCollider.transform.parent.GetComponent<Rigidbody>())
                         {
-                            hitedCollider.transform.parent.GetComponent<Rigidbody>().AddExplosionForce((AP?5f:8f) * Caliber, pos, Mathf.Sqrt(Caliber) / (AP ? 8f : 5f));
+                            if (!(hitedCollider.transform.parent.name == "Balloon" || hitedCollider.transform.parent.name == "SqrBalloon"))
+                            {
+                                hitedCollider.transform.parent.GetComponent<Rigidbody>().AddExplosionForce((AP ? 5f : 8f) * Caliber, pos, Mathf.Sqrt(Caliber) / (AP ? 8f : 5f));
+                            }
                         }
                     }
                     catch { }
