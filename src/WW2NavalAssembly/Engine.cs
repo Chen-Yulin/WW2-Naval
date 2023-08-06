@@ -14,7 +14,7 @@ namespace WW2NavalAssembly
 {
     public class EngineMsgReceiver : SingleInstance<EngineMsgReceiver>
     {
-        public override string Name { get; } = "Gun Msg Receiver";
+        public override string Name { get; } = "Engine Msg Receiver";
         // playerID, guid, HPPercent, TapPosition, TargetVelocity
         public static MessageType EngineStateMsg = ModNetworking.CreateMessageType(DataType.Integer, DataType.Integer, DataType.Single, DataType.Single, DataType.Single);
 
@@ -106,6 +106,27 @@ namespace WW2NavalAssembly
         public float myforce = 0;
 
         public float ThrustPercentage = 0;
+
+        public Stack<Chimney> Chimneys = new Stack<Chimney>();
+
+        public void FindChimneys()
+        {
+            foreach(var chimney in transform.parent.GetComponentsInChildren<Chimney>())
+            {
+                if (chimney.GetComponent<Chimney>() != null)
+                {
+                    Chimneys.Push(chimney.GetComponent<Chimney>());
+                }
+            }
+        }
+
+        public void SetChimney(int state)
+        {
+            foreach(var chimney in Chimneys)
+            {
+                chimney.SetSmokeState(state);
+            }
+        }
 
         public void UpdateAccel()
         {
@@ -519,6 +540,7 @@ namespace WW2NavalAssembly
                 catch { }
             }
             InitTrail();
+            FindChimneys();
         }
         public override void SimulateUpdateHost()
         {
@@ -527,11 +549,13 @@ namespace WW2NavalAssembly
                 TapPosition++;
                 TapPosition = Mathf.Clamp(TapPosition, -1, 4);
                 SendEngineData();
+                SetChimney((int)Mathf.Abs(TapPosition));
             }else if (BackKey.IsPressed)
             {
                 TapPosition--;
                 TapPosition = Mathf.Clamp(TapPosition, -1, 4);
                 SendEngineData();
+                SetChimney((int)Mathf.Abs(TapPosition));
             }
             UpdateTrail();
         }
@@ -544,7 +568,13 @@ namespace WW2NavalAssembly
                 HP = HPPercent * InitialHP;
                 ArmMat.SetColor("_TintColor", new Color(HPPercent, HPPercent, HPPercent, 1));
                 ThrustPercentage = EngineMsgReceiver.Instance.engineData[myPlayerID][myGuid].ThrustPercent;
-                TapPosition = EngineMsgReceiver.Instance.engineData[myPlayerID][myGuid].TapPosition;
+
+                float remoteTapPosition = EngineMsgReceiver.Instance.engineData[myPlayerID][myGuid].TapPosition;
+                if (TapPosition != remoteTapPosition)
+                {
+                    TapPosition = remoteTapPosition;
+                    SetChimney((int)Mathf.Abs(TapPosition));
+                }
             }
             UpdateTrail();
         }
