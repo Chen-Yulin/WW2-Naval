@@ -13,7 +13,7 @@
 	</Description>
 
 	<Icon name="icon"/>
-	<Debug>false</Debug>
+	<Debug>True</Debug>
 	
 	
 	<MultiplayerCompatible>true</MultiplayerCompatible>

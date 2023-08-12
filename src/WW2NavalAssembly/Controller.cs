@@ -784,6 +784,12 @@ namespace WW2NavalAssembly
             FlightDataBase.Instance.DeckForward[myPlayerID] = new Vector2(forward.x,forward.z).normalized;
         }
 
+        public void UploadRight()
+        {
+            Vector3 right = transform.right;
+            FlightDataBase.Instance.DeckRight[myPlayerID] = new Vector2(right.x, right.z).normalized;
+        }
+
 
         public override void SafeAwake()
         {
@@ -926,6 +932,7 @@ namespace WW2NavalAssembly
         public override void BuildingUpdate()
         {
             UploadForward();
+            UploadRight();
             ControlMapper(!CommandAircraft.isDefaultValue);
         }
         public override void BuildingFixedUpdate()
@@ -989,6 +996,7 @@ namespace WW2NavalAssembly
         public override void SimulateUpdateAlways()
         {
             UploadForward();
+            UploadRight();
         }
         public override void SimulateUpdateHost()
         {
