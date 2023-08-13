@@ -309,7 +309,7 @@ namespace WW2NavalAssembly
             });
             TorpedoType = AddMenu("TorpedoType", 0, new List<string>
             {
-                "SBD",
+                "SB2C",
                 "99"
             });
             BombType = AddMenu("BombType", 0, new List<string>

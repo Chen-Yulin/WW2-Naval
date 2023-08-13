@@ -18,10 +18,14 @@ namespace WW2NavalAssembly
         public override string Name { get; } = "Flight Data Base";
 
         public Vector2[] DeckForward = new Vector2[16];
+        public Vector2[] DeckRight = new Vector2[16];
         public Dictionary<int, FlightDeck>[] AvailableDeckWood = new Dictionary<int, FlightDeck>[16];
         public Deck[] Decks = new Deck[16];
 
-        public GameObject[,] DeckLine = new GameObject[4, 16];
+        public GameObject[,] DeckLine = new GameObject[5, 16];
+
+        public Texture GunnerAlertIcon;
+        int iconSize = 30;
 
         public class Deck
         {
@@ -29,21 +33,38 @@ namespace WW2NavalAssembly
             public float Width;
             public float Length;
             public float height;
+            public float RightMargin = 1;
+
             public Vector2 Center;
             public Vector2 Forward;
+            public Vector2 Right;
+            public Vector2 Anchor;
+
+            public int Length_num;
+            public int Width_num;
+            public int Total_num;
+
             //public Vector3[] Corner = new Vector3[4];
             public Deck()
             {
                 valid = false;
             }
-            public Deck(Vector2 center, float width, float length, Vector2 forward, float height)
+            public Deck(Vector2 center, float width, float length, Vector2 forward, Vector2 right, float height)
             {
                 valid = true;
                 this.Center = center;
                 this.Width = width;
                 this.Length = length;
                 this.Forward = forward;
+                this.Right = right;
                 this.height = height;
+                this.Anchor = Center - Forward * Length / 2 + right * width / 2;
+
+                this.Width_num = (int)((Width-2) / 2f) + 1;
+                this.Length_num = (int)((Length-10) / 3f);
+                this.Total_num = Width_num * Length_num;
+
+                this.RightMargin = (Width - (Width_num - 1) * 2) / 2f;
             }
         }
         public void AddDeck(int playerID, int guid, FlightDeck deck)
@@ -60,7 +81,7 @@ namespace WW2NavalAssembly
 
         public void InitLine()
         {
-            for (int i = 0; i < 4; i++)
+            for (int i = 0; i < 5; i++)
             {
                 for (int j = 0; j < 16; j++)
                 {
@@ -86,17 +107,46 @@ namespace WW2NavalAssembly
                 }
             }
         }
+
+        public void ShowDeckParkingSpotOnGUI(int playerID)
+        {
+            if (ModController.Instance.showArmour)
+            {
+                if (Decks[playerID].valid)
+                {
+                    for (int i = 0; i < Decks[playerID].Total_num; i++)
+                    {
+                        Vector3 anchor = new Vector3(Decks[playerID].Anchor.x, Decks[playerID].height, Decks[playerID].Anchor.y);
+                        Vector3 right = new Vector3(Decks[playerID].Right.x, 0, Decks[playerID].Right.y);
+                        Vector3 forward = new Vector3(Decks[playerID].Forward.x, 0, Decks[playerID].Forward.y);
+                        bool ForwardABit = (i % Decks[playerID].Width_num) % 2 == 1;
+                        Vector3 spotPos =   anchor - right * Decks[playerID].RightMargin + forward * 5f
+                                            - i % Decks[playerID].Width_num * 2 * right 
+                                            + i / Decks[playerID].Width_num * 3 * forward
+                                            + (ForwardABit? 1.5f : 0) * forward;
+
+                        Vector3 onScreenPosition = Camera.main.WorldToScreenPoint(spotPos);
+                        if (onScreenPosition.z >= 0)
+                        {
+                                GUI.DrawTexture(new Rect(onScreenPosition.x - iconSize / 2, Camera.main.pixelHeight - onScreenPosition.y - iconSize / 2, iconSize, iconSize), GunnerAlertIcon);
+                        }
+                    }
+                }
+            }
+        }
+
         public void ShowDeckVis(int playerID)
         {
             if (ModController.Instance.showArmour)
             {
                 if (Decks[playerID].valid)
                 {
-                    for (int i = 0; i < 4; i++)
+                    for (int i = 0; i < 5; i++)
                     {
                         DeckLine[i, playerID].SetActive(true);
                     }
                     {   
+                        // horizental box
                         LineRenderer DLLR = DeckLine[0, playerID].GetComponent<LineRenderer>();
                         Vector2 forward = Decks[playerID].Forward;
                         Vector2 right = new Vector2(forward.y, -forward.x);
@@ -119,11 +169,16 @@ namespace WW2NavalAssembly
                         DLLR.SetPosition(1, new Vector3(corner2D.x, Decks[playerID].height, corner2D.y));
                         corner2D = Decks[playerID].Center + forward * Decks[playerID].Length / 2 - right * Decks[playerID].Width / 2;
                         DLLR.SetPosition(0, new Vector3(corner2D.x, Decks[playerID].height, corner2D.y));
+
+                        // verticle line
+                        DLLR = DeckLine[4, playerID].GetComponent<LineRenderer>();
+                        DLLR.SetPosition(1, new Vector3(Decks[playerID].Anchor.x, Decks[playerID].height, Decks[playerID].Anchor.y));
+                        DLLR.SetPosition(0, new Vector3(Decks[playerID].Anchor.x, Decks[playerID].height+3, Decks[playerID].Anchor.y));
                     }// set line position
                 }
                 else
                 {
-                    for (int i = 0; i < 4; i++)
+                    for (int i = 0; i < 5; i++)
                     {
                         DeckLine[i, playerID].SetActive(false);
                     }
@@ -131,7 +186,7 @@ namespace WW2NavalAssembly
             }
             else
             {
-                for (int i = 0; i < 4; i++)
+                for (int i = 0; i < 5; i++)
                 {
                     DeckLine[i, playerID].SetActive(false);
                 }
@@ -245,7 +300,7 @@ namespace WW2NavalAssembly
                 float length = Mathf.Abs(deckCorners[0].y - deckCorners[2].y);
                 Vector2 forwardLeft = new Vector2(deckCorners[3].x, deckCorners[0].y);
                 Vector2 center = forwardLeft + new Vector2(width / 2, -length / 2);
-                return new Deck(MathTool.PointRotate(Vector2.zero,center,-orien), width, length, DeckForward[playerID],height);
+                return new Deck(MathTool.PointRotate(Vector2.zero,center,-orien), width, length, DeckForward[playerID], DeckRight[playerID], height);
             }
         }
 
@@ -254,10 +309,12 @@ namespace WW2NavalAssembly
             for (int i = 0; i < 16; i++)
             {
                 DeckForward[i] = new Vector2(1, 0);
+                DeckRight[i] = new Vector2(0, 1);
                 AvailableDeckWood[i] = new Dictionary<int, FlightDeck>();
                 Decks[i] = new Deck();
             }
             InitLine();
+            GunnerAlertIcon = ModResource.GetTexture("gunnerAlert Texture").Texture;
         }
 
         public void FixedUpdate()
@@ -269,8 +326,8 @@ namespace WW2NavalAssembly
                     for (int i = 0; i < 16; i++)
                     {
                         Decks[i] = CalculateDeck(i);
-                        ShowDeckVis(i);
                     }
+                    ShowDeckVis(0);
                 }
                 else
                 {
@@ -292,6 +349,7 @@ namespace WW2NavalAssembly
                 //GUI.Box(new Rect(100, 200, 250, 50), Decks[0].Center.ToString() + " " + Decks[0].Width.ToString() + " " + Decks[0].Length.ToString());
                 //GUI.Box(new Rect(100, 300, 250, 50), AvailableDeckWood[0].Count.ToString());
             }
+            ShowDeckParkingSpotOnGUI(0);
             
         }
 

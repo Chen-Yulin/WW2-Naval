@@ -33,11 +33,16 @@
 	<Colliders>
 		<!-- TODO: Insert Collider definitions here.
 			 Examples: -->
-		<BoxCollider>
-			<Position x="0.0" y="0.0" z="0.25" />
-			<Rotation x="0.0" y="0.0" z="0.0" />
-			<Scale x="0.5" y="0.5" z="0.3" />
-		</BoxCollider>
+		<CapsuleCollider>
+			<Position x="0.0" y="-0.1" z="0.05" />
+			<Rotation x="0" y="90.0" z="0.0" />
+			<Capsule direction="Z" radius="0.3" height="1.5" />
+		</CapsuleCollider>
+		<CapsuleCollider>
+			<Position x="0.0" y="0.4" z="0.15" />
+			<Rotation x="90.0" y="0.0" z="0.0" />
+			<Capsule direction="Z" radius="0.15" height="1.8" />
+		</CapsuleCollider>
 	</Colliders>
 	
 	<BasePoint hasAddingPoint="false">
