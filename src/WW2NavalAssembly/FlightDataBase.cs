@@ -22,6 +22,8 @@ namespace WW2NavalAssembly
         public Dictionary<int, FlightDeck>[] AvailableDeckWood = new Dictionary<int, FlightDeck>[16];
         public Deck[] Decks = new Deck[16];
 
+        public GameObject[] DeckObjects = new GameObject[16];
+
         public GameObject[,] DeckLine = new GameObject[5, 16];
 
         public Texture GunnerAlertIcon;
@@ -67,6 +69,70 @@ namespace WW2NavalAssembly
                 this.RightMargin = (Width - (Width_num - 1) * 2) / 2f;
             }
         }
+
+        public void UpdateDeckTransform(int playerID)
+        {
+            if (Decks[playerID] == null || !Decks[playerID].valid)
+            {
+                return;
+            }
+            if (DeckObjects[playerID] == null)
+            {
+                return;
+            }
+            DeckObjects[playerID].transform.position = new Vector3(Decks[playerID].Anchor.x, Decks[playerID].height, Decks[playerID].Anchor.y);
+            DeckObjects[playerID].transform.rotation = Quaternion.LookRotation(new Vector3(Decks[playerID].Forward.x, 0, Decks[playerID].Forward.y));
+            DeckObjects[playerID].transform.eulerAngles = new Vector3(0, DeckObjects[playerID].transform.eulerAngles.y, 0);
+        }
+
+        public GameObject GenerateDeckOnStart(int playerID, Transform t)
+        {
+            if (t == null || !Decks[playerID].valid)
+            {
+                return null;
+            }
+            GameObject preObject = DeckObjects[playerID];
+
+            DeckObjects[playerID] = new GameObject("DeckObject");
+            DeckObjects[playerID].transform.parent = t;
+            DeckObjects[playerID].transform.position = new Vector3(Decks[playerID].Anchor.x, Decks[playerID].height, Decks[playerID].Anchor.y);
+            DeckObjects[playerID].transform.rotation = Quaternion.LookRotation(new Vector3(Decks[playerID].Forward.x, 0, Decks[playerID].Forward.y));
+            DeckObjects[playerID].transform.eulerAngles = new Vector3(0, DeckObjects[playerID].transform.eulerAngles.y, 0);
+
+            GameObject Vis = new GameObject("Vis");
+            Vis.transform.parent = DeckObjects[playerID].transform;
+            Vis.transform.localPosition = Vector3.zero;
+            Vis.transform.localEulerAngles = Vector3.zero;
+
+            for (int i = 0; i < Decks[playerID].Total_num; i++)
+            {
+                GameObject parkingSpot = Instantiate(AssetManager.Instance.Aircraft.ParkingSpot);
+                parkingSpot.name = "ParkingSpot-" + i.ToString();
+                parkingSpot.transform.parent = Vis.transform;
+
+                Vector3 anchor = new Vector3(0,0.3f,0);
+                Vector3 right = Vector3.right;
+                Vector3 forward = Vector3.forward;
+                bool ForwardABit = (i % Decks[playerID].Width_num) % 2 == 1;
+                Vector3 spotPos = anchor - right * Decks[playerID].RightMargin + forward * 5f
+                                    - i % Decks[playerID].Width_num * 2 * right
+                                    + i / Decks[playerID].Width_num * 3 * forward
+                                    + (ForwardABit ? 1.5f : 0) * forward;
+
+                parkingSpot.transform.localPosition = spotPos;
+
+                parkingSpot.transform.localEulerAngles = Vector3.zero;
+            }
+
+
+            if (preObject != null)
+            {
+                Destroy(preObject);
+            }
+
+            return DeckObjects[playerID];
+        }
+
         public void AddDeck(int playerID, int guid, FlightDeck deck)
         {
             if (AvailableDeckWood[playerID].ContainsKey(guid))
@@ -349,7 +415,7 @@ namespace WW2NavalAssembly
                 //GUI.Box(new Rect(100, 200, 250, 50), Decks[0].Center.ToString() + " " + Decks[0].Width.ToString() + " " + Decks[0].Length.ToString());
                 //GUI.Box(new Rect(100, 300, 250, 50), AvailableDeckWood[0].Count.ToString());
             }
-            ShowDeckParkingSpotOnGUI(0);
+            //ShowDeckParkingSpotOnGUI(0);
             
         }
 

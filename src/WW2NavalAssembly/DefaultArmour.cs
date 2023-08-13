@@ -70,6 +70,10 @@ namespace WW2NavalAssembly
                         {
                             return;
                         }
+                        else if (gameObject.name == "Aircraft Captain")
+                        {
+                            return;
+                        }
                         else if (gameObject.name == "Engine")
                         {
                             return;

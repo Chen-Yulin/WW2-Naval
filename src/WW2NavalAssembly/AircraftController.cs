@@ -21,6 +21,8 @@ namespace WW2NavalAssembly
         public MKey ReturnKey;
         public MKey TakeOffKey;
 
+        public GameObject DeckVis;
+
         public override void SafeAwake()
         {
             gameObject.name = "Aircraft Captain";
@@ -40,6 +42,69 @@ namespace WW2NavalAssembly
         public override void OnSimulateStart()
         {
             myGuid = BlockBehaviour.BuildingBlock.Guid.GetHashCode();
+            if (StatMaster.isMP)
+            {
+                if (PlayerData.localPlayer.networkId == myPlayerID)
+                {
+                    DeckVis = FlightDataBase.Instance.GenerateDeckOnStart(myPlayerID, transform.parent).transform.Find("Vis").gameObject;
+                    DeckVis.SetActive(ModController.Instance.showArmour);
+                }
+            }
+            else
+            {
+                DeckVis = FlightDataBase.Instance.GenerateDeckOnStart(myPlayerID, transform.parent).transform.Find("Vis").gameObject;
+                DeckVis.SetActive(ModController.Instance.showArmour);
+            }
+        }
+
+        public override void SimulateFixedUpdateAlways()
+        {
+            // local frequency
+            if (ModController.Instance.state % 10 == mySeed)
+            {
+                if (StatMaster.isMP)
+                {
+                    if (PlayerData.localPlayer.networkId == myPlayerID)
+                    {
+                        DeckVis.SetActive(ModController.Instance.showArmour);
+                    }
+                }
+                else
+                {
+                    DeckVis.SetActive(ModController.Instance.showArmour);
+                }
+            }
+
+            // high frequency
+            if (StatMaster.isMP)
+            {
+                if (PlayerData.localPlayer.networkId == myPlayerID)
+                {
+                }
+            }
+            else
+            {
+            }
+        }
+
+        public override void SimulateUpdateAlways()
+        {
+            if (StatMaster.isMP)
+            {
+                if (PlayerData.localPlayer.networkId == myPlayerID)
+                {
+                    FlightDataBase.Instance.UpdateDeckTransform(myPlayerID);
+                }
+            }
+            else
+            {
+                FlightDataBase.Instance.UpdateDeckTransform(myPlayerID);
+            }
+        }
+
+
+        public override void OnSimulateStop()
+        {
         }
 
     }

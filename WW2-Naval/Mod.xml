@@ -133,17 +133,58 @@
 
 		<!-- AirCraft -->
 		<Mesh name="A-Zero-0 Mesh" path="Aircraft\R\ZERO\ZERO 0.obj"/>
+		<Mesh name="A-Zero-0.5 Mesh" path="Aircraft\R\ZERO\ZERO 0.5.obj"/>
 		<Mesh name="A-Zero-1 Mesh" path="Aircraft\R\ZERO\ZERO 1.obj"/>
 		<Mesh name="A-Zero-2 Mesh" path="Aircraft\R\ZERO\ZERO 2.obj"/>
 		<Texture name="A-Zero-0 Texture" path="Aircraft\R\ZERO\ZERO 0.png"/>
+		<Texture name="A-Zero-0.5 Texture" path="Aircraft\R\ZERO\ZERO 0.5.png"/>
 		<Texture name="A-Zero-1 Texture" path="Aircraft\R\ZERO\ZERO 1.png"/>
 		<Texture name="A-Zero-2 Texture" path="Aircraft\R\ZERO\ZERO 2.png"/>
+
+		<Mesh name="A-R99-0 Mesh" path="Aircraft\R\99\99 0.obj"/>
+		<Mesh name="A-R99-0.5 Mesh" path="Aircraft\R\99\99 0.5.obj"/>
+		<Mesh name="A-R99-1 Mesh" path="Aircraft\R\99\99 1.obj"/>
+		<Mesh name="A-R99-2 Mesh" path="Aircraft\R\99\99 2.obj"/>
+		<Texture name="A-R99-0 Texture" path="Aircraft\R\99\99 0.png"/>
+		<Texture name="A-R99-0.5 Texture" path="Aircraft\R\99\99 0.5.png"/>
+		<Texture name="A-R99-1 Texture" path="Aircraft\R\99\99 1.png"/>
+		<Texture name="A-R99-2 Texture" path="Aircraft\R\99\99 2.png"/>
+
+		<Mesh name="A-B7A2-0 Mesh" path="Aircraft\R\B7A2\B7A2 0.obj"/>
+		<Mesh name="A-B7A2-0.5 Mesh" path="Aircraft\R\B7A2\B7A2 0.5.obj"/>
+		<Mesh name="A-B7A2-1 Mesh" path="Aircraft\R\B7A2\B7A2 1.obj"/>
+		<Mesh name="A-B7A2-2 Mesh" path="Aircraft\R\B7A2\B7A2 2.obj"/>
+		<Texture name="A-B7A2-0 Texture" path="Aircraft\R\B7A2\B7A2 0.png"/>
+		<Texture name="A-B7A2-0.5 Texture" path="Aircraft\R\B7A2\B7A2 0.5.png"/>
+		<Texture name="A-B7A2-1 Texture" path="Aircraft\R\B7A2\B7A2 1.png"/>
+		<Texture name="A-B7A2-2 Texture" path="Aircraft\R\B7A2\B7A2 2.png"/>
+
 		<Mesh name="A-F4U-0 Mesh" path="Aircraft\M\F4U\F4U 0.obj"/>
+		<Mesh name="A-F4U-0.5 Mesh" path="Aircraft\M\F4U\F4U 0.5.obj"/>
 		<Mesh name="A-F4U-1 Mesh" path="Aircraft\M\F4U\F4U 1.obj"/>
 		<Mesh name="A-F4U-2 Mesh" path="Aircraft\M\F4U\F4U 2.obj"/>
 		<Texture name="A-F4U-0 Texture" path="Aircraft\M\F4U\F4U 0.png"/>
+		<Texture name="A-F4U-0.5 Texture" path="Aircraft\M\F4U\F4U 0.5.png"/>
 		<Texture name="A-F4U-1 Texture" path="Aircraft\M\F4U\F4U 1.png"/>
 		<Texture name="A-F4U-2 Texture" path="Aircraft\M\F4U\F4U 2.png"/>
+
+		<Mesh name="A-SB2C-0 Mesh" path="Aircraft\M\SB2C\SB2C 0.obj"/>
+		<Mesh name="A-SB2C-0.5 Mesh" path="Aircraft\M\SB2C\SB2C 0.5.obj"/>
+		<Mesh name="A-SB2C-1 Mesh" path="Aircraft\M\SB2C\SB2C 1.obj"/>
+		<Mesh name="A-SB2C-2 Mesh" path="Aircraft\M\SB2C\SB2C 2.obj"/>
+		<Texture name="A-SB2C-0 Texture" path="Aircraft\M\SB2C\SB2C 0.png"/>
+		<Texture name="A-SB2C-0.5 Texture" path="Aircraft\M\SB2C\SB2C 0.5.png"/>
+		<Texture name="A-SB2C-1 Texture" path="Aircraft\M\SB2C\SB2C 1.png"/>
+		<Texture name="A-SB2C-2 Texture" path="Aircraft\M\SB2C\SB2C 2.png"/>
+
+		<Mesh name="A-SBD-0 Mesh" path="Aircraft\M\SBD\SBD 0.obj"/>
+		<Mesh name="A-SBD-0.5 Mesh" path="Aircraft\M\SBD\SBD 0.5.obj"/>
+		<Mesh name="A-SBD-1 Mesh" path="Aircraft\M\SBD\SBD 1.obj"/>
+		<Mesh name="A-SBD-2 Mesh" path="Aircraft\M\SBD\SBD 2.obj"/>
+		<Texture name="A-SBD-0 Texture" path="Aircraft\M\SBD\SBD 0.png"/>
+		<Texture name="A-SBD-0.5 Texture" path="Aircraft\M\SBD\SBD 0.5.png"/>
+		<Texture name="A-SBD-1 Texture" path="Aircraft\M\SBD\SBD 1.png"/>
+		<Texture name="A-SBD-2 Texture" path="Aircraft\M\SBD\SBD 2.png"/>
 
 
 	</Resources>

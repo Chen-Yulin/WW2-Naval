@@ -16,7 +16,7 @@
 	<Script>WW2NavalAssembly.Aircraft</Script>
 
 	<Mesh name="A-Zero-0 Mesh"> <!-- Must be defined as a resource in the manifest. -->
-		<Position x="0.0" y="0.0" z="0.0" />
+		<Position x="0.0" y="0.85" z="0.0" />
 		<Rotation x="90.0" y="0.0" z="0.0" />
 		<Scale x="0.3" y="0.3" z="0.3" />
 	</Mesh>
@@ -24,7 +24,7 @@
 	<Texture name="A-Zero-0 Texture" /> <!-- Must be defined as a resource in the manifest. -->
 	
 	<Icon>
-		<Position x="0.0" y="0.0" z="-0.4" />
+		<Position x="0.3" y="0.0" z="-0.4" />
 		<Rotation x="45.0" y="225.0" z="0.0" />
 		<Scale x="0.15" y="0.15" z="0.15" />
 	</Icon>
@@ -33,12 +33,12 @@
 		<!-- TODO: Insert Collider definitions here.
 			 Examples: -->
 		<CapsuleCollider>
-			<Position x="0.0" y="-0.1" z="0.05" />
+			<Position x="0.0" y="-0.1" z="0.32" />
 			<Rotation x="0" y="90.0" z="0.0" />
 			<Capsule direction="Z" radius="0.3" height="1.5" />
 		</CapsuleCollider>
 		<CapsuleCollider>
-			<Position x="0.0" y="0.4" z="0.15" />
+			<Position x="0.0" y="0.4" z="0.42" />
 			<Rotation x="90.0" y="0.0" z="0.0" />
 			<Capsule direction="Z" radius="0.15" height="1.8" />
 		</CapsuleCollider>
@@ -50,11 +50,5 @@
 	</BasePoint>
 	
 	<AddingPoints>
-		<!-- TODO: Insert AddingPoint definitions here. Example:-->
-		<AddingPoint>
-			<Position x="0.0" y="0.0" z="0.0" />
-			<Rotation x="0.0" y="0.0" z="0.0" />
-			<Stickiness enabled="false" radius="1"/>
-		</AddingPoint>
 	</AddingPoints>
 </Block>

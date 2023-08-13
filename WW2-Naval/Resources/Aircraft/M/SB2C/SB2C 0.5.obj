@@ -1,6 +1,6 @@
 # Blender 3.6.1
 # www.blender.org
-mtllib SB2C 1.5.mtl
+mtllib SB2C 0.5.mtl
 o SB2C_JiShen.002
 v -0.051981 2.913541 -0.949904
 v -0.051981 2.947120 -1.375614

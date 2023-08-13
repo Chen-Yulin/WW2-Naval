@@ -197,8 +197,15 @@ namespace WW2NavalAssembly
                 PropellerObject.transform.SetParent(transform.Find("Vis"));
                 PropellerObject.transform.localScale = Vector3.one;
                 PropellerObject.transform.localEulerAngles = Vector3.zero;
-                PropellerObject.AddComponent<MeshFilter>();
-                PropellerObject.AddComponent<MeshRenderer>().material = transform.Find("Vis").GetComponent<MeshRenderer>().material;
+
+                GameObject PropellerChild = new GameObject("PropellerChild");
+                PropellerChild.transform.SetParent(PropellerObject.transform);
+                PropellerChild.transform.localScale = Vector3.one;
+                PropellerChild.transform.localEulerAngles = Vector3.zero;
+                PropellerChild.transform.localPosition = Vector3.zero;
+
+                PropellerChild.AddComponent<MeshFilter>();
+                PropellerChild.AddComponent<MeshRenderer>().material = transform.Find("Vis").GetComponent<MeshRenderer>().material;
             }
             else
             {
@@ -221,14 +228,18 @@ namespace WW2NavalAssembly
         }
         public void UpdateAppearance(string craftName)
         {
-            transform.Find("Vis").GetComponent<MeshFilter>().sharedMesh = AircraftAssetManager.Instance.GetMesh0(craftName);
-            transform.Find("Vis").GetComponent<MeshRenderer>().material.mainTexture = AircraftAssetManager.Instance.GetTex0(craftName);
+            transform.Find("Vis").GetComponent<MeshFilter>().sharedMesh = AircraftAssetManager.Instance.GetMesh05(craftName);
+            transform.Find("Vis").GetComponent<MeshRenderer>().material.mainTexture = AircraftAssetManager.Instance.GetTex05(craftName);
+            transform.Find("Vis").localPosition = AircraftAssetManager.Instance.GetBodyOffset(craftName);
+
             UndercartObject.GetComponent<MeshFilter>().sharedMesh = AircraftAssetManager.Instance.GetMesh1(craftName);
             UndercartObject.GetComponent<MeshRenderer>().material.mainTexture = AircraftAssetManager.Instance.GetTex1(craftName);
             UndercartObject.transform.localPosition = Vector3.zero;
-            PropellerObject.GetComponent<MeshFilter>().sharedMesh = AircraftAssetManager.Instance.GetMesh2(craftName);
-            PropellerObject.GetComponent<MeshRenderer>().material.mainTexture = AircraftAssetManager.Instance.GetTex2(craftName);
-            PropellerObject.transform.localPosition = new Vector3(0, AircraftAssetManager.Instance.GetOffset(craftName), 0);
+
+            PropellerObject.transform.GetChild(0).gameObject.GetComponent<MeshFilter>().sharedMesh = AircraftAssetManager.Instance.GetMesh2(craftName);
+            PropellerObject.transform.GetChild(0).gameObject.GetComponent<MeshRenderer>().material.mainTexture = AircraftAssetManager.Instance.GetTex2(craftName);
+            PropellerObject.transform.GetChild(0).localPosition = -new Vector3(0, AircraftAssetManager.Instance.GetPropOffset(craftName), 0);
+            PropellerObject.transform.localPosition = new Vector3(0, AircraftAssetManager.Instance.GetPropOffset(craftName), 0);
         }
         public void HoldAppearance()
         {
@@ -310,7 +321,7 @@ namespace WW2NavalAssembly
             TorpedoType = AddMenu("TorpedoType", 0, new List<string>
             {
                 "SB2C",
-                "99"
+                "B7A2"
             });
             BombType = AddMenu("BombType", 0, new List<string>
             {
