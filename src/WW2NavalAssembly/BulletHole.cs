@@ -17,6 +17,7 @@ namespace WW2NavalAssembly
         public float size = 0;
         public float shellWaterIn;
         public float carbinWaterIn;
+        public float torpedoWaterIn;
         public Rigidbody body;
 
         private float _coeff = 50000;
@@ -30,13 +31,17 @@ namespace WW2NavalAssembly
         {
             carbinWaterIn = Mathf.Clamp(carbinWaterIn + water, 0, size - shellWaterIn);
         }
+        public void AddTorpedoWater(float water)
+        {
+            torpedoWaterIn = Mathf.Clamp(torpedoWaterIn + water, 0, 4*size);
+        }
         private void RemoveCarbinWater()
         {
             carbinWaterIn *= _drainRate;
         }
         private void ApplyFore()
         {
-            body.AddForce((shellWaterIn + carbinWaterIn) / 100f * Vector3.down);
+            body.AddForce((shellWaterIn + carbinWaterIn + torpedoWaterIn) / 100f * Vector3.down);
         }
 
         public void Awake()
@@ -58,7 +63,7 @@ namespace WW2NavalAssembly
             try
             {
 
-                body.drag = (shellWaterIn + carbinWaterIn) / 160000f;
+                body.drag = (shellWaterIn + carbinWaterIn + torpedoWaterIn) / 80000f;
                 ApplyFore();
                 RemoveCarbinWater();
             }
@@ -131,6 +136,11 @@ namespace WW2NavalAssembly
                     if (holeType == 0)
                     {
                         wc.AddShellWater(sqrCaliber / 400f * (type == 0 ? 1 : 10));
+                        if (type == 1)
+                        {
+                            wc.AddTorpedoWater(sqrCaliber / 400f * 20);
+                            wc.AddCarbinWater(sqrCaliber / 400f * 10);
+                        }
                     }
                     else
                     {
