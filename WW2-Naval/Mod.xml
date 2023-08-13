@@ -13,7 +13,7 @@
 	</Description>
 
 	<Icon name="icon"/>
-	<Debug>false</Debug>
+	<Debug>True</Debug>
 	
 	
 	<MultiplayerCompatible>true</MultiplayerCompatible>
@@ -32,6 +32,7 @@
 		<Block path="Gunnner.xml" />
 		<Block path="Aircraft.xml" />
 		<Block path="Engine.xml" />
+		<Block path="AircraftController.xml" />
 	</Blocks>
 	
 	<!-- Any entities (level objects) your mod adds to the game.
@@ -70,6 +71,8 @@
 		<Texture name="Cannon Texture" path="Gun\Cannon.png"/>
 		<Mesh name="pilot Mesh" path="CentralController\captain.obj"/>
 		<Texture name="pilot Texture" path="CentralController\captain.png"/>
+		<Mesh name="AircraftController Mesh" path="AircraftController\AircraftController.obj"/>
+		<Texture name="AircraftController Texture" path="AircraftController\AircraftController.png"/>
 		<Texture name="ReloadHEOut Texture" path="Gun\loadCircleOut.png"/>
 		<Texture name="ReloadHEIn Texture" path="Gun\loadCircleIn.png"/>
 		<Texture name="ReloadAPOut Texture" path="Gun\loadCircleOut2.png"/>
@@ -126,6 +129,7 @@
 		<AssetBundle name="Sea AB" path="sea.ab"/>
 		<AssetBundle name="TorpedoTrail AB" path="torpedotrail.ab"/>
 		<AssetBundle name="Sky AB" path="sky.ab"/>
+		<AssetBundle name="Aircraft AB" path="aircraft.ab"/>
 
 		<!-- AirCraft -->
 		<Mesh name="A-Zero-0 Mesh" path="Aircraft\R\ZERO\ZERO 0.obj"/>

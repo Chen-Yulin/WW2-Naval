@@ -6,6 +6,14 @@ using Modding;
 
 namespace WW2NavalAssembly
 {
+    public class Asset_Aircraft
+    {
+        public GameObject ParkingSpot;
+        public Asset_Aircraft(ModAssetBundle modAssetBundle)
+        {
+            ParkingSpot = modAssetBundle.LoadAsset<GameObject>("AircraftParkingSpot");
+        }
+    }
     public class Asset_Sky
     {
         public Material[] Sky = new Material[20];
@@ -149,6 +157,7 @@ namespace WW2NavalAssembly
         public Asset_Sea Sea { get; protected set; }
         public Asset_TorpedoTrail TorpedoTrail { get; protected set; }
         public Asset_Sky Sky { get; protected set; }
+        public Asset_Aircraft Aircraft { get; protected set; }
 
         protected void Awake()
         {
@@ -164,6 +173,7 @@ namespace WW2NavalAssembly
             Sea = new Asset_Sea(ModResource.GetAssetBundle("Sea AB"));
             TorpedoTrail = new Asset_TorpedoTrail(ModResource.GetAssetBundle("TorpedoTrail AB"));
             Sky = new Asset_Sky(ModResource.GetAssetBundle("Sky AB"));
+            Aircraft = new Asset_Aircraft(ModResource.GetAssetBundle("Aircraft AB"));
 
             float colorValue = 1;
             for (int i = 0; i < 8; i++)

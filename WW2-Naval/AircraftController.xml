@@ -1,0 +1,44 @@
+<Block>
+
+	<Debug>false</Debug>
+
+	<ID>7</ID>
+
+	<Name>AircraftController</Name>
+
+	<Mass>0.3</Mass>
+	
+	<Script>WW2NavalAssembly.AircraftController</Script>
+	
+	<Mesh name="AircraftController Mesh"> <!-- Must be defined as a resource in the manifest. -->
+		<Position x="0.0" y="0.0" z="0" />
+		<Rotation x="90" y="0" z="0" />
+		<Scale x="0.32" y="0.32" z="0.32" />
+	</Mesh>
+	
+	<Texture name="AircraftController Texture" /> <!-- Must be defined as a resource in the manifest. -->
+	
+	<Icon>
+		<Position x="0.25" y="-0.3" z="-0.1" />
+		<Rotation x="45" y="225" z="0" />
+		<Scale x="0.18" y="0.18" z="0.18" />
+	</Icon>
+
+	
+	<Colliders>
+		<BoxCollider>
+			<Position x="0.0" y="0.0" z="0.31" />
+			<Rotation x="270" y="0.0" z="180" />
+			<Scale x="0.35" y="1" z="0.35" />
+		</BoxCollider>
+	</Colliders>
+	
+	<BasePoint hasAddingPoint="false">
+		<Stickiness enabled="true" radius="0.3" />
+		<!-- Can only have motion if sticky -->
+		<Motion x="false" y="false" z="false" /> <!-- Optional -->
+	</BasePoint>
+	
+	<AddingPoints>
+	</AddingPoints>
+</Block>

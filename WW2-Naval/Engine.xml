@@ -1,5 +1,5 @@
 <Block>
-	<Debug>false</Debug>
+	<Debug>True</Debug>
 	<ID>6</ID>
 	<Name>Engine</Name>
 	<Mass>1</Mass>
@@ -16,8 +16,8 @@
 	
 	<Icon>
 		<Position x="0.0" y="0.0" z="0.0" />
-		<Rotation x="0.0" y="0.0" z="0.0" />
-		<Scale x="1.0" y="1.0" z="1.0" />
+		<Rotation x="-45.0" y="225.0" z="0.0" />
+		<Scale x="0.6" y="0.6" z="0.6" />
 	</Icon>
 	
 	<Colliders>
