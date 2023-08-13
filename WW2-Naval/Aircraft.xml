@@ -24,10 +24,9 @@
 	<Texture name="A-Zero-0 Texture" /> <!-- Must be defined as a resource in the manifest. -->
 	
 	<Icon>
-		<Position x="0.0" y="0.0" z="0.0" />
-		<Rotation x="0.0" y="0.0" z="0.0" />
-		<Scale x="0.2" y="0.2" z="0.2" />
-		<Scale x="1" y="1" z="1" />
+		<Position x="0.0" y="0.0" z="-0.4" />
+		<Rotation x="45.0" y="225.0" z="0.0" />
+		<Scale x="0.15" y="0.15" z="0.15" />
 	</Icon>
 	
 	<Colliders>

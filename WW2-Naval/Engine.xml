@@ -15,8 +15,8 @@
 	<Texture name="Engine Texture" /> <!-- Must be defined as a resource in the manifest. -->
 	
 	<Icon>
-		<Position x="0.0" y="0.0" z="0.0" />
-		<Rotation x="-45.0" y="225.0" z="0.0" />
+		<Position x="0.0" y="0.0" z="-0.5" />
+		<Rotation x="-30.0" y="210.0" z="0.0" />
 		<Scale x="0.6" y="0.6" z="0.6" />
 	</Icon>
 	

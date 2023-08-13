@@ -130,9 +130,6 @@ namespace WW2NavalAssembly
         public MKey OffsetRight;
         public MSlider FCPanelSize;
         public MSlider TurrentHeight;
-        public MToggle CommandAircraft;
-        public MKey ReturnKey;
-        public MKey TakeOffKey;
 
         public bool TrackOn;
         public Camera _viewCamera;
@@ -766,18 +763,6 @@ namespace WW2NavalAssembly
                             RotationError * new Vector2(UnityEngine.Random.value-0.5f, UnityEngine.Random.value - 0.5f) * OrienVector2.magnitude/500;
             RandomError  = (RandomError + (ClosingModifier-1) * new Vector2(UnityEngine.Random.value - 0.5f, UnityEngine.Random.value - 0.5f) * 2) * ClosingModifier;
         }
-
-        // For Aircraft
-        public void ControlMapper(bool control) // in build update
-        {
-            if (control != preControlAircraft)
-            {
-                preControlAircraft = control;
-
-                ReturnKey.DisplayInMapper = control;
-                TakeOffKey.DisplayInMapper = control;
-            }
-        }
         public void UploadForward()
         {
             Vector3 forward = -transform.up;
@@ -799,16 +784,11 @@ namespace WW2NavalAssembly
             SwitchCannnon = AddKey("Switch Tracking Cannon", "SwitchTrackingCannon", KeyCode.RightShift);
             FCPanelSize = AddSlider("Fire Control Size", "FCSize", 1f, 0.2f, 5f);
             TurrentHeight = AddSlider("TurrentHeight", "TurrentHeight", 0.5f, -100f, 100f);
-            CommandAircraft = AddToggle("Command Aircraft", "Command Aircraft", false);
             Lock = AddKey("Lock", "WW2Lock", KeyCode.X);
-            ReturnKey = AddKey("Aircraft Return", "ReturnKey", KeyCode.Backspace);
-            TakeOffKey = AddKey("Aircraft Take Off", "TakeOffKey", KeyCode.Q);
             OffsetUp = AddKey("Offset Up", "OffsetUp", KeyCode.None);
             OffsetDown = AddKey("Offset Down", "OffsetDown", KeyCode.None);
             OffsetLeft = AddKey("Offset Left", "OffsetLeft", KeyCode.None);
             OffsetRight = AddKey("Offset Right", "OffsetRight", KeyCode.None);
-
-            ControlMapper(!preControlAircraft);
 
             
             mySeed = (int)(UnityEngine.Random.value * 10);
@@ -933,7 +913,6 @@ namespace WW2NavalAssembly
         {
             UploadForward();
             UploadRight();
-            ControlMapper(!CommandAircraft.isDefaultValue);
         }
         public override void BuildingFixedUpdate()
         {
