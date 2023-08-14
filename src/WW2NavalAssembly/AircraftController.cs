@@ -22,8 +22,10 @@ namespace WW2NavalAssembly
         public MKey TakeOffKey;
 
         public GameObject DeckVis;
+        public GameObject HangarVis;
 
         public bool hasDeck = false;
+        public bool hasHangar = false;
 
         public override void SafeAwake()
         {
@@ -48,22 +50,34 @@ namespace WW2NavalAssembly
             {
                 if (PlayerData.localPlayer.networkId == myPlayerID)
                 {
-                    DeckVis = FlightDataBase.Instance.GenerateDeckOnStart(myPlayerID, transform.parent).transform.Find("Vis").gameObject;
+                    DeckVis = FlightDataBase.Instance.GenerateDeckOnStart(myPlayerID, transform.parent);
+                    HangarVis = FlightDataBase.Instance.GenerateHangarOnStart(myPlayerID, transform.parent);
                     if (DeckVis)
                     {
                         hasDeck = true;
                         DeckVis.SetActive(ModController.Instance.showArmour);
+                    }
+                    if (HangarVis)
+                    {
+                        hasHangar = true;
+                        HangarVis.SetActive(ModController.Instance.showArmour);
                     }
                     
                 }
             }
             else
             {
-                DeckVis = FlightDataBase.Instance.GenerateDeckOnStart(myPlayerID, transform.parent).transform.Find("Vis").gameObject;
+                DeckVis = FlightDataBase.Instance.GenerateDeckOnStart(myPlayerID, transform.parent);
+                HangarVis = FlightDataBase.Instance.GenerateHangarOnStart(myPlayerID, transform.parent);
                 if (DeckVis)
                 {
                     hasDeck = true;
                     DeckVis.SetActive(ModController.Instance.showArmour);
+                }
+                if (HangarVis)
+                {
+                    hasHangar = true;
+                    HangarVis.SetActive(ModController.Instance.showArmour);
                 }
             }
         }
@@ -99,7 +113,34 @@ namespace WW2NavalAssembly
                 {
                 }
             }
-
+            if (hasHangar)
+            {
+                // local frequency
+                if (ModController.Instance.state % 10 == mySeed)
+                {
+                    if (StatMaster.isMP)
+                    {
+                        if (PlayerData.localPlayer.networkId == myPlayerID)
+                        {
+                            HangarVis.SetActive(ModController.Instance.showArmour);
+                        }
+                    }
+                    else
+                    {
+                        HangarVis.SetActive(ModController.Instance.showArmour);
+                    }
+                }
+                // high frequency
+                if (StatMaster.isMP)
+                {
+                    if (PlayerData.localPlayer.networkId == myPlayerID)
+                    {
+                    }
+                }
+                else
+                {
+                }
+            }
         }
 
         public override void SimulateUpdateAlways()
@@ -116,6 +157,20 @@ namespace WW2NavalAssembly
                 else
                 {
                     FlightDataBase.Instance.UpdateDeckTransform(myPlayerID);
+                }
+            }
+            if (hasHangar)
+            {
+                if (StatMaster.isMP)
+                {
+                    if (PlayerData.localPlayer.networkId == myPlayerID)
+                    {
+                        FlightDataBase.Instance.UpdateHangarTransform(myPlayerID);
+                    }
+                }
+                else
+                {
+                    FlightDataBase.Instance.UpdateHangarTransform(myPlayerID);
                 }
             }
 

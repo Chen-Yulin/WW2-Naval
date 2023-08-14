@@ -58,7 +58,7 @@ namespace WW2NavalAssembly
             {
                 valid = false;
             }
-            public Deck(Vector2 center, float width, float length, Vector2 forward, Vector2 right, float height)
+            public Deck(Vector2 center, float width, float length, Vector2 forward, Vector2 right, float height, bool isHangar = false)
             {
                 valid = true;
                 this.Center = center;
@@ -70,7 +70,7 @@ namespace WW2NavalAssembly
                 this.Anchor = Center - Forward * Length / 2 + right * width / 2;
 
                 this.Width_num = (int)((Width- 1.2f) / 2f) + 1;
-                this.Length_num = (int)((Length-10) / 3f);
+                this.Length_num = (int)((Length-(isHangar?2:10)) / 2.4f) + 1;
                 this.Total_num = Width_num * Length_num;
 
                 this.RightMargin = (Width - (Width_num - 1) * 1.5f) / 2f;
@@ -99,7 +99,7 @@ namespace WW2NavalAssembly
                 {
                     continue;
                 }
-                //...
+                //...todo
             }
         }
 
@@ -149,6 +149,80 @@ namespace WW2NavalAssembly
             }
 
             return DeckObjects[playerID];
+        }
+
+        public GameObject GenerateHangarOnStart(int playerID, Transform t)
+        {
+            if (t == null)
+            {
+                return null;
+            }
+
+            GameObject rootHangar = new GameObject("Hangar root");
+            rootHangar.transform.parent = t;
+            
+            foreach (var hangar in Hangars[playerID])
+            {
+                if (!hangar.Value.valid)
+                {
+                    if (HangarLine[playerID].ContainsKey(hangar.Key))
+                    {
+                        HangarLine[playerID].Remove(hangar.Key);
+                    }
+                    continue;
+                }
+
+                GameObject preObject;
+                if (HangarObjects[playerID].ContainsKey(hangar.Key))
+                {
+                    preObject = HangarObjects[playerID][hangar.Key];
+                }
+                else
+                {
+                    HangarObjects[playerID].Add(hangar.Key, new GameObject());
+                    preObject = null;
+                }
+
+
+                HangarObjects[playerID][hangar.Key] = new GameObject("HangarObject (" + hangar.Key + ")");
+                HangarObjects[playerID][hangar.Key].transform.parent = rootHangar.transform;
+                HangarObjects[playerID][hangar.Key].transform.position = new Vector3(hangar.Value.Anchor.x, hangar.Value.height, hangar.Value.Anchor.y);
+                HangarObjects[playerID][hangar.Key].transform.rotation = Quaternion.LookRotation(new Vector3(hangar.Value.Forward.x, 0, hangar.Value.Forward.y));
+                HangarObjects[playerID][hangar.Key].transform.eulerAngles = new Vector3(0, HangarObjects[playerID][hangar.Key].transform.eulerAngles.y, 0);
+
+                GameObject Vis = new GameObject("Vis");
+                Vis.transform.parent = HangarObjects[playerID][hangar.Key].transform;
+                Vis.transform.localPosition = Vector3.zero;
+                Vis.transform.localEulerAngles = Vector3.zero;
+
+                for (int i = 0; i < hangar.Value.Total_num; i++)
+                {
+                    GameObject parkingSpot = Instantiate(AssetManager.Instance.Aircraft.ParkingSpot);
+                    parkingSpot.name = "ParkingSpot-" + i.ToString();
+                    parkingSpot.transform.parent = Vis.transform;
+
+                    Vector3 anchor = new Vector3(0, 0.3f, 0);
+                    Vector3 right = Vector3.right;
+                    Vector3 forward = Vector3.forward;
+                    bool ForwardABit = (i % hangar.Value.Width_num) % 2 == 1;
+                    Vector3 spotPos = anchor - right * hangar.Value.RightMargin + forward * 1f
+                                        - i % hangar.Value.Width_num * AIRCRAFT_WIDTH * right
+                                        + i / hangar.Value.Width_num * AIRCRAFT_LENGTH * forward
+                                        + (ForwardABit ? AIRCRAFT_LENGTH / 3f : 0) * forward;
+
+                    parkingSpot.transform.localPosition = spotPos;
+
+                    parkingSpot.transform.localEulerAngles = Vector3.zero;
+                }
+
+
+                if (preObject != null)
+                {
+                    Destroy(preObject);
+                }
+            }
+
+            return rootHangar;
         }
 
         public void AddDeck(int playerID, int guid, FlightDeck deck)
@@ -577,7 +651,8 @@ namespace WW2NavalAssembly
                                             length, 
                                             DeckForward[playerID], 
                                             DeckRight[playerID], 
-                                            height));
+                                            height,
+                                            true));
                 }
             }
 
