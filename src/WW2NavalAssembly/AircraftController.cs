@@ -23,6 +23,8 @@ namespace WW2NavalAssembly
 
         public GameObject DeckVis;
 
+        public bool hasDeck = false;
+
         public override void SafeAwake()
         {
             gameObject.name = "Aircraft Captain";
@@ -47,59 +49,76 @@ namespace WW2NavalAssembly
                 if (PlayerData.localPlayer.networkId == myPlayerID)
                 {
                     DeckVis = FlightDataBase.Instance.GenerateDeckOnStart(myPlayerID, transform.parent).transform.Find("Vis").gameObject;
-                    DeckVis.SetActive(ModController.Instance.showArmour);
+                    if (DeckVis)
+                    {
+                        hasDeck = true;
+                        DeckVis.SetActive(ModController.Instance.showArmour);
+                    }
+                    
                 }
             }
             else
             {
                 DeckVis = FlightDataBase.Instance.GenerateDeckOnStart(myPlayerID, transform.parent).transform.Find("Vis").gameObject;
-                DeckVis.SetActive(ModController.Instance.showArmour);
+                if (DeckVis)
+                {
+                    hasDeck = true;
+                    DeckVis.SetActive(ModController.Instance.showArmour);
+                }
             }
         }
 
         public override void SimulateFixedUpdateAlways()
         {
-            // local frequency
-            if (ModController.Instance.state % 10 == mySeed)
+            if (hasDeck)
+            {
+                // local frequency
+                if (ModController.Instance.state % 10 == mySeed)
+                {
+                    if (StatMaster.isMP)
+                    {
+                        if (PlayerData.localPlayer.networkId == myPlayerID)
+                        {
+                            DeckVis.SetActive(ModController.Instance.showArmour);
+                        }
+                    }
+                    else
+                    {
+                        DeckVis.SetActive(ModController.Instance.showArmour);
+                    }
+                }
+
+                // high frequency
+                if (StatMaster.isMP)
+                {
+                    if (PlayerData.localPlayer.networkId == myPlayerID)
+                    {
+                    }
+                }
+                else
+                {
+                }
+            }
+
+        }
+
+        public override void SimulateUpdateAlways()
+        {
+            if(hasDeck)
             {
                 if (StatMaster.isMP)
                 {
                     if (PlayerData.localPlayer.networkId == myPlayerID)
                     {
-                        DeckVis.SetActive(ModController.Instance.showArmour);
+                        FlightDataBase.Instance.UpdateDeckTransform(myPlayerID);
                     }
                 }
                 else
                 {
-                    DeckVis.SetActive(ModController.Instance.showArmour);
-                }
-            }
-
-            // high frequency
-            if (StatMaster.isMP)
-            {
-                if (PlayerData.localPlayer.networkId == myPlayerID)
-                {
-                }
-            }
-            else
-            {
-            }
-        }
-
-        public override void SimulateUpdateAlways()
-        {
-            if (StatMaster.isMP)
-            {
-                if (PlayerData.localPlayer.networkId == myPlayerID)
-                {
                     FlightDataBase.Instance.UpdateDeckTransform(myPlayerID);
                 }
             }
-            else
-            {
-                FlightDataBase.Instance.UpdateDeckTransform(myPlayerID);
-            }
+
         }
 
 

@@ -122,7 +122,6 @@ namespace WW2NavalAssembly
                 Debug.LogError("Destroy " + go.name + " Error");
             }
         }
-
         public void OptimizeBlock(BlockBehaviour bb, int hierarchy = 0)
         {
             //Debug.Log("Optimizing Block");
@@ -188,7 +187,6 @@ namespace WW2NavalAssembly
             }
             
         }
-
         public void InitPropellerUndercart()
         {
             if (!transform.Find("Vis").Find("Propeller"))
@@ -259,7 +257,6 @@ namespace WW2NavalAssembly
                 UpdateAppearance(preAppearance);
             }
         }
-
         public void ShowGroupLine()
         {
             GroupLine.SetActive(false);
@@ -518,7 +515,6 @@ namespace WW2NavalAssembly
         {
 
         }
-
         public void OnGUI()
         {
             if (!AsLeader.isDefaultValue)
