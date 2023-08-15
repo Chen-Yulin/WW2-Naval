@@ -62,8 +62,22 @@ namespace WW2NavalAssembly
                         hasHangar = true;
                         HangarVis.SetActive(ModController.Instance.showArmour);
                     }
-                    
                 }
+                else if (PlayerData.localPlayer.networkId == 0)
+                {
+                    DeckVis = FlightDataBase.Instance.GenerateDeckOnStart(myPlayerID, transform.parent);
+                    HangarVis = FlightDataBase.Instance.GenerateHangarOnStart(myPlayerID, transform.parent);
+                    if (DeckVis)
+                    {
+                        hasDeck = true;
+                        DeckVis.SetActive(false);
+                    }
+                    if (HangarVis)
+                    {
+                        hasHangar = true;
+                        HangarVis.SetActive(false);
+                    }
+                } // generate parking spot for client in host
             }
             else
             {

@@ -69,10 +69,11 @@ namespace WW2NavalAssembly
     class PropellerBehaviour : MonoBehaviour
     {
         public bool Direction;
-        public float Speed = 10;
+        public Vector3 Speed = new Vector3(0,10,0);
+
         public void Update()
         {
-            transform.localEulerAngles += new Vector3(0, (Direction? Speed:-Speed), 0);
+            transform.localEulerAngles += Speed * (Direction ? 1 : -1);
         }
     }
     class TorpedoBehaviour : MonoBehaviour

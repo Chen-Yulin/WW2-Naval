@@ -122,6 +122,8 @@ namespace WW2NavalAssembly
                 Debug.LogError("Destroy " + go.name + " Error");
             }
         }
+
+        // deprecated
         public void OptimizeBlock(BlockBehaviour bb, int hierarchy = 0)
         {
             //Debug.Log("Optimizing Block");

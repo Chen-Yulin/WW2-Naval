@@ -236,7 +236,7 @@ namespace WW2NavalAssembly
             //myforce += (TargetVelocity - myVel)*5;
 
             float PBSpeed = Mathf.Sign(ThrustPercentage*20) * Mathf.Sqrt(Mathf.Abs(ThrustPercentage *20 * HPPercent)) * 4;
-            PropellerPB.Speed = Mathf.Abs(PBSpeed)<1f?0:PBSpeed;
+            PropellerPB.Speed = (Mathf.Abs(PBSpeed)<1f?0:PBSpeed) * Vector3.up;
             myRigid.AddForceAtPosition(-MyVisAnchor.transform.up * ThrustPercentage*ThrustValue.Value*HPPercent*PropellerSize.Value, Sleeve.transform.position);
         }
         public void UpdateArmVis()
@@ -525,7 +525,7 @@ namespace WW2NavalAssembly
 
             PropellerPB = Propeller.AddComponent<PropellerBehaviour>();
             PropellerPB.Direction = false;
-            PropellerPB.Speed = 0;
+            PropellerPB.Speed = Vector3.zero;
 
             HP = transform.localScale.x * transform.localScale.y * transform.localScale.z;
             InitialHP = transform.lossyScale.x * transform.lossyScale.y * transform.lossyScale.z;
@@ -603,7 +603,7 @@ namespace WW2NavalAssembly
             frameCount++;
             CalculateThrustPercentage();
             float PBSpeed = Mathf.Sign(ThrustPercentage * 20) * Mathf.Sqrt(Mathf.Abs(ThrustPercentage * 20 * HPPercent)) * 4;
-            PropellerPB.Speed = Mathf.Abs(PBSpeed) < 1f ? 0 : PBSpeed;
+            PropellerPB.Speed = (Mathf.Abs(PBSpeed) < 1f ? 0 : PBSpeed) * Vector3.up;
         }
         public void OnGUI()
         {

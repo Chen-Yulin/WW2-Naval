@@ -33,16 +33,19 @@ namespace WW2NavalAssembly
         public Texture GunnerAlertIcon;
         int iconSize = 30;
 
-        float AIRCRAFT_WIDTH = 1.5f;
+        float AIRCRAFT_WIDTH = 1.6f;
         float AIRCRAFT_LENGTH = 2.4f;
 
         public class Deck
         {
+            float AIRCRAFT_WIDTH = 1.6f;
+            float AIRCRAFT_LENGTH = 2.4f;
+
             public bool valid;
             public float Width;
             public float Length;
             public float height;
-            public float RightMargin = 0.6f;
+            public float RightMargin = 0.8f;
 
             public Vector2 Center;
             public Vector2 Forward;
@@ -69,11 +72,11 @@ namespace WW2NavalAssembly
                 this.height = height;
                 this.Anchor = Center - Forward * Length / 2 + right * width / 2;
 
-                this.Width_num = (int)((Width- 1.2f) / 2f) + 1;
-                this.Length_num = (int)((Length-(isHangar?2:10)) / 2.4f) + 1;
+                this.Width_num = (int)((Width- 2*RightMargin) / AIRCRAFT_WIDTH) + ((Width - 2 * RightMargin>0)?1:0);
+                this.Length_num = (int)((Length-(isHangar?3:10)) / AIRCRAFT_LENGTH) + 1;
                 this.Total_num = Width_num * Length_num;
 
-                this.RightMargin = (Width - (Width_num - 1) * 1.5f) / 2f;
+                this.RightMargin = (Width - (Width_num - 1) * AIRCRAFT_WIDTH) / 2f;
             }
         }
 
@@ -99,7 +102,9 @@ namespace WW2NavalAssembly
                 {
                     continue;
                 }
-                //...todo
+                HangarObjects[playerID][hangarKey].transform.position = new Vector3(Hangars[playerID][hangarKey].Anchor.x, Hangars[playerID][hangarKey].height, Hangars[playerID][hangarKey].Anchor.y);
+                HangarObjects[playerID][hangarKey].transform.rotation = Quaternion.LookRotation(new Vector3(Hangars[playerID][hangarKey].Forward.x, 0, Hangars[playerID][hangarKey].Forward.y));
+                HangarObjects[playerID][hangarKey].transform.eulerAngles = new Vector3(0, HangarObjects[playerID][hangarKey].transform.eulerAngles.y, 0);
             }
         }
 
@@ -132,7 +137,7 @@ namespace WW2NavalAssembly
                 Vector3 right = Vector3.right;
                 Vector3 forward = Vector3.forward;
                 bool ForwardABit = (i % Decks[playerID].Width_num) % 2 == 1;
-                Vector3 spotPos = anchor - right * Decks[playerID].RightMargin + forward * 5f
+                Vector3 spotPos = anchor - right * Decks[playerID].RightMargin + forward * 2f
                                     - i % Decks[playerID].Width_num * AIRCRAFT_WIDTH * right
                                     + i / Decks[playerID].Width_num * AIRCRAFT_LENGTH * forward
                                     + (ForwardABit ? AIRCRAFT_LENGTH/3f : 0) * forward;
@@ -205,7 +210,7 @@ namespace WW2NavalAssembly
                     Vector3 right = Vector3.right;
                     Vector3 forward = Vector3.forward;
                     bool ForwardABit = (i % hangar.Value.Width_num) % 2 == 1;
-                    Vector3 spotPos = anchor - right * hangar.Value.RightMargin + forward * 1f
+                    Vector3 spotPos = anchor - right * hangar.Value.RightMargin + forward * 2f
                                         - i % hangar.Value.Width_num * AIRCRAFT_WIDTH * right
                                         + i / hangar.Value.Width_num * AIRCRAFT_LENGTH * forward
                                         + (ForwardABit ? AIRCRAFT_LENGTH / 3f : 0) * forward;
@@ -316,20 +321,10 @@ namespace WW2NavalAssembly
                             HangarLine[playerID][hangarGroup.Key][i].transform.parent = transform;
                             LineRenderer DLLR = HangarLine[playerID][hangarGroup.Key][i].AddComponent<LineRenderer>();
                             DLLR.material = new Material(Shader.Find("Particles/Additive"));
-                            if (i == 0)
-                            {
-                                DLLR.SetColors(Color.white, Color.white);
-                            }
-                            else if (i == 2)
-                            {
-                                DLLR.SetColors(Color.gray, Color.gray);
-                            }
-                            else
-                            {
-                                DLLR.SetColors(Color.white, Color.gray);
-                            }
 
-                            DLLR.SetWidth(0.5f, 0.5f);
+                            DLLR.SetColors(Color.white, Color.gray);
+
+                            DLLR.SetWidth(0.2f, 0.2f);
                             HangarLine[playerID][hangarGroup.Key][i].SetActive(false);
                         }
 
@@ -682,7 +677,7 @@ namespace WW2NavalAssembly
                         DLLR.SetColors(Color.yellow, new Color(0.6f, 0, 0.6f));
                     }
 
-                    DLLR.SetWidth(0.5f, 0.5f);
+                    DLLR.SetWidth(0.3f, 0.3f);
                     DeckLine[i, j].SetActive(false);
                 }
             }
@@ -739,12 +734,6 @@ namespace WW2NavalAssembly
         {
             if (Decks[0].valid)
             {
-                try
-                {
-                    GUI.Box(new Rect(100, 200, 250, 50), Hangars[0].Count.ToString());
-                }
-                catch { }
-                
                 //GUI.Box(new Rect(100, 300, 250, 50), AvailableDeckWood[0].Count.ToString());
             }
             //ShowDeckParkingSpotOnGUI(0);
