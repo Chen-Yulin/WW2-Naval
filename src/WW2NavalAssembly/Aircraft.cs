@@ -20,9 +20,8 @@ namespace WW2NavalAssembly
         public MMenu TorpedoType;
         public MMenu BombType;
         public MMenu FighterType;
-        public MToggle Customize;
+        public MMenu Rank;
         public MText Group;
-        public MToggle AsLeader;
         public MKey SwitchActive;
         
 
@@ -32,16 +31,18 @@ namespace WW2NavalAssembly
 
         public int frameCount;
 
-        public int preType;
-        public bool preCustom;
+        public string preType;
         public string preAppearance;
-        public bool preIsLeader;
+        public int preRank;
 
         public bool preSkinEnabled;
         public bool preShowCluster;
 
         public GameObject PropellerObject;
         public GameObject UndercartObject;
+
+        public PropellerBehaviour Propeller;
+
 
         public Dictionary<int, Aircraft> myGroup = new Dictionary<int, Aircraft>();
 
@@ -197,6 +198,9 @@ namespace WW2NavalAssembly
                 PropellerObject.transform.SetParent(transform.Find("Vis"));
                 PropellerObject.transform.localScale = Vector3.one;
                 PropellerObject.transform.localEulerAngles = Vector3.zero;
+                Propeller = PropellerObject.AddComponent<PropellerBehaviour>();
+                Propeller.enabled = false;
+                Propeller.Speed = new Vector3(0, 0, 11f);
 
                 GameObject PropellerChild = new GameObject("PropellerChild");
                 PropellerChild.transform.SetParent(PropellerObject.transform);
@@ -262,13 +266,12 @@ namespace WW2NavalAssembly
         public void ShowGroupLine()
         {
             GroupLine.SetActive(false);
-            try
+            if (myLeader)
             {
                 GroupLine.GetComponent<LineRenderer>().SetPosition(0, myLeader.transform.position);
                 GroupLine.GetComponent<LineRenderer>().SetPosition(1, transform.position);
                 GroupLine.SetActive(true);
             }
-            catch { }
         }
         public void InitGroupLine()
         {
@@ -294,12 +297,10 @@ namespace WW2NavalAssembly
             name = "Aircraft";
             myPlayerID = transform.gameObject.GetComponent<BlockBehaviour>().ParentMachine.PlayerID;
             myseed = (int)(UnityEngine.Random.value * 10);
-            Customize = AddToggle("Customize Appearance", "ACCustomize", false);
 
-            preType = 0;
-            preCustom = false;
+            preType = "";
             preAppearance = "";
-            preIsLeader = true;
+            preRank = -1;
             preSkinEnabled = OptionsMaster.skinsEnabled;
             preShowCluster = StatMaster.clusterCoded;
             
@@ -309,7 +310,6 @@ namespace WW2NavalAssembly
             SwitchActive = AddKey("Switch Active", "SwitchActive", KeyCode.Alpha1);
             
             Group = AddText("Group", "AircraftGroup", "1");
-            AsLeader = AddToggle("As Leader", "AsLeader", false);
 
             Type = AddMenu("Aircraft Type",0,new List<string>
             {
@@ -332,6 +332,12 @@ namespace WW2NavalAssembly
                 "Zero",
                 "F4U",
             });
+            Rank = AddMenu("Rank", 0, new List<string>
+            {
+                "Slave",
+                "Leader",
+                "Backup",
+            });
         }
         public void Start()
         {
@@ -342,76 +348,54 @@ namespace WW2NavalAssembly
 
             if (ModController.Instance.state % 10 == myseed)
             {
-                Grouper.Instance.AddAircraft(myPlayerID, Group.Value, BlockBehaviour.Guid.GetHashCode(), this);
+                Grouper.Instance.AddAircraft(myPlayerID, Rank.Value == 2? "null" : Group.Value, BlockBehaviour.Guid.GetHashCode(), this);
                 //Debug.Log("add " + BlockBehaviour.Guid.GetHashCode());
             }
             bool appearChanged = false;
-            if (preCustom != Customize.isDefaultValue)
+            if (preType != Type.Selection)
             {
-                preCustom = Customize.isDefaultValue;
-                appearChanged = true;
-            }
-            if (preType != Type.Value)
-            {
-                preType = Type.Value;
+                preType = Type.Selection;
                 appearChanged = true;
             }
             if (appearChanged)
             {
-                if (Customize.isDefaultValue)
-                {
-                    switch (Type.Value)
-                    {
-                        case 1:
-                            TorpedoType.DisplayInMapper = true;
-                            BombType.DisplayInMapper = false;
-                            FighterType.DisplayInMapper = false;
-                            break;
-                        case 2:
-                            TorpedoType.DisplayInMapper = false;
-                            BombType.DisplayInMapper = true;
-                            FighterType.DisplayInMapper = false;
-                            break;
-                        case 0:
-                            TorpedoType.DisplayInMapper = false;
-                            BombType.DisplayInMapper = false;
-                            FighterType.DisplayInMapper = true;
-                            break;
-                        default:
-                            break;
-                    }
-                }
-                else
-                {
-                    TorpedoType.DisplayInMapper = false;
-                    BombType.DisplayInMapper = false;
-                    FighterType.DisplayInMapper = false;
-                }
-
-            }
-
-            string nowAppearance = "";
-
-            if (Customize.isDefaultValue)
-            {
                 switch (Type.Value)
                 {
                     case 1:
-                        nowAppearance = TorpedoType.Selection;
+                        TorpedoType.DisplayInMapper = true;
+                        BombType.DisplayInMapper = false;
+                        FighterType.DisplayInMapper = false;
                         break;
                     case 2:
-                        nowAppearance = BombType.Selection;
+                        TorpedoType.DisplayInMapper = false;
+                        BombType.DisplayInMapper = true;
+                        FighterType.DisplayInMapper = false;
                         break;
                     case 0:
-                        nowAppearance = FighterType.Selection;
+                        TorpedoType.DisplayInMapper = false;
+                        BombType.DisplayInMapper = false;
+                        FighterType.DisplayInMapper = true;
                         break;
                     default:
                         break;
                 }
             }
-            else
+
+            string nowAppearance = "";
+
+            switch (Type.Value)
             {
-                nowAppearance = "cus";
+                case 1:
+                    nowAppearance = TorpedoType.Selection;
+                    break;
+                case 2:
+                    nowAppearance = BombType.Selection;
+                    break;
+                case 0:
+                    nowAppearance = FighterType.Selection;
+                    break;
+                default:
+                    break;
             }
 
             if (preAppearance != nowAppearance)
@@ -420,30 +404,36 @@ namespace WW2NavalAssembly
                 UpdateAppearance(nowAppearance);
             }
 
-            bool leaderChanged = false;
-            if (preIsLeader == AsLeader.isDefaultValue)
+            bool rankChanged = false;
+            if (Rank.Value != preRank)
             {
-                preIsLeader = !AsLeader.isDefaultValue;
-                leaderChanged = true;
+                preRank = Rank.Value;
+                rankChanged = true;
             }
-            if (leaderChanged)
+            if (rankChanged)
             {
-                if (preIsLeader)
+                switch (preRank)
                 {
-                    SwitchActive.DisplayInMapper = true;
-                }
-                else
-                {
-                    SwitchActive.DisplayInMapper = false;
+                    case 0:
+                        Group.DisplayInMapper = true;
+                        SwitchActive.DisplayInMapper = false;
+                        break;
+                    case 1:
+                        Group.DisplayInMapper = true;
+                        SwitchActive.DisplayInMapper = true;
+                        break;
+                    case 2:
+                        Group.DisplayInMapper = false;
+                        SwitchActive.DisplayInMapper = false;
+                        break;
                 }
             }
-
         }
         public override void OnSimulateStart()
         {
             myGuid = BlockBehaviour.BuildingBlock.Guid.GetHashCode();
-            Grouper.Instance.AddAircraft(myPlayerID, Group.Value, myGuid, this);
-            if (!AsLeader.isDefaultValue)
+            Grouper.Instance.AddAircraft(myPlayerID, Rank.Value == 2 ? "null" : Group.Value, myGuid, this);
+            if (Rank.Value == 1)
             {
                 myGroup = Grouper.Instance.GetAircraft(myPlayerID, Group.Value);
                 myLeader = null;
@@ -451,7 +441,7 @@ namespace WW2NavalAssembly
             else
             {
                 myGroup = new Dictionary<int, Aircraft>();
-                myLeader = Grouper.Instance.GetLeader(myPlayerID, Group.Value);
+                myLeader = Grouper.Instance.GetLeader(myPlayerID, Rank.Value == 2 ? "null" : Group.Value);
             }
         }
         public void OnDestroy()
@@ -471,30 +461,23 @@ namespace WW2NavalAssembly
         {
             if (BlockBehaviour.isSimulating && preAppearance == "")
             {
-                if (Customize.isDefaultValue)
+                switch (Type.Value)
                 {
-                    switch (Type.Value)
-                    {
-                        case 1:
-                            preAppearance = TorpedoType.Selection;
-                            break;
-                        case 2:
-                            preAppearance = BombType.Selection;
-                            break;
-                        case 0:
-                            preAppearance = FighterType.Selection;
-                            break;
-                        default:
-                            break;
-                    }
-                }
-                else
-                {
-                    preAppearance = "cus";
+                    case 1:
+                        preAppearance = TorpedoType.Selection;
+                        break;
+                    case 2:
+                        preAppearance = BombType.Selection;
+                        break;
+                    case 0:
+                        preAppearance = FighterType.Selection;
+                        break;
+                    default:
+                        break;
                 }
             }
             HoldAppearance();
-            if (!AsLeader.isDefaultValue)
+            if (Rank.Value == 1)
             {
                 myGroup = Grouper.Instance.GetAircraft(myPlayerID, Group.Value);
                 myLeader = null;
@@ -502,8 +485,10 @@ namespace WW2NavalAssembly
             else
             {
                 myGroup = new Dictionary<int, Aircraft>();
-                myLeader = Grouper.Instance.GetLeader(myPlayerID, Group.Value);
+                myLeader = Grouper.Instance.GetLeader(myPlayerID, Rank.Value == 2? "null" : Group.Value);
             }
+
+
             if (ModController.Instance.showArmour)
             {
                 ShowGroupLine();
@@ -519,7 +504,7 @@ namespace WW2NavalAssembly
         }
         public void OnGUI()
         {
-            if (!AsLeader.isDefaultValue)
+            if (Rank.Value == 1)
             {
                 //GUI.Box(new Rect(100, 200, 200, 50), myGroup.Count.ToString());
             }

@@ -88,7 +88,7 @@ namespace WW2NavalAssembly
             }
 
             // AircraftLeaders
-            if (!ac.AsLeader.isDefaultValue)
+            if (ac.Rank.Value == 1)
             {
                 foreach (var leader in AircraftLeaders[playerID])
                 {
