@@ -15,6 +15,17 @@ namespace WW2NavalAssembly
 
     class Aircraft : BlockScript
     {
+        public enum Status
+        {
+            Deprecated,
+            InHangar,
+            OnBoard,
+            TakingOff,
+            Cruise,
+            Attacking,
+            Returning,
+            Landing
+        }
 
         public MMenu Type;
         public MMenu TorpedoType;
@@ -23,13 +34,14 @@ namespace WW2NavalAssembly
         public MMenu Rank;
         public MText Group;
         public MKey SwitchActive;
-        
+
+        public Status status = Status.Deprecated;
 
         public int myseed;
         public int myPlayerID;
         public int myGuid;
 
-        public int frameCount;
+        public Rigidbody myRigid;
 
         public string preType;
         public string preAppearance;
@@ -40,6 +52,8 @@ namespace WW2NavalAssembly
 
         public GameObject PropellerObject;
         public GameObject UndercartObject;
+        public Transform MyHangar;
+        public Transform MyDeck;
 
         public PropellerBehaviour Propeller;
 
@@ -291,6 +305,56 @@ namespace WW2NavalAssembly
                 GroupLine.SetActive(false);
             }
         }
+        public void FindHangar()
+        {
+            foreach (var hangar in FlightDataBase.Instance.Hangars[myPlayerID])
+            {
+                if (hangar.Value.Occupied_num < hangar.Value.Total_num) // there are spare space
+                {
+                    hangar.Value.Occupied_num++;
+                    foreach (Transform spot in FlightDataBase.Instance.HangarObjects[myPlayerID][hangar.Key].transform.Find("Vis"))
+                    {
+                        if (!spot.gameObject.GetComponent<ParkingSpot>().occupied)
+                        {
+                            MyHangar = spot;
+                            spot.gameObject.GetComponent<ParkingSpot>().occupied = true;
+                            status = Status.InHangar;
+                            break;
+                        }
+                    }
+                    break;
+                }
+            }
+        }
+        public void SettleHangar(bool force = false)
+        {
+            if (MyHangar)
+            {
+                if (force)
+                {
+                    Vector3 f = (MyHangar.position - transform.position) * 100f;
+                    f.y = 0;
+                    myRigid.AddForceAtPosition(f, transform.position);
+                }
+                else
+                {
+                    transform.position = MyHangar.position;
+                }
+                // modify rotation
+                //transform.rotation = Quaternion.Euler(transform.eulerAngles.x, MyHangar.eulerAngles.y, transform.eulerAngles.z);
+
+            }
+
+        }
+
+
+        public void InHangarBehaviour()
+        {
+            if (MyHangar)
+            {
+                SettleHangar(true);
+            }
+        }
 
         public override void SafeAwake()
         {
@@ -443,6 +507,8 @@ namespace WW2NavalAssembly
                 myGroup = new Dictionary<int, Aircraft>();
                 myLeader = Grouper.Instance.GetLeader(myPlayerID, Rank.Value == 2 ? "null" : Group.Value);
             }
+            MyHangar = null;
+            myRigid = BlockBehaviour.Rigidbody;
         }
         public void OnDestroy()
         {
@@ -500,7 +566,22 @@ namespace WW2NavalAssembly
         }
         public override void SimulateFixedUpdateHost()
         {
+            if (ModController.Instance.state % 10 == myseed)
+            {
+                if (!MyHangar)
+                {
+                    FindHangar();
 
+                    SettleHangar();
+                }
+            }
+            switch (status)
+            {
+                case Status.InHangar:
+                    InHangarBehaviour();
+                    break;
+                default : break;
+            }
         }
         public void OnGUI()
         {

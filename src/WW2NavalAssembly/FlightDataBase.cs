@@ -13,6 +13,11 @@ using Modding.Blocks;
 
 namespace WW2NavalAssembly
 {
+    public class ParkingSpot : MonoBehaviour
+    {
+        public bool occupied = false;
+    }
+
     class FlightDataBase : SingleInstance<FlightDataBase>
     {
         public override string Name { get; } = "Flight Data Base";
@@ -56,12 +61,14 @@ namespace WW2NavalAssembly
             public int Width_num;
             public int Total_num;
 
+            public int Occupied_num = 0;
+
             //public Vector3[] Corner = new Vector3[4];
             public Deck()
             {
                 valid = false;
             }
-            public Deck(Vector2 center, float width, float length, Vector2 forward, Vector2 right, float height, bool isHangar = false)
+            public Deck(Vector2 center, float width, float length, Vector2 forward, Vector2 right, float height, bool isHangar = false, int occupied_num = 0)
             {
                 valid = true;
                 this.Center = center;
@@ -77,7 +84,9 @@ namespace WW2NavalAssembly
                 this.Total_num = Width_num * Length_num;
 
                 this.RightMargin = (Width - (Width_num - 1) * AIRCRAFT_WIDTH) / 2f;
+                this.Occupied_num = occupied_num;
             }
+
         }
 
         public void UpdateDeckTransform(int playerID)
@@ -132,8 +141,9 @@ namespace WW2NavalAssembly
                 GameObject parkingSpot = Instantiate(AssetManager.Instance.Aircraft.ParkingSpot);
                 parkingSpot.name = "ParkingSpot-" + i.ToString();
                 parkingSpot.transform.parent = Vis.transform;
+                parkingSpot.AddComponent<ParkingSpot>();
 
-                Vector3 anchor = new Vector3(0,0.3f,0);
+                Vector3 anchor = new Vector3(0,0,0);
                 Vector3 right = Vector3.right;
                 Vector3 forward = Vector3.forward;
                 bool ForwardABit = (i % Decks[playerID].Width_num) % 2 == 1;
@@ -205,8 +215,9 @@ namespace WW2NavalAssembly
                     GameObject parkingSpot = Instantiate(AssetManager.Instance.Aircraft.ParkingSpot);
                     parkingSpot.name = "ParkingSpot-" + i.ToString();
                     parkingSpot.transform.parent = Vis.transform;
+                    parkingSpot.AddComponent<ParkingSpot>();
 
-                    Vector3 anchor = new Vector3(0, 0.3f, 0);
+                    Vector3 anchor = new Vector3(0, 0f, 0);
                     Vector3 right = Vector3.right;
                     Vector3 forward = Vector3.forward;
                     bool ForwardABit = (i % hangar.Value.Width_num) % 2 == 1;
@@ -545,6 +556,13 @@ namespace WW2NavalAssembly
                 AvailableHangarWood[playerID].Remove(hangarGuid);
             }
 
+            // save occupied number of hangar
+            Dictionary<string, int> hangarOccupied = new Dictionary<string, int>();
+            foreach (var h in Hangars[playerID])
+            {
+                hangarOccupied.Add(h.Key, h.Value.Occupied_num);
+            }
+
             // reset Hangars
             Hangars[playerID] = new Dictionary<string, Deck>();
 
@@ -647,7 +665,9 @@ namespace WW2NavalAssembly
                                             DeckForward[playerID], 
                                             DeckRight[playerID], 
                                             height,
-                                            true));
+                                            true,
+                                            (hangarOccupied.ContainsKey(hangarGroup.Key) ? hangarOccupied[hangarGroup.Key]:0))
+                                            );
                 }
             }
 

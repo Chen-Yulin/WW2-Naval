@@ -163,7 +163,7 @@ namespace WW2NavalAssembly
             {
                 if (StatMaster.isMP)
                 {
-                    if (PlayerData.localPlayer.networkId == myPlayerID)
+                    if (PlayerData.localPlayer.networkId == myPlayerID || !StatMaster.isClient)
                     {
                         FlightDataBase.Instance.UpdateDeckTransform(myPlayerID);
                     }
@@ -177,7 +177,7 @@ namespace WW2NavalAssembly
             {
                 if (StatMaster.isMP)
                 {
-                    if (PlayerData.localPlayer.networkId == myPlayerID)
+                    if (PlayerData.localPlayer.networkId == myPlayerID || !StatMaster.isClient)
                     {
                         FlightDataBase.Instance.UpdateHangarTransform(myPlayerID);
                     }
@@ -193,6 +193,10 @@ namespace WW2NavalAssembly
 
         public override void OnSimulateStop()
         {
+            foreach (var hangar in FlightDataBase.Instance.Hangars[myPlayerID])
+            {
+                hangar.Value.Occupied_num = 0;
+            }
         }
 
     }

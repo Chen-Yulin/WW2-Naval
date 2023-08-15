@@ -10,6 +10,8 @@ namespace WW2NavalAssembly
     {
         public override string Name { get; } = "Asset Manager";
 
+        public bool Loaded = false;
+
         //=======================Zero=======================
         public Mesh Zero_0_Mesh;
         public Mesh Zero_05_Mesh;
@@ -91,7 +93,7 @@ namespace WW2NavalAssembly
         public Vector3 SB2C_Body_Offset = new Vector3(0, 0.52f, -0.2f);
 
 
-        public AircraftAssetManager()
+        public void LoadAsset()
         {
             Zero_0_Mesh = ModResource.GetMesh("A-Zero-0 Mesh").Mesh;
             Zero_05_Mesh = ModResource.GetMesh("A-Zero-0.5 Mesh").Mesh;
@@ -146,6 +148,11 @@ namespace WW2NavalAssembly
             SB2C_05_Tex = ModResource.GetTexture("A-SB2C-0.5 Texture").Texture;
             SB2C_1_Tex = ModResource.GetTexture("A-SB2C-1 Texture").Texture;
             SB2C_2_Tex = ModResource.GetTexture("A-SB2C-2 Texture").Texture;
+        }
+
+        public AircraftAssetManager()
+        {
+            
         }
 
         public Mesh GetMesh0(string name)
@@ -347,6 +354,11 @@ namespace WW2NavalAssembly
                 default:
                     return Zero_Body_Offset;
             }
+        }
+
+        public void Start()
+        {
+            LoadAsset();
         }
 
 
