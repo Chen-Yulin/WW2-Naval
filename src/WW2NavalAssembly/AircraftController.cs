@@ -12,6 +12,11 @@ using UnityEngine.Networking;
 
 namespace WW2NavalAssembly
 {
+    public class AircraftElevator
+    {
+
+    }
+
     class AircraftController : BlockScript
     {
         public int myPlayerID;

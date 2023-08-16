@@ -24,7 +24,9 @@ namespace WW2NavalAssembly
             Cruise,
             Attacking,
             Returning,
-            Landing
+            Landing,
+            ShootDown,
+            Exploded,
         }
 
         public MMenu Type;
@@ -42,6 +44,37 @@ namespace WW2NavalAssembly
         public int myGuid;
 
         public Rigidbody myRigid;
+
+        
+        public bool TriedFindHangar = false;
+        public bool ColliderActive
+        {
+            set
+            {
+                if (value != colliderActive)
+                {
+                    transform.Find("Colliders").gameObject.SetActive(value);
+                    colliderActive = value;
+                }
+            }
+        }
+        public bool RigidActive
+        {
+            set
+            {
+                if (value != rigidActive)
+                {
+                    myRigid.isKinematic = !value;
+                    rigidActive = value;
+                }
+            }
+        }
+
+
+
+
+        bool colliderActive = true;
+        bool rigidActive = true;
 
         public string preType;
         public string preAppearance;
@@ -326,34 +359,73 @@ namespace WW2NavalAssembly
                 }
             }
         }
-        public void SettleHangar(bool force = false)
+        public void FindDeck()
         {
-            if (MyHangar)
+            FlightDataBase.Deck deck = FlightDataBase.Instance.Decks[myPlayerID];
+            if (deck.Occupied_num < deck.Total_num)
             {
-                if (force)
+                deck.Occupied_num++;
+                foreach (Transform spot in FlightDataBase.Instance.DeckObjects[myPlayerID].transform.Find("Vis"))
                 {
-                    Vector3 f = (MyHangar.position - transform.position) * 100f;
-                    f.y = 0;
-                    myRigid.AddForceAtPosition(f, transform.position);
+                    if (!spot.gameObject.GetComponent<ParkingSpot>().occupied)
+                    {
+                        MyDeck = spot;
+                        spot.gameObject.GetComponent<ParkingSpot>().occupied = true;
+                        status = Status.OnBoard;
+                        break;
+                    }
+                }
+            }
+        }
+        public void SettleSpot(Transform spot, bool direct = false)
+        {
+            if (spot)
+            {
+                if (!direct)
+                {
+                    if ((transform.position - spot.position).magnitude > 0.2f || Vector3.Angle(transform.forward, Vector3.up) > 20f)
+                    {
+                        transform.position = spot.position;
+                        transform.rotation = spot.GetChild(0).rotation;
+                        myRigid.drag = 100f;
+                        myRigid.angularDrag = 100;
+                    }
+                    else
+                    {
+                        Vector3 targetPosition = Vector3.Lerp(transform.position, spot.position, 0.1f);
+                        targetPosition.y = transform.position.y;
+                        transform.position = targetPosition;
+                        myRigid.drag = 0.2f;
+                        myRigid.angularDrag = 0.2f;
+                    }
+
                 }
                 else
                 {
                     transform.position = MyHangar.position;
                 }
                 // modify rotation
-                //transform.rotation = Quaternion.Euler(transform.eulerAngles.x, MyHangar.eulerAngles.y, transform.eulerAngles.z);
+
+                float deltaAngle = MathTool.SignedAngle(-new Vector2(transform.up.x, transform.up.z), new Vector2(spot.forward.x, spot.forward.z));
+                transform.RotateAround(transform.position, transform.up, deltaAngle);
 
             }
 
         }
+        
 
 
-        public void InHangarBehaviour()
+        public void InHangarBehaviourFU()
         {
-            if (MyHangar)
-            {
-                SettleHangar(true);
-            }
+            SettleSpot(MyHangar,false);
+        }
+        public void InHangarBehaviourUpdate()
+        {
+            
+        }
+        public void OnBoardBehaviourFU()
+        {
+            
         }
 
         public override void SafeAwake()
@@ -509,6 +581,8 @@ namespace WW2NavalAssembly
             }
             MyHangar = null;
             myRigid = BlockBehaviour.Rigidbody;
+            ColliderActive = false;
+            RigidActive = false;
         }
         public void OnDestroy()
         {
@@ -522,6 +596,22 @@ namespace WW2NavalAssembly
             }
             
 
+        }
+        public override void OnSimulateCollisionEnter(Collision collision)
+        {
+            if (status == Status.Exploded)
+            {
+                return;
+            }
+            float collisionForce = collision.impulse.magnitude / Time.fixedDeltaTime;
+            if (collisionForce > 500f )
+            {
+
+                GameObject explo = (GameObject)Instantiate(AssetManager.Instance.Aircraft.AircraftExplo, transform.position, Quaternion.identity);
+                Destroy(explo, 5);
+                Debug.Log("Aircraft exploded");
+                status = Status.Exploded;
+            }
         }
         public void Update()
         {
@@ -564,21 +654,45 @@ namespace WW2NavalAssembly
                 GroupLine.SetActive(false);
             }
         }
-        public override void SimulateFixedUpdateHost()
+        public override void SimulateUpdateHost()
         {
-            if (ModController.Instance.state % 10 == myseed)
-            {
-                if (!MyHangar)
-                {
-                    FindHangar();
-
-                    SettleHangar();
-                }
-            }
             switch (status)
             {
                 case Status.InHangar:
-                    InHangarBehaviour();
+                    
+                    break;
+                default: break;
+            }
+        }
+
+        public override void SimulateFixedUpdateHost()
+        {
+            if (ModController.Instance.state % 10 == myseed && !TriedFindHangar)
+            {
+                if (!MyHangar)
+                {
+                    ColliderActive = true;
+                    FindHangar();
+                    SettleSpot(MyHangar, true);
+                    TriedFindHangar = true;
+                }
+            }
+            // after first trying, active rigid and collider
+            if (TriedFindHangar)
+            {
+                RigidActive = true;
+                ColliderActive = true;
+            }
+
+
+
+            switch (status)
+            {
+                case Status.InHangar:
+                    InHangarBehaviourFU();
+                    break;
+                case Status.OnBoard:
+                    OnBoardBehaviourFU();
                     break;
                 default : break;
             }

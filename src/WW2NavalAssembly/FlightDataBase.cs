@@ -518,11 +518,12 @@ namespace WW2NavalAssembly
             }
             else
             {
+                int occupied_num = Decks[playerID].Occupied_num;
                 float width = Mathf.Abs(deckCorners[1].x - deckCorners[3].x);
                 float length = Mathf.Abs(deckCorners[0].y - deckCorners[2].y);
                 Vector2 forwardLeft = new Vector2(deckCorners[3].x, deckCorners[0].y);
                 Vector2 center = forwardLeft + new Vector2(width / 2, -length / 2);
-                return new Deck(MathTool.PointRotate(Vector2.zero,center,-orien), width, length, DeckForward[playerID], DeckRight[playerID], height);
+                return new Deck(MathTool.PointRotate(Vector2.zero,center,-orien), width, length, DeckForward[playerID], DeckRight[playerID], height, false, occupied_num);
             }
         }
         public void CalculateHangar(int playerID)
