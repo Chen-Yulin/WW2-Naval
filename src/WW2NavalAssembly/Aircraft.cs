@@ -13,7 +13,7 @@ using UnityEngine.Networking;
 namespace WW2NavalAssembly
 {
 
-    class Aircraft : BlockScript
+    public class Aircraft : BlockScript
     {
         public enum Status
         {
@@ -88,7 +88,7 @@ namespace WW2NavalAssembly
         public Transform MyHangar;
         public Transform MyDeck;
 
-        public PropellerBehaviour Propeller;
+        private PropellerBehaviour Propeller;
 
 
         public Dictionary<int, Aircraft> myGroup = new Dictionary<int, Aircraft>();
@@ -351,7 +351,6 @@ namespace WW2NavalAssembly
                         {
                             MyHangar = spot;
                             spot.gameObject.GetComponent<ParkingSpot>().occupied = true;
-                            status = Status.InHangar;
                             break;
                         }
                     }
@@ -364,14 +363,13 @@ namespace WW2NavalAssembly
             FlightDataBase.Deck deck = FlightDataBase.Instance.Decks[myPlayerID];
             if (deck.Occupied_num < deck.Total_num)
             {
-                deck.Occupied_num++;
                 foreach (Transform spot in FlightDataBase.Instance.DeckObjects[myPlayerID].transform.Find("Vis"))
                 {
                     if (!spot.gameObject.GetComponent<ParkingSpot>().occupied)
                     {
                         MyDeck = spot;
                         spot.gameObject.GetComponent<ParkingSpot>().occupied = true;
-                        status = Status.OnBoard;
+                        FlightDataBase.Instance.GetTakeOffPosition(myPlayerID);
                         break;
                     }
                 }
@@ -383,7 +381,7 @@ namespace WW2NavalAssembly
             {
                 if (!direct)
                 {
-                    if ((transform.position - spot.position).magnitude > 0.2f || Vector3.Angle(transform.forward, Vector3.up) > 20f)
+                    if ((transform.position - spot.position).magnitude > 0.5f || Vector3.Angle(transform.forward, Vector3.up) > 20f)
                     {
                         transform.position = spot.position;
                         transform.rotation = spot.GetChild(0).rotation;
@@ -413,8 +411,19 @@ namespace WW2NavalAssembly
 
         }
         
-
-
+        public void SwitchToInHangar()
+        {
+            if (status == Status.OnBoard)
+            {
+                MyDeck.gameObject.GetComponent<ParkingSpot>().occupied = false;
+                FlightDataBase.Instance.Decks[myPlayerID].Occupied_num--;
+                status = Status.InHangar;
+                SettleSpot(MyHangar, true);
+            }
+            else if (status == Status.InHangar)
+            {
+            }
+        }
         public void InHangarBehaviourFU()
         {
             SettleSpot(MyHangar,false);
@@ -425,7 +434,7 @@ namespace WW2NavalAssembly
         }
         public void OnBoardBehaviourFU()
         {
-            
+            SettleSpot(MyDeck,false);
         }
 
         public override void SafeAwake()
@@ -606,7 +615,6 @@ namespace WW2NavalAssembly
             float collisionForce = collision.impulse.magnitude / Time.fixedDeltaTime;
             if (collisionForce > 500f )
             {
-
                 GameObject explo = (GameObject)Instantiate(AssetManager.Instance.Aircraft.AircraftExplo, transform.position, Quaternion.identity);
                 Destroy(explo, 5);
                 Debug.Log("Aircraft exploded");
@@ -644,6 +652,25 @@ namespace WW2NavalAssembly
                 myLeader = Grouper.Instance.GetLeader(myPlayerID, Rank.Value == 2? "null" : Group.Value);
             }
 
+            switch (Rank.Value)
+            {
+                case 0:
+                    myGroup = new Dictionary<int, Aircraft>();
+                    myLeader = Grouper.Instance.GetLeader(myPlayerID, Group.Value);
+                    break;
+                case 1:
+                    myGroup = Grouper.Instance.GetAircraft(myPlayerID, Group.Value);
+                    myLeader = null;
+                    break;
+                case 2:
+                    myGroup = new Dictionary<int, Aircraft>();
+                    myLeader = Grouper.Instance.GetLeader(myPlayerID, "null");
+                    break;
+                default:
+                    break;
+            }
+
+
 
             if (ModController.Instance.showArmour)
             {
@@ -659,10 +686,33 @@ namespace WW2NavalAssembly
             switch (status)
             {
                 case Status.InHangar:
-                    
                     break;
                 default: break;
             }
+
+            switch (Rank.Value)
+            {
+                case 0:
+                    break;
+                case 1:
+                    if (SwitchActive.IsPressed)
+                    {
+                        if (FlightDataBase.Instance.aircraftController[myPlayerID].CurrentLeader == this)
+                        {
+                            FlightDataBase.Instance.aircraftController[myPlayerID].CurrentLeader = null;
+                        }
+                        else
+                        {
+                            FlightDataBase.Instance.aircraftController[myPlayerID].CurrentLeader = this;
+                        }
+                    }
+                    break;
+                case 2:
+                    break;
+                default:
+                    break;
+            }
+
         }
 
         public override void SimulateFixedUpdateHost()
@@ -673,6 +723,7 @@ namespace WW2NavalAssembly
                 {
                     ColliderActive = true;
                     FindHangar();
+                    status = Status.InHangar;
                     SettleSpot(MyHangar, true);
                     TriedFindHangar = true;
                 }
@@ -683,8 +734,6 @@ namespace WW2NavalAssembly
                 RigidActive = true;
                 ColliderActive = true;
             }
-
-
 
             switch (status)
             {

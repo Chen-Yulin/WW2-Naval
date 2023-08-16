@@ -11,11 +11,13 @@ namespace WW2NavalAssembly
         public GameObject ParkingSpot;
         public GameObject AircraftShootDown;
         public GameObject AircraftExplo;
+        public GameObject TakeOffSpot;
         public Asset_Aircraft(ModAssetBundle modAssetBundle)
         {
             ParkingSpot = modAssetBundle.LoadAsset<GameObject>("AircraftParkingSpot");
             AircraftShootDown = modAssetBundle.LoadAsset<GameObject>("AircraftDestroy");
             AircraftExplo = modAssetBundle.LoadAsset<GameObject>("AircraftExplo");
+            TakeOffSpot = modAssetBundle.LoadAsset<GameObject>("TakeOffArrow");
         }
     }
     public class Asset_Sky

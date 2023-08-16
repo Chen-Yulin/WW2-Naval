@@ -22,11 +22,14 @@ namespace WW2NavalAssembly
     {
         public override string Name { get; } = "Flight Data Base";
 
+        public AircraftController[] aircraftController = new AircraftController[16];
+
         public Vector2[] DeckForward = new Vector2[16];
         public Vector2[] DeckRight = new Vector2[16];
         public Dictionary<int, FlightDeck>[] AvailableDeckWood = new Dictionary<int, FlightDeck>[16];
         public Dictionary<int, FlightDeck>[] AvailableHangarWood = new Dictionary<int, FlightDeck>[16];
         public Deck[] Decks = new Deck[16];
+        public float[] TakeOffPosition = new float[16];
         public Dictionary<string, Deck>[] Hangars = new Dictionary<string, Deck>[16];
 
         public GameObject[] DeckObjects = new GameObject[16];
@@ -88,6 +91,19 @@ namespace WW2NavalAssembly
             }
 
         }
+        public void GetTakeOffPosition(int playerID)
+        {
+            float res = 0;
+            foreach (Transform spot in DeckObjects[playerID].transform.Find("Vis"))
+            {
+                if (spot.GetComponent<ParkingSpot>().occupied)
+                {
+                    res = Mathf.Max(res, spot.GetSiblingIndex()+1);
+                }
+            }
+            res = ((Mathf.Ceil(res / (float)Decks[playerID].Width_num) - 1) * AIRCRAFT_LENGTH + 4f);
+            TakeOffPosition[playerID] = res;
+        }
 
         public void UpdateDeckTransform(int playerID)
         {
@@ -102,6 +118,10 @@ namespace WW2NavalAssembly
             DeckObjects[playerID].transform.position = new Vector3(Decks[playerID].Anchor.x, Decks[playerID].height, Decks[playerID].Anchor.y);
             DeckObjects[playerID].transform.rotation = Quaternion.LookRotation(new Vector3(Decks[playerID].Forward.x, 0, Decks[playerID].Forward.y));
             DeckObjects[playerID].transform.eulerAngles = new Vector3(0, DeckObjects[playerID].transform.eulerAngles.y, 0);
+
+            // for take off
+            DeckObjects[playerID].transform.GetChild(1).localPosition = new Vector3(-Decks[playerID].Width / 2f, 0.3f, TakeOffPosition[playerID] + 3f);
+
         }
         public void UpdateHangarTransform(int playerID)
         {
@@ -131,6 +151,7 @@ namespace WW2NavalAssembly
             DeckObjects[playerID].transform.rotation = Quaternion.LookRotation(new Vector3(Decks[playerID].Forward.x, 0, Decks[playerID].Forward.y));
             DeckObjects[playerID].transform.eulerAngles = new Vector3(0, DeckObjects[playerID].transform.eulerAngles.y, 0);
 
+            // for parking spot
             GameObject Vis = new GameObject("Vis");
             Vis.transform.parent = DeckObjects[playerID].transform;
             Vis.transform.localPosition = Vector3.zero;
@@ -157,6 +178,19 @@ namespace WW2NavalAssembly
                 parkingSpot.transform.localEulerAngles = Vector3.zero;
             }
 
+            // for take off spot
+            GameObject TakeOff = new GameObject("TakeOff");
+            TakeOff.transform.parent = DeckObjects[playerID].transform;
+            TakeOff.transform.localPosition = Vector3.zero;
+            TakeOff.transform.localEulerAngles = Vector3.zero;
+
+            GameObject takeoffSpot = Instantiate(AssetManager.Instance.Aircraft.TakeOffSpot);
+            takeoffSpot.name = "Take Off Spot";
+            takeoffSpot.transform.parent = TakeOff.transform;
+            takeoffSpot.transform.localPosition = Vector3.zero;
+            takeoffSpot.transform.localEulerAngles = Vector3.zero;
+
+            GetTakeOffPosition(playerID);
 
             if (preObject != null)
             {
@@ -414,7 +448,6 @@ namespace WW2NavalAssembly
                 }// turn off hangar line
             }
         }
-
         public Deck CalculateDeck(int playerID)
         {
             List<int> tobeRemoved = new List<int>();
@@ -707,6 +740,7 @@ namespace WW2NavalAssembly
         {
             for (int i = 0; i < 16; i++)
             {
+                aircraftController[i] = null;
                 DeckForward[i] = new Vector2(1, 0);
                 DeckRight[i] = new Vector2(0, 1);
                 AvailableDeckWood[i] = new Dictionary<int, FlightDeck>();
