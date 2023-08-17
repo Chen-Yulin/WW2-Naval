@@ -11,7 +11,7 @@
 	<!-- Name of the block, shown in the user interface. -->
 	<Name>Aircraft</Name>
 	
-	<Mass>0.3</Mass>
+	<Mass>1</Mass>
 
 	<Script>WW2NavalAssembly.Aircraft</Script>
 

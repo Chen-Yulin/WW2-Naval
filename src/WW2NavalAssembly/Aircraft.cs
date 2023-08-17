@@ -70,11 +70,31 @@ namespace WW2NavalAssembly
             }
         }
 
-
-
+        public bool SmoothActive
+        {
+            set
+            {
+                if (value != smoothActive)
+                {
+                    if (value)
+                    {
+                        transform.Find("Colliders").GetChild(0).GetComponent<CapsuleCollider>().material = SmoothMat;
+                        transform.Find("Colliders").GetChild(1).GetComponent<CapsuleCollider>().material = SmoothMat;
+                    }
+                    else
+                    {
+                        transform.Find("Colliders").GetChild(0).GetComponent<CapsuleCollider>().material = RegularMat;
+                        transform.Find("Colliders").GetChild(1).GetComponent<CapsuleCollider>().material = RegularMat;
+                    }
+                    
+                    smoothActive = value;
+                }
+            }
+        }
 
         bool colliderActive = true;
         bool rigidActive = true;
+        bool smoothActive = false;
 
         public string preType;
         public string preAppearance;
@@ -85,6 +105,7 @@ namespace WW2NavalAssembly
 
         public GameObject PropellerObject;
         public GameObject UndercartObject;
+        public GameObject AircraftVis;
         public Transform MyHangar;
         public Transform MyDeck;
 
@@ -97,6 +118,55 @@ namespace WW2NavalAssembly
 
         public GameObject GroupLine;
 
+        public PhysicMaterial SmoothMat;
+        public PhysicMaterial RegularMat;
+
+        // ============== for aero dynamics =================
+        public float AirDensity = 0.0015f;
+        public float mainWingArea = 20f;
+        public float verticleWingArea = 5f;
+
+        // ================== for flight ==================
+        float thrust = 0f;
+        public float Thrust
+        {
+            set
+            {
+                thrust = Mathf.Clamp(value, 0f, 60f);
+            }
+            get
+            {
+                return thrust;
+            }
+        }
+        public float Pitch
+        {
+            set
+            {
+                if (Mathf.Abs(value)<0.1f)
+                {
+                    SetPitch(0);
+                }
+                else
+                {
+                    SetPitch(value);
+                }
+                
+            }
+            get
+            {
+                float angle = Vector3.Angle(Vector3.up, -transform.up);
+                return 90 - angle;
+            }
+        }
+       public float CruiseHeight = 60f;
+
+
+        // ============== for takingOff =================
+        public Vector2 TakeOffDirection;
+
+        // ================== for cruise ==================
+        public Queue<Vector2> WayPoints = new Queue<Vector2>();
 
         
         public void DestroyComponent(GameObject go)
@@ -261,6 +331,7 @@ namespace WW2NavalAssembly
             else
             {
                 PropellerObject = transform.Find("Vis").Find("Propeller").gameObject;
+                Propeller = PropellerObject.transform.GetComponent<PropellerBehaviour>();
             }
             if (!transform.Find("Vis").Find("Undercart"))
             {
@@ -338,6 +409,13 @@ namespace WW2NavalAssembly
                 GroupLine.SetActive(false);
             }
         }
+        public void GetPartsOnSimulateStart()
+        {
+            PropellerObject = transform.Find("Vis").Find("Propeller").gameObject;
+            Propeller = PropellerObject.transform.GetComponent<PropellerBehaviour>();
+            UndercartObject = transform.Find("Vis").Find("Undercart").gameObject;
+            AircraftVis = transform.Find("Vis").gameObject;
+        }
         public void FindHangar()
         {
             foreach (var hangar in FlightDataBase.Instance.Hangars[myPlayerID])
@@ -381,12 +459,12 @@ namespace WW2NavalAssembly
             {
                 if (!direct)
                 {
-                    if ((transform.position - spot.position).magnitude > 0.5f || Vector3.Angle(transform.forward, Vector3.up) > 20f)
+                    if ((transform.position - spot.position).magnitude > 1f || Vector3.Angle(transform.forward, Vector3.up) > 30f)
                     {
-                        transform.position = spot.position;
+                        transform.position = spot.position + Vector3.up * 0.05f;
                         transform.rotation = spot.GetChild(0).rotation;
                         myRigid.drag = 100f;
-                        myRigid.angularDrag = 100;
+                        myRigid.angularDrag = 1000;
                     }
                     else
                     {
@@ -410,15 +488,151 @@ namespace WW2NavalAssembly
             }
 
         }
-        
+        public void ChangeDeckSpot(Transform spot, bool takeoffSpot)
+        {
+            MyDeck.gameObject.GetComponent<ParkingSpot>().occupied = false;
+            FlightDataBase.Instance.GetTakeOffPosition(myPlayerID);
+            MyDeck = spot;
+            if (!takeoffSpot)
+            {
+                MyDeck.GetComponent<ParkingSpot>().occupied = true;
+            }
+            else
+            {
+                FlightDataBase.Instance.Decks[myPlayerID].Occupied_num--;
+                transform.Find("Vis").GetComponent<MeshFilter>().sharedMesh = AircraftAssetManager.Instance.GetMesh0(preAppearance);
+                transform.Find("Vis").GetComponent<MeshRenderer>().material.mainTexture = AircraftAssetManager.Instance.GetTex0(preAppearance);
+            }
+        }
+        public virtual float CalculateLift(float WingArea, float AoA, bool mainWing)
+        {
+            float CL = CalculateCL(AoA, mainWing?5:0);
+            float Lift = 0.5f * AirDensity * myRigid.velocity.sqrMagnitude * WingArea * CL;
+            return Lift;
+        }
+        public float CalculateDrag(float WingArea, float AoA)
+        {
+            float CD = CalculateCD(AoA);
+            float Drag = 0.5f * AirDensity * myRigid.velocity.sqrMagnitude * WingArea * CD;
+            return Drag;
+        }
+
+        public float CalculateCL(float AoA ,int WingConst)
+        {
+            return (-0.7f * Mathf.Atan(0.1f * Mathf.Abs(AoA) - 2) + 1)
+                    * 6f * Mathf.Sin(0.01f * (AoA + WingConst));
+        }
+        public float CalculateCD(float AoA)
+        {
+            return 1f / 3000f * AoA * AoA + 0.008f;
+        }
+        public void AddMainWingForce()
+        {
+            Vector3 velocity_verticle = Vector3.ProjectOnPlane(myRigid.velocity, transform.right);
+            float AoA = Vector3.Angle(velocity_verticle, -transform.up);
+            if (Vector3.Dot(velocity_verticle, transform.forward) > 0)
+            {
+                AoA = -AoA;
+            }
+            Vector3 lift_direction = Vector3.Cross(myRigid.velocity, transform.right).normalized;
+            Vector3 drag_direction = -myRigid.velocity.normalized;
+
+            myRigid.AddForce(CalculateLift(mainWingArea, AoA, true) * lift_direction + CalculateDrag(mainWingArea, AoA) * drag_direction, ForceMode.Force);
+        }
+        public void AddAeroForce()
+        {
+            myRigid.angularDrag = Mathf.Clamp(myRigid.velocity.magnitude * 0.5f, 0.2f,150f);
+            myRigid.drag = Mathf.Clamp(myRigid.velocity.magnitude * 0.01f, 0.2f, 10f);
+
+            // horizon
+            AddMainWingForce();
+
+            // vertical
+            Vector3 velocity = myRigid.velocity;
+            velocity = transform.InverseTransformDirection(velocity);
+            velocity.x *= 0.9f;
+            myRigid.velocity = transform.TransformDirection(velocity);
+        }
+        public void SetPitch(float p)
+        {
+            if (p == 0) p = 0.1f;
+            Vector2 forward_h = new Vector2(-transform.up.x, -transform.up.z).normalized;
+            float forward_v = forward_h.magnitude * Mathf.Tan(p * Mathf.Deg2Rad);
+
+            Vector2 newforward_h = forward_v * -forward_h;
+            float newforward_v = forward_h.magnitude;
+
+            Vector3 newforward = new Vector3(newforward_h.x, newforward_v, newforward_h.y).normalized;
+            transform.rotation = Quaternion.LookRotation(newforward, (p>0?-1:1)*Vector3.up);
+        }
+        public void SetHeight(float h)
+        {
+            Vector3 velocity = myRigid.velocity;
+            velocity.y += (h-transform.position.y)*0.05f;
+            myRigid.velocity = velocity;
+        }
+        public void SetVisRoll()
+        {
+            AircraftVis.transform.localEulerAngles = new Vector3(90, Mathf.Clamp(myRigid.angularVelocity.y * 45,-60,60), 0);
+        }
+        public void TurnToWayPoint()
+        {
+            Vector2 target = WayPoints.Peek();
+            Vector2 targetDir = target - MathTool.Get2DCoordinate(transform.position);
+            Vector2 forward = MathTool.Get2DCoordinate(-transform.up);
+            float angle = MathTool.SignedAngle(forward, targetDir);
+            myRigid.AddTorque(-Vector3.up * angle * 0.15f);
+        }
+
+        public void SwitchToCruise()
+        {
+            if (status == Status.TakingOff)
+            {
+                status = Status.Cruise;
+                UndercartObject.SetActive(false);
+                Thrust = 100f;
+            }
+        }
+        public void SwitchToTakingOff()
+        {
+            if (status == Status.OnBoard)
+            {
+                status = Status.TakingOff;
+                MyDeck = null;
+                TakeOffDirection = new Vector2(-transform.up.x, -transform.up.z);
+                Propeller.enabled = true;
+                Propeller.Speed = new Vector3(0, 0, 11);
+                Thrust = 40f;
+                WayPoints.Enqueue(MathTool.Get2DCoordinate(transform.position));
+            }
+        }
+        public void SwitchToOnBoard()
+        {
+            if (status == Status.InHangar)
+            {
+                if (!MyDeck)
+                {
+                    FindDeck();
+                }
+                status = Status.OnBoard;
+                SettleSpot(MyDeck, true);
+                Propeller.enabled = true;
+                Propeller.Speed = new Vector3(0, 0, 3);
+                Thrust = 0;
+            }
+        }
         public void SwitchToInHangar()
         {
             if (status == Status.OnBoard)
             {
                 MyDeck.gameObject.GetComponent<ParkingSpot>().occupied = false;
                 FlightDataBase.Instance.Decks[myPlayerID].Occupied_num--;
+                FlightDataBase.Instance.GetTakeOffPosition(myPlayerID);
+                MyDeck = null;
                 status = Status.InHangar;
                 SettleSpot(MyHangar, true);
+                Propeller.enabled = false;
+                Thrust = 0;
             }
             else if (status == Status.InHangar)
             {
@@ -592,6 +806,14 @@ namespace WW2NavalAssembly
             myRigid = BlockBehaviour.Rigidbody;
             ColliderActive = false;
             RigidActive = false;
+            GetPartsOnSimulateStart();
+            SmoothMat = new PhysicMaterial();
+            SmoothMat.bounciness = 0f;
+            SmoothMat.bounceCombine = PhysicMaterialCombine.Minimum;
+            SmoothMat.staticFriction = 0f;
+            SmoothMat.dynamicFriction = 0f;
+            SmoothMat.frictionCombine = PhysicMaterialCombine.Minimum;
+            RegularMat = transform.Find("Colliders").GetChild(0).GetComponent<CapsuleCollider>().material;
         }
         public void OnDestroy()
         {
@@ -613,12 +835,16 @@ namespace WW2NavalAssembly
                 return;
             }
             float collisionForce = collision.impulse.magnitude / Time.fixedDeltaTime;
-            if (collisionForce > 500f )
+            if (collisionForce > 2000f )
             {
                 GameObject explo = (GameObject)Instantiate(AssetManager.Instance.Aircraft.AircraftExplo, transform.position, Quaternion.identity);
                 Destroy(explo, 5);
                 Debug.Log("Aircraft exploded");
                 status = Status.Exploded;
+                myRigid.drag = 0.2f;
+                myRigid.angularDrag = 0.2f;
+                Thrust = 0f;
+                SmoothActive = false;
             }
         }
         public void Update()
@@ -739,12 +965,35 @@ namespace WW2NavalAssembly
             {
                 case Status.InHangar:
                     InHangarBehaviourFU();
+                    SmoothActive = false;
                     break;
                 case Status.OnBoard:
                     OnBoardBehaviourFU();
+                    SmoothActive = false;
+                    break;
+                case Status.TakingOff:
+                    AddAeroForce();
+                    Thrust += 0.2f;
+                    myRigid.angularVelocity = Vector3.zero;
+                    SmoothActive = true;
+                    if (transform.position.y >= CruiseHeight)
+                    {
+                        SwitchToCruise();
+                    }
+                    break;
+                case Status.Cruise:
+                    AddAeroForce();
+                    SmoothActive = false;
+                    Pitch *= 0.98f;
+                    SetHeight(CruiseHeight);
+                    TurnToWayPoint();
+                    SetVisRoll();
                     break;
                 default : break;
             }
+
+            myRigid.AddForce(Thrust * (-transform.up));
+
         }
         public void OnGUI()
         {

@@ -101,7 +101,7 @@ namespace WW2NavalAssembly
                     res = Mathf.Max(res, spot.GetSiblingIndex()+1);
                 }
             }
-            res = ((Mathf.Ceil(res / (float)Decks[playerID].Width_num) - 1) * AIRCRAFT_LENGTH + 4f);
+            res = ((Mathf.Ceil(res / (float)Decks[playerID].Width_num)) * AIRCRAFT_LENGTH + 3f);
             TakeOffPosition[playerID] = res;
         }
 
@@ -120,7 +120,7 @@ namespace WW2NavalAssembly
             DeckObjects[playerID].transform.eulerAngles = new Vector3(0, DeckObjects[playerID].transform.eulerAngles.y, 0);
 
             // for take off
-            DeckObjects[playerID].transform.GetChild(1).localPosition = new Vector3(-Decks[playerID].Width / 2f, 0.3f, TakeOffPosition[playerID] + 3f);
+            DeckObjects[playerID].transform.GetChild(1).localPosition = new Vector3(-Decks[playerID].Width / 2f, 0f, TakeOffPosition[playerID]);
 
         }
         public void UpdateHangarTransform(int playerID)

@@ -9,6 +9,7 @@ using Modding;
 using Modding.Blocks;
 using UnityEngine;
 using UnityEngine.Networking;
+using System.Linq;
 
 namespace WW2NavalAssembly
 {
@@ -107,11 +108,10 @@ namespace WW2NavalAssembly
             if (a && a.status == Aircraft.Status.InHangar)
             {
                 a.FindDeck();
-                a.SettleSpot(a.MyDeck, true);
                 Debug.Log("elevator lift aircraft: " + a.myGuid + "...");
                 yield return new WaitForSeconds(delayTime);
-                a.status = Aircraft.Status.OnBoard;
-                Debug.Log("Finish");
+                a.SwitchToOnBoard();
+                //Debug.Log("Finish");
             }
             upOperating = false;
             yield break;
@@ -126,7 +126,7 @@ namespace WW2NavalAssembly
                 Debug.Log("elevator drop aircraft: " + a.myGuid + "...");
                 yield return new WaitForSeconds(delayTime);
                 a.SwitchToInHangar();
-                Debug.Log("Finish");
+                //Debug.Log("Finish");
             }
             downOperating = false;
             yield break;
@@ -161,6 +161,56 @@ namespace WW2NavalAssembly
 
     }
 
+    public class AircraftRunway : MonoBehaviour // guide the aircraft group to takeoff
+    {
+        public Queue<Aircraft> takeOffQueue = new Queue<Aircraft>();
+        public Transform takeOffSpot;
+
+        bool takeOffOperating = false;
+        public float delayTime = 0.3f;
+
+        public void AddAircraft(Aircraft aircraft)
+        {
+            if (!takeOffQueue.Contains(aircraft) && aircraft.status == Aircraft.Status.OnBoard)
+            {
+                takeOffQueue.Enqueue(aircraft);
+            }
+        }
+
+        IEnumerator TakeOffCoroutine()
+        {
+            takeOffOperating = true;
+            Aircraft a = takeOffQueue.Count > 0 ? takeOffQueue.Dequeue() : null;
+            if (a && a.status == Aircraft.Status.OnBoard)
+            {
+                Debug.Log("move aircraft: " + a.myGuid + " to take off spot...");
+                yield return new WaitForSeconds(delayTime);
+                a.ChangeDeckSpot(FlightDataBase.Instance.DeckObjects[a.myPlayerID].transform.Find("TakeOff").GetChild(0), true);
+                Debug.Log("taking off ...");
+                yield return new WaitForSeconds(delayTime);
+                a.SwitchToTakingOff();
+                Debug.Log("Finish take off");
+            }
+            takeOffOperating = false;
+            yield break;
+        }
+
+        public void Update()
+        {
+            if (takeOffQueue.Count > 0 && !takeOffOperating)
+            {
+                StartCoroutine(TakeOffCoroutine());
+            }
+        }
+
+        public void OnGUI()
+        {
+            //GUI.Box(new Rect(100, 400, 200, 30), takeOffQueue.Count.ToString());
+            //GUI.Box(new Rect(100, 430, 200, 30), DownQueue.Count.ToString());
+
+        }
+    }
+
     class AircraftController : BlockScript
     {
         public int myPlayerID;
@@ -180,6 +230,7 @@ namespace WW2NavalAssembly
 
         public Aircraft CurrentLeader;
         public AircraftElevator Elevator;
+        public AircraftRunway Runway;
 
         public override void SafeAwake()
         {
@@ -203,6 +254,7 @@ namespace WW2NavalAssembly
         {
             myGuid = BlockBehaviour.BuildingBlock.Guid.GetHashCode();
             Elevator = gameObject.AddComponent<AircraftElevator>();
+            Runway = gameObject.AddComponent<AircraftRunway>();
 
 
             if (StatMaster.isMP)
@@ -353,7 +405,7 @@ namespace WW2NavalAssembly
             }
 
         }
-        public override void SimulateUpdateHost()
+        public override void SimulateUpdateHost() // key responding
         {
             if (ElevatorDown.IsPressed && CurrentLeader)
             {
@@ -380,6 +432,33 @@ namespace WW2NavalAssembly
                 }
             }
 
+            if (TakeOffKey.IsPressed)
+            {
+                if (CurrentLeader)
+                {
+                    bool allOnBoard = true;
+                    foreach (var member in CurrentLeader.myGroup)
+                    {
+                        if (member.Value.status != Aircraft.Status.OnBoard)
+                        {
+                            allOnBoard = false;
+                            break;
+                        }
+                    }
+                    if (!allOnBoard)
+                    {
+                        Debug.Log("Not all aircrafts are on board");
+                    }
+                    else
+                    {
+                        foreach (var member in CurrentLeader.myGroup.Reverse())
+                        {
+                            Runway.AddAircraft(member.Value);
+                        }
+                    }
+                }
+            }
+
         }
 
 
@@ -399,7 +478,7 @@ namespace WW2NavalAssembly
                 GUI.Box(new Rect(100, 200, 200, 30), CurrentLeader.Group.Value.ToString());
                 GUI.Box(new Rect(100, 250, 200, 30), CurrentLeader.myGroup.Count.ToString());
             }
-            GUI.Box(new Rect(100, 300, 200, 30), FlightDataBase.Instance.TakeOffPosition[myPlayerID].ToString());
+            //GUI.Box(new Rect(100, 300, 200, 30), FlightDataBase.Instance.TakeOffPosition[myPlayerID].ToString());
 
 
         }
