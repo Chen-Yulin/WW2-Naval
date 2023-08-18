@@ -43,6 +43,8 @@ namespace WW2NavalAssembly
         public int myPlayerID;
         public int myGuid;
 
+        public int frameCount = 0;
+
         public Rigidbody myRigid;
 
         
@@ -54,6 +56,7 @@ namespace WW2NavalAssembly
                 if (value != colliderActive)
                 {
                     transform.Find("Colliders").gameObject.SetActive(value);
+                    myRigid.useGravity = value;
                     colliderActive = value;
                 }
             }
@@ -943,7 +946,7 @@ namespace WW2NavalAssembly
 
         public override void SimulateFixedUpdateHost()
         {
-            if (ModController.Instance.state % 10 == myseed && !TriedFindHangar)
+            if (ModController.Instance.state % 10 == myseed && !TriedFindHangar && frameCount > 10)
             {
                 if (!MyHangar)
                 {
@@ -953,6 +956,10 @@ namespace WW2NavalAssembly
                     SettleSpot(MyHangar, true);
                     TriedFindHangar = true;
                 }
+            }
+            else
+            {
+                frameCount++;
             }
             // after first trying, active rigid and collider
             if (TriedFindHangar)
