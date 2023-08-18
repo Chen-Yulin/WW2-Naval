@@ -442,6 +442,10 @@ namespace WW2NavalAssembly
             if (TacticalView.IsPressed)
             {
                 inTacticalView = !inTacticalView;
+                if (inTacticalView)
+                {
+                    MainCamera.transform.position = CurrentLeader.transform.position;
+                }
             }
             if (inTacticalView)
             {
