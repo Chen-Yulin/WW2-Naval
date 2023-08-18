@@ -167,7 +167,7 @@ namespace WW2NavalAssembly
         public Transform takeOffSpot;
 
         bool takeOffOperating = false;
-        public float delayTime = 0.3f;
+        public float delayTime = 0.5f;
 
         public void AddAircraft(Aircraft aircraft)
         {
@@ -217,10 +217,41 @@ namespace WW2NavalAssembly
         public int myGuid;
         public int mySeed;
 
+        public MKey TacticalView;
         public MKey ReturnKey;
         public MKey TakeOffKey;
         public MKey ElevatorUp;
         public MKey ElevatorDown;
+        public MKey ViewUp;
+        public MKey ViewDown;
+        public MKey ViewLeft;
+        public MKey ViewRight;
+
+        bool _inTacticalView = false;
+        float _orthoSize = 400f;
+        public bool inTacticalView
+        {
+            get { return _inTacticalView; }
+            set { 
+                _inTacticalView = value;
+                SingleInstanceFindOnly<MouseOrbit>.Instance.isActive = !_inTacticalView;
+                if (_inTacticalView)
+                {
+                    MainCamera.orthographic = true;
+                    MainCamera.transform.eulerAngles = new Vector3(90, 0, 0);
+                    MainCamera.orthographicSize = _orthoSize;
+
+                    Vector3 pos = MainCamera.transform.position;
+                    pos.y = 100;
+                    MainCamera.transform.position = pos;
+
+                }
+                else
+                {
+                    MainCamera.orthographic = false;
+                }
+            }
+        }
 
         public GameObject DeckVis;
         public GameObject HangarVis;
@@ -232,13 +263,46 @@ namespace WW2NavalAssembly
         public AircraftElevator Elevator;
         public AircraftRunway Runway;
 
+        public Camera _viewCamera;
+        public Camera MainCamera
+        {
+            get
+            {
+                bool flag;
+                if (this._viewCamera == null)
+                {
+                    MouseOrbit instance = SingleInstanceFindOnly<MouseOrbit>.Instance;
+                    flag = (((instance != null) ? instance.cam : null) != null);
+                }
+                else
+                {
+                    flag = false;
+                }
+                bool flag2 = flag;
+                if (flag2)
+                {
+                    this._viewCamera = SingleInstanceFindOnly<MouseOrbit>.Instance.cam;
+                }
+                bool flag3 = this._viewCamera == null;
+                if (flag3)
+                {
+                    this._viewCamera = Camera.main;
+                }
+                return this._viewCamera;
+            }
+        }
+
         public override void SafeAwake()
         {
             gameObject.name = "Aircraft Captain";
             myPlayerID = BlockBehaviour.ParentMachine.PlayerID;
             mySeed = (int)(UnityEngine.Random.value * 10);
 
-
+            TacticalView = AddKey("Tactical View", "TacticalView", KeyCode.T);
+            ViewUp = AddKey("View Up", "ViewUp", KeyCode.Y);
+            ViewDown = AddKey("View Down", "ViewDown", KeyCode.H);
+            ViewLeft = AddKey("View Left", "ViewLeft", KeyCode.G);
+            ViewRight = AddKey("View Right", "ViewRight", KeyCode.J);
             ReturnKey = AddKey("Aircraft Return", "ReturnKey", KeyCode.Backspace);
             TakeOffKey = AddKey("Aircraft Take Off", "TakeOffKey", KeyCode.Q);
             ElevatorUp = AddKey("Aircraft Elevator Up", "ElevatorUp", KeyCode.UpArrow);
@@ -375,7 +439,23 @@ namespace WW2NavalAssembly
 
         public override void SimulateUpdateAlways()
         {
-            if(hasDeck)
+            if (TacticalView.IsPressed)
+            {
+                inTacticalView = !inTacticalView;
+            }
+            if (inTacticalView)
+            {
+                float mouseY = Input.mouseScrollDelta.y;
+                _orthoSize = Mathf.Clamp(_orthoSize * (mouseY > 0 ? 1f / (1f + mouseY * 0.2f) : (1f - mouseY * 0.2f)), 50, 2000);
+                MainCamera.transform.position += _orthoSize * 0.5f * Time.deltaTime * (
+                                                                    Vector3.forward * (ViewUp.IsHeld ? 1 : 0) +
+                                                                    Vector3.back * (ViewDown.IsHeld ? 1 : 0) +
+                                                                    Vector3.left * (ViewLeft.IsHeld ? 1 : 0) +
+                                                                    Vector3.right * (ViewRight.IsHeld ? 1 : 0));
+            }
+            
+
+            if (hasDeck)
             {
                 if (StatMaster.isMP)
                 {
@@ -461,6 +541,27 @@ namespace WW2NavalAssembly
 
         }
 
+        public override void SimulateLateUpdateAlways()
+        {
+            if (StatMaster.isMP)
+            {
+                if (PlayerData.localPlayer.networkId != myPlayerID)
+                {
+                    return;
+                }
+            }
+
+            if (inTacticalView)
+            {
+                inTacticalView = true;
+            }
+            else
+            {
+
+            }
+
+
+        }
 
         public override void OnSimulateStop()
         {
@@ -469,6 +570,11 @@ namespace WW2NavalAssembly
                 hangar.Value.Occupied_num = 0;
             }
             FlightDataBase.Instance.Decks[myPlayerID].Occupied_num = 0;
+            inTacticalView = false;
+        }
+        public void OnDestroy()
+        {
+            inTacticalView = false;
         }
 
         public void OnGUI()

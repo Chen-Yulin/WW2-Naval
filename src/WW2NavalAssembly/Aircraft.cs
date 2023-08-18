@@ -75,18 +75,23 @@ namespace WW2NavalAssembly
 
         public bool SmoothActive
         {
+            get { return smoothActive; }
             set
             {
                 if (value != smoothActive)
                 {
                     if (value)
                     {
-                        transform.Find("Colliders").GetChild(0).GetComponent<CapsuleCollider>().material = SmoothMat;
+                        myRigid.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
+                        transform.Find("Colliders").GetChild(0).GetComponent<CapsuleCollider>().isTrigger = true;
+                        transform.Find("Colliders").GetChild(0).GetComponent<CapsuleCollider>().radius = 0.5f;
                         transform.Find("Colliders").GetChild(1).GetComponent<CapsuleCollider>().material = SmoothMat;
                     }
                     else
                     {
-                        transform.Find("Colliders").GetChild(0).GetComponent<CapsuleCollider>().material = RegularMat;
+                        myRigid.collisionDetectionMode = CollisionDetectionMode.Discrete;
+                        transform.Find("Colliders").GetChild(0).GetComponent<CapsuleCollider>().isTrigger=false;
+                        transform.Find("Colliders").GetChild(0).GetComponent<CapsuleCollider>().radius = 0.3f;
                         transform.Find("Colliders").GetChild(1).GetComponent<CapsuleCollider>().material = RegularMat;
                     }
                     
@@ -162,8 +167,30 @@ namespace WW2NavalAssembly
                 return 90 - angle;
             }
         }
-       public float CruiseHeight = 60f;
+        public float Roll
+        {
+            set
+            {
+                SetVisRoll(value);
+                if (Rank.Value == 1 && TeamBase)
+                {
+                    SetTeamRoll(value / 4f);
+                }
+            }
+            get
+            {
+                float angle = Vector3.Angle(Vector3.up, AircraftVis.transform.right);
+                return -90+angle;
+            }
+        }
+        public float CruiseHeight = 60f;
 
+        // ================== for team up ==================
+        GameObject TeamBase = null;
+        public List<Transform> TeammateSpot = new List<Transform>();
+        public Aircraft nextTeammate = null;
+        public Aircraft preTeammate = null;
+        public Transform GroupTargetSpot = null;
 
         // ============== for takingOff =================
         public Vector2 TakeOffDirection;
@@ -412,6 +439,57 @@ namespace WW2NavalAssembly
                 GroupLine.SetActive(false);
             }
         }
+        public void TeamUpByLeader()
+        {
+            myGroup = Grouper.Instance.GetAircraft(myPlayerID, Group.Value);
+            GenerateFormation();
+
+            // team up the order
+            preTeammate = null;
+            List<Aircraft> groupWithoutLeader = new List<Aircraft>();
+            foreach (var aircraft in myGroup)
+            {
+                if (aircraft.Value != this)
+                {
+                    groupWithoutLeader.Add(aircraft.Value);
+                }
+            }
+            nextTeammate = groupWithoutLeader[0];
+            groupWithoutLeader[0].preTeammate = this;
+            for (int i = 0; i < groupWithoutLeader.Count; i++)
+            {
+                if (i<groupWithoutLeader.Count-1)
+                {
+                    groupWithoutLeader[i].nextTeammate = groupWithoutLeader[i + 1];
+                    groupWithoutLeader[i + 1].preTeammate = groupWithoutLeader[i];
+                }
+                groupWithoutLeader[i].GroupTargetSpot = TeammateSpot[i];
+                
+            }
+
+            
+
+            // assign teammate to target
+
+
+        }
+        public void GenerateFormation()
+        {
+            TeamBase = new GameObject("TeamBase");
+            TeamBase.transform.parent = transform;
+            TeamBase.transform.localPosition = Vector3.zero;
+            TeamBase.transform.localEulerAngles = new Vector3(90,0,0);
+
+            for (int i = 0;i < myGroup.Count - 1;i++)
+            {
+                GameObject Spot = new GameObject("Spot " + i.ToString());
+                Spot.transform.parent = TeamBase.transform;
+                Spot.transform.localPosition = new Vector3((i%2 == 0?-1:1) * (i/2+1) * 10, 0, -(i / 2 + 1) * 3);
+                Spot.transform.localEulerAngles = Vector3.zero;
+                TeammateSpot.Add(Spot.transform);
+            }
+            
+        }
         public void GetPartsOnSimulateStart()
         {
             PropellerObject = transform.Find("Vis").Find("Propeller").gameObject;
@@ -568,25 +646,53 @@ namespace WW2NavalAssembly
             Vector3 newforward = new Vector3(newforward_h.x, newforward_v, newforward_h.y).normalized;
             transform.rotation = Quaternion.LookRotation(newforward, (p>0?-1:1)*Vector3.up);
         }
-        public void SetHeight(float h)
+        public void SetHeight(float h, bool direct = false, float force = 0.05f)
         {
-            Vector3 velocity = myRigid.velocity;
-            velocity.y += (h-transform.position.y)*0.05f;
-            myRigid.velocity = velocity;
+            if (!direct)
+            {
+                Vector3 velocity = myRigid.velocity;
+                velocity.y += (h - transform.position.y) * force;
+                myRigid.velocity = velocity;
+            }
+            else
+            {
+                Vector3 velocity = myRigid.velocity;
+                velocity.y = (h - transform.position.y) * force;
+                myRigid.velocity = velocity;
+            }
+            
         }
-        public void SetVisRoll()
+        public void SetVisRoll(float roll)
         {
-            AircraftVis.transform.localEulerAngles = new Vector3(90, Mathf.Clamp(myRigid.angularVelocity.y * 45,-60,60), 0);
+            AircraftVis.transform.localEulerAngles = new Vector3(90, Mathf.Clamp(roll,-60,60), 0);
         }
-        public void TurnToWayPoint()
+        public void SetTeamRoll(float roll)
+        {
+            TeamBase.transform.localEulerAngles = new Vector3(90, Mathf.Clamp(roll, -60, 60), 0);
+        }
+        public void LeaderTurnToWayPoint()
         {
             Vector2 target = WayPoints.Peek();
             Vector2 targetDir = target - MathTool.Get2DCoordinate(transform.position);
             Vector2 forward = MathTool.Get2DCoordinate(-transform.up);
             float angle = MathTool.SignedAngle(forward, targetDir);
-            myRigid.AddTorque(-Vector3.up * angle * 0.15f);
+            myRigid.AddTorque(-Vector3.up * Mathf.Clamp(angle, -120,120) * 0.15f);
         }
+        public void SlaveFollowLeader()
+        {
+            if (GroupTargetSpot)
+            {
+                Vector3 target = GroupTargetSpot.position;
+                Vector2 targetDir = - new Vector2(myLeader.transform.up.x, myLeader.transform.up.z);
+                Vector2 forward = MathTool.Get2DCoordinate(-transform.up);
+                float angle = MathTool.SignedAngle(forward, targetDir);
+                myRigid.AddTorque(-Vector3.up * angle * 0.5f);
 
+                myRigid.MovePosition(transform.position + (target - transform.position).normalized * Mathf.Clamp((target - transform.position).magnitude, 0, 10f) * 0.03f);
+                
+
+            }
+        }
         public void SwitchToCruise()
         {
             if (status == Status.TakingOff)
@@ -606,7 +712,7 @@ namespace WW2NavalAssembly
                 Propeller.enabled = true;
                 Propeller.Speed = new Vector3(0, 0, 11);
                 Thrust = 40f;
-                WayPoints.Enqueue(MathTool.Get2DCoordinate(transform.position));
+                WayPoints.Enqueue(MathTool.Get2DCoordinate(transform.position - transform.up * 300f));
             }
         }
         public void SwitchToOnBoard()
@@ -831,6 +937,23 @@ namespace WW2NavalAssembly
             
 
         }
+        public override void OnSimulateCollisionStay(Collision collision)
+        {
+            if (SmoothActive)
+            {
+                float contactHeight = 0;
+                foreach (var contact in collision.contacts)
+                {
+                    contactHeight = Mathf.Max(contactHeight, contact.point.y);
+                }
+                Vector3 pos = transform.position;
+                pos.y = Mathf.Max(contactHeight - 0.05f, pos.y);
+                myRigid.MovePosition(pos);
+                Vector3 vel = myRigid.velocity;
+                vel.y = Mathf.Max(0,vel.y);
+                myRigid.velocity = vel;
+            }
+        }
         public override void OnSimulateCollisionEnter(Collision collision)
         {
             if (status == Status.Exploded)
@@ -870,16 +993,6 @@ namespace WW2NavalAssembly
                 }
             }
             HoldAppearance();
-            if (Rank.Value == 1)
-            {
-                myGroup = Grouper.Instance.GetAircraft(myPlayerID, Group.Value);
-                myLeader = null;
-            }
-            else
-            {
-                myGroup = new Dictionary<int, Aircraft>();
-                myLeader = Grouper.Instance.GetLeader(myPlayerID, Rank.Value == 2? "null" : Group.Value);
-            }
 
             switch (Rank.Value)
             {
@@ -946,6 +1059,13 @@ namespace WW2NavalAssembly
 
         public override void SimulateFixedUpdateHost()
         {
+            if (frameCount == 0)
+            {
+                if (Rank.Value == 1)
+                {
+                    TeamUpByLeader();
+                }
+            }
             if (ModController.Instance.state % 10 == myseed && !TriedFindHangar && frameCount > 10)
             {
                 if (!MyHangar)
@@ -983,6 +1103,12 @@ namespace WW2NavalAssembly
                     Thrust += 0.2f;
                     myRigid.angularVelocity = Vector3.zero;
                     SmoothActive = true;
+
+                    if (myRigid.velocity.magnitude > 50f)
+                    {
+                        Pitch = Pitch + (30 - Pitch) * 0.05f;
+                    }
+
                     if (transform.position.y >= CruiseHeight)
                     {
                         SwitchToCruise();
@@ -992,9 +1118,18 @@ namespace WW2NavalAssembly
                     AddAeroForce();
                     SmoothActive = false;
                     Pitch *= 0.98f;
-                    SetHeight(CruiseHeight);
-                    TurnToWayPoint();
-                    SetVisRoll();
+                    
+                    if (Rank.Value == 0)
+                    {
+                        SlaveFollowLeader();
+                    }
+                    else if(Rank.Value == 1)
+                    {
+                        SetHeight(CruiseHeight);
+                        LeaderTurnToWayPoint();
+                    }
+                    
+                    Roll = Roll + (myRigid.angularVelocity.y * 45-Roll) * 0.05f;
                     break;
                 default : break;
             }
