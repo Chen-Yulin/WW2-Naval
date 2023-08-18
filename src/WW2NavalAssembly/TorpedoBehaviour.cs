@@ -315,7 +315,7 @@ namespace WW2NavalAssembly
                     }
                     
                     myRigid.drag = 5;
-                    transform.eulerAngles = new Vector3(270, transform.eulerAngles.y, transform.eulerAngles.z);
+                    transform.rotation = Quaternion.LookRotation(Vector3.up, transform.up);
 
                     if (mode == 0)
                     {

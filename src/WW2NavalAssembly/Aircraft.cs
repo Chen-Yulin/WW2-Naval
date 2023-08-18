@@ -114,6 +114,7 @@ namespace WW2NavalAssembly
         public GameObject PropellerObject;
         public GameObject UndercartObject;
         public GameObject AircraftVis;
+        public GameObject LoadObject;
         public Transform MyHangar;
         public Transform MyDeck;
 
@@ -496,6 +497,47 @@ namespace WW2NavalAssembly
             Propeller = PropellerObject.transform.GetComponent<PropellerBehaviour>();
             UndercartObject = transform.Find("Vis").Find("Undercart").gameObject;
             AircraftVis = transform.Find("Vis").gameObject;
+        }
+        public void AddLoad()
+        {
+            LoadObject = new GameObject("Load");
+            LoadObject.transform.parent = transform;
+            LoadObject.transform.localPosition = new Vector3(0, 0.1f, 0.2f);
+            LoadObject.transform.localEulerAngles = new Vector3(0, 0, -90);
+            LoadObject.transform.localScale = Vector3.one * 1.5f;
+            MeshFilter mf = LoadObject.AddComponent<MeshFilter>();
+            MeshRenderer mr = LoadObject.AddComponent<MeshRenderer>();
+            switch (Type.Selection)
+            {
+                case "Bomb":
+                    mf.sharedMesh = ModResource.GetMesh("Bomb Mesh");
+                    mr.material.mainTexture = ModResource.GetTexture("Engine Texture").Texture;
+                    switch (BombType.Selection)
+                    {
+                        case "99":
+                            LoadObject.transform.localPosition = new Vector3(0, 0.1f, 0.28f);
+                            break;
+                        default:
+                            break;
+                    }
+                    break;
+                case "Torpedo":
+                    mf.sharedMesh = ModResource.GetMesh("Torpedo Mesh");
+                    mr.material.mainTexture = ModResource.GetTexture("Torpedo Texture").Texture;
+                    switch (TorpedoType.Selection)
+                    {
+                        case "B7A2":
+                            LoadObject.transform.localPosition = new Vector3(0, 0.3f, 0.3f);
+                            break;
+                        case "SB2C":
+                            LoadObject.transform.localPosition = new Vector3(0, 0.1f, 0.25f);
+                            break;
+                        default:
+                            break;
+                    }
+                    break;
+                default: break;
+            }
         }
         public void FindHangar()
         {
