@@ -358,9 +358,17 @@ namespace WW2NavalAssembly
 
         public void Start()
         {
-            LoadAsset();
+            
         }
-
+        public void Update()
+        {
+            if (!Loaded &&!StatMaster.isMainMenu)
+            {
+                LoadAsset();
+                Loaded = true;
+                Debug.Log("WW2 Aircraft Asset Loaded");
+            }
+        }
 
     }
 }
