@@ -1,12 +1,12 @@
 ManifestFileVersion: 0
-CRC: 297952845
+CRC: 1908511757
 Hashes:
   AssetFileHash:
     serializedVersion: 2
-    Hash: 5564fd097c8472dbb7dc83fe3cc67e13
+    Hash: 2f841963df3a942b3a171fbb7ebb2c23
   TypeTreeHash:
     serializedVersion: 2
-    Hash: 8aae01c9aaeffb7cf6279a4030df0f39
+    Hash: b96841ecb06580fcefecd8cfda7c67e8
 HashAppended: 0
 ClassTypes:
 - Class: 1
@@ -25,13 +25,22 @@ ClassTypes:
   Script: {instanceID: 0}
 - Class: 48
   Script: {instanceID: 0}
+- Class: 102
+  Script: {instanceID: 0}
+- Class: 128
+  Script: {instanceID: 0}
 - Class: 198
   Script: {instanceID: 0}
 - Class: 199
+  Script: {instanceID: 0}
+- Class: 212
+  Script: {instanceID: 0}
+- Class: 213
   Script: {instanceID: 0}
 Assets:
 - Assets/Aircraft/AircraftExplo.prefab
 - Assets/Aircraft/TakeOffArrow.prefab
 - Assets/Aircraft/AircraftDestroy.prefab
 - Assets/Aircraft/AircraftParkingSpot.prefab
+- Assets/Aircraft/GroupIcon.prefab
 Dependencies: []

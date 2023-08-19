@@ -210,6 +210,19 @@ namespace WW2NavalAssembly
 
         }
     }
+    public class CruisePoint:MonoBehaviour
+    {
+        public Vector3 Position;
+        public int Type = 0; // 0: normal, 1: torpedo attack, 2: bomb attack
+        public CruisePoint(Vector3 pos, int type)
+        {
+            Position = pos;
+            Type = type;
+        }
+        public void Awake()
+        {
+        }
+    }
 
     class AircraftController : BlockScript
     {
@@ -226,6 +239,8 @@ namespace WW2NavalAssembly
         public MKey ViewDown;
         public MKey ViewLeft;
         public MKey ViewRight;
+        public MKey Continuous;
+        public MSlider ViewSensitivity;
 
         bool _inTacticalView = false;
         float _orthoSize = 400f;
@@ -259,7 +274,70 @@ namespace WW2NavalAssembly
         public bool hasDeck = false;
         public bool hasHangar = false;
 
-        public Aircraft CurrentLeader;
+        public GameObject DrawBoard;
+        public Dictionary<string, LineRenderer> RouteLines = new Dictionary<string, LineRenderer>();
+        public Dictionary<string,Queue<CruisePoint>> Routes = new Dictionary<string, Queue<CruisePoint>>();
+        public Dictionary<string, GameObject> GroupIcon = new Dictionary<string, GameObject>();
+
+        private Aircraft currentLeader;
+        public Aircraft CurrentLeader
+        {
+            get
+            {
+                return currentLeader;
+            }
+            set
+            {
+                if (value != currentLeader)
+                {
+                    currentLeader = value;
+                    // update the line visual
+                    foreach (var line in RouteLines)
+                    {
+                        if (currentLeader)
+                        {
+                            if (line.Key != currentLeader.Group.Value)
+                            {
+                                line.Value.SetColors(Color.gray, Color.gray);
+                                line.Value.SetWidth(0.5f, 0.5f);
+                            }
+                            else
+                            {
+                                line.Value.SetColors(Color.white, Color.white);
+                                line.Value.SetWidth(1f, 1f);
+                            }
+                        }
+                        else
+                        {
+                            line.Value.SetColors(Color.gray, Color.gray);
+                            line.Value.SetWidth(0.5f, 0.5f);
+                        }
+                        
+                    }
+                    foreach (var icon in GroupIcon)
+                    {
+                        if (currentLeader)
+                        {
+                            if (icon.Key != currentLeader.Group.Value)
+                            {
+                                icon.Value.GetComponentInChildren<SpriteRenderer>().color = Color.white * 0.5f;
+                                icon.Value.GetComponentInChildren<TextMesh>().color = Color.white * 0.5f;
+                            }
+                            else
+                            {
+                                icon.Value.GetComponentInChildren<SpriteRenderer>().color = Color.white;
+                                icon.Value.GetComponentInChildren<TextMesh>().color = Color.white;
+                            }
+                        }
+                        else
+                        {
+                            icon.Value.GetComponentInChildren<SpriteRenderer>().color = Color.white * 0.5f;
+                            icon.Value.GetComponentInChildren<TextMesh>().color = Color.white * 0.5f;
+                        }
+                    }
+                }
+            }
+        }
         public AircraftElevator Elevator;
         public AircraftRunway Runway;
 
@@ -292,6 +370,89 @@ namespace WW2NavalAssembly
             }
         }
 
+        public void InitDrawBoard()
+        {
+            DrawBoard = new GameObject("DrawBoard");
+            DrawBoard.transform.parent = BlockBehaviour.ParentMachine.transform.Find("Simulation Machine");
+            DrawBoard.SetActive(false);
+            foreach (var group in Grouper.Instance.AircraftGroups[myPlayerID])
+            {
+                if (group.Key == "null")
+                {
+                    continue;
+                }
+                GameObject icon = (GameObject)Instantiate(AssetManager.Instance.Aircraft.GroupIcon);
+                icon.transform.GetChild(1).GetComponent<TextMesh>().text = group.Key;
+                icon.transform.parent = DrawBoard.transform;
+                GroupIcon.Add(group.Key, icon);
+            }
+        }
+        public void UpdateRouteLine(string group)
+        {
+            if (!Routes.ContainsKey(group))
+            {
+                Routes.Add(group, new Queue<CruisePoint>());
+                GameObject routeRoot = new GameObject("Route_" + group);
+                routeRoot.transform.parent = DrawBoard.transform;
+                LineRenderer LR = routeRoot.AddComponent<LineRenderer>();
+                LR.material = new Material(Shader.Find("Particles/Additive"));
+                RouteLines.Add(group, LR);
+            }
+            RouteLines[group].SetVertexCount(Routes[group].Count + 1);
+            RouteLines[group].SetPosition(0, Grouper.Instance.AircraftLeaders[myPlayerID][group].Value.transform.position);
+            int i = 1;
+            foreach (var routePoint in Routes[group])
+            {
+                RouteLines[group].SetPosition(i, routePoint.Position);
+                i++;
+            }
+
+            // disable other route lines
+            
+
+        }
+        public void UpdateGroupIcon(string group)
+        {
+            if (Grouper.Instance.AircraftLeaders[myPlayerID].ContainsKey(group))
+            {
+                Aircraft a = Grouper.Instance.AircraftLeaders[myPlayerID][group].Value;
+                Vector3 pos = a.transform.position;
+                pos.y = 60;
+                GroupIcon[group].transform.position = pos;
+                float angle = -MathTool.SignedAngle(MathTool.Get2DCoordinate(-a.transform.up), Vector2.right);
+                GroupIcon[group].transform.GetChild(0).localEulerAngles = new Vector3(90, 0, angle);
+                GroupIcon[group].transform.localScale = _orthoSize/200f * Vector3.one;
+            }
+        }
+        public void AddRoutePoint(string group, Vector2 position, int type = 0)
+        {
+            if (!Routes.ContainsKey(group))
+            {
+                Routes.Add(group, new Queue<CruisePoint>());
+                GameObject routeRoot = new GameObject("Route_" + group);
+                routeRoot.transform.parent = DrawBoard.transform;
+                LineRenderer LR = routeRoot.AddComponent<LineRenderer>();
+                LR.material = new Material(Shader.Find("Particles/Additive"));
+                RouteLines.Add(group, LR);
+            }
+            Routes[group].Enqueue(new CruisePoint(new Vector3(position.x,60f,position.y), type));
+        }
+        public void ResetRoutePoint(string group, Vector2 position, int type = 0)
+        {
+            if (!Routes.ContainsKey(group))
+            {
+                Routes.Add(group, new Queue<CruisePoint>());
+                GameObject routeRoot = new GameObject("Route_" + group);
+                routeRoot.transform.parent = DrawBoard.transform;
+                LineRenderer LR = routeRoot.AddComponent<LineRenderer>();
+                LR.material = new Material(Shader.Find("Particles/Additive"));
+                RouteLines.Add(group, LR);
+            }
+            Routes[group].Clear();
+            Routes[group].Enqueue(new CruisePoint(new Vector3(position.x, 60f, position.y), type));
+            CurrentLeader.WayPoint = position;
+        }
+
         public override void SafeAwake()
         {
             gameObject.name = "Aircraft Captain";
@@ -307,6 +468,8 @@ namespace WW2NavalAssembly
             TakeOffKey = AddKey("Aircraft Take Off", "TakeOffKey", KeyCode.Q);
             ElevatorUp = AddKey("Aircraft Elevator Up", "ElevatorUp", KeyCode.UpArrow);
             ElevatorDown = AddKey("Aircraft Elevator Down", "ElevatorDown", KeyCode.DownArrow);
+            Continuous = AddKey("Continuous", "Continuous", KeyCode.LeftControl);
+            ViewSensitivity = AddSlider("View Sensitivity", "ViewSensitivity", 1, 0.3f, 3f);
         }
 
         public void Start()
@@ -320,13 +483,13 @@ namespace WW2NavalAssembly
             Elevator = gameObject.AddComponent<AircraftElevator>();
             Runway = gameObject.AddComponent<AircraftRunway>();
 
-
+            // use database to generate deck and hangar
             if (StatMaster.isMP)
             {
                 if (PlayerData.localPlayer.networkId == myPlayerID)
                 {
-                    DeckVis = FlightDataBase.Instance.GenerateDeckOnStart(myPlayerID, transform.parent);
-                    HangarVis = FlightDataBase.Instance.GenerateHangarOnStart(myPlayerID, transform.parent);
+                    DeckVis = FlightDataBase.Instance.GenerateDeckOnStart(myPlayerID, BlockBehaviour.ParentMachine.transform.Find("Simulation Machine"));
+                    HangarVis = FlightDataBase.Instance.GenerateHangarOnStart(myPlayerID, BlockBehaviour.ParentMachine.transform.Find("Simulation Machine"));
                     if (DeckVis)
                     {
                         hasDeck = true;
@@ -342,8 +505,8 @@ namespace WW2NavalAssembly
                 else if (PlayerData.localPlayer.networkId == 0)
                 {
                     // generate parking spot for client in host
-                    DeckVis = FlightDataBase.Instance.GenerateDeckOnStart(myPlayerID, transform.parent);
-                    HangarVis = FlightDataBase.Instance.GenerateHangarOnStart(myPlayerID, transform.parent);
+                    DeckVis = FlightDataBase.Instance.GenerateDeckOnStart(myPlayerID, BlockBehaviour.ParentMachine.transform.Find("Simulation Machine"));
+                    HangarVis = FlightDataBase.Instance.GenerateHangarOnStart(myPlayerID, BlockBehaviour.ParentMachine.transform.Find("Simulation Machine"));
                     if (DeckVis)
                     {
                         hasDeck = true;
@@ -360,8 +523,8 @@ namespace WW2NavalAssembly
             }
             else
             {
-                DeckVis = FlightDataBase.Instance.GenerateDeckOnStart(myPlayerID, transform.parent);
-                HangarVis = FlightDataBase.Instance.GenerateHangarOnStart(myPlayerID, transform.parent);
+                DeckVis = FlightDataBase.Instance.GenerateDeckOnStart(myPlayerID, BlockBehaviour.ParentMachine.transform.Find("Simulation Machine"));
+                HangarVis = FlightDataBase.Instance.GenerateHangarOnStart(myPlayerID, BlockBehaviour.ParentMachine.transform.Find("Simulation Machine"));
                 if (DeckVis)
                 {
                     hasDeck = true;
@@ -374,6 +537,10 @@ namespace WW2NavalAssembly
                 }
                 FlightDataBase.Instance.aircraftController[myPlayerID] = this;
             }
+
+            // drawboard
+            InitDrawBoard();
+            CurrentLeader = null;
         }
 
         public override void SimulateFixedUpdateAlways()
@@ -442,20 +609,57 @@ namespace WW2NavalAssembly
             if (TacticalView.IsPressed)
             {
                 inTacticalView = !inTacticalView;
-                if (inTacticalView)
+                if (inTacticalView && CurrentLeader)
                 {
                     MainCamera.transform.position = CurrentLeader.transform.position;
                 }
             }
             if (inTacticalView)
             {
+                DrawBoard.SetActive(true);
                 float mouseY = Input.mouseScrollDelta.y;
                 _orthoSize = Mathf.Clamp(_orthoSize * (mouseY > 0 ? 1f / (1f + mouseY * 0.2f) : (1f - mouseY * 0.2f)), 50, 2000);
-                MainCamera.transform.position += _orthoSize * 0.5f * Time.deltaTime * (
+                MainCamera.transform.position += _orthoSize * ViewSensitivity.Value * Time.deltaTime * (
                                                                     Vector3.forward * (ViewUp.IsHeld ? 1 : 0) +
                                                                     Vector3.back * (ViewDown.IsHeld ? 1 : 0) +
                                                                     Vector3.left * (ViewLeft.IsHeld ? 1 : 0) +
                                                                     Vector3.right * (ViewRight.IsHeld ? 1 : 0));
+
+
+
+                if (CurrentLeader)
+                {
+                    if (Continuous.IsHeld)
+                    {
+                        if (Input.GetMouseButtonDown(1))
+                        {
+                            Vector2 screenPosition = new Vector2(Input.mousePosition.x, Input.mousePosition.y);
+                            Vector3 worldPosition = Camera.main.ScreenToWorldPoint(screenPosition);
+                            AddRoutePoint(CurrentLeader.Group.Value, new Vector2(worldPosition.x, worldPosition.z), 0);
+                        }
+                    }
+                    else
+                    {
+                        if (Input.GetMouseButtonDown(1))
+                        {
+                            Vector2 screenPosition = new Vector2(Input.mousePosition.x, Input.mousePosition.y);
+                            Vector3 worldPosition = Camera.main.ScreenToWorldPoint(screenPosition);
+                            ResetRoutePoint(CurrentLeader.Group.Value, new Vector2(worldPosition.x, worldPosition.z), 0);
+                        }
+                    }
+                }
+                foreach (var group in Routes)
+                {
+                    UpdateRouteLine(group.Key);
+                }
+                foreach (var group in Grouper.Instance.AircraftGroups[myPlayerID])
+                {
+                    UpdateGroupIcon(group.Key);
+                }
+            }
+            else
+            {
+                DrawBoard.SetActive(false);
             }
             
 
@@ -487,7 +691,6 @@ namespace WW2NavalAssembly
                     FlightDataBase.Instance.UpdateHangarTransform(myPlayerID);
                 }
             }
-
         }
         public override void SimulateUpdateHost() // key responding
         {

@@ -197,7 +197,7 @@ namespace WW2NavalAssembly
         public Vector2 TakeOffDirection;
 
         // ================== for cruise ==================
-        public Queue<Vector2> WayPoints = new Queue<Vector2>();
+        public Vector2 WayPoint = new Vector2();
 
         
         public void DestroyComponent(GameObject go)
@@ -714,7 +714,7 @@ namespace WW2NavalAssembly
         }
         public void LeaderTurnToWayPoint()
         {
-            Vector2 target = WayPoints.Peek();
+            Vector2 target = WayPoint;
             Vector2 targetDir = target - MathTool.Get2DCoordinate(transform.position);
             Vector2 forward = MathTool.Get2DCoordinate(-transform.up);
             float angle = MathTool.SignedAngle(forward, targetDir);
@@ -754,7 +754,7 @@ namespace WW2NavalAssembly
                 Propeller.enabled = true;
                 Propeller.Speed = new Vector3(0, 0, 11);
                 Thrust = 40f;
-                WayPoints.Enqueue(MathTool.Get2DCoordinate(transform.position - transform.up * 300f));
+                WayPoint=MathTool.Get2DCoordinate(transform.position - transform.up * 300f);
             }
         }
         public void SwitchToOnBoard()
@@ -1169,6 +1169,21 @@ namespace WW2NavalAssembly
                     {
                         SetHeight(CruiseHeight);
                         LeaderTurnToWayPoint();
+                        //Debug.Log((MathTool.Get2DCoordinate(transform.position) - WayPoint).magnitude);
+                        if ((MathTool.Get2DCoordinate(transform.position)-WayPoint).magnitude < 75f)
+                        {
+                            //Debug.Log(FlightDataBase.Instance.aircraftController[myPlayerID].Routes[Group.Value].Count);
+                            if (FlightDataBase.Instance.aircraftController[myPlayerID].Routes[Group.Value].Count>0)
+                            {
+                                Vector3 peekPos = FlightDataBase.Instance.aircraftController[myPlayerID].Routes[Group.Value].Peek().Position;
+                                if (WayPoint.x == peekPos.x && WayPoint.y == peekPos.z && FlightDataBase.Instance.aircraftController[myPlayerID].Routes[Group.Value].Count > 1)
+                                {
+                                    FlightDataBase.Instance.aircraftController[myPlayerID].Routes[Group.Value].Dequeue();
+                                    peekPos = FlightDataBase.Instance.aircraftController[myPlayerID].Routes[Group.Value].Peek().Position;
+                                }
+                                WayPoint = new Vector2(peekPos.x, peekPos.z);
+                            }
+                        }
                     }
                     
                     Roll = Roll + (myRigid.angularVelocity.y * 45-Roll) * 0.05f;

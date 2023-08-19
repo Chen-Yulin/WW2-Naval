@@ -91,6 +91,7 @@ namespace WW2NavalAssembly
         public Rigidbody myRigid;
 
         public bool launched = false;
+        public float LaunchForce = 500f;
 
         GameObject Trail;
         public void UpdateVis()
@@ -298,7 +299,7 @@ namespace WW2NavalAssembly
             {
                 launched = true;
                 fire = false;
-                myRigid.AddForce(-transform.up * 500);
+                myRigid.AddForce(-transform.up * LaunchForce);
                 myRigid.angularDrag = 100;
                 
             }
