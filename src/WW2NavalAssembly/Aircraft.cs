@@ -1173,16 +1173,20 @@ namespace WW2NavalAssembly
                         if ((MathTool.Get2DCoordinate(transform.position)-WayPoint).magnitude < 75f)
                         {
                             //Debug.Log(FlightDataBase.Instance.aircraftController[myPlayerID].Routes[Group.Value].Count);
-                            if (FlightDataBase.Instance.aircraftController[myPlayerID].Routes[Group.Value].Count>0)
+                            if (FlightDataBase.Instance.aircraftController[myPlayerID].Routes.ContainsKey(Group.Value))
                             {
-                                Vector3 peekPos = FlightDataBase.Instance.aircraftController[myPlayerID].Routes[Group.Value].Peek().Position;
-                                if (WayPoint.x == peekPos.x && WayPoint.y == peekPos.z && FlightDataBase.Instance.aircraftController[myPlayerID].Routes[Group.Value].Count > 1)
+                                if (FlightDataBase.Instance.aircraftController[myPlayerID].Routes[Group.Value].Count > 0)
                                 {
-                                    FlightDataBase.Instance.aircraftController[myPlayerID].Routes[Group.Value].Dequeue();
-                                    peekPos = FlightDataBase.Instance.aircraftController[myPlayerID].Routes[Group.Value].Peek().Position;
+                                    Vector3 peekPos = FlightDataBase.Instance.aircraftController[myPlayerID].Routes[Group.Value].Peek().Position;
+                                    if (WayPoint.x == peekPos.x && WayPoint.y == peekPos.z && FlightDataBase.Instance.aircraftController[myPlayerID].Routes[Group.Value].Count > 1)
+                                    {
+                                        FlightDataBase.Instance.aircraftController[myPlayerID].Routes[Group.Value].Dequeue();
+                                        peekPos = FlightDataBase.Instance.aircraftController[myPlayerID].Routes[Group.Value].Peek().Position;
+                                    }
+                                    WayPoint = new Vector2(peekPos.x, peekPos.z);
                                 }
-                                WayPoint = new Vector2(peekPos.x, peekPos.z);
                             }
+
                         }
                     }
                     
