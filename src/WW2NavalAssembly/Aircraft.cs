@@ -87,6 +87,7 @@ namespace WW2NavalAssembly
                     }
                     else
                     {
+                        deckBelow = false;
                         transform.Find("Colliders").GetChild(0).GetComponent<CapsuleCollider>().isTrigger=false;
                         transform.Find("Colliders").GetChild(1).GetComponent<CapsuleCollider>().material = RegularMat;
                     }
@@ -129,13 +130,14 @@ namespace WW2NavalAssembly
         // ============== for aircraft mass =================
         float _fuel = 1;
         float _loadmass = 0;
+        float _loadCoeff = 0.3f;
 
         public float Fuel
         {
             set
             {
                 _fuel = Mathf.Clamp(value, 0f, 1f);
-                myRigid.mass = 0.9f + _fuel * 0.1f + _loadmass * 0.4f;
+                myRigid.mass = 0.9f + _fuel * 0.1f + _loadmass *_loadCoeff;
             }
             get
             {
@@ -147,7 +149,7 @@ namespace WW2NavalAssembly
             set
             {
                 _loadmass = Mathf.Clamp(value, 0f, 1f);
-                myRigid.mass = 0.9f + _fuel * 0.1f + _loadmass * 0.4f;
+                myRigid.mass = 0.9f + _fuel * 0.1f + _loadmass * _loadCoeff;
             }
             get
             {
@@ -624,7 +626,7 @@ namespace WW2NavalAssembly
             Vector2 forward = MathTool.Get2DCoordinate(-transform.up);
             float angle = MathTool.SignedAngle(forward, targetDir);
             angle = Mathf.Sign(angle) * Mathf.Sqrt(Mathf.Abs(angle));
-            myRigid.AddTorque(-Vector3.up * Mathf.Clamp(angle, -11,11) * 2f);
+            myRigid.AddTorque(-Vector3.up * Mathf.Clamp(angle, -11,11) * 2f / myRigid.mass);
         }
         public void SlaveFollowLeader()
         {
@@ -1072,7 +1074,6 @@ namespace WW2NavalAssembly
                         pos.y = deckHeight - 0.05f;
                         transform.position = pos;
                         myRigid.constraints = RigidbodyConstraints.FreezePositionY;
-                        deckBelow = false;
                     }
                     else
                     {
@@ -1081,15 +1082,14 @@ namespace WW2NavalAssembly
 
                     if (myRigid.velocity.magnitude > 50f)
                     {
-                        deckSliding = false;
                         Pitch = Pitch + (30 - Pitch) * 0.05f;
                     }
 
                     if (transform.position.y >= CruiseHeight)
                     {
-                        deckSliding = false;
                         SwitchToCruise();
                     }
+                    deckBelow = false;
                     break;
                 case Status.Cruise:
                     AddAeroForce();
