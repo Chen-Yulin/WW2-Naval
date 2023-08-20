@@ -73,36 +73,32 @@ namespace WW2NavalAssembly
             }
         }
 
-        public bool SmoothActive
+        public bool DeckSliding
         {
-            get { return smoothActive; }
+            get { return deckSliding; }
             set
             {
-                if (value != smoothActive)
+                if (value != deckSliding)
                 {
                     if (value)
                     {
-                        myRigid.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
                         transform.Find("Colliders").GetChild(0).GetComponent<CapsuleCollider>().isTrigger = true;
-                        transform.Find("Colliders").GetChild(0).GetComponent<CapsuleCollider>().radius = 0.5f;
                         transform.Find("Colliders").GetChild(1).GetComponent<CapsuleCollider>().material = SmoothMat;
                     }
                     else
                     {
-                        myRigid.collisionDetectionMode = CollisionDetectionMode.Discrete;
                         transform.Find("Colliders").GetChild(0).GetComponent<CapsuleCollider>().isTrigger=false;
-                        transform.Find("Colliders").GetChild(0).GetComponent<CapsuleCollider>().radius = 0.3f;
                         transform.Find("Colliders").GetChild(1).GetComponent<CapsuleCollider>().material = RegularMat;
                     }
                     
-                    smoothActive = value;
+                    deckSliding = value;
                 }
             }
         }
 
         bool colliderActive = true;
         bool rigidActive = true;
-        bool smoothActive = false;
+        bool deckSliding = false;
 
         public string preType;
         public string preAppearance;
@@ -129,6 +125,35 @@ namespace WW2NavalAssembly
 
         public PhysicMaterial SmoothMat;
         public PhysicMaterial RegularMat;
+
+        // ============== for aircraft mass =================
+        float _fuel = 1;
+        float _loadmass = 0;
+
+        public float Fuel
+        {
+            set
+            {
+                _fuel = Mathf.Clamp(value, 0f, 1f);
+                myRigid.mass = 0.9f + _fuel * 0.1f + _loadmass * 0.4f;
+            }
+            get
+            {
+                return _fuel;
+            }
+        }
+        public float LoadMass
+        {
+            set
+            {
+                _loadmass = Mathf.Clamp(value, 0f, 1f);
+                myRigid.mass = 0.9f + _fuel * 0.1f + _loadmass * 0.4f;
+            }
+            get
+            {
+                return _loadmass;
+            }
+        }
 
         // ============== for aero dynamics =================
         public float AirDensity = 0.0015f;
@@ -195,150 +220,15 @@ namespace WW2NavalAssembly
 
         // ============== for takingOff =================
         public Vector2 TakeOffDirection;
+        public float TakeOffLift = 0;
+        public bool deckBelow = false;
+        public float deckHeight = 0;
 
         // ================== for cruise ==================
         public Vector2 WayPoint = new Vector2();
         public Vector2 WayDirection = Vector2.zero;
 
-        
-        public void DestroyComponent(GameObject go)
-        {
-            try
-            {
-                foreach (var jointComponent in go.GetComponents<ConfigurableJoint>())
-                {
-                    Destroy(jointComponent);
-                }
 
-                try
-                {
-                    Destroy(go.GetComponent<IceTag>());
-                }
-                catch { }
-                try
-                {
-                    Destroy(go.GetComponent<ConstantForce>());
-                }
-                catch{}
-                try
-                {
-                    Destroy(go.GetComponent<PropellorController>());
-                }
-                catch { }
-                try
-                {
-                    Destroy(go.GetComponent<FlyingController>());
-                }
-                catch { }
-                try
-                {
-                    Destroy(go.GetComponent<AxialDrag>());
-                }
-                catch { }
-                try
-                {
-                    Destroy(go.GetComponent<FireController>());
-                }
-                catch { }
-
-                try
-                {
-                    Destroy(go.GetComponent<Rigidbody>());
-                }
-                catch
-                {
-                    Debug.LogError("Destroy Rigid:" + go.name + " Error");
-                }
-                
-                try
-                {
-                    Destroy(go.GetComponent<WWIIUnderWater>());
-                }
-                catch{}
-                try
-                {
-                    Destroy(go.GetComponent<DefaultArmour>());
-                }
-                catch { }
-                try
-                {
-                    Destroy(go.GetComponent<WoodenArmour>());
-                }
-                catch { }
-
-            }
-            catch
-            {
-                Debug.LogError("Destroy " + go.name + " Error");
-            }
-        }
-
-        // deprecated
-        public void OptimizeBlock(BlockBehaviour bb, int hierarchy = 0)
-        {
-            //Debug.Log("Optimizing Block");
-            //Debug.Log(ClusterIndex);
-
-            BlockCluster cluster = bb.ParentMachine.LinkManager.GetCluster(bb.ClusterIndex);
-            if (cluster != null)
-            {
-                if (cluster.Blocks.Count > 20)
-                {
-                    return;
-                }
-                foreach (var block in cluster.Blocks)
-                {
-                    
-                    {
-                        //string outputSpace = "";
-                        //for (int i = 0; i < hierarchy; i++)
-                        //{
-                        //    outputSpace += "  ";
-                        //}
-                        //Debug.Log(outputSpace + block.Block.SimBlock.name);
-                    }
-
-                    if (block.Block.SimBlock == bb)
-                    {
-                        Debug.Log("Same");
-                        continue;
-                    }
-
-
-                    DestroyComponent(block.Block.SimBlock.gameObject);
-                    block.Block.SimBlock.gameObject.transform.SetParent(transform);
-
-
-                    if (block.Block.SimBlock.jointsToMe != null)
-                    {
-                        foreach (var attachedJoint in block.Block.SimBlock.jointsToMe)
-                        {
-                            
-                            if (attachedJoint.gameObject.tag == "MechanicalTag")
-                            {
-                                if (attachedJoint.gameObject.GetComponent<BlockBehaviour>().ClusterIndex == bb.ClusterIndex)
-                                {
-                                    continue;
-                                }
-                                //Debug.Log(outputSpace + "<new Cluster>  {");
-                                try
-                                {
-                                    attachedJoint.gameObject.GetComponent<ConfigurableJoint>().connectedBody = GetComponent<Rigidbody>();
-                                }
-                                catch
-                                {
-                                    Debug.LogError("Reconnect Joint Error: " + attachedJoint.gameObject.name);
-                                }
-                                OptimizeBlock(attachedJoint.gameObject.GetComponent<BlockBehaviour>(),hierarchy + 1);
-                                //Debug.Log(outputSpace + "}");
-                            }
-                        }
-                    }
-                    
-                }
-            }
-            
-        }
         public void InitPropellerUndercart()
         {
             if (!transform.Find("Vis").Find("Propeller"))
@@ -511,6 +401,7 @@ namespace WW2NavalAssembly
             switch (Type.Selection)
             {
                 case "Bomb":
+                    LoadMass = 0.5f;
                     mf.sharedMesh = ModResource.GetMesh("Bomb Mesh");
                     mr.material.mainTexture = ModResource.GetTexture("Engine Texture").Texture;
                     switch (BombType.Selection)
@@ -523,6 +414,7 @@ namespace WW2NavalAssembly
                     }
                     break;
                 case "Torpedo":
+                    LoadMass = 1f;
                     mf.sharedMesh = ModResource.GetMesh("Torpedo Mesh");
                     mr.material.mainTexture = ModResource.GetTexture("Torpedo Texture").Texture;
                     switch (TorpedoType.Selection)
@@ -539,6 +431,7 @@ namespace WW2NavalAssembly
                     break;
                 default: break;
             }
+
         }
         public void FindHangar()
         {
@@ -647,7 +540,7 @@ namespace WW2NavalAssembly
         {
             return 1f / 3000f * AoA * AoA + 0.008f;
         }
-        public void AddMainWingForce()
+        public float AddMainWingForce()
         {
             Vector3 velocity_verticle = Vector3.ProjectOnPlane(myRigid.velocity, transform.right);
             float AoA = Vector3.Angle(velocity_verticle, -transform.up);
@@ -658,21 +551,25 @@ namespace WW2NavalAssembly
             Vector3 lift_direction = Vector3.Cross(myRigid.velocity, transform.right).normalized;
             Vector3 drag_direction = -myRigid.velocity.normalized;
 
-            myRigid.AddForce(CalculateLift(mainWingArea, AoA, true) * lift_direction + CalculateDrag(mainWingArea, AoA) * drag_direction, ForceMode.Force);
+            float liftForce = CalculateLift(mainWingArea, AoA, true);
+
+            myRigid.AddForce(liftForce * lift_direction + CalculateDrag(mainWingArea, AoA) * drag_direction, ForceMode.Force);
+            return liftForce;
         }
-        public void AddAeroForce()
+        public float AddAeroForce()
         {
             myRigid.angularDrag = Mathf.Clamp(myRigid.velocity.magnitude * 0.5f, 0.2f,150f);
-            myRigid.drag = Mathf.Clamp(myRigid.velocity.magnitude * 0.01f, 0.2f, 10f);
+            myRigid.drag = Mathf.Clamp(myRigid.velocity.magnitude * myRigid.mass * 0.01f, 0.2f, 10f);
 
             // horizon
-            AddMainWingForce();
+            float liftForce = AddMainWingForce();
 
             // vertical
             Vector3 velocity = myRigid.velocity;
             velocity = transform.InverseTransformDirection(velocity);
             velocity.x *= 0.9f;
             myRigid.velocity = transform.TransformDirection(velocity);
+            return liftForce;
         }
         public void SetPitch(float p)
         {
@@ -686,7 +583,7 @@ namespace WW2NavalAssembly
             Vector3 newforward = new Vector3(newforward_h.x, newforward_v, newforward_h.y).normalized;
             transform.rotation = Quaternion.LookRotation(newforward, (p>0?-1:1)*Vector3.up);
         }
-        public void SetHeight(float h, bool direct = false, float force = 0.05f)
+        public void SetHeight(float h, bool direct = false, float force = 0.1f)
         {
             if (!direct)
             {
@@ -966,6 +863,10 @@ namespace WW2NavalAssembly
             SmoothMat.dynamicFriction = 0f;
             SmoothMat.frictionCombine = PhysicMaterialCombine.Minimum;
             RegularMat = transform.Find("Colliders").GetChild(0).GetComponent<CapsuleCollider>().material;
+
+            //init load and fuel
+            AddLoad();
+            Fuel = 1;
         }
         public void OnDestroy()
         {
@@ -980,21 +881,31 @@ namespace WW2NavalAssembly
             
 
         }
-        public override void OnSimulateCollisionStay(Collision collision)
+        public override void OnSimulateTriggerStay(Collider collision)
         {
-            if (SmoothActive)
+            if (DeckSliding)
             {
-                float contactHeight = 0;
-                foreach (var contact in collision.contacts)
+                Ray UnderRay1 = new Ray(transform.position - 0.1f * transform.up + 0.5f * transform.forward + 0.5f * transform.right, -transform.forward);
+                RaycastHit hit1;
+                Ray UnderRay2 = new Ray(transform.position - 0.1f * transform.up + 0.5f * transform.forward - 0.5f * transform.right, -transform.forward);
+                RaycastHit hit2;
+                if (Physics.Raycast(UnderRay1, out hit1, 1f))
                 {
-                    contactHeight = Mathf.Max(contactHeight, contact.point.y);
+                    deckHeight = Mathf.Max(deckHeight, hit1.point.y);
+                    deckBelow = true;
                 }
-                Vector3 pos = transform.position;
-                pos.y = Mathf.Max(contactHeight - 0.05f, pos.y);
-                myRigid.MovePosition(pos);
-                Vector3 vel = myRigid.velocity;
-                vel.y = Mathf.Max(0,vel.y);
-                myRigid.velocity = vel;
+                else
+                {
+                    if (Physics.Raycast(UnderRay2, out hit2, 1f))
+                    {
+                        deckHeight = Mathf.Max(deckHeight, hit2.point.y);
+                        deckBelow = true;
+                    }
+                    else
+                    {
+                        deckBelow = false;
+                    }
+                }
             }
         }
         public override void OnSimulateCollisionEnter(Collision collision)
@@ -1013,7 +924,7 @@ namespace WW2NavalAssembly
                 myRigid.drag = 0.2f;
                 myRigid.angularDrag = 0.2f;
                 Thrust = 0f;
-                SmoothActive = false;
+                DeckSliding = false;
             }
         }
         public void Update()
@@ -1135,31 +1046,46 @@ namespace WW2NavalAssembly
             {
                 case Status.InHangar:
                     InHangarBehaviourFU();
-                    SmoothActive = false;
+                    DeckSliding = false;
                     break;
                 case Status.OnBoard:
                     OnBoardBehaviourFU();
-                    SmoothActive = false;
+                    DeckSliding = false;
                     break;
                 case Status.TakingOff:
-                    AddAeroForce();
+                    TakeOffLift = AddAeroForce();
                     Thrust += 0.2f;
                     myRigid.angularVelocity = Vector3.zero;
-                    SmoothActive = true;
+                    DeckSliding = true;
+
+                    if (TakeOffLift < myRigid.mass * 30 && deckBelow)
+                    {
+                        Vector3 pos = transform.position;
+                        pos.y = deckHeight - 0.05f;
+                        transform.position = pos;
+                        myRigid.constraints = RigidbodyConstraints.FreezePositionY;
+                        deckBelow = false;
+                    }
+                    else
+                    {
+                        myRigid.constraints = RigidbodyConstraints.None;
+                    }
 
                     if (myRigid.velocity.magnitude > 50f)
                     {
+                        deckSliding = false;
                         Pitch = Pitch + (30 - Pitch) * 0.05f;
                     }
 
                     if (transform.position.y >= CruiseHeight)
                     {
+                        deckSliding = false;
                         SwitchToCruise();
                     }
                     break;
                 case Status.Cruise:
                     AddAeroForce();
-                    SmoothActive = false;
+                    DeckSliding = false;
                     Pitch *= 0.98f;
                     
                     if (Rank.Value == 0)
