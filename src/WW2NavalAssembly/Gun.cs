@@ -1008,6 +1008,8 @@ namespace WW2NavalAssembly
         public int myGuid;
         public int myseed;
 
+        public bool noShutter = true;
+
         public MKey FireKey;
         public MKey SwitchKey;
         public MSlider Caliber;
@@ -1108,7 +1110,6 @@ namespace WW2NavalAssembly
 
             CannonPrefab.SetActive(false);
         }
-
         public void ClearCannon()
         {
             List<GameObject> tmps = new List<GameObject>();
@@ -1129,6 +1130,25 @@ namespace WW2NavalAssembly
             {
                 Destroy(t);
             }
+        }
+        public bool DetectSelfHost()
+        {
+            bool res = false;
+            Ray GunRay = new Ray(transform.position + transform.forward, transform.forward);
+            RaycastHit[] hitList = Physics.RaycastAll(GunRay, 20f);
+            foreach (var hit in hitList)
+            {
+                try
+                {
+                    if (hit.collider.transform.parent.GetComponent<BlockBehaviour>().ParentMachine.PlayerID == myPlayerID)
+                    {
+                        res = true;
+                        break;
+                    }
+                }
+                catch { }
+            }
+            return res;
         }
 
         public override void SafeAwake()
@@ -1267,7 +1287,7 @@ namespace WW2NavalAssembly
                 return;
             }
 
-            if (FireKey.IsPressed || triggeredByGunner)
+            if ((FireKey.IsPressed || triggeredByGunner) && noShutter)
             {
                 if (triggeredByGunner)
                 {
@@ -1361,6 +1381,7 @@ namespace WW2NavalAssembly
         }
         public override void SimulateFixedUpdateHost()
         {
+            noShutter = !DetectSelfHost();
             if (muzzleStage < 7)
             {
                 muzzleStage++;
@@ -1378,7 +1399,7 @@ namespace WW2NavalAssembly
                 return;
             }
 
-            if (FireKey.EmulationPressed())
+            if (FireKey.EmulationPressed() && noShutter)
             {
                 currentReloadTime = 0;
                 muzzleStage = 0;
