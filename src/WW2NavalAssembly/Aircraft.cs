@@ -346,18 +346,26 @@ namespace WW2NavalAssembly
                     groupWithoutLeader.Add(aircraft.Value);
                 }
             }
-            nextTeammate = groupWithoutLeader[0];
-            groupWithoutLeader[0].preTeammate = this;
-            for (int i = 0; i < groupWithoutLeader.Count; i++)
+            if (groupWithoutLeader.Count == 0)// no fellow
             {
-                if (i<groupWithoutLeader.Count-1)
-                {
-                    groupWithoutLeader[i].nextTeammate = groupWithoutLeader[i + 1];
-                    groupWithoutLeader[i + 1].preTeammate = groupWithoutLeader[i];
-                }
-                groupWithoutLeader[i].GroupTargetSpot = TeammateSpot[i];
-                
+                nextTeammate = null;
             }
+            else
+            {
+                nextTeammate = groupWithoutLeader[0];
+                groupWithoutLeader[0].preTeammate = this;
+                for (int i = 0; i < groupWithoutLeader.Count; i++)
+                {
+                    if (i < groupWithoutLeader.Count - 1)
+                    {
+                        groupWithoutLeader[i].nextTeammate = groupWithoutLeader[i + 1];
+                        groupWithoutLeader[i + 1].preTeammate = groupWithoutLeader[i];
+                    }
+                    groupWithoutLeader[i].GroupTargetSpot = TeammateSpot[i];
+
+                }
+            }
+            
 
             
 
