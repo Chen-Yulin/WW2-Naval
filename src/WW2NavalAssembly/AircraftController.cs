@@ -213,10 +213,12 @@ namespace WW2NavalAssembly
     public class CruisePoint:MonoBehaviour
     {
         public Vector3 Position;
+        public Vector2 Direction;
         public int Type = 0; // 0: normal, 1: torpedo attack, 2: bomb attack
-        public CruisePoint(Vector3 pos, int type)
+        public CruisePoint(Vector3 pos, Vector2 direction, int type)
         {
             Position = pos;
+            Direction = direction;
             Type = type;
         }
         public void Awake()
@@ -435,7 +437,18 @@ namespace WW2NavalAssembly
                 LR.material = new Material(Shader.Find("Particles/Additive"));
                 RouteLines.Add(group, LR);
             }
-            Routes[group].Enqueue(new CruisePoint(new Vector3(position.x,60f,position.y), type));
+
+            Vector2 direction = Vector2.zero;
+
+            if (Routes[group].Count > 0)
+            {
+                Vector3 prePosition = Routes[group].LastOrDefault().Position;
+                Debug.Log(prePosition);
+                Debug.Log(position);
+                direction = MathTool.Get2DCoordinate(new Vector3(position.x, 60f, position.y) - prePosition).normalized;
+                Debug.Log(direction);
+            }
+            Routes[group].Enqueue(new CruisePoint(new Vector3(position.x,60f,position.y), direction, type));
         }
         public void ResetRoutePoint(string group, Vector2 position, int type = 0)
         {
@@ -448,9 +461,15 @@ namespace WW2NavalAssembly
                 LR.material = new Material(Shader.Find("Particles/Additive"));
                 RouteLines.Add(group, LR);
             }
+
+            Vector2 direction = Vector2.zero;
+
+            Vector3 prePosition = CurrentLeader.transform.position;
+            direction = MathTool.Get2DCoordinate(new Vector3(position.x, 60f, position.y) - prePosition).normalized;
             Routes[group].Clear();
-            Routes[group].Enqueue(new CruisePoint(new Vector3(position.x, 60f, position.y), type));
+            Routes[group].Enqueue(new CruisePoint(new Vector3(position.x, 60f, position.y), direction, type));
             CurrentLeader.WayPoint = position;
+            CurrentLeader.WayDirection = direction;
         }
 
         public override void SafeAwake()

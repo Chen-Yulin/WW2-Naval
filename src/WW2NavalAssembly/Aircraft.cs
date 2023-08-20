@@ -198,6 +198,7 @@ namespace WW2NavalAssembly
 
         // ================== for cruise ==================
         public Vector2 WayPoint = new Vector2();
+        public Vector2 WayDirection = Vector2.zero;
 
         
         public void DestroyComponent(GameObject go)
@@ -711,11 +712,14 @@ namespace WW2NavalAssembly
         }
         public void LeaderTurnToWayPoint()
         {
-            Vector2 target = WayPoint;
+            Vector2 myPos = MathTool.Get2DCoordinate(transform.position);
+            float dist = Vector2.Distance(myPos, WayPoint);
+            Vector2 target = WayPoint - (dist > 75 ? 0.5f * WayDirection * dist : Vector2.zero);
             Vector2 targetDir = target - MathTool.Get2DCoordinate(transform.position);
             Vector2 forward = MathTool.Get2DCoordinate(-transform.up);
             float angle = MathTool.SignedAngle(forward, targetDir);
-            myRigid.AddTorque(-Vector3.up * Mathf.Clamp(angle, -120,120) * 0.15f);
+            angle = Mathf.Sign(angle) * Mathf.Sqrt(Mathf.Abs(angle));
+            myRigid.AddTorque(-Vector3.up * Mathf.Clamp(angle, -11,11) * 2f);
         }
         public void SlaveFollowLeader()
         {
@@ -1175,12 +1179,15 @@ namespace WW2NavalAssembly
                                 if (FlightDataBase.Instance.aircraftController[myPlayerID].Routes[Group.Value].Count > 0)
                                 {
                                     Vector3 peekPos = FlightDataBase.Instance.aircraftController[myPlayerID].Routes[Group.Value].Peek().Position;
+                                    Vector2 peekDir = FlightDataBase.Instance.aircraftController[myPlayerID].Routes[Group.Value].Peek().Direction;
                                     if (WayPoint.x == peekPos.x && WayPoint.y == peekPos.z && FlightDataBase.Instance.aircraftController[myPlayerID].Routes[Group.Value].Count > 1)
                                     {
                                         FlightDataBase.Instance.aircraftController[myPlayerID].Routes[Group.Value].Dequeue();
                                         peekPos = FlightDataBase.Instance.aircraftController[myPlayerID].Routes[Group.Value].Peek().Position;
+                                        peekDir = FlightDataBase.Instance.aircraftController[myPlayerID].Routes[Group.Value].Peek().Direction;
                                     }
                                     WayPoint = new Vector2(peekPos.x, peekPos.z);
+                                    WayDirection = peekDir;
                                 }
                             }
 
@@ -1197,10 +1204,6 @@ namespace WW2NavalAssembly
         }
         public void OnGUI()
         {
-            if (Rank.Value == 1)
-            {
-                //GUI.Box(new Rect(100, 200, 200, 50), myGroup.Count.ToString());
-            }
             
         }
 
