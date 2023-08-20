@@ -562,17 +562,14 @@ namespace WW2NavalAssembly
         public void FindDeck()
         {
             FlightDataBase.Deck deck = FlightDataBase.Instance.Decks[myPlayerID];
-            if (deck.Occupied_num < deck.Total_num)
+            foreach (Transform spot in FlightDataBase.Instance.DeckObjects[myPlayerID].transform.Find("Vis"))
             {
-                foreach (Transform spot in FlightDataBase.Instance.DeckObjects[myPlayerID].transform.Find("Vis"))
+                if (!spot.gameObject.GetComponent<ParkingSpot>().occupied)
                 {
-                    if (!spot.gameObject.GetComponent<ParkingSpot>().occupied)
-                    {
-                        MyDeck = spot;
-                        spot.gameObject.GetComponent<ParkingSpot>().occupied = true;
-                        FlightDataBase.Instance.GetTakeOffPosition(myPlayerID);
-                        break;
-                    }
+                    MyDeck = spot;
+                    spot.gameObject.GetComponent<ParkingSpot>().occupied = true;
+                    FlightDataBase.Instance.GetTakeOffPosition(myPlayerID);
+                    break;
                 }
             }
         }

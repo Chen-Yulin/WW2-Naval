@@ -791,7 +791,7 @@ namespace WW2NavalAssembly
                 GUI.Box(new Rect(100, 200, 200, 30), CurrentLeader.Group.Value.ToString());
                 GUI.Box(new Rect(100, 250, 200, 30), CurrentLeader.myGroup.Count.ToString());
             }
-            //GUI.Box(new Rect(100, 300, 200, 30), FlightDataBase.Instance.TakeOffPosition[myPlayerID].ToString());
+            //GUI.Box(new Rect(100, 300, 200, 30), FlightDataBase.Instance.Decks[myPlayerID].Occupied_num.ToString());
 
 
         }
