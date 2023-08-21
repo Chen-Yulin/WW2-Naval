@@ -934,6 +934,10 @@ namespace WW2NavalAssembly
         }
         public void FixedUpdate()
         {
+            if (transform.position.y < -1)
+            {
+                Destroy(this);
+            }
             if (fire)
             {
                 if (!thrustOn)

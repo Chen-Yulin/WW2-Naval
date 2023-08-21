@@ -242,6 +242,7 @@ namespace WW2NavalAssembly
         public MKey ViewLeft;
         public MKey ViewRight;
         public MKey Continuous;
+        public MKey Attack;
         public MSlider ViewSensitivity;
 
         bool _inTacticalView = false;
@@ -259,7 +260,7 @@ namespace WW2NavalAssembly
                     MainCamera.orthographicSize = _orthoSize;
 
                     Vector3 pos = MainCamera.transform.position;
-                    pos.y = 100;
+                    pos.y = 200;
                     MainCamera.transform.position = pos;
 
                 }
@@ -417,13 +418,18 @@ namespace WW2NavalAssembly
         {
             if (Grouper.Instance.AircraftLeaders[myPlayerID].ContainsKey(group))
             {
-                Aircraft a = Grouper.Instance.AircraftLeaders[myPlayerID][group].Value;
-                Vector3 pos = a.transform.position;
-                pos.y = 60;
-                GroupIcon[group].transform.position = pos;
-                float angle = -MathTool.SignedAngle(MathTool.Get2DCoordinate(-a.transform.up), Vector2.right);
-                GroupIcon[group].transform.GetChild(0).localEulerAngles = new Vector3(90, 0, angle);
-                GroupIcon[group].transform.localScale = _orthoSize/200f * Vector3.one;
+                try
+                {
+                    Aircraft a = Grouper.Instance.AircraftLeaders[myPlayerID][group].Value;
+                    Vector3 pos = a.transform.position;
+                    pos.y = 60;
+                    GroupIcon[group].transform.position = pos;
+                    float angle = -MathTool.SignedAngle(MathTool.Get2DCoordinate(-a.transform.up), Vector2.right);
+                    GroupIcon[group].transform.GetChild(0).localEulerAngles = new Vector3(90, 0, angle);
+                    GroupIcon[group].transform.localScale = _orthoSize / 200f * Vector3.one;
+                }
+                catch { }
+                
             }
         }
         public void AddRoutePoint(string group, Vector2 position, int type = 0)
@@ -443,12 +449,27 @@ namespace WW2NavalAssembly
             if (Routes[group].Count > 0)
             {
                 Vector3 prePosition = Routes[group].LastOrDefault().Position;
-                Debug.Log(prePosition);
-                Debug.Log(position);
                 direction = MathTool.Get2DCoordinate(new Vector3(position.x, 60f, position.y) - prePosition).normalized;
-                Debug.Log(direction);
             }
-            Routes[group].Enqueue(new CruisePoint(new Vector3(position.x,60f,position.y), direction, type));
+
+            float height;
+            switch (type)
+            {
+                case 0:
+                    height = 60f;
+                    break;
+                case 1:
+                    height = 25f;
+                    break;
+                case 2:
+                    height = 120f;
+                    break;
+                default:
+                    height = 60f;
+                    break;
+            }
+
+            Routes[group].Enqueue(new CruisePoint(new Vector3(position.x,height,position.y), direction, type));
         }
         public void ResetRoutePoint(string group, Vector2 position, int type = 0)
         {
@@ -462,14 +483,42 @@ namespace WW2NavalAssembly
                 RouteLines.Add(group, LR);
             }
 
-            Vector2 direction = Vector2.zero;
+            if (currentLeader.status != Aircraft.Status.Attacking)
+            {
+                float height;
+                switch (type)
+                {
+                    case 0:
+                        height = 60f;
+                        break;
+                    case 1:
+                        height = 25f;
+                        break;
+                    case 2:
+                        height = 120f;
+                        break;
+                    default:
+                        height = 60f;
+                        break;
+                }
 
-            Vector3 prePosition = CurrentLeader.transform.position;
-            direction = MathTool.Get2DCoordinate(new Vector3(position.x, 60f, position.y) - prePosition).normalized;
-            Routes[group].Clear();
-            Routes[group].Enqueue(new CruisePoint(new Vector3(position.x, 60f, position.y), direction, type));
-            CurrentLeader.WayPoint = position;
-            CurrentLeader.WayDirection = direction;
+                Vector2 direction = Vector2.zero;
+
+                Vector3 prePosition = CurrentLeader.transform.position;
+                direction = MathTool.Get2DCoordinate(new Vector3(position.x, height, position.y) - prePosition).normalized;
+                Routes[group].Clear();
+                Routes[group].Enqueue(new CruisePoint(new Vector3(position.x, height, position.y), direction, type));
+                CurrentLeader.WayPoint = position;
+                CurrentLeader.WayDirection = direction;
+                CurrentLeader.WayHeight = height;
+                CurrentLeader.WayPointType = type;
+            }
+            else
+            {
+                AddRoutePoint(group, position, type);
+            }
+
+            
         }
 
         public override void SafeAwake()
@@ -489,6 +538,7 @@ namespace WW2NavalAssembly
             ElevatorDown = AddKey("Aircraft Elevator Down", "ElevatorDown", KeyCode.DownArrow);
             Continuous = AddKey("Continuous", "Continuous", KeyCode.LeftControl);
             ViewSensitivity = AddSlider("View Sensitivity", "ViewSensitivity", 1, 0.3f, 3f);
+            Attack = AddKey("Attack", "Attack", KeyCode.C);
         }
 
         public void Start()
@@ -655,6 +705,11 @@ namespace WW2NavalAssembly
                             Vector2 screenPosition = new Vector2(Input.mousePosition.x, Input.mousePosition.y);
                             Vector3 worldPosition = Camera.main.ScreenToWorldPoint(screenPosition);
                             AddRoutePoint(CurrentLeader.Group.Value, new Vector2(worldPosition.x, worldPosition.z), 0);
+                        }else if (Attack.IsHeld)
+                        {
+                            Vector2 screenPosition = new Vector2(Input.mousePosition.x, Input.mousePosition.y);
+                            Vector3 worldPosition = Camera.main.ScreenToWorldPoint(screenPosition);
+                            AddRoutePoint(CurrentLeader.Group.Value, new Vector2(worldPosition.x, worldPosition.z), CurrentLeader.Type.Value);
                         }
                     }
                     else
@@ -664,6 +719,11 @@ namespace WW2NavalAssembly
                             Vector2 screenPosition = new Vector2(Input.mousePosition.x, Input.mousePosition.y);
                             Vector3 worldPosition = Camera.main.ScreenToWorldPoint(screenPosition);
                             ResetRoutePoint(CurrentLeader.Group.Value, new Vector2(worldPosition.x, worldPosition.z), 0);
+                        }else if (Attack.IsHeld)
+                        {
+                            Vector2 screenPosition = new Vector2(Input.mousePosition.x, Input.mousePosition.y);
+                            Vector3 worldPosition = Camera.main.ScreenToWorldPoint(screenPosition);
+                            ResetRoutePoint(CurrentLeader.Group.Value, new Vector2(worldPosition.x, worldPosition.z), CurrentLeader.Type.Value);
                         }
                     }
                 }
