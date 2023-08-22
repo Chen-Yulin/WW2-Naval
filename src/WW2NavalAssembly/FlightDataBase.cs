@@ -42,12 +42,13 @@ namespace WW2NavalAssembly
         int iconSize = 30;
 
         float AIRCRAFT_WIDTH = 1.6f;
-        float AIRCRAFT_LENGTH = 2.4f;
+        float AIRCRAFT_LENGTH_HANGAR = 2f;
+        float AIRCRAFT_LENGTH_DECK = 3f;
 
         public class Deck
         {
-            float AIRCRAFT_WIDTH = 1.6f;
-            float AIRCRAFT_LENGTH = 2.4f;
+            public float AIRCRAFT_WIDTH = 1.6f;
+            public float AIRCRAFT_LENGTH = 3f;
 
             public bool valid;
             public float Width;
@@ -73,6 +74,15 @@ namespace WW2NavalAssembly
             }
             public Deck(Vector2 center, float width, float length, Vector2 forward, Vector2 right, float height, bool isHangar = false, int occupied_num = 0)
             {
+                if (isHangar)
+                {
+                    AIRCRAFT_LENGTH = 2f;
+                }
+                else
+                {
+                    AIRCRAFT_LENGTH = 3f;
+                }
+
                 valid = true;
                 this.Center = center;
                 this.Width = width;
@@ -101,7 +111,7 @@ namespace WW2NavalAssembly
                     res = Mathf.Max(res, spot.GetSiblingIndex()+1);
                 }
             }
-            res = ((Mathf.Ceil(res / (float)Decks[playerID].Width_num)) * AIRCRAFT_LENGTH + 3f);
+            res = ((Mathf.Ceil(res / (float)Decks[playerID].Width_num)) * AIRCRAFT_LENGTH_DECK + 3f);
             TakeOffPosition[playerID] = res;
         }
 
@@ -132,7 +142,7 @@ namespace WW2NavalAssembly
                     continue;
                 }
                 HangarObjects[playerID][hangarKey].transform.position = new Vector3(Hangars[playerID][hangarKey].Anchor.x, Hangars[playerID][hangarKey].height, Hangars[playerID][hangarKey].Anchor.y);
-                HangarObjects[playerID][hangarKey].transform.rotation = Quaternion.LookRotation(new Vector3(Hangars[playerID][hangarKey].Forward.x, 0, Hangars[playerID][hangarKey].Forward.y));
+                HangarObjects[playerID][hangarKey].transform.rotation = Quaternion.LookRotation(new Vector3(Hangars[playerID][hangarKey].Forward.x, 30, Hangars[playerID][hangarKey].Forward.y));
                 HangarObjects[playerID][hangarKey].transform.eulerAngles = new Vector3(0, HangarObjects[playerID][hangarKey].transform.eulerAngles.y, 0);
             }
         }
@@ -170,8 +180,8 @@ namespace WW2NavalAssembly
                 bool ForwardABit = (i % Decks[playerID].Width_num) % 2 == 1;
                 Vector3 spotPos = anchor - right * Decks[playerID].RightMargin + forward * 2f
                                     - i % Decks[playerID].Width_num * AIRCRAFT_WIDTH * right
-                                    + i / Decks[playerID].Width_num * AIRCRAFT_LENGTH * forward
-                                    + (ForwardABit ? AIRCRAFT_LENGTH/3f : 0) * forward;
+                                    + i / Decks[playerID].Width_num * AIRCRAFT_LENGTH_DECK * forward
+                                    + (ForwardABit ? AIRCRAFT_LENGTH_DECK/2f : 0) * forward;
 
                 parkingSpot.transform.localPosition = spotPos;
 
@@ -254,15 +264,13 @@ namespace WW2NavalAssembly
                     Vector3 anchor = new Vector3(0, 0f, 0);
                     Vector3 right = Vector3.right;
                     Vector3 forward = Vector3.forward;
-                    bool ForwardABit = (i % hangar.Value.Width_num) % 2 == 1;
                     Vector3 spotPos = anchor - right * hangar.Value.RightMargin + forward * 2f
                                         - i % hangar.Value.Width_num * AIRCRAFT_WIDTH * right
-                                        + i / hangar.Value.Width_num * AIRCRAFT_LENGTH * forward
-                                        + (ForwardABit ? AIRCRAFT_LENGTH / 3f : 0) * forward;
+                                        + i / hangar.Value.Width_num * AIRCRAFT_LENGTH_HANGAR * forward;
 
                     parkingSpot.transform.localPosition = spotPos;
 
-                    parkingSpot.transform.localEulerAngles = Vector3.zero;
+                    parkingSpot.transform.localEulerAngles = new Vector3(0, 30, 0);
                 }
 
 

@@ -78,19 +78,19 @@ namespace WW2NavalAssembly
         public Texture SB2C_1_Tex;
         public Texture SB2C_2_Tex;
 
-        public float Zero_Prop_Offset = 1.35f;
-        public float B7A2_Prop_Offset = 2.3f;
-        public float R99_Prop_Offset = 2.08f;
-        public float F4U_Prop_Offset = 2.38f;
-        public float SBD_Prop_Offset = 1.35f;
-        public float SB2C_Prop_Offset = 2.3f;
+        public float Zero_Prop_Offset = 1.8f;
+        public float B7A2_Prop_Offset = 3.55f;
+        public float R99_Prop_Offset = 2.95f;
+        public float F4U_Prop_Offset = 3f;
+        public float SBD_Prop_Offset = 2.1f;
+        public float SB2C_Prop_Offset = 3.45f;
 
-        public Vector3 Zero_Body_Offset = new Vector3(0, 0.85f, 0);
-        public Vector3 R99_Body_Offset = new Vector3(0, 0.82f, -0.14f);
-        public Vector3 B7A2_Body_Offset = new Vector3(0, 0.41f, -0.22f);
-        public Vector3 F4U_Body_Offset = new Vector3(0, 0.55f, -0.14f);
-        public Vector3 SBD_Body_Offset = new Vector3(0, 0.74f, 0f);
-        public Vector3 SB2C_Body_Offset = new Vector3(0, 0.52f, -0.2f);
+        public Vector3 Zero_Body_Offset = new Vector3(0, 0.75f, 0.02f);
+        public Vector3 R99_Body_Offset = new Vector3(0, 0.75f, -0.15f);
+        public Vector3 B7A2_Body_Offset = new Vector3(0, 0.43f, -0.23f);
+        public Vector3 F4U_Body_Offset = new Vector3(0, 0.45f, -0.1f);
+        public Vector3 SBD_Body_Offset = new Vector3(0, 0.78f, 0f);
+        public Vector3 SB2C_Body_Offset = new Vector3(0, 0.53f, -0.2f);
 
 
         public void LoadAsset()

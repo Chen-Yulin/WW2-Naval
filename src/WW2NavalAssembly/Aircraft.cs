@@ -486,10 +486,10 @@ namespace WW2NavalAssembly
                     switch (TorpedoType.Selection)
                     {
                         case "B7A2":
-                            LoadObject.transform.localPosition = new Vector3(0, 0.3f, 0.3f);
+                            LoadObject.transform.localPosition = new Vector3(0, 0.4f, 0.3f);
                             break;
                         case "SB2C":
-                            LoadObject.transform.localPosition = new Vector3(0, 0.1f, 0.25f);
+                            LoadObject.transform.localPosition = new Vector3(0, 0.2f, 0.25f);
                             break;
                         default:
                             break;
@@ -563,7 +563,7 @@ namespace WW2NavalAssembly
                 // modify rotation
 
                 float deltaAngle = MathTool.SignedAngle(-new Vector2(transform.up.x, transform.up.z), new Vector2(spot.forward.x, spot.forward.z));
-                transform.RotateAround(transform.position, transform.up, deltaAngle);
+                transform.RotateAround(transform.position, Vector3.up, -deltaAngle);
 
             }
 
@@ -703,6 +703,8 @@ namespace WW2NavalAssembly
                 Vector2 forward = MathTool.Get2DCoordinate(-transform.up);
                 float angle = MathTool.SignedAngle(forward, targetDir);
                 myRigid.AddTorque(-Vector3.up * angle * 0.5f);
+
+                SetHeight(myRigid.position.y + (target.y - myRigid.position.y) * 0.1f);
 
                 myRigid.MovePosition(transform.position + (target - transform.position).normalized * Mathf.Clamp((target - transform.position).magnitude, 0, 10f) * 0.03f);
 
@@ -1024,7 +1026,7 @@ namespace WW2NavalAssembly
         }
         public override void OnSimulateCollisionEnter(Collision collision)
         {
-            if (status == Status.Exploded)
+            if (status == Status.Exploded || frameCount < 100)
             {
                 return;
             }
