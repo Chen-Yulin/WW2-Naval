@@ -473,7 +473,10 @@ namespace WW2NavalAssembly
                     switch (BombType.Selection)
                     {
                         case "99":
-                            LoadObject.transform.localPosition = new Vector3(0, 0.1f, 0.28f);
+                            LoadObject.transform.localPosition = new Vector3(0, 0.1f, 0.25f);
+                            break;
+                        case "SBD":
+                            LoadObject.transform.localPosition = new Vector3(0, -0.05f, 0.2f);
                             break;
                         default:
                             break;
@@ -486,10 +489,10 @@ namespace WW2NavalAssembly
                     switch (TorpedoType.Selection)
                     {
                         case "B7A2":
-                            LoadObject.transform.localPosition = new Vector3(0, 0.4f, 0.3f);
+                            LoadObject.transform.localPosition = new Vector3(0, 0.2f, 0.3f);
                             break;
                         case "SB2C":
-                            LoadObject.transform.localPosition = new Vector3(0, 0.2f, 0.25f);
+                            LoadObject.transform.localPosition = new Vector3(0, 0f, 0.25f);
                             break;
                         default:
                             break;
@@ -596,7 +599,6 @@ namespace WW2NavalAssembly
             float Drag = 0.5f * AirDensity * myRigid.velocity.sqrMagnitude * WingArea * CD;
             return Drag;
         }
-
         public float CalculateCL(float AoA ,int WingConst)
         {
             return (-0.7f * Mathf.Atan(0.1f * Mathf.Abs(AoA) - 2) + 1)
@@ -1128,7 +1130,6 @@ namespace WW2NavalAssembly
             }
 
         }
-
         public override void SimulateFixedUpdateHost()
         {
             if (frameCount == 0)
@@ -1213,7 +1214,7 @@ namespace WW2NavalAssembly
                         //Debug.Log((MathTool.Get2DCoordinate(transform.position) - WayPoint).magnitude);
 
                         float distFromWayPoint = (MathTool.Get2DCoordinate(transform.position) - WayPoint).magnitude;
-                        if (distFromWayPoint < 200f && WayPointType != 0)
+                        if (distFromWayPoint < 200f && WayPointType != 0 && !hasAttacked)
                         {
                             SwitchToAttack();
                         }
