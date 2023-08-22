@@ -220,6 +220,7 @@ namespace WW2NavalAssembly
         public Aircraft nextTeammate = null;
         public Aircraft preTeammate = null;
         public Transform GroupTargetSpot = null;
+        public int myTeamIndex = 0;
 
         // ============== for takingOff =================
         public Vector2 TakeOffDirection;
@@ -241,11 +242,28 @@ namespace WW2NavalAssembly
         {
             inAttackRoutine = true;
             Thrust = 53f;
-            while(Vector2.Distance(MathTool.Get2DCoordinate(transform.position), WayPoint) > 20f)
+            while(Vector2.Distance(MathTool.Get2DCoordinate(transform.position), WayPoint) > 10f)
             {
                 yield return new WaitForFixedUpdate();
             }
             Debug.Log("Drop Torpedo");
+            SwitchToCruise();
+            inAttackRoutine = false;
+            yield break;
+        }
+        IEnumerator BombCoroutine()
+        {
+            inAttackRoutine = true;
+            Thrust = 20f;
+            yield return new WaitForSeconds(myTeamIndex * 0.2f + UnityEngine.Random.value * 0.2f - 0.1f);
+            for (int i = 0; i < 35; i++)
+            {
+                Pitch -= 2;
+                yield return new WaitForFixedUpdate();
+            }
+            Thrust = 10f;
+            yield return new WaitForSeconds(1f);
+            Debug.Log("Diving");
             SwitchToCruise();
             inAttackRoutine = false;
             yield break;
@@ -383,6 +401,7 @@ namespace WW2NavalAssembly
                         groupWithoutLeader[i + 1].preTeammate = groupWithoutLeader[i];
                     }
                     groupWithoutLeader[i].GroupTargetSpot = TeammateSpot[i];
+                    groupWithoutLeader[i].myTeamIndex = i+1;
 
                 }
             }
@@ -396,6 +415,10 @@ namespace WW2NavalAssembly
         }
         public void GenerateFormation(bool attack = false)
         {
+            if (Rank.Value != 1)
+            {
+                return;
+            }
             if (!TeamBase)
             {
                 TeamBase = new GameObject("TeamBase");
@@ -685,7 +708,11 @@ namespace WW2NavalAssembly
             float angle = MathTool.SignedAngle(forward, targetDir);
             angle = Mathf.Sign(angle) * Mathf.Sqrt(Mathf.Abs(angle));
             myRigid.AddTorque(-Vector3.up * Mathf.Clamp(angle, -11,11) * 2f / myRigid.mass);
-            SetHeight(myRigid.position.y + (WayHeight - myRigid.position.y) * 0.1f);
+            SetHeight(myRigid.position.y + Mathf.Clamp((WayHeight - myRigid.position.y) * 0.1f, -0.5f, 0.5f));
+
+            Vector3 rigidPos = myRigid.position;
+            rigidPos.y = Mathf.Clamp(rigidPos.y, 21, 1000);
+            myRigid.MovePosition(rigidPos);
 
             float targetPitch = 0;
             if (dist > 25f)
@@ -706,19 +733,19 @@ namespace WW2NavalAssembly
                 float angle = MathTool.SignedAngle(forward, targetDir);
                 myRigid.AddTorque(-Vector3.up * angle * 0.5f);
 
-                SetHeight(myRigid.position.y + (target.y - myRigid.position.y) * 0.1f);
-
-                myRigid.MovePosition(transform.position + (target - transform.position).normalized * Mathf.Clamp((target - transform.position).magnitude, 0, 10f) * 0.03f);
-
-                if (myLeader.status == Status.Cruise)
+                if (myLeader.status == Status.Cruise || myLeader.status == Status.Attacking)
                 {
-                    Pitch = Pitch + (myLeader.Pitch-Pitch) * 0.02f;
+                    Pitch = Pitch + (myLeader.Pitch-Pitch) * 0.2f;
+                    SetHeight(myRigid.position.y + (target.y - myRigid.position.y) * 0.1f);
                 }
-                else
+                else if (myLeader.status != Status.Attacking)
                 {
                     Pitch *= 0.98f;
                 }
-                
+
+                Vector3 rigidTargetPosition = myRigid.position + (target - myRigid.position).normalized * Mathf.Clamp((target - transform.position).magnitude, 0, 10f) * 0.03f;
+                rigidTargetPosition.y = Mathf.Clamp(rigidTargetPosition.y, 21, 1000);
+                myRigid.MovePosition(rigidTargetPosition);
             }
         }
         public void DropLoad()
@@ -751,12 +778,21 @@ namespace WW2NavalAssembly
                 Thrust = 60f;
             }else if (status == Status.Attacking)
             {
-                GenerateFormation();
-                foreach (var a in myGroup)
+                if (Type.Value == 1)
                 {
-                    a.Value.status = Status.Cruise;
-                    a.Value.UndercartObject.SetActive(false);
-                    a.Value.Thrust = 60f;
+                    GenerateFormation();
+                    foreach (var a in myGroup)
+                    {
+                        a.Value.status = Status.Cruise;
+                        a.Value.UndercartObject.SetActive(false);
+                        a.Value.Thrust = 60f;
+                    }
+                }else if (Type.Value == 2)
+                {
+                    GenerateFormation();
+                    status = Status.Cruise;
+                    UndercartObject.SetActive(false);
+                    Thrust = 60f;
                 }
             }
         }
@@ -1251,13 +1287,16 @@ namespace WW2NavalAssembly
                     AddAeroForce();
                     DeckSliding = false;
 
-                    if (Rank.Value == 0)
+                    if (Type.Value == 1 || (Type.Value == 2 && !inAttackRoutine))
                     {
-                        SlaveFollowLeader();
-                    }
-                    else if (Rank.Value == 1)
-                    {
-                        LeaderTurnToWayPoint();
+                        if (Rank.Value == 0)
+                        {
+                            SlaveFollowLeader();
+                        }
+                        else if (Rank.Value == 1)
+                        {
+                            LeaderTurnToWayPoint();
+                        }
                     }
 
                     if (Type.Value == 1)
@@ -1269,7 +1308,14 @@ namespace WW2NavalAssembly
                     }
                     else if (Type.Value == 2)
                     {
-                        
+                        float distFromWayPoint = (MathTool.Get2DCoordinate(transform.position) - WayPoint).magnitude;
+                        if (!inAttackRoutine && distFromWayPoint < 50f && Rank.Value == 1)
+                        {
+                            foreach (var a in myGroup)
+                            {
+                                a.Value.StartCoroutine(a.Value.BombCoroutine());
+                            }
+                        }
                     }
 
                     Roll = Roll + (myRigid.angularVelocity.y * 45 - Roll) * 0.05f;

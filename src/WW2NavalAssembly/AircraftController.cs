@@ -459,10 +459,10 @@ namespace WW2NavalAssembly
                     height = 60f;
                     break;
                 case 1:
-                    height = 25f;
+                    height = 21.5f;
                     break;
                 case 2:
-                    height = 120f;
+                    height = 250f;
                     break;
                 default:
                     height = 60f;
@@ -492,10 +492,10 @@ namespace WW2NavalAssembly
                         height = 60f;
                         break;
                     case 1:
-                        height = 25f;
+                        height = 21.5f;
                         break;
                     case 2:
-                        height = 120f;
+                        height = 250f;
                         break;
                     default:
                         height = 60f;
