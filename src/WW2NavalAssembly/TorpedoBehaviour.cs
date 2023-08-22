@@ -322,9 +322,12 @@ namespace WW2NavalAssembly
                     {
                         myRigid.AddForce(-transform.up * 12f + new Vector3(0, 20 - depth - transform.position.y + 6.5f, 0));
                     }
-                    else
+                    else if (mode == 1)
                     {
                         myRigid.AddForce(-transform.up * 19f + new Vector3(0, 20 - depth - transform.position.y + 6.5f, 0));
+                    }else if (mode == 2)
+                    {
+                        myRigid.AddForce(-transform.up * 8f + new Vector3(0, 20 - depth - transform.position.y + 6.5f, 0));
                     }
 
                     if (StatMaster.isMP)

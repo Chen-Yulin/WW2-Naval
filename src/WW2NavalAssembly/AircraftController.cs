@@ -260,7 +260,7 @@ namespace WW2NavalAssembly
                     MainCamera.orthographicSize = _orthoSize;
 
                     Vector3 pos = MainCamera.transform.position;
-                    pos.y = 200;
+                    pos.y = 400;
                     MainCamera.transform.position = pos;
 
                 }

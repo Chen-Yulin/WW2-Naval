@@ -113,6 +113,8 @@ namespace WW2NavalAssembly
         public GameObject UndercartObject;
         public GameObject AircraftVis;
         public GameObject LoadObject;
+        public GameObject TorpedoPrefab;
+        public GameObject BombPrefab;
         public Transform MyHangar;
         public Transform MyDeck;
 
@@ -238,6 +240,7 @@ namespace WW2NavalAssembly
         public bool hasAttacked = false;
         public bool inAttackRoutine = false;
 
+
         IEnumerator TorpedoCoroutine()
         {
             inAttackRoutine = true;
@@ -247,6 +250,10 @@ namespace WW2NavalAssembly
                 yield return new WaitForFixedUpdate();
             }
             Debug.Log("Drop Torpedo");
+            foreach (var a in myGroup)
+            {
+                a.Value.DropLoad();
+            }
             SwitchToCruise();
             inAttackRoutine = false;
             yield break;
@@ -256,14 +263,15 @@ namespace WW2NavalAssembly
             inAttackRoutine = true;
             Thrust = 20f;
             yield return new WaitForSeconds(myTeamIndex * 0.2f + UnityEngine.Random.value * 0.2f - 0.1f);
-            for (int i = 0; i < 35; i++)
+            for (int i = 0; i < 166; i++)
             {
-                Pitch -= 2;
+                Pitch -= 0.5f;
                 yield return new WaitForFixedUpdate();
             }
             Thrust = 10f;
-            yield return new WaitForSeconds(1f);
-            Debug.Log("Diving");
+            yield return new WaitForSeconds(2.5f);
+            Debug.Log("Drop Bomb");
+            DropLoad();
             SwitchToCruise();
             inAttackRoutine = false;
             yield break;
@@ -308,6 +316,47 @@ namespace WW2NavalAssembly
                 UndercartObject = transform.Find("Vis").Find("Undercart").gameObject;
             }
 
+        }
+        void InitTorpedo()
+        {
+            TorpedoPrefab = new GameObject("NavalTorpedo");
+            TorpedoPrefab.transform.localScale = new Vector3(1.5f, 1.5f, 1.5f);
+            TorpedoBehaviour TBtmp = TorpedoPrefab.AddComponent<TorpedoBehaviour>();
+            TBtmp.Caliber = 400f;
+            TBtmp.myPlayerID = myPlayerID;
+            Rigidbody RBtmp = TorpedoPrefab.AddComponent<Rigidbody>();
+            RBtmp.mass = 0.2f;
+            RBtmp.drag = 0.1f;
+            RBtmp.useGravity = true;
+            GameObject TorpedoVis = new GameObject("TorpedoVis");
+            TorpedoVis.transform.SetParent(TorpedoPrefab.transform);
+            TorpedoVis.transform.localPosition = Vector3.zero;
+            TorpedoVis.transform.localRotation = Quaternion.Euler(0f, 0f, 270f);
+            TorpedoVis.transform.localScale = Vector3.one;
+            MeshFilter MFtmp = TorpedoVis.AddComponent<MeshFilter>();
+            MFtmp.sharedMesh = ModResource.GetMesh("Torpedo Mesh").Mesh;
+            MeshRenderer MRtmp = TorpedoVis.AddComponent<MeshRenderer>();
+            MRtmp.material.mainTexture = ModResource.GetTexture("Torpedo Texture").Texture;
+
+            GameObject Fan1 = new GameObject("Fan1");
+            Fan1.transform.SetParent(TorpedoPrefab.transform);
+            Fan1.transform.localPosition = Vector3.zero;
+            Fan1.transform.localRotation = Quaternion.Euler(0f, 0f, 270f);
+            Fan1.transform.localScale = Vector3.one;
+            Fan1.AddComponent<MeshFilter>().sharedMesh = ModResource.GetMesh("TorpedoFan1 Mesh").Mesh;
+            Fan1.AddComponent<MeshRenderer>().material.mainTexture = ModResource.GetTexture("TorpedoFan1 Texture").Texture;
+            Fan1.AddComponent<PropellerBehaviour>().Direction = false;
+
+            GameObject Fan2 = new GameObject("Fan2");
+            Fan2.transform.SetParent(TorpedoPrefab.transform);
+            Fan2.transform.localPosition = Vector3.zero;
+            Fan2.transform.localRotation = Quaternion.Euler(0f, 0f, 270f);
+            Fan2.transform.localScale = Vector3.one;
+            Fan2.AddComponent<MeshFilter>().sharedMesh = ModResource.GetMesh("TorpedoFan2 Mesh").Mesh;
+            Fan2.AddComponent<MeshRenderer>().material.mainTexture = ModResource.GetTexture("TorpedoFan2 Texture").Texture;
+            Fan2.AddComponent<PropellerBehaviour>().Direction = true;
+
+            TorpedoPrefab.SetActive(false);
         }
         public void UpdateAppearance(string craftName)
         {
@@ -524,6 +573,12 @@ namespace WW2NavalAssembly
                 default: break;
             }
             LoadObject.transform.parent = AircraftVis.transform;
+
+            // init load component
+            if (Type.Value == 1)
+            {
+                InitTorpedo();
+            }
         }
         public void FindHangar()
         {
@@ -721,7 +776,7 @@ namespace WW2NavalAssembly
             }
             
 
-            Pitch = Pitch + (targetPitch - Pitch) * 0.02f;
+            Pitch = Pitch + Mathf.Clamp((targetPitch - Pitch) * 0.02f, -2f, 2f);
         }
         public void SlaveFollowLeader()
         {
@@ -735,7 +790,7 @@ namespace WW2NavalAssembly
 
                 if (myLeader.status == Status.Cruise || myLeader.status == Status.Attacking)
                 {
-                    Pitch = Pitch + (myLeader.Pitch-Pitch) * 0.2f;
+                    Pitch = Pitch + Mathf.Clamp((myLeader.Pitch-Pitch) * 0.2f, -1f, 1f);
                     SetHeight(myRigid.position.y + (target.y - myRigid.position.y) * 0.1f);
                 }
                 else if (myLeader.status != Status.Attacking)
@@ -750,7 +805,30 @@ namespace WW2NavalAssembly
         }
         public void DropLoad()
         {
+            if (Type.Value == 1)
+            {
+                GameObject Torpedo = (GameObject)Instantiate(   TorpedoPrefab, LoadObject.transform.position, Quaternion.identity, 
+                                                                BlockBehaviour.ParentMachine.transform.Find("Simulation Machine"));
+                Torpedo.transform.rotation = Quaternion.LookRotation(transform.forward, transform.up);
+                Torpedo.name = "Torpedo" + myPlayerID.ToString();
+                Torpedo.SetActive(true);
+                TorpedoBehaviour TB = Torpedo.GetComponent<TorpedoBehaviour>();
+                TB.fire = true;
+                TB.mode = 2;
+                TB.parentGuid = myGuid;
+                TB.depth = 0.5f;
+                Destroy(Torpedo, 20f);
 
+                if (StatMaster.isMP)
+                {
+                    ModNetworking.SendToAll(WeaponMsgReceiver.FireMsg.CreateMessage(myPlayerID, myGuid, Vector3.zero, Torpedo.transform.eulerAngles));
+                }
+                LoadObject.SetActive(false);
+            }
+            else if (Type.Value == 2)
+            {
+                
+            }
         }
         public void SwitchToAttack()
         {
@@ -1309,7 +1387,7 @@ namespace WW2NavalAssembly
                     else if (Type.Value == 2)
                     {
                         float distFromWayPoint = (MathTool.Get2DCoordinate(transform.position) - WayPoint).magnitude;
-                        if (!inAttackRoutine && distFromWayPoint < 50f && Rank.Value == 1)
+                        if (!inAttackRoutine && distFromWayPoint < 100f && Rank.Value == 1)
                         {
                             foreach (var a in myGroup)
                             {
