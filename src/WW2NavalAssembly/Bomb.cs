@@ -11,9 +11,10 @@ namespace WW2NavalAssembly
     {
         public int myPlayerID;
         public int myGuid;
+        public GameObject parent;
 
         public int BombType = 0;
-        public int Weight = 1000;
+        public float Weight = 300;
 
         Rigidbody myRigid;
         public Vector3 randomForce;
@@ -26,6 +27,7 @@ namespace WW2NavalAssembly
         public int timer = 0;
         public bool timerOn;
 
+        public bool hasHitWater = false;
         public bool exploded = false;
         public void AddExploSound(Transform t)
         {
@@ -296,6 +298,16 @@ namespace WW2NavalAssembly
                     {
                         continue;
                     }
+                    try
+                    {
+                        if (hit.collider.transform.parent.parent.name == "Aircraft")
+                        {
+                            continue;
+                        }
+                    }
+                    catch { }
+                    
+
                     timerOn = true;
 
                     // pericing
@@ -304,10 +316,10 @@ namespace WW2NavalAssembly
                     {
                         // particle and sound effect
                         GameObject pierceEffect = (GameObject)Instantiate(AssetManager.Instance.Pierce.Pierce, hit.point, Quaternion.identity);
-                        pierceEffect.transform.localScale = Caliber / 400 * Vector3.one;
+                        pierceEffect.transform.localScale = Weight / 400 * Vector3.one;
                         Destroy(pierceEffect, 1);
                         AddPierceSound(pierceEffect.transform);
-                        ModNetworking.SendToAll(WeaponMsgReceiver.ExploMsg.CreateMessage(myPlayerID, hit.point, Caliber, 1));
+                        ModNetworking.SendToAll(WeaponMsgReceiver.ExploMsg.CreateMessage(myPlayerID, hit.point, Weight, 1));
 
                         // destroy balloon if directly hitted
                         if ((hit.collider.transform.parent.name == "Balloon" || hit.collider.transform.parent.name == "SqrBalloon")
@@ -324,7 +336,7 @@ namespace WW2NavalAssembly
                             CannonWell CW = hit.collider.transform.parent.GetComponent<CannonWell>();
                             if (CW.totalCaliber != 0)
                             {
-                                float WellExploProb = Caliber / CW.myCaliber * CW.gunNum * 0.08f;
+                                float WellExploProb = Weight / CW.myCaliber * CW.gunNum * 0.08f;
                                 float WellPalsyProb = 2 * WellExploProb;
                                 float AmmoExploProb = 3 * WellExploProb;
                                 if (hit.collider.name == "WellArmourVis")
@@ -358,7 +370,7 @@ namespace WW2NavalAssembly
 
                         if (hit.collider.transform.parent.parent.name == "Engine")
                         {
-                            hit.collider.transform.parent.parent.GetComponent<Engine>().CannonDamage(Caliber);
+                            hit.collider.transform.parent.parent.GetComponent<Engine>().CannonDamage(Weight);
                         }
 
                         // add force
@@ -366,7 +378,7 @@ namespace WW2NavalAssembly
                         {
                             if (!(hit.collider.transform.parent.name == "Balloon" || hit.collider.transform.parent.name == "SqrBalloon"))
                             {
-                                hit.collider.attachedRigidbody.AddForce(transform.forward * myRigid.velocity.magnitude * Caliber / 4, ForceMode.Force);
+                                hit.collider.attachedRigidbody.AddForce(transform.forward * myRigid.velocity.magnitude * Weight / 4, ForceMode.Force);
                             }
                         }
                         catch { }
@@ -375,7 +387,8 @@ namespace WW2NavalAssembly
                     if (!exploded)
                     {
                         PlayExploHit(hit, AP);
-                        Destroy(gameObject);
+                        gameObject.SetActive(false);
+                        Destroy(gameObject, 0.1f);
                     }
 
                     break;
@@ -401,7 +414,7 @@ namespace WW2NavalAssembly
                     case 1:
                         {
                             GameObject pierceEffect = (GameObject)Instantiate(AssetManager.Instance.Pierce.Pierce, exploPosition, Quaternion.identity);
-                            pierceEffect.transform.localScale = Caliber / 400 * Vector3.one;
+                            pierceEffect.transform.localScale = Weight / 400f * Vector3.one;
                             Destroy(pierceEffect, 1);
                             AddPierceSound(pierceEffect.transform);
                             break;
@@ -425,91 +438,23 @@ namespace WW2NavalAssembly
         }
         public void CannonDetectWaterHost()
         {
-            if (transform.position.y < 20f)
+            if (transform.position.y < 20f && myRigid.velocity.y < 0 && !hasHitWater && pericedBlock.Count == 0)
             {
-                if (!spotted)
-                {
-                    spotted = true;
-                    if ((transform.position - ControllerDataManager.Instance.lockData[myPlayerID].position).magnitude < 200f)
-                    {
-                        if (StatMaster.isMP)
-                        {
-                            if (myPlayerID == 0)
-                            {
-                                ControllerDataManager.Instance.SpotNum[myPlayerID]++;
-                            }
-                        }
-                        else
-                        {
-                            ControllerDataManager.Instance.SpotNum[myPlayerID]++;
-                        }
-                    }
-                }
-            }
-            if (transform.position.y < 20f && pericedBlock.Count == 0)
-            {
-                if (!hasHitWater)
-                {
-                    penetration *= 0.7f;
-                }
-                myRigid.velocity = new Vector3(myRigid.velocity.x, myRigid.velocity.y / (1 + Mathf.Sqrt(Caliber) / 40), myRigid.velocity.z);
-                myRigid.AddForce(myRigid.velocity * 0.8f - Vector3.up * 8);
-                penetration *= 0.8f + Mathf.Clamp(Mathf.Sqrt(Caliber) / 200, 0, 0.15f);
-                if (myRigid.velocity.magnitude <= 5f)
-                {
-                    Destroy(gameObject);
-                }
-            }
-            if (transform.position.y < 20f && !hasHitWater && myRigid.velocity.y < 0)
-            {
-
-                myRigid.drag = 11f / Mathf.Sqrt(Caliber) * 20;
+                hasHitWater = true;
                 GameObject waterhit;
-                if (Caliber >= 283)
-                {
-                    waterhit = (GameObject)Instantiate(AssetManager.Instance.WaterHit.waterhit1, new Vector3(transform.position.x, 20, transform.position.z), Quaternion.identity);
-                    waterhit.transform.localScale = Caliber / 381 * Vector3.one;
-                    Destroy(waterhit, 3);
-                }
-                else if (Caliber >= 100)
-                {
-                    waterhit = (GameObject)Instantiate(AssetManager.Instance.WaterHit.waterhit2, new Vector3(transform.position.x, 20, transform.position.z), Quaternion.identity);
-                    waterhit.transform.localScale = Caliber / 381 * Vector3.one;
-                    Destroy(waterhit, 3);
-                }
-                else
-                {
-                    waterhit = (GameObject)Instantiate(AssetManager.Instance.WaterHit.waterhit3, new Vector3(transform.position.x, 20, transform.position.z), Quaternion.identity);
-                    waterhit.transform.localScale = Caliber / 381 * Vector3.one;
-                    Destroy(waterhit, 3);
-                }
+                waterhit = (GameObject)Instantiate(AssetManager.Instance.WaterHit.waterhit1, new Vector3(transform.position.x, 20, transform.position.z), Quaternion.identity);
+                waterhit.transform.localScale = Weight / 381 * Vector3.one;
+                Destroy(waterhit, 3);
 
-
+                PlayExploInAir(false);
 
                 AddWaterHitSound(waterhit.transform);
-                hasHitWater = true;
-                ModNetworking.SendToAll(WeaponMsgReceiver.WaterHitMsg.CreateMessage(myPlayerID, new Vector3(transform.position.x, 20, transform.position.z), Caliber));
+                ModNetworking.SendToAll(WeaponMsgReceiver.WaterHitMsg.CreateMessage(myPlayerID, new Vector3(transform.position.x, 20, transform.position.z), Weight));
+                Destroy(gameObject);
             }
         }
         public void CannonDetectWaterClient()
         {
-            if (transform.position.y < 20f)
-            {
-                if (!spotted)
-                {
-                    spotted = true;
-                    if ((transform.position - ControllerDataManager.Instance.lockData[myPlayerID].position).magnitude < 200f)
-                    {
-                        if (StatMaster.isMP)
-                        {
-                            if (myPlayerID == PlayerData.localPlayer.networkId)
-                            {
-                                ControllerDataManager.Instance.SpotNum[myPlayerID]++;
-                            }
-                        }
-                    }
-                }
-            }
 
             foreach (WeaponMsgReceiver.waterhitInfo waterhitInfo in WeaponMsgReceiver.Instance.waterHitInfo[myPlayerID])
             {
@@ -517,19 +462,19 @@ namespace WW2NavalAssembly
                 if (waterhitInfo.Caliber >= 283)
                 {
                     waterhit = (GameObject)Instantiate(AssetManager.Instance.WaterHit.waterhit1, waterhitInfo.position, Quaternion.identity);
-                    waterhit.transform.localScale = waterhitInfo.Caliber / 381 * Vector3.one;
+                    waterhit.transform.localScale = waterhitInfo.Caliber / 381f * Vector3.one;
                     Destroy(waterhit, 3);
                 }
                 else if (waterhitInfo.Caliber >= 100)
                 {
                     waterhit = (GameObject)Instantiate(AssetManager.Instance.WaterHit.waterhit2, waterhitInfo.position, Quaternion.identity);
-                    waterhit.transform.localScale = waterhitInfo.Caliber / 381 * Vector3.one;
+                    waterhit.transform.localScale = waterhitInfo.Caliber / 381f * Vector3.one;
                     Destroy(waterhit, 3);
                 }
                 else
                 {
                     waterhit = (GameObject)Instantiate(AssetManager.Instance.WaterHit.waterhit3, waterhitInfo.position, Quaternion.identity);
-                    waterhit.transform.localScale = Caliber / 381 * Vector3.one;
+                    waterhit.transform.localScale = Weight / 381f * Vector3.one;
                     Destroy(waterhit, 3);
                 }
 
@@ -542,33 +487,28 @@ namespace WW2NavalAssembly
         {
             try
             {
-                GameObject explo = (GameObject)Instantiate(AssetManager.Instance.CannonHit.explo, hit.point - myRigid.velocity.normalized * Caliber / 800f, Quaternion.identity);
+                GameObject explo = (GameObject)Instantiate(AssetManager.Instance.CannonHit.explo, hit.point - myRigid.velocity.normalized * Weight / 800f, Quaternion.identity);
                 explo.SetActive(true);
-                explo.transform.localScale = Caliber / 800 * (AP ? 1 : 2) * Vector3.one;
+                explo.transform.localScale = Weight / 800 * (AP ? 1 : 2) * Vector3.one;
                 Destroy(explo, 3);
                 AddExploSound(explo.transform);
 
                 exploded = true;
 
                 //send to client
-                ModNetworking.SendToAll(WeaponMsgReceiver.ExploMsg.CreateMessage(myPlayerID, hit.point, Caliber, AP ? 0 : 2));
+                ModNetworking.SendToAll(WeaponMsgReceiver.ExploMsg.CreateMessage(myPlayerID, hit.point, Weight, AP ? 0 : 2));
 
                 try
                 {
-                    hit.collider.attachedRigidbody.AddForce(transform.forward * myRigid.velocity.magnitude * Caliber / 3, ForceMode.Force);
+                    hit.collider.attachedRigidbody.AddForce(transform.forward * myRigid.velocity.magnitude * Weight / 3, ForceMode.Force);
                 }
                 catch { }
 
                 ExploDestroyBalloon(hit.point, AP);
             }
             catch { }
-            if (transform.FindChild("CannonVis"))
-            {
-                transform.FindChild("CannonVis").gameObject.SetActive(false);
-            }
 
-            Destroy(gameObject.GetComponent<Rigidbody>());
-            Destroy(gameObject.GetComponent<BulletBehaviour>());
+            Destroy(gameObject);
 
 
         }
@@ -576,75 +516,26 @@ namespace WW2NavalAssembly
         {
             GameObject explo = (GameObject)Instantiate(AssetManager.Instance.CannonHit.explo, transform.position, Quaternion.identity);
             explo.SetActive(true);
-            explo.transform.localScale = Caliber / 800 * (AP ? 1 : 2) * Vector3.one;
+            explo.transform.localScale = Weight / 800f * (AP ? 1 : 2) * Vector3.one;
             Destroy(explo, 3);
             AddExploSound(explo.transform);
 
             exploded = true;
 
             //send to client
-            ModNetworking.SendToAll(WeaponMsgReceiver.ExploMsg.CreateMessage(myPlayerID, transform.position, Caliber, AP ? 0 : 2));
+            ModNetworking.SendToAll(WeaponMsgReceiver.ExploMsg.CreateMessage(myPlayerID, transform.position, Weight, AP ? 0 : 2));
 
             ExploDestroyBalloon(transform.position, AP);
-            if (transform.FindChild("CannonVis"))
-            {
-                transform.FindChild("CannonVis").gameObject.SetActive(false);
-            }
-            Destroy(gameObject.GetComponent<Rigidbody>());
-            Destroy(gameObject.GetComponent<BulletBehaviour>());
+            Destroy(gameObject);
         }
-        public void HEDetectWaterHost()
-        {
-            if (transform.position.y < 20f)
-            {
-                if (!spotted)
-                {
-                    spotted = true;
-                    if ((transform.position - ControllerDataManager.Instance.lockData[myPlayerID].position).magnitude < 200f)
-                    {
-                        if (StatMaster.isMP)
-                        {
-                            if (myPlayerID == 0)
-                            {
-                                ControllerDataManager.Instance.SpotNum[myPlayerID]++;
-                            }
-                        }
-                        else
-                        {
-                            ControllerDataManager.Instance.SpotNum[myPlayerID]++;
-                        }
-                    }
-                }
-            }
-            if (transform.position.y < 20f && !hasHitWater && myRigid.velocity.y < 0)
-            {
-
-                GameObject waterhit;
-                if (Caliber >= 283)
-                {
-                    waterhit = (GameObject)Instantiate(AssetManager.Instance.WaterHit.waterhit1, new Vector3(transform.position.x, 20, transform.position.z), Quaternion.identity);
-                    waterhit.transform.localScale = Caliber / 381 * Vector3.one;
-                }
-                else
-                {
-                    waterhit = (GameObject)Instantiate(AssetManager.Instance.WaterHit.waterhit2, new Vector3(transform.position.x, 20, transform.position.z), Quaternion.identity);
-                    waterhit.transform.localScale = Caliber / 381 * Vector3.one;
-                }
-                Destroy(waterhit, 3);
-                AddWaterHitSound(waterhit.transform);
-                hasHitWater = true;
-                PlayExploInAir(false);
-                Destroy(gameObject, 0.1f);
-                ModNetworking.SendToAll(WeaponMsgReceiver.WaterHitMsg.CreateMessage(myPlayerID, new Vector3(transform.position.x, 20, transform.position.z), Caliber));
-            }
-        }
+        
         private void ExploDestroyBalloon(Vector3 pos, bool AP = true)
         {
-            float exploPenetration = Caliber / 20f * (AP ? 1f : 1.5f);
+            float exploPenetration = Weight / 20f * (AP ? 1f : 1.5f);
             try
             {
                 //Debug.Log(armourGuid);
-                Collider[] ExploCol = Physics.OverlapSphere(transform.position, Mathf.Sqrt(Caliber) / (AP ? 8f : 5f));
+                Collider[] ExploCol = Physics.OverlapSphere(transform.position, Mathf.Sqrt(Weight) / (AP ? 8f : 5f));
                 foreach (Collider hitedCollider in ExploCol)
                 {
                     try
@@ -684,7 +575,7 @@ namespace WW2NavalAssembly
                         {
                             if (!(hitedCollider.transform.parent.name == "Balloon" || hitedCollider.transform.parent.name == "SqrBalloon"))
                             {
-                                hitedCollider.transform.parent.GetComponent<Rigidbody>().AddExplosionForce((AP ? 5f : 8f) * Caliber, pos, Mathf.Sqrt(Caliber) / (AP ? 8f : 5f));
+                                hitedCollider.transform.parent.GetComponent<Rigidbody>().AddExplosionForce((AP ? 5f : 8f) * Weight, pos, Mathf.Sqrt(Weight) / (AP ? 8f : 5f));
                             }
                         }
                     }
@@ -699,96 +590,49 @@ namespace WW2NavalAssembly
             myRigid = gameObject.GetComponent<Rigidbody>();
             if (BombType == 0)
             {
-                penetration = Caliber * 2;
+                penetration = Weight * 0.3f;
             }
-            else if (BombType == 1)
-            {
-                penetration = Caliber * 0.5f;
-            }
-
-            decay = Mathf.Pow(0.5f, 1 / (Mathf.Sqrt(Caliber + 100) * 30f));
 
             TrailRenderer TR = gameObject.GetComponent<TrailRenderer>();
             if (BombType == 0)
             {
-                TR.material.SetColor("_TintColor", Color.white);
-            }
-            else
-            {
-                TR.material.SetColor("_TintColor", Color.white - 0.8f * Color.blue);
+                TR.material.SetColor("_TintColor", new Color(1,1,1,0.1f));
             }
 
         }
         public void FixedUpdate()
         {
-            if (transform.position.y < -1)
+            myRigid.AddForce(randomForce);
+            
+            if (!StatMaster.isClient)
             {
-                Destroy(this);
-            }
-            if (fire)
-            {
-                if (!thrustOn)
+                if (BombType == 0 && !hasHitWater) // for AP
                 {
-                    myRigid.velocity = transform.forward * (130 + 0.08f * (Caliber + 50) + ((18000) / (Caliber + 100)));
-                    thrustOn = true;
-                    PlayGunShot();
-                } // add initial speed
-                transform.rotation = Quaternion.LookRotation(myRigid.velocity);
-                myRigid.AddForce(randomForce);
-
-                if (!StatMaster.isClient)
-                {
-                    if (BombType == 0) // for AP
+                    CannonDetectCollisionHost(false);
+                    if (ModController.Instance.showSea)
                     {
-                        CannonDetectCollisionHost();
-                        if (ModController.Instance.showSea)
-                        {
-                            CannonDetectWaterHost();
-                        }
-                        if (timerOn)
-                        {
-                            timer++;
-                        }
-                        if (timer > 5f && !exploded)
-                        {
-                            PlayExploInAir();
-                        }
+                        CannonDetectWaterHost();
                     }
-                    else
+                    if (timerOn)
                     {
-                        CannonDetectCollisionHost(false);
-                        if (pericedBlock.Count == 0 && ModController.Instance.showSea)
-                        {
-                            HEDetectWaterHost();
-                        }
-                        if (timerOn)
-                        {
-                            timer++;
-                        }
-                        if (timer > 3f && !exploded)
-                        {
-                            PlayExploInAir(false);
-                        }
-
+                        timer++;
                     }
-
-                }
-                else
-                {
-                    CannonDetectCollisionClient();
-                    CannonDetectWaterClient();
-
+                    if (timer > 15f && !exploded)
+                    {
+                        PlayExploInAir(false);
+                    }
                 }
 
-            }
-            if (BombType == 0)
-            {
-                penetration *= decay;
-                //Debug.Log(penetration);
             }
             else
             {
-                penetration *= decay;
+                CannonDetectCollisionClient();
+                CannonDetectWaterClient();
+
+            }
+            if (transform.position.y < -1)
+            {
+                Destroy(this.gameObject);
             }
 
         }

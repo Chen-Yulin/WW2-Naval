@@ -239,6 +239,7 @@ namespace WW2NavalAssembly
         // ================== for attacking ==================
         public bool hasAttacked = false;
         public bool inAttackRoutine = false;
+        public float divingTime = 2.5f;
 
 
         IEnumerator TorpedoCoroutine()
@@ -263,13 +264,29 @@ namespace WW2NavalAssembly
             inAttackRoutine = true;
             Thrust = 20f;
             yield return new WaitForSeconds(myTeamIndex * 0.2f + UnityEngine.Random.value * 0.2f - 0.1f);
-            for (int i = 0; i < 166; i++)
+            float targetPitch = -82 + UnityEngine.Random.value * 8f;
+            float targetRoll = 0;
+            while(Pitch > targetPitch)
             {
                 Pitch -= 0.5f;
+                targetRoll += 2;
+                targetRoll = Mathf.Clamp(targetRoll, 0, 180);
+                Roll = targetRoll;
                 yield return new WaitForFixedUpdate();
             }
             Thrust = 10f;
-            yield return new WaitForSeconds(2.5f);
+
+            float time = 0;
+            targetRoll = -180;
+            while (time<divingTime)
+            {
+                yield return new WaitForFixedUpdate();
+                time += Time.fixedDeltaTime;
+                targetRoll += 2;
+                targetRoll = Mathf.Clamp(targetRoll, -180, 0);
+                Roll = targetRoll;
+            }
+            
             Debug.Log("Drop Bomb");
             DropLoad();
             SwitchToCruise();
@@ -357,6 +374,47 @@ namespace WW2NavalAssembly
             Fan2.AddComponent<PropellerBehaviour>().Direction = true;
 
             TorpedoPrefab.SetActive(false);
+        }
+        void InitBomb()
+        {
+            BombPrefab = new GameObject("BombPrefab");
+            Bomb BBtmp = BombPrefab.AddComponent<Bomb>();
+            BBtmp.Weight = 300;
+            BBtmp.myPlayerID = myPlayerID;
+            Rigidbody RBtmp = BombPrefab.AddComponent<Rigidbody>();
+            RBtmp.mass = 0.2f;
+            RBtmp.drag = 0.1f;
+            RBtmp.useGravity = true;
+
+            GameObject CannonVis = new GameObject("BombVis");
+            CannonVis.transform.SetParent(BombPrefab.transform);
+            CannonVis.transform.localPosition = Vector3.zero;
+            CannonVis.transform.localRotation = Quaternion.Euler(0f, 0f, 0f);
+            MeshFilter MFtmp = CannonVis.AddComponent<MeshFilter>();
+            MFtmp.sharedMesh = ModResource.GetMesh("Bomb Mesh").Mesh;
+            MeshRenderer MRtmp = CannonVis.AddComponent<MeshRenderer>();
+            MRtmp.material.mainTexture = ModResource.GetTexture("Engine Texture").Texture;
+
+
+            TrailRenderer TRtmp = BombPrefab.AddComponent<TrailRenderer>();
+            TRtmp.autodestruct = false;
+
+            TRtmp.receiveShadows = false;
+            TRtmp.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+
+            TRtmp.startWidth = Mathf.Clamp(0.001f * 1000, 0.05f, 0.5f);
+            TRtmp.endWidth = 0f;
+
+            TRtmp.material = new Material(Shader.Find("Particles/Additive"));
+
+            TRtmp.material.SetColor("_TintColor", Color.white - 0.8f * Color.blue);
+
+
+            TRtmp.enabled = true;
+            TRtmp.time = 0.1f;
+
+
+            BombPrefab.SetActive(false);
         }
         public void UpdateAppearance(string craftName)
         {
@@ -578,6 +636,9 @@ namespace WW2NavalAssembly
             if (Type.Value == 1)
             {
                 InitTorpedo();
+            }else if (Type.Value == 2)
+            {
+                InitBomb();
             }
         }
         public void FindHangar()
@@ -747,7 +808,15 @@ namespace WW2NavalAssembly
         }
         public void SetVisRoll(float roll)
         {
-            AircraftVis.transform.localEulerAngles = new Vector3(90, Mathf.Clamp(roll,-60,60), 0);
+            if (!inAttackRoutine)
+            {
+                AircraftVis.transform.localEulerAngles = new Vector3(90, Mathf.Clamp(roll, -60, 60), 0);
+            }
+            else
+            {
+                AircraftVis.transform.localEulerAngles = new Vector3(90, roll, 0);
+            }
+            
         }
         public void SetTeamRoll(float roll)
         {
@@ -827,6 +896,17 @@ namespace WW2NavalAssembly
             }
             else if (Type.Value == 2)
             {
+                GameObject Bomb = (GameObject)Instantiate(BombPrefab, LoadObject.transform.position, Quaternion.identity,
+                                                                BlockBehaviour.ParentMachine.transform.Find("Simulation Machine"));
+                Bomb.transform.rotation = Quaternion.LookRotation(transform.forward, transform.up);
+                Bomb.GetComponent<Rigidbody>().velocity = myRigid.velocity;
+                Bomb.GetComponent<Bomb>().randomForce = new Vector3(UnityEngine.Random.value - 0.5f, UnityEngine.Random.value - 0.5f, UnityEngine.Random.value - 0.5f);
+                Bomb.GetComponent<Bomb>().parent = gameObject;
+                Bomb.name = "Bomb" + myPlayerID.ToString();
+
+
+                Bomb.SetActive(true);
+
                 LoadObject.SetActive(false);
             }
         }
@@ -1387,7 +1467,7 @@ namespace WW2NavalAssembly
                     else if (Type.Value == 2)
                     {
                         float distFromWayPoint = (MathTool.Get2DCoordinate(transform.position) - WayPoint).magnitude;
-                        if (!inAttackRoutine && distFromWayPoint < 100f && Rank.Value == 1)
+                        if (!inAttackRoutine && distFromWayPoint < 95f && Rank.Value == 1)
                         {
                             foreach (var a in myGroup)
                             {
@@ -1396,7 +1476,11 @@ namespace WW2NavalAssembly
                         }
                     }
 
-                    Roll = Roll + (myRigid.angularVelocity.y * 45 - Roll) * 0.05f;
+                    if (!inAttackRoutine)
+                    {
+                        Roll = Roll + (myRigid.angularVelocity.y * 45 - Roll) * 0.05f;
+                    }
+                    
                     break;
                 default : break;
             }
