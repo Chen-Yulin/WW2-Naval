@@ -214,12 +214,14 @@ namespace WW2NavalAssembly
     {
         public Vector3 Position;
         public Vector2 Direction;
+        public GameObject Icon;
         public int Type = 0; // 0: normal, 1: torpedo attack, 2: bomb attack
-        public CruisePoint(Vector3 pos, Vector2 direction, int type)
+        public CruisePoint(Vector3 pos, Vector2 direction, int type, GameObject icon = null)
         {
             Position = pos;
             Direction = direction;
             Type = type;
+            Icon = icon;
         }
         public void Awake()
         {
@@ -445,11 +447,27 @@ namespace WW2NavalAssembly
             }
 
             Vector2 direction = Vector2.zero;
+            GameObject Icon = null;
 
             if (Routes[group].Count > 0)
             {
                 Vector3 prePosition = Routes[group].LastOrDefault().Position;
                 direction = MathTool.Get2DCoordinate(new Vector3(position.x, 60f, position.y) - prePosition).normalized;
+                switch (type)
+                {
+                    case 1:
+                        Icon = (GameObject)Instantiate( AssetManager.Instance.Aircraft.TorpedoAim, new Vector3(position.x, 20.5f, position.y), Quaternion.identity,
+                                                        DrawBoard.transform);
+                        Icon.transform.rotation = Quaternion.LookRotation(Vector3.up, new Vector3(direction.x, 0, direction.y));
+                        break;
+                    case 2:
+                        Icon = (GameObject)Instantiate(AssetManager.Instance.Aircraft.BombAim, new Vector3(position.x, 20.5f, position.y), Quaternion.identity,
+                                                        DrawBoard.transform);
+                        Icon.transform.rotation = Quaternion.LookRotation(Vector3.up, new Vector3(direction.x, 0, direction.y));
+                        break;
+                    default:
+                        break;
+                }
             }
 
             float height;
@@ -469,7 +487,7 @@ namespace WW2NavalAssembly
                     break;
             }
 
-            Routes[group].Enqueue(new CruisePoint(new Vector3(position.x,height,position.y), direction, type));
+            Routes[group].Enqueue(new CruisePoint(new Vector3(position.x,height,position.y), direction, type, Icon));
         }
         public void ResetRoutePoint(string group, Vector2 position, int type = 0)
         {
@@ -503,11 +521,38 @@ namespace WW2NavalAssembly
                 }
 
                 Vector2 direction = Vector2.zero;
-
+                GameObject Icon = null;
                 Vector3 prePosition = CurrentLeader.transform.position;
                 direction = MathTool.Get2DCoordinate(new Vector3(position.x, height, position.y) - prePosition).normalized;
+
+                switch (type)
+                {
+                    case 1:
+                        Icon = (GameObject)Instantiate(AssetManager.Instance.Aircraft.TorpedoAim, new Vector3(position.x, 20.5f, position.y), Quaternion.identity,
+                                                        DrawBoard.transform);
+                        Icon.transform.rotation = Quaternion.LookRotation(Vector3.up, new Vector3(direction.x, 0, direction.y));
+                        break;
+                    case 2:
+                        Icon = (GameObject)Instantiate(AssetManager.Instance.Aircraft.BombAim, new Vector3(position.x, 20.5f, position.y), Quaternion.identity,
+                                                        DrawBoard.transform);
+                        Icon.transform.rotation = Quaternion.LookRotation(Vector3.up, new Vector3(direction.x, 0, direction.y));
+                        break;
+                    default:
+                        break;
+                }
+
+
+                foreach (var point in Routes[group])
+                {
+                    if (point.Icon)
+                    {
+                        Destroy(point.Icon);
+                    }
+                }
                 Routes[group].Clear();
-                Routes[group].Enqueue(new CruisePoint(new Vector3(position.x, height, position.y), direction, type));
+
+
+                Routes[group].Enqueue(new CruisePoint(new Vector3(position.x, height, position.y), direction, type, Icon));
                 CurrentLeader.WayPoint = position;
                 CurrentLeader.WayDirection = direction;
                 CurrentLeader.WayHeight = height;
@@ -517,8 +562,30 @@ namespace WW2NavalAssembly
             {
                 AddRoutePoint(group, position, type);
             }
+        }
 
-            
+        public CruisePoint DequeueRoutePoint(string group)
+        {
+            if (Routes.ContainsKey(group))
+            {
+                if (Routes[group].Count > 0)
+                {
+                    CruisePoint point = Routes[group].Dequeue();
+                    if (point.Icon)
+                    {
+                        Destroy(point.Icon);
+                    }
+                    return point;
+                }
+                else
+                {
+                    return null;
+                }
+            }
+            else
+            {
+                return null;
+            }
         }
 
         public override void SafeAwake()
@@ -705,7 +772,7 @@ namespace WW2NavalAssembly
                             Vector2 screenPosition = new Vector2(Input.mousePosition.x, Input.mousePosition.y);
                             Vector3 worldPosition = Camera.main.ScreenToWorldPoint(screenPosition);
                             AddRoutePoint(CurrentLeader.Group.Value, new Vector2(worldPosition.x, worldPosition.z), 0);
-                        }else if (Attack.IsHeld)
+                        }else if (Attack.IsPressed)
                         {
                             Vector2 screenPosition = new Vector2(Input.mousePosition.x, Input.mousePosition.y);
                             Vector3 worldPosition = Camera.main.ScreenToWorldPoint(screenPosition);
@@ -719,7 +786,7 @@ namespace WW2NavalAssembly
                             Vector2 screenPosition = new Vector2(Input.mousePosition.x, Input.mousePosition.y);
                             Vector3 worldPosition = Camera.main.ScreenToWorldPoint(screenPosition);
                             ResetRoutePoint(CurrentLeader.Group.Value, new Vector2(worldPosition.x, worldPosition.z), 0);
-                        }else if (Attack.IsHeld)
+                        }else if (Attack.IsPressed)
                         {
                             Vector2 screenPosition = new Vector2(Input.mousePosition.x, Input.mousePosition.y);
                             Vector3 worldPosition = Camera.main.ScreenToWorldPoint(screenPosition);

@@ -817,7 +817,7 @@ namespace WW2NavalAssembly
                 TB.mode = 2;
                 TB.parentGuid = myGuid;
                 TB.depth = 0.5f;
-                Destroy(Torpedo, 20f);
+                Destroy(Torpedo, 25f);
 
                 if (StatMaster.isMP)
                 {
@@ -827,7 +827,7 @@ namespace WW2NavalAssembly
             }
             else if (Type.Value == 2)
             {
-                
+                LoadObject.SetActive(false);
             }
         }
         public void SwitchToAttack()
@@ -1344,7 +1344,7 @@ namespace WW2NavalAssembly
                                     int type = FlightDataBase.Instance.aircraftController[myPlayerID].Routes[Group.Value].Peek().Type;
                                     if (WayPoint.x == peekPos.x && WayPoint.y == peekPos.z && FlightDataBase.Instance.aircraftController[myPlayerID].Routes[Group.Value].Count > 1)
                                     {
-                                        FlightDataBase.Instance.aircraftController[myPlayerID].Routes[Group.Value].Dequeue();
+                                        FlightDataBase.Instance.aircraftController[myPlayerID].DequeueRoutePoint(Group.Value);
                                         peekPos = FlightDataBase.Instance.aircraftController[myPlayerID].Routes[Group.Value].Peek().Position;
                                         peekDir = FlightDataBase.Instance.aircraftController[myPlayerID].Routes[Group.Value].Peek().Direction;
                                         type = FlightDataBase.Instance.aircraftController[myPlayerID].Routes[Group.Value].Peek().Type;

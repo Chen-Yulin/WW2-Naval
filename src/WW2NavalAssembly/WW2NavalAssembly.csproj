@@ -54,6 +54,7 @@
     <Compile Include="AircraftController.cs" />
     <Compile Include="AssetManager.cs" />
     <Compile Include="BalloonLife.cs" />
+    <Compile Include="Bomb.cs" />
     <Compile Include="BraceOptimizer.cs" />
     <Compile Include="BulletHole.cs" />
     <Compile Include="CannonTrackManager.cs" />
