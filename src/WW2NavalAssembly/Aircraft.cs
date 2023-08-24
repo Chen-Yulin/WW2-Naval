@@ -590,7 +590,7 @@ namespace WW2NavalAssembly
             LoadObject = new GameObject("Load");
             LoadObject.transform.parent = transform;
             LoadObject.transform.localPosition = new Vector3(0, 0.1f, 0.2f);
-            LoadObject.transform.localEulerAngles = new Vector3(0, 0, -90);
+            LoadObject.transform.localEulerAngles = new Vector3(5, 0, -90);
             LoadObject.transform.localScale = Vector3.one * 1.5f;
             MeshFilter mf = LoadObject.AddComponent<MeshFilter>();
             MeshRenderer mr = LoadObject.AddComponent<MeshRenderer>();
@@ -608,6 +608,9 @@ namespace WW2NavalAssembly
                         case "SBD":
                             LoadObject.transform.localPosition = new Vector3(0, -0.05f, 0.2f);
                             break;
+                        case "Fulmar":
+                            LoadObject.transform.localPosition = new Vector3(0, 0.1f, 0.25f);
+                            break;
                         default:
                             break;
                     }
@@ -623,6 +626,9 @@ namespace WW2NavalAssembly
                             break;
                         case "SB2C":
                             LoadObject.transform.localPosition = new Vector3(0, 0f, 0.25f);
+                            break;
+                        case "Barracuda":
+                            LoadObject.transform.localPosition = new Vector3(0, 0.1f, 0.23f);
                             break;
                         default:
                             break;

@@ -24,7 +24,7 @@
 	<Texture name="A-Zero-0 Texture" /> <!-- Must be defined as a resource in the manifest. -->
 	
 	<Icon>
-		<Position x="0.3" y="0.0" z="-0.4" />
+		<Position x="0.3" y="0.3" z="-0.4" />
 		<Rotation x="45.0" y="225.0" z="0.0" />
 		<Scale x="0.1" y="0.1" z="0.1" />
 	</Icon>
