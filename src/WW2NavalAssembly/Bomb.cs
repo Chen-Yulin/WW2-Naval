@@ -617,7 +617,7 @@ namespace WW2NavalAssembly
                     {
                         timer++;
                     }
-                    if (timer > 15f && !exploded)
+                    if (timer > 10f && !exploded)
                     {
                         PlayExploInAir(false);
                     }

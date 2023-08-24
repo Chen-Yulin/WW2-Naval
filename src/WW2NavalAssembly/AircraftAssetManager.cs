@@ -117,9 +117,9 @@ namespace WW2NavalAssembly
         public float F4U_Prop_Offset = 3f;
         public float SBD_Prop_Offset = 2.1f;
         public float SB2C_Prop_Offset = 3.45f;
-        public float Spitfire_Prop_Offset = 2.5f;
-        public float Fulmar_Prop_Offset = 2.5f;
-        public float Barracuda_Prop_Offset = 3.5f;
+        public float Spitfire_Prop_Offset = 3.5f;
+        public float Fulmar_Prop_Offset = 1.45f;
+        public float Barracuda_Prop_Offset = 2.85f;
 
         public Vector3 Zero_Body_Offset = new Vector3(0, 0.75f, 0.02f);
         public Vector3 R99_Body_Offset = new Vector3(0, 0.75f, -0.15f);
@@ -127,9 +127,9 @@ namespace WW2NavalAssembly
         public Vector3 F4U_Body_Offset = new Vector3(0, 0.45f, -0.1f);
         public Vector3 SBD_Body_Offset = new Vector3(0, 0.78f, 0f);
         public Vector3 SB2C_Body_Offset = new Vector3(0, 0.53f, -0.2f);
-        public Vector3 Spitfire_Body_Offset = new Vector3(0, 0.5f, -0.1f);
-        public Vector3 Fulmar_Body_Offset = new Vector3(0, 0.5f, -0.1f);
-        public Vector3 Barracuda_Body_Offset = new Vector3(0, 0.5f, -0.1f);
+        public Vector3 Spitfire_Body_Offset = new Vector3(0, 0.13f, -0.31f);
+        public Vector3 Fulmar_Body_Offset = new Vector3(0, 0.4f, 0.18f);
+        public Vector3 Barracuda_Body_Offset = new Vector3(0, 0.18f, -0.12f);
 
 
         public void LoadAsset()

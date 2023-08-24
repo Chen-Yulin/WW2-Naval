@@ -898,7 +898,7 @@ namespace WW2NavalAssembly
             {
                 GameObject Bomb = (GameObject)Instantiate(BombPrefab, LoadObject.transform.position, Quaternion.identity,
                                                                 BlockBehaviour.ParentMachine.transform.Find("Simulation Machine"));
-                Bomb.transform.rotation = Quaternion.LookRotation(transform.forward, transform.up);
+                Bomb.transform.rotation = Quaternion.LookRotation(LoadObject.transform.forward, LoadObject.transform.up);
                 Bomb.GetComponent<Rigidbody>().velocity = myRigid.velocity;
                 Bomb.GetComponent<Bomb>().randomForce = new Vector3(UnityEngine.Random.value - 0.5f, UnityEngine.Random.value - 0.5f, UnityEngine.Random.value - 0.5f);
                 Bomb.GetComponent<Bomb>().parent = gameObject;
