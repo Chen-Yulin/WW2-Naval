@@ -1042,17 +1042,20 @@ namespace WW2NavalAssembly
             TorpedoType = AddMenu("TorpedoType", 0, new List<string>
             {
                 "SB2C",
-                "B7A2"
+                "B7A2",
+                "Barracuda"
             });
             BombType = AddMenu("BombType", 0, new List<string>
             {
                 "SBD",
-                "99"
+                "99",
+                "Fulmar"
             });
             FighterType = AddMenu("FighterType", 0, new List<string>
             {
                 "Zero",
                 "F4U",
+                "Spitfire"
             });
             Rank = AddMenu("Rank", 0, new List<string>
             {

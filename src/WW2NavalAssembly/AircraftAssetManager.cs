@@ -78,12 +78,48 @@ namespace WW2NavalAssembly
         public Texture SB2C_1_Tex;
         public Texture SB2C_2_Tex;
 
+        //========================Spitfire===================
+        public Mesh Spitfire_0_Mesh;
+        public Mesh Spitfire_05_Mesh;
+        public Mesh Spitfire_1_Mesh;
+        public Mesh Spitfire_2_Mesh;
+
+        public Texture Spitfire_0_Tex;
+        public Texture Spitfire_05_Tex;
+        public Texture Spitfire_1_Tex;
+        public Texture Spitfire_2_Tex;
+
+        // =======================Fulmar======================
+        public Mesh Fulmar_0_Mesh;
+        public Mesh Fulmar_05_Mesh;
+        public Mesh Fulmar_1_Mesh;
+        public Mesh Fulmar_2_Mesh;
+
+        public Texture Fulmar_0_Tex;
+        public Texture Fulmar_05_Tex;
+        public Texture Fulmar_1_Tex;
+        public Texture Fulmar_2_Tex;
+
+        //=======================Barracuda====================
+        public Mesh Barracuda_0_Mesh;
+        public Mesh Barracuda_05_Mesh;
+        public Mesh Barracuda_1_Mesh;
+        public Mesh Barracuda_2_Mesh;
+
+        public Texture Barracuda_0_Tex;
+        public Texture Barracuda_05_Tex;
+        public Texture Barracuda_1_Tex;
+        public Texture Barracuda_2_Tex;
+
         public float Zero_Prop_Offset = 1.8f;
         public float B7A2_Prop_Offset = 3.55f;
         public float R99_Prop_Offset = 2.95f;
         public float F4U_Prop_Offset = 3f;
         public float SBD_Prop_Offset = 2.1f;
         public float SB2C_Prop_Offset = 3.45f;
+        public float Spitfire_Prop_Offset = 2.5f;
+        public float Fulmar_Prop_Offset = 2.5f;
+        public float Barracuda_Prop_Offset = 3.5f;
 
         public Vector3 Zero_Body_Offset = new Vector3(0, 0.75f, 0.02f);
         public Vector3 R99_Body_Offset = new Vector3(0, 0.75f, -0.15f);
@@ -91,6 +127,9 @@ namespace WW2NavalAssembly
         public Vector3 F4U_Body_Offset = new Vector3(0, 0.45f, -0.1f);
         public Vector3 SBD_Body_Offset = new Vector3(0, 0.78f, 0f);
         public Vector3 SB2C_Body_Offset = new Vector3(0, 0.53f, -0.2f);
+        public Vector3 Spitfire_Body_Offset = new Vector3(0, 0.5f, -0.1f);
+        public Vector3 Fulmar_Body_Offset = new Vector3(0, 0.5f, -0.1f);
+        public Vector3 Barracuda_Body_Offset = new Vector3(0, 0.5f, -0.1f);
 
 
         public void LoadAsset()
@@ -148,6 +187,34 @@ namespace WW2NavalAssembly
             SB2C_05_Tex = ModResource.GetTexture("A-SB2C-0.5 Texture").Texture;
             SB2C_1_Tex = ModResource.GetTexture("A-SB2C-1 Texture").Texture;
             SB2C_2_Tex = ModResource.GetTexture("A-SB2C-2 Texture").Texture;
+
+            Spitfire_0_Mesh = ModResource.GetMesh("A-Spitfire-0 Mesh").Mesh;
+            Spitfire_05_Mesh = ModResource.GetMesh("A-Spitfire-0.5 Mesh").Mesh;
+            Spitfire_1_Mesh = ModResource.GetMesh("A-Spitfire-1 Mesh").Mesh;
+            Spitfire_2_Mesh = ModResource.GetMesh("A-Spitfire-2 Mesh").Mesh;
+            Spitfire_0_Tex = ModResource.GetTexture("A-Spitfire-0 Texture").Texture;
+            Spitfire_05_Tex = ModResource.GetTexture("A-Spitfire-0.5 Texture").Texture;
+            Spitfire_1_Tex = ModResource.GetTexture("A-Spitfire-1 Texture").Texture;
+            Spitfire_2_Tex = ModResource.GetTexture("A-Spitfire-2 Texture").Texture;
+
+            Fulmar_0_Mesh = ModResource.GetMesh("A-Fulmar-0 Mesh").Mesh;
+            Fulmar_05_Mesh = ModResource.GetMesh("A-Fulmar-0.5 Mesh").Mesh;
+            Fulmar_1_Mesh = ModResource.GetMesh("A-Fulmar-1 Mesh").Mesh;
+            Fulmar_2_Mesh = ModResource.GetMesh("A-Fulmar-2 Mesh").Mesh;
+            Fulmar_0_Tex = ModResource.GetTexture("A-Fulmar-0 Texture").Texture;
+            Fulmar_05_Tex = ModResource.GetTexture("A-Fulmar-0.5 Texture").Texture;
+            Fulmar_1_Tex = ModResource.GetTexture("A-Fulmar-1 Texture").Texture;
+            Fulmar_2_Tex = ModResource.GetTexture("A-Fulmar-2 Texture").Texture;
+
+            Barracuda_0_Mesh = ModResource.GetMesh("A-Barracuda-0 Mesh").Mesh;
+            Barracuda_05_Mesh = ModResource.GetMesh("A-Barracuda-0.5 Mesh").Mesh;
+            Barracuda_1_Mesh = ModResource.GetMesh("A-Barracuda-1 Mesh").Mesh;
+            Barracuda_2_Mesh = ModResource.GetMesh("A-Barracuda-2 Mesh").Mesh;
+            Barracuda_0_Tex = ModResource.GetTexture("A-Barracuda-0 Texture").Texture;
+            Barracuda_05_Tex = ModResource.GetTexture("A-Barracuda-0.5 Texture").Texture;
+            Barracuda_1_Tex = ModResource.GetTexture("A-Barracuda-1 Texture").Texture;
+            Barracuda_2_Tex = ModResource.GetTexture("A-Barracuda-2 Texture").Texture;
+
         }
 
         public AircraftAssetManager()
@@ -171,6 +238,12 @@ namespace WW2NavalAssembly
                     return SBD_0_Mesh;
                 case "SB2C":
                     return SB2C_0_Mesh;
+                case "Spitfire":
+                    return Spitfire_0_Mesh;
+                case "Fulmar":
+                    return Fulmar_0_Mesh;
+                case "Barracuda":
+                    return Barracuda_0_Mesh;
                 default:
                     return Zero_0_Mesh;
             }
@@ -191,6 +264,12 @@ namespace WW2NavalAssembly
                     return SBD_05_Mesh;
                 case "SB2C":
                     return SB2C_05_Mesh;
+                case "Spitfire":
+                    return Spitfire_05_Mesh;
+                case "Fulmar":
+                    return Fulmar_05_Mesh;
+                case "Barracuda":
+                    return Barracuda_05_Mesh;
                 default:
                     return Zero_05_Mesh;
             }
@@ -211,6 +290,12 @@ namespace WW2NavalAssembly
                     return SBD_1_Mesh;
                 case "SB2C":
                     return SB2C_1_Mesh;
+                case "Spitfire":
+                    return Spitfire_1_Mesh;
+                case "Fulmar":
+                    return Fulmar_1_Mesh;
+                case "Barracuda":
+                    return Barracuda_1_Mesh;
                 default:
                     return Zero_1_Mesh;
             }
@@ -231,6 +316,12 @@ namespace WW2NavalAssembly
                     return SBD_2_Mesh;
                 case "SB2C":
                     return SB2C_2_Mesh;
+                case "Spitfire":
+                    return Spitfire_2_Mesh;
+                case "Fulmar":
+                    return Fulmar_2_Mesh;
+                case "Barracuda":
+                    return Barracuda_2_Mesh;
                 default:
                     return Zero_2_Mesh;
             }
@@ -251,6 +342,12 @@ namespace WW2NavalAssembly
                     return SBD_0_Tex;
                 case "SB2C":
                     return SB2C_0_Tex;
+                case "Spitfire":
+                    return Spitfire_0_Tex;
+                case "Fulmar":
+                    return Fulmar_0_Tex;
+                case "Barracuda":
+                    return Barracuda_0_Tex;
                 default:
                     return Zero_0_Tex;
             }
@@ -271,6 +368,12 @@ namespace WW2NavalAssembly
                     return SBD_05_Tex;
                 case "SB2C":
                     return SB2C_05_Tex;
+                case "Spitfire":
+                    return Spitfire_05_Tex;
+                case "Fulmar":
+                    return Fulmar_05_Tex;
+                case "Barracuda":
+                    return Barracuda_05_Tex;
                 default:
                     return Zero_05_Tex;
             }
@@ -291,6 +394,12 @@ namespace WW2NavalAssembly
                     return SBD_1_Tex;
                 case "SB2C":
                     return SB2C_1_Tex;
+                case "Spitfire":
+                    return Spitfire_1_Tex;
+                case "Fulmar":
+                    return Fulmar_1_Tex;
+                case "Barracuda":
+                    return Barracuda_1_Tex;
                 default:
                     return Zero_1_Tex;
             }
@@ -311,6 +420,12 @@ namespace WW2NavalAssembly
                     return SBD_2_Tex;
                 case "SB2C":
                     return SB2C_2_Tex;
+                case "Spitfire":
+                    return Spitfire_2_Tex;
+                case "Fulmar":
+                    return Fulmar_2_Tex;
+                case "Barracuda":
+                    return Barracuda_2_Tex;
                 default:
                     return Zero_2_Tex;
             }
@@ -331,6 +446,12 @@ namespace WW2NavalAssembly
                     return SBD_Prop_Offset;
                 case "SB2C":
                     return SB2C_Prop_Offset;
+                case "Spitfire":
+                    return Spitfire_Prop_Offset;
+                case "Fulmar":
+                    return Fulmar_Prop_Offset;
+                case "Barracuda":
+                    return Barracuda_Prop_Offset;
                 default:
                     return Zero_Prop_Offset;
             }
@@ -351,6 +472,12 @@ namespace WW2NavalAssembly
                     return SBD_Body_Offset;
                 case "SB2C":
                     return SB2C_Body_Offset;
+                case "Spitfire":
+                    return Spitfire_Body_Offset;
+                case "Fulmar":
+                    return Fulmar_Body_Offset;
+                case "Barracuda":
+                    return Barracuda_Body_Offset;
                 default:
                     return Zero_Body_Offset;
             }

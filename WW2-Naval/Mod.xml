@@ -188,6 +188,33 @@
 		<Texture name="A-SBD-1 Texture" path="Aircraft\M\SBD\SBD 1.png"/>
 		<Texture name="A-SBD-2 Texture" path="Aircraft\M\SBD\SBD 2.png"/>
 
+		<Mesh name="A-Spitfire-0 Mesh" path="Aircraft\Y\Spitfire\Spitfire 0.obj"/>
+		<Mesh name="A-Spitfire-0.5 Mesh" path="Aircraft\Y\Spitfire\Spitfire 0.5.obj"/>
+		<Mesh name="A-Spitfire-1 Mesh" path="Aircraft\Y\Spitfire\Spitfire 1.obj"/>
+		<Mesh name="A-Spitfire-2 Mesh" path="Aircraft\Y\Spitfire\Spitfire 2.obj"/>
+		<Texture name="A-Spitfire-0 Texture" path="Aircraft\Y\Spitfire\Spitfire 0.png"/>
+		<Texture name="A-Spitfire-0.5 Texture" path="Aircraft\Y\Spitfire\Spitfire 0.5.png"/>
+		<Texture name="A-Spitfire-1 Texture" path="Aircraft\Y\Spitfire\Spitfire 1.png"/>
+		<Texture name="A-Spitfire-2 Texture" path="Aircraft\Y\Spitfire\Spitfire 2.png"/>
+
+		<Mesh name="A-Fulmar-0 Mesh" path="Aircraft\Y\Fulmar\Fulmar 0.obj"/>
+		<Mesh name="A-Fulmar-0.5 Mesh" path="Aircraft\Y\Fulmar\Fulmar 0.5.obj"/>
+		<Mesh name="A-Fulmar-1 Mesh" path="Aircraft\Y\Fulmar\Fulmar 1.obj"/>
+		<Mesh name="A-Fulmar-2 Mesh" path="Aircraft\Y\Fulmar\Fulmar 2.obj"/>
+		<Texture name="A-Fulmar-0 Texture" path="Aircraft\Y\Fulmar\Fulmar 0.png"/>
+		<Texture name="A-Fulmar-0.5 Texture" path="Aircraft\Y\Fulmar\Fulmar 0.5.png"/>
+		<Texture name="A-Fulmar-1 Texture" path="Aircraft\Y\Fulmar\Fulmar 1.png"/>
+		<Texture name="A-Fulmar-2 Texture" path="Aircraft\Y\Fulmar\Fulmar 2.png"/>
+
+		<Mesh name="A-Barracuda-0 Mesh" path="Aircraft\Y\Barracuda\Barracuda 0.obj"/>
+		<Mesh name="A-Barracuda-0.5 Mesh" path="Aircraft\Y\Barracuda\Barracuda 0.5.obj"/>
+		<Mesh name="A-Barracuda-1 Mesh" path="Aircraft\Y\Barracuda\Barracuda 1.obj"/>
+		<Mesh name="A-Barracuda-2 Mesh" path="Aircraft\Y\Barracuda\Barracuda 2.obj"/>
+		<Texture name="A-Barracuda-0 Texture" path="Aircraft\Y\Barracuda\Barracuda 0.png"/>
+		<Texture name="A-Barracuda-0.5 Texture" path="Aircraft\Y\Barracuda\Barracuda 0.5.png"/>
+		<Texture name="A-Barracuda-1 Texture" path="Aircraft\Y\Barracuda\Barracuda 1.png"/>
+		<Texture name="A-Barracuda-2 Texture" path="Aircraft\Y\Barracuda\Barracuda 2.png"/>
+
 
 	</Resources>
 
