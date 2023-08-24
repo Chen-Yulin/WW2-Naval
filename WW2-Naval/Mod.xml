@@ -5,11 +5,11 @@
 	<Name>WW2Naval</Name>
 	<Author>Chen, Yulin</Author> <!-- FIX: Insert your name here. -->
 	<!-- Major.Minor.Build -->
-	<Version>0.6.32</Version>
+	<Version>0.6.33</Version>
 	
 	<Description>
-    Version 0.6.32
-	Add gun fire detection
+    Version 0.6.33
+	Finish aircraft attacking
 	</Description>
 
 	<Icon name="icon"/>
