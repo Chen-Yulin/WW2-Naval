@@ -843,7 +843,7 @@ namespace WW2NavalAssembly
             if (ElevatorDown.IsPressed && CurrentLeader)
             {
                 
-                foreach (var aircraft in CurrentLeader.myGroup)
+                foreach (var aircraft in CurrentLeader.myGroup.Reverse())
                 {
                     Elevator.AddDownQueue(aircraft.Value);
                 }
@@ -858,7 +858,7 @@ namespace WW2NavalAssembly
                 else
                 {
                     FlightDataBase.Instance.Decks[myPlayerID].Occupied_num += CurrentLeader.myGroup.Count;
-                    foreach (var aircraft in CurrentLeader.myGroup)
+                    foreach (var aircraft in CurrentLeader.myGroup.Reverse())
                     {
                         Elevator.AddUpQueue(aircraft.Value);
                     }
@@ -884,7 +884,7 @@ namespace WW2NavalAssembly
                     }
                     else
                     {
-                        foreach (var member in CurrentLeader.myGroup.Reverse())
+                        foreach (var member in CurrentLeader.myGroup)
                         {
                             Runway.AddAircraft(member.Value);
                         }

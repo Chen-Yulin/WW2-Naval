@@ -379,7 +379,6 @@ namespace WW2NavalAssembly
         {
             BombPrefab = new GameObject("BombPrefab");
             Bomb BBtmp = BombPrefab.AddComponent<Bomb>();
-            BBtmp.Weight = 300;
             BBtmp.myPlayerID = myPlayerID;
             Rigidbody RBtmp = BombPrefab.AddComponent<Rigidbody>();
             RBtmp.mass = 0.2f;

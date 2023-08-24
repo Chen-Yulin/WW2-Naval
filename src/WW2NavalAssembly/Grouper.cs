@@ -9,6 +9,7 @@ using Modding;
 using Modding.Blocks;
 using UnityEngine;
 using UnityEngine.Networking;
+using System.Linq;
 
 namespace WW2NavalAssembly
 {
@@ -111,6 +112,8 @@ namespace WW2NavalAssembly
                 }
             }
 
+            var sortedDict = AircraftGroups[playerID][key].OrderBy(entry => entry.Value.Rank.Value != 1).ToDictionary(pair => pair.Key, pair => pair.Value);
+            AircraftGroups[playerID][key] = sortedDict;
         }
 
         public Dictionary<int, Aircraft> GetAircraft(int playerID, string key)
@@ -119,6 +122,7 @@ namespace WW2NavalAssembly
             {
                 AircraftGroups[playerID].Add(key, new Dictionary<int, Aircraft>());
             }
+            
 
             return AircraftGroups[playerID][key];
         }

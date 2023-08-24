@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Policy;
 using System.Text;
 using UnityEngine;
 
@@ -14,7 +15,7 @@ namespace WW2NavalAssembly
         public GameObject parent;
 
         public int BombType = 0;
-        public float Weight = 300;
+        public float Weight = 570;
 
         Rigidbody myRigid;
         public Vector3 randomForce;
@@ -443,13 +444,13 @@ namespace WW2NavalAssembly
                 hasHitWater = true;
                 GameObject waterhit;
                 waterhit = (GameObject)Instantiate(AssetManager.Instance.WaterHit.waterhit1, new Vector3(transform.position.x, 20, transform.position.z), Quaternion.identity);
-                waterhit.transform.localScale = Weight / 381 * Vector3.one;
+                waterhit.transform.localScale = Weight / 2f / 381f * Vector3.one;
                 Destroy(waterhit, 3);
 
-                PlayExploInAir(false);
+                PlayExploInAir(false, false);
 
                 AddWaterHitSound(waterhit.transform);
-                ModNetworking.SendToAll(WeaponMsgReceiver.WaterHitMsg.CreateMessage(myPlayerID, new Vector3(transform.position.x, 20, transform.position.z), Weight));
+                ModNetworking.SendToAll(WeaponMsgReceiver.WaterHitMsg.CreateMessage(myPlayerID, new Vector3(transform.position.x, 20, transform.position.z), Weight/2f));
                 Destroy(gameObject);
             }
         }
@@ -487,7 +488,7 @@ namespace WW2NavalAssembly
         {
             try
             {
-                GameObject explo = (GameObject)Instantiate(AssetManager.Instance.CannonHit.explo, hit.point - myRigid.velocity.normalized * Weight / 800f, Quaternion.identity);
+                GameObject explo = (GameObject)Instantiate(AssetManager.Instance.CannonHit.exploWithSmoke, hit.point - myRigid.velocity.normalized * Weight / 800f, Quaternion.identity);
                 explo.SetActive(true);
                 explo.transform.localScale = Weight / 800 * (AP ? 1 : 2) * Vector3.one;
                 Destroy(explo, 3);
@@ -496,7 +497,7 @@ namespace WW2NavalAssembly
                 exploded = true;
 
                 //send to client
-                ModNetworking.SendToAll(WeaponMsgReceiver.ExploMsg.CreateMessage(myPlayerID, hit.point, Weight, AP ? 0 : 2));
+                ModNetworking.SendToAll(WeaponMsgReceiver.ExploMsg.CreateMessage(myPlayerID, hit.point, Weight, 3));
 
                 try
                 {
@@ -512,9 +513,18 @@ namespace WW2NavalAssembly
 
 
         }
-        private void PlayExploInAir(bool AP = true)
+        private void PlayExploInAir(bool AP = true, bool hasSmoke = true)
         {
-            GameObject explo = (GameObject)Instantiate(AssetManager.Instance.CannonHit.explo, transform.position, Quaternion.identity);
+            GameObject explo = null;
+            if (hasSmoke)
+            {
+                explo = (GameObject)Instantiate(AssetManager.Instance.CannonHit.exploWithSmoke, transform.position, Quaternion.identity);
+            }
+            else
+            {
+                explo = (GameObject)Instantiate(AssetManager.Instance.CannonHit.explo, transform.position, Quaternion.identity);
+            }
+
             explo.SetActive(true);
             explo.transform.localScale = Weight / 800f * (AP ? 1 : 2) * Vector3.one;
             Destroy(explo, 3);
@@ -523,7 +533,14 @@ namespace WW2NavalAssembly
             exploded = true;
 
             //send to client
-            ModNetworking.SendToAll(WeaponMsgReceiver.ExploMsg.CreateMessage(myPlayerID, transform.position, Weight, AP ? 0 : 2));
+            if (hasSmoke)
+            {
+                ModNetworking.SendToAll(WeaponMsgReceiver.ExploMsg.CreateMessage(myPlayerID, transform.position, Weight, 3));
+            }
+            else
+            {
+                ModNetworking.SendToAll(WeaponMsgReceiver.ExploMsg.CreateMessage(myPlayerID, transform.position, Weight, 0));
+            }
 
             ExploDestroyBalloon(transform.position, AP);
             Destroy(gameObject);
@@ -590,7 +607,7 @@ namespace WW2NavalAssembly
             myRigid = gameObject.GetComponent<Rigidbody>();
             if (BombType == 0)
             {
-                penetration = Weight * 0.3f;
+                penetration = Weight * 0.12f;
             }
 
             TrailRenderer TR = gameObject.GetComponent<TrailRenderer>();

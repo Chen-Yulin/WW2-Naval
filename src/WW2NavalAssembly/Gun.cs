@@ -41,7 +41,7 @@ namespace WW2NavalAssembly
         {
             public Vector3 position = Vector3.zero;
             public float Caliber = 0;
-            public int type = 0;// 0 for explosion, 1 for pierce, 2 for large explosion
+            public int type = 0;// 0 for explosion, 1 for pierce, 2 for large explosion, 3 for explosion with smoke
             public exploInfo(Vector3 position, float caliber, int type)
             {
                 this.position = position;
