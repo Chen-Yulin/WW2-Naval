@@ -5,11 +5,11 @@
 	<Name>WW2Naval</Name>
 	<Author>Chen, Yulin</Author> <!-- FIX: Insert your name here. -->
 	<!-- Major.Minor.Build -->
-	<Version>0.6.34</Version>
+	<Version>0.6.35</Version>
 	
 	<Description>
-    Version 0.6.34
-	Finish aircraft attacking
+    Version 0.6.35
+	Finish aircraft return and landing
 	</Description>
 
 	<Icon name="icon"/>
