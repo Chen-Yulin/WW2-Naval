@@ -885,11 +885,27 @@ namespace WW2NavalAssembly
         {
             if (ElevatorDown.IsPressed && CurrentLeader)
             {
-                
-                foreach (var aircraft in CurrentLeader.myGroup.Reverse())
+                bool allOnCarrier = true;
+                foreach (var aircraft in CurrentLeader.myGroup)
                 {
-                    Elevator.AddDownQueue(aircraft.Value);
+                    if (aircraft.Value.status != Aircraft.Status.OnBoard && aircraft.Value.status != Aircraft.Status.InHangar)
+                    {
+                        allOnCarrier = false;
+                        break;
+                    }
                 }
+                if (allOnCarrier)
+                {
+                    foreach (var aircraft in CurrentLeader.myGroup.Reverse())
+                    {
+                        Elevator.AddDownQueue(aircraft.Value);
+                    }
+                }
+                else
+                {
+                    Debug.Log("Not all aircraft in the team on Carrier");
+                }
+                
             }
 
             if (ElevatorUp.IsPressed && CurrentLeader)
@@ -978,7 +994,6 @@ namespace WW2NavalAssembly
             if (CurrentLeader)
             {
                 GUI.Box(new Rect(100, 200, 200, 30), CurrentLeader.Group.Value.ToString());
-                GUI.Box(new Rect(100, 250, 200, 30), CurrentLeader.myGroup.Count.ToString());
             }
             //GUI.Box(new Rect(100, 300, 200, 30), FlightDataBase.Instance.Decks[myPlayerID].Occupied_num.ToString());
 

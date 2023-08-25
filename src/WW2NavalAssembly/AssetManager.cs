@@ -15,6 +15,7 @@ namespace WW2NavalAssembly
         public GameObject GroupIcon;
         public GameObject TorpedoAim;
         public GameObject BombAim;
+        public GameObject AircraftShoot;
         public Asset_Aircraft(ModAssetBundle modAssetBundle)
         {
             ParkingSpot = modAssetBundle.LoadAsset<GameObject>("AircraftParkingSpot");
@@ -24,6 +25,7 @@ namespace WW2NavalAssembly
             GroupIcon = modAssetBundle.LoadAsset<GameObject>("GroupIcon");
             TorpedoAim = modAssetBundle.LoadAsset<GameObject>("TorpedoAim");
             BombAim = modAssetBundle.LoadAsset<GameObject>("BombAim");
+            AircraftShoot = modAssetBundle.LoadAsset<GameObject>("AircraftShoot");
         }
     }
     public class Asset_Sky

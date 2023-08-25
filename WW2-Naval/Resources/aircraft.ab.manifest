@@ -1,9 +1,9 @@
 ManifestFileVersion: 0
-CRC: 833518635
+CRC: 3785831794
 Hashes:
   AssetFileHash:
     serializedVersion: 2
-    Hash: 466b900766c3df29830666ab4a68c645
+    Hash: 64c0842f94305f696d8df1b3a7bba2ab
   TypeTreeHash:
     serializedVersion: 2
     Hash: b96841ecb06580fcefecd8cfda7c67e8
@@ -38,6 +38,7 @@ ClassTypes:
 - Class: 213
   Script: {instanceID: 0}
 Assets:
+- Assets/Aircraft/AircraftShoot.prefab
 - Assets/Aircraft/AircraftExplo.prefab
 - Assets/Aircraft/TakeOffArrow.prefab
 - Assets/Aircraft/BombAim.prefab
