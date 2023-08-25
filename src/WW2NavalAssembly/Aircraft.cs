@@ -9,6 +9,7 @@ using Modding;
 using Modding.Blocks;
 using UnityEngine;
 using UnityEngine.Networking;
+using System.Linq;
 
 namespace WW2NavalAssembly
 {
@@ -223,6 +224,7 @@ namespace WW2NavalAssembly
         public Aircraft preTeammate = null;
         public Transform GroupTargetSpot = null;
         public int myTeamIndex = 0;
+        public int targetTeamCount = 0;
 
         // ============== for takingOff =================
         public Vector2 TakeOffDirection;
@@ -234,17 +236,21 @@ namespace WW2NavalAssembly
         public Vector2 WayPoint = new Vector2();
         public Vector2 WayDirection = Vector2.zero;
         public float WayHeight;
-        public int WayPointType = 0;
+        public int WayPointType = 0; // 0 for 60m cruise, 1 for 21m torpedo, 2 for 270m bomb
 
         // ================== for attacking ==================
         public bool hasAttacked = false;
         public bool inAttackRoutine = false;
         public float divingTime = 2.5f;
 
+        // ================== for landing ===================
+        public bool onboard = false;
+
 
         IEnumerator TorpedoCoroutine()
         {
             inAttackRoutine = true;
+            Roll = 0f;
             Thrust = 53f;
             while(Vector2.Distance(MathTool.Get2DCoordinate(transform.position), WayPoint) > 10f)
             {
@@ -291,6 +297,15 @@ namespace WW2NavalAssembly
             DropLoad();
             SwitchToCruise();
             inAttackRoutine = false;
+            yield break;
+        }
+
+        IEnumerator LandOnBoardCoroutine()
+        {
+            onboard = true;
+            yield return new WaitForSeconds(2f);
+            SwitchToInHangar();
+            onboard = false;
             yield break;
         }
         public void InitPropellerUndercart()
@@ -752,7 +767,7 @@ namespace WW2NavalAssembly
         {
             return 1f / 3000f * AoA * AoA + 0.008f;
         }
-        public float AddMainWingForce()
+        public float AddMainWingForce(bool flap = false)
         {
             Vector3 velocity_verticle = Vector3.ProjectOnPlane(myRigid.velocity, transform.right);
             float AoA = Vector3.Angle(velocity_verticle, -transform.up);
@@ -763,18 +778,18 @@ namespace WW2NavalAssembly
             Vector3 lift_direction = Vector3.Cross(myRigid.velocity, transform.right).normalized;
             Vector3 drag_direction = -myRigid.velocity.normalized;
 
-            float liftForce = CalculateLift(mainWingArea, AoA, true) * (status == Status.Attacking ? 3 : 1);
+            float liftForce = CalculateLift(mainWingArea, AoA, true) * (flap ? 3 : 1);
 
             myRigid.AddForce(liftForce * lift_direction + CalculateDrag(mainWingArea, AoA) * drag_direction, ForceMode.Force);
             return liftForce;
         }
-        public float AddAeroForce()
+        public float AddAeroForce(bool flap = false)
         {
             myRigid.angularDrag = Mathf.Clamp(myRigid.velocity.magnitude * 0.5f, 0.2f,150f);
-            myRigid.drag = Mathf.Clamp(myRigid.velocity.magnitude * myRigid.mass * 0.01f, 0.2f, 10f) * (status == Status.Attacking ? 2 : 1);
+            myRigid.drag = Mathf.Clamp(myRigid.velocity.magnitude * myRigid.mass * 0.01f, 0.2f, 10f) * (flap ? 2 : 1);
 
             // horizon
-            float liftForce = AddMainWingForce();
+            float liftForce = AddMainWingForce(flap);
 
             // vertical
             Vector3 velocity = myRigid.velocity;
@@ -827,30 +842,45 @@ namespace WW2NavalAssembly
         {
             TeamBase.transform.localEulerAngles = new Vector3(90, Mathf.Clamp(roll, -60, 60), 0);
         }
-        public void LeaderTurnToWayPoint()
+        public void TurnToWayPoint(float turningForce = 0.5f, float HeightDeltaMax = 0.5f, bool usePitch = true, bool linearHeight = false)
         {
             Vector2 myPos = MathTool.Get2DCoordinate(transform.position);
             float dist = Vector2.Distance(myPos, WayPoint);
-            Vector2 target = WayPoint - (dist > 75 ? 0.5f * WayDirection * dist : Vector2.zero);
+            Vector2 target = WayPoint - (dist > 75 ? turningForce * WayDirection * dist : Vector2.zero);
             Vector2 targetDir = target - MathTool.Get2DCoordinate(transform.position);
             Vector2 forward = MathTool.Get2DCoordinate(-transform.up);
             float angle = MathTool.SignedAngle(forward, targetDir);
             angle = Mathf.Sign(angle) * Mathf.Sqrt(Mathf.Abs(angle));
             myRigid.AddTorque(-Vector3.up * Mathf.Clamp(angle, -11,11) * 2f / myRigid.mass);
-            SetHeight(myRigid.position.y + Mathf.Clamp((WayHeight - myRigid.position.y) * 0.1f, -0.5f, 0.5f));
+            if (linearHeight)
+            {
+                Vector2 vel = MathTool.Get2DCoordinate(myRigid.velocity);
+                float projectedVel = Vector2.Dot(vel, WayDirection);
+                float targetHeight = transform.position.y + projectedVel * Time.fixedDeltaTime / dist * (WayHeight - transform.position.y);
+                SetHeight(targetHeight, false, 1);
+            }
+            else
+            {
+                SetHeight(myRigid.position.y + Mathf.Clamp((WayHeight - myRigid.position.y) * 0.1f, -HeightDeltaMax, HeightDeltaMax), false, 1);
+            }
+            
 
             Vector3 rigidPos = myRigid.position;
             rigidPos.y = Mathf.Clamp(rigidPos.y, 21, 1000);
             myRigid.MovePosition(rigidPos);
 
-            float targetPitch = 0;
-            if (dist > 25f)
+            if (usePitch)
             {
-                targetPitch = 90 - (Vector3.Angle(Vector3.up, new Vector3(target.x, WayHeight, target.y) - myRigid.position));
-            }
-            
+                float targetPitch = 0;
+                if (dist > 25f)
+                {
+                    targetPitch = 90 - (Vector3.Angle(Vector3.up, new Vector3(target.x, WayHeight, target.y) - myRigid.position));
+                }
 
-            Pitch = Pitch + Mathf.Clamp((targetPitch - Pitch) * 0.02f, -2f, 2f);
+
+                Pitch = Pitch + Mathf.Clamp((targetPitch - Pitch) * 0.02f, -2f, 2f);
+            }
+
         }
         public void SlaveFollowLeader()
         {
@@ -915,6 +945,75 @@ namespace WW2NavalAssembly
                 LoadObject.SetActive(false);
             }
         }
+        public void RemoveFromGroup()
+        {
+            if (Rank.Value == 0)
+            {
+                Grouper.Instance.AircraftGroups[myPlayerID][Group.Value].Remove(myGuid);
+                myLeader.TeamUpByLeader();
+            }else if (Rank.Value == 1)
+            {
+                foreach (var a in myGroup)
+                {
+                    if (a.Value != this)
+                    {
+                        a.Value.status = Status.Deprecated;
+                    }
+                }
+                Grouper.Instance.AircraftGroups[myPlayerID].Remove(Group.Value);
+            }
+        }
+        public void GetReturningWayPoint()
+        {
+            if (Rank.Value == 1)
+            {
+                FlightDataBase.Deck deck = FlightDataBase.Instance.Decks[myPlayerID];
+                Vector2 targetPoint = deck.Center + deck.Forward * (-deck.Length * 0.25f - 200f);
+                WayDirection = MathTool.Get2DCoordinate(targetPoint - WayPoint).normalized;
+                WayPoint = targetPoint;
+                WayPointType = 0;
+                WayHeight = 40f;
+            }
+        }
+        public void GetLandingWayPoint()
+        {
+            FlightDataBase.Deck deck = FlightDataBase.Instance.Decks[myPlayerID];
+            Vector2 targetPoint = deck.Center + deck.Forward * (-deck.Length * 0.25f);
+            WayDirection = deck.Forward;
+            WayPoint = targetPoint;
+            WayPointType = 0;
+            WayHeight = deck.height + 0.3f;
+        }
+        public void SwitchToLanding()
+        {
+            if (status == Status.Returning)
+            {
+                status = Status.Landing;
+                FlightDataBase.Deck deck = FlightDataBase.Instance.Decks[myPlayerID];
+                Vector2 targetPoint = deck.Center + deck.Forward * (-deck.Length * 0.25f);
+                WayDirection = deck.Forward;
+                WayPoint = targetPoint;
+                WayPointType = 0;
+                WayHeight = deck.height + 0.3f;
+                Thrust = 30f;
+                UndercartObject.SetActive(true);
+            }
+        }
+        public void SwitchToReturn()
+        {
+            if (status == Status.Cruise)
+            {
+                status = Status.Returning;
+                foreach (var a in myGroup)
+                {
+                    if (a.Value.status == Status.Cruise)
+                    {
+                        a.Value.status = Status.Returning;
+                        a.Value.Thrust = 50f;
+                    }
+                }
+            }
+        }
         public void SwitchToAttack()
         {
             if (hasAttacked)
@@ -935,7 +1034,10 @@ namespace WW2NavalAssembly
         {
             if (status == Status.TakingOff)
             {
-                GenerateFormation();
+                if (Rank.Value == 1)
+                {
+                    GenerateFormation();
+                }
                 status = Status.Cruise;
                 UndercartObject.SetActive(false);
                 Thrust = 60f;
@@ -1004,6 +1106,14 @@ namespace WW2NavalAssembly
             }
             else if (status == Status.InHangar)
             {
+            }
+            else if (status == Status.Landing)
+            {
+                MyDeck = null;
+                status = Status.InHangar;
+                SettleSpot(MyHangar, true);
+                Propeller.enabled = false;
+                Thrust = 0;
             }
         }
         public void InHangarBehaviourFU()
@@ -1235,7 +1345,7 @@ namespace WW2NavalAssembly
                 return;
             }
             float collisionForce = collision.impulse.magnitude / Time.fixedDeltaTime;
-            if (collisionForce > 2000f )
+            if (collisionForce > 3000f )
             {
                 GameObject explo = (GameObject)Instantiate(AssetManager.Instance.Aircraft.AircraftExplo, transform.position, Quaternion.identity);
                 Destroy(explo, 5);
@@ -1247,6 +1357,7 @@ namespace WW2NavalAssembly
                 myRigid.angularDrag = 0.2f;
                 Thrust = 0f;
                 DeckSliding = false;
+                RemoveFromGroup();
             }
         }
         public void Update()
@@ -1273,8 +1384,17 @@ namespace WW2NavalAssembly
             switch (Rank.Value)
             {
                 case 0:
-                    myGroup = new Dictionary<int, Aircraft>();
-                    myLeader = Grouper.Instance.GetLeader(myPlayerID, Group.Value);
+                    if (status != Status.Exploded && status != Status.ShootDown && status != Status.Deprecated)
+                    {
+                        myGroup = new Dictionary<int, Aircraft>();
+                        myLeader = Grouper.Instance.GetLeader(myPlayerID, Group.Value);
+                    }
+                    else
+                    {
+                        myGroup = null;
+                        myLeader = null;
+                    }
+                    
                     break;
                 case 1:
                     myGroup = Grouper.Instance.GetAircraft(myPlayerID, Group.Value);
@@ -1338,6 +1458,7 @@ namespace WW2NavalAssembly
             {
                 if (Rank.Value == 1)
                 {
+                    targetTeamCount = Grouper.Instance.GetAircraft(myPlayerID, Group.Value).Count();
                     TeamUpByLeader();
                 }
             }
@@ -1412,7 +1533,7 @@ namespace WW2NavalAssembly
                     }
                     else if(Rank.Value == 1)
                     {
-                        LeaderTurnToWayPoint();
+                        TurnToWayPoint();
                         //Debug.Log((MathTool.Get2DCoordinate(transform.position) - WayPoint).magnitude);
 
                         float distFromWayPoint = (MathTool.Get2DCoordinate(transform.position) - WayPoint).magnitude;
@@ -1450,7 +1571,7 @@ namespace WW2NavalAssembly
                     Roll = Roll + (myRigid.angularVelocity.y * 45-Roll) * 0.05f;
                     break;
                 case Status.Attacking:
-                    AddAeroForce();
+                    AddAeroForce(true);
                     DeckSliding = false;
 
                     if (Type.Value == 1 || (Type.Value == 2 && !inAttackRoutine))
@@ -1461,7 +1582,7 @@ namespace WW2NavalAssembly
                         }
                         else if (Rank.Value == 1)
                         {
-                            LeaderTurnToWayPoint();
+                            TurnToWayPoint();
                         }
                     }
 
@@ -1490,13 +1611,82 @@ namespace WW2NavalAssembly
                     }
                     
                     break;
+                case Status.Returning:
+                    AddAeroForce();
+                    DeckSliding = false;
+                    if (Rank.Value == 0)
+                    {
+                        SlaveFollowLeader();
+                    }
+                    else if (Rank.Value == 1)
+                    {
+                        GetReturningWayPoint();
+                        TurnToWayPoint();
+
+                        float distFromWayPoint = (MathTool.Get2DCoordinate(transform.position) - WayPoint).magnitude;
+                        if (distFromWayPoint < 75f)
+                        {
+                            foreach (var a in myGroup.Reverse())
+                            {
+                                if (a.Value.status == Status.InHangar || a.Value.status == Status.Exploded)
+                                {
+                                    continue;
+                                }
+                                else
+                                {
+                                    a.Value.SwitchToLanding();
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    Roll = Roll + (myRigid.angularVelocity.y * 45 - Roll) * 0.05f;
+                    break;
+                case Status.Landing:
+                    DeckSliding = false;
+                    GetLandingWayPoint();
+                    Vector2 VectFromWayPoint = WayPoint - MathTool.Get2DCoordinate(transform.position);
+                    Vector2 forward = MathTool.Get2DCoordinate(-transform.up);
+                    float dist = Vector2.Dot(WayDirection, VectFromWayPoint);
+                    
+                    if (!onboard)
+                    {
+                        if (dist < 2f && dist>-5f && Vector2.Dot(forward, WayDirection) > 0)
+                        {
+                            AddAeroForce(false);
+                            myRigid.useGravity = true;
+                            Thrust = 0f;
+                            Roll = 0;
+                            StartCoroutine(LandOnBoardCoroutine());
+                        }
+                        else
+                        {
+                            myRigid.angularDrag = Mathf.Clamp(myRigid.velocity.magnitude * 0.5f, 0.2f, 150f);
+                            myRigid.drag = Mathf.Clamp(myRigid.velocity.magnitude * myRigid.mass * 0.01f, 0.2f, 10f) * 2;
+
+                            // vertical
+                            Vector3 velocity = myRigid.velocity;
+                            velocity = transform.InverseTransformDirection(velocity);
+                            velocity.x *= 0.9f;
+                            myRigid.velocity = transform.TransformDirection(velocity);
+
+                            myRigid.useGravity = false;
+                            Pitch = 3f;
+                            TurnToWayPoint(0.6f, 0.1f, false, true);
+                            Roll = Roll + (myRigid.angularVelocity.y * 45 - Roll) * 0.05f;
+                        }
+                    }
+
+                    Pitch = Mathf.Clamp(Pitch, -10,30);
+
+                    break;
                 default : break;
             }
 
             if (Fuel > 0)
             {
                 myRigid.AddForce(Thrust * (-transform.up));
-                Fuel -= Thrust / 1000000f;
+                Fuel -= Thrust / 3000000f;
             }
             
         }
@@ -1507,8 +1697,5 @@ namespace WW2NavalAssembly
                 //GUI.Box(new Rect(100, 300, 200, 30), WayHeight.ToString());
             }
         }
-
-
-
     }
 }

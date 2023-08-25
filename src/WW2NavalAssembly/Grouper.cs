@@ -120,11 +120,15 @@ namespace WW2NavalAssembly
         {
             if (!AircraftGroups[playerID].ContainsKey(key))
             {
-                AircraftGroups[playerID].Add(key, new Dictionary<int, Aircraft>());
+                return null;
+            }
+            else
+            {
+                return AircraftGroups[playerID][key];
             }
             
 
-            return AircraftGroups[playerID][key];
+            
         }
 
         public Aircraft GetLeader(int playerID, string key)
