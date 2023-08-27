@@ -151,6 +151,8 @@ namespace WW2NavalAssembly
         public Dictionary<float, FCResult> FCResults = new Dictionary<float, FCResult>();
         public GameObject OffsetIcon;
 
+        public ModLogger logger;
+
         public bool Locking = false;
         public GameObject lockingObject;
 
@@ -339,6 +341,12 @@ namespace WW2NavalAssembly
             FCOrien = FireControlPanel.transform.Find("OrienController").gameObject;
             FCOffset = FireControlPanel.transform.Find("Offset").gameObject;
             OffsetIcon = FCOffset.transform.Find("AimPrefab").Find("GunIcon").gameObject;
+        }
+        public void InitModLoggerPanel()// after init FC panel
+        {
+            logger = gameObject.AddComponent<ModLogger>();
+            logger.canvas = FCCanvas;
+            MyLogger.Instance.logger = logger;
         }
         public void AdjustFCPanel()
         {
@@ -811,11 +819,19 @@ namespace WW2NavalAssembly
                 {
                     InitFireControlPanel();
                     AdjustFCPanel(); // adjust position and size
+                    
                 }
             }
             catch { }
-            
 
+            try
+            {
+                if (!StatMaster.isMP || PlayerData.localPlayer.networkId == myPlayerID)
+                {
+                    InitModLoggerPanel();
+                }
+            }
+            catch { }
         }
         public override void OnSimulateStop()
         {

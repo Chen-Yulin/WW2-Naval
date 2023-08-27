@@ -11,6 +11,7 @@ using UnityEngine;
 using UnityEngine.Networking;
 using System.Linq;
 using UnityEngine.Assertions.Must;
+using static ProjectileScript;
 
 namespace WW2NavalAssembly
 {
@@ -306,7 +307,7 @@ namespace WW2NavalAssembly
             {
                 yield return new WaitForFixedUpdate();
             }
-            Debug.Log("Drop Torpedo");
+            MyLogger.Instance.Log("["+ Group.Value + "](" + myTeamIndex + ") Drop Torpedo");
             foreach (var a in myGroup)
             {
                 a.Value.DropLoad();
@@ -343,7 +344,7 @@ namespace WW2NavalAssembly
                 Roll = targetRoll;
             }
             
-            Debug.Log("Drop Bomb");
+            MyLogger.Instance.Log("["+ Group.Value + "](" + myTeamIndex + ") Drop Bomb");
             DropLoad();
             SwitchToCruise();
             inAttackRoutine = false;
@@ -352,14 +353,13 @@ namespace WW2NavalAssembly
         IEnumerator TurnOverCoroutine()
         {
             inTurnoverRoutine = true;
-
+            Shoot = false;
             Vector3 horizonRight = (transform.forward.y > 0 ? 1 : -1) * Vector3.ProjectOnPlane(transform.right, Vector3.up).normalized;
 
             int i = 0;
-            while (i < 100)
+            while (i < 140)
             {
-                Vector3 RollTorque = Vector3.Cross(transform.right, horizonRight.normalized) * 30;
-                myRigid.AddTorque(-horizonRight * 10f + RollTorque);
+                myRigid.AddTorque(-horizonRight * 10f);
                 yield return new WaitForFixedUpdate();
                 i++;
             }
@@ -367,8 +367,10 @@ namespace WW2NavalAssembly
         }
         IEnumerator LandOnBoardCoroutine()
         {
+            MyLogger.Instance.Log("[" + Group.Value + "](" + myTeamIndex + ") land on deck successfully, transfer to hangar ...");
             onboard = true;
             yield return new WaitForSeconds(2f);
+            MyLogger.Instance.Log("\tFinish transfer");
             SwitchToInHangar();
             onboard = false;
             yield break;
@@ -1046,6 +1048,7 @@ namespace WW2NavalAssembly
                     }
                 }
                 Grouper.Instance.AircraftGroups[myPlayerID].Remove(Group.Value);
+                Grouper.Instance.AircraftLeaders[myPlayerID].Remove(Group.Value);
             }
         }
         public void GetReturningWayPoint()
@@ -1124,10 +1127,12 @@ namespace WW2NavalAssembly
                     RemoveFromGroup();
                 }
                 catch { }
+                MyLogger.Instance.Log("[" + Group.Value + "](" + myTeamIndex + ") is shot down");
             }
         }
         public void SwitchToDogFighting(Aircraft a)
         {
+            Roll = 0;
             ColliderActive = false;
             if (Rank.Value == 1)
             {
@@ -1170,7 +1175,7 @@ namespace WW2NavalAssembly
                     member.Value.status = Status.DogFighting;
                     i++;
                 }
-                Debug.Log("Team " + Group.Value + " is dogfighting with Team " + a.Group.Value);
+                MyLogger.Instance.Log("[" + Group.Value + "] is dogfighting with [" + a.Group.Value + "]");
             }
         }
         public void SwitchToLanding()
@@ -1392,7 +1397,6 @@ namespace WW2NavalAssembly
             if (ModController.Instance.state % 10 == myseed)
             {
                 Grouper.Instance.AddAircraft(myPlayerID, Rank.Value == 2? "null" : Group.Value, BlockBehaviour.Guid.GetHashCode(), this);
-                //Debug.Log("add " + BlockBehaviour.Guid.GetHashCode());
             }
             bool appearChanged = false;
             if (preType != Type.Selection)
@@ -1550,13 +1554,22 @@ namespace WW2NavalAssembly
             float collisionForce = collision.impulse.magnitude / Time.fixedDeltaTime;
             try
             {
-                if (collisionForce > 2000f || (status == Status.Landing && collision.rigidbody.name == "Aircraft"))
+                bool case1 = collisionForce > 2000f;
+                bool case2 = (status == Status.Landing && collision.rigidbody.name == "Aircraft");
+                bool case3 = true;
+                Aircraft a = collision.rigidbody.gameObject.GetComponent<Aircraft>();
+                if (a)
+                {
+                    case3 = (a.myPlayerID == myPlayerID);
+                }
+                
+                if ((case1 && case3) || case2)
                 {
                     GameObject explo = (GameObject)Instantiate(AssetManager.Instance.Aircraft.AircraftExplo, transform.position, Quaternion.identity);
                     Destroy(explo, 5);
                     GameObject smoke = (GameObject)Instantiate(AssetManager.Instance.Aircraft.AircraftShootDown, transform.position, Quaternion.identity, transform);
                     Destroy(smoke, 10);
-                    Debug.Log("Aircraft exploded");
+                    MyLogger.Instance.Log("["+ Group.Value + "](" + myTeamIndex + ") exploded!");
                     status = Status.Exploded;
                     myRigid.drag = 0.2f;
                     myRigid.angularDrag = 0.2f;
@@ -1675,7 +1688,7 @@ namespace WW2NavalAssembly
                     TeamUpByLeader();
                 }
             }
-            if (ModController.Instance.state % 10 == myseed && !TriedFindHangar && frameCount > 10)
+            if (ModController.Instance.state % 10 == myseed && !TriedFindHangar && frameCount > 20)
             {
                 if (!MyHangar)
                 {
@@ -1764,7 +1777,6 @@ namespace WW2NavalAssembly
 
 
                             TurnToWayPoint();
-                            //Debug.Log((MathTool.Get2DCoordinate(transform.position) - WayPoint).magnitude);
 
                             float distFromWayPoint = (MathTool.Get2DCoordinate(transform.position) - WayPoint).magnitude;
                             if (distFromWayPoint < 200f && WayPointType != 0 && !hasAttacked)
@@ -1773,7 +1785,6 @@ namespace WW2NavalAssembly
                             }
                             else if (distFromWayPoint < 75f)
                             {
-                                //Debug.Log(FlightDataBase.Instance.aircraftController[myPlayerID].Routes[Group.Value].Count);
                                 if (FlightDataBase.Instance.aircraftController[myPlayerID].Routes.ContainsKey(Group.Value))
                                 {
                                     if (FlightDataBase.Instance.aircraftController[myPlayerID].Routes[Group.Value].Count > 0)
@@ -1937,7 +1948,7 @@ namespace WW2NavalAssembly
                         // limit height
                         if (targetAircraft.status == Status.DogFighting && transform.position.y > 70)
                         {
-                            myRigid.AddForce(0, (70 - transform.position.y) * 0.1f, 0);
+                            myRigid.AddForce(0, (70 - transform.position.y) * 0.5f, 0);
                         }
 
                         Thrust = 60f;
@@ -1957,10 +1968,9 @@ namespace WW2NavalAssembly
                         {
                             Vector3 targetDirection = FightTarget.position - transform.position;
                             float AngleDiff = Vector3.Angle(-transform.up, targetDirection);
-                            Vector3 torque = Vector3.Cross(-transform.up, targetDirection).normalized * Mathf.Clamp(AngleDiff * AngleDiff * 0.2f, -7, 7);
-                            Vector3 RollTorque = Vector3.Cross(transform.right, -torque.normalized) * 30;
-                            Vector3 StableTorque = (transform.forward.y > 0? 1 : -1) * Vector3.Cross(transform.right, Vector3.up) * 0.5f;
-                            myRigid.AddTorque(torque + RollTorque + StableTorque);
+                            Vector3 torque = Vector3.Cross(-transform.up, targetDirection).normalized * Mathf.Clamp(Mathf.Sqrt(AngleDiff) * 2f, -7, 7);
+                            Vector3 StableTorque = (transform.forward.y > 0? 1 : -1) * Vector3.Cross(transform.right, Vector3.up) * 2f;
+                            myRigid.AddTorque((torque + StableTorque) * (!inTurnoverRoutine?1:0.3f) );
 
                             bool canShoot = AngleDiff < 3;
                             Shoot = canShoot;
@@ -1969,6 +1979,10 @@ namespace WW2NavalAssembly
                                 targetAircraft.ReduceHP(1);
                             }
                         }
+                        Vector3 v_angularVel = myRigid.angularVelocity;
+                        Vector3 RollTorque = Vector3.Cross(transform.right, -v_angularVel.normalized) * 5;
+                        myRigid.AddTorque(RollTorque);
+
 
                         Vector3 velocity = myRigid.velocity;
                         velocity = transform.InverseTransformDirection(velocity);
@@ -1997,9 +2011,14 @@ namespace WW2NavalAssembly
                 if (transform.position.y<20f && transform.position.y > 18f && myRigid.velocity.y < 0f)
                 {
                     hasHitWater = true;
-                    RemoveFromGroup();
+                    try
+                    {
+                        RemoveFromGroup();
+                    }
+                    catch { }
+                    
                     status = Status.Deprecated;
-                    Debug.Log("Aircraft drop sea!");
+                    MyLogger.Instance.Log("["+ Group.Value + "](" + myTeamIndex + ") drop sea!");
 
                     GameObject waterhit;
                     waterhit = (GameObject)Instantiate(AssetManager.Instance.WaterHit.waterhit2, new Vector3(transform.position.x, 20, transform.position.z), Quaternion.identity);

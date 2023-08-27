@@ -8,11 +8,14 @@ using Modding.Modules;
 using Modding;
 using Modding.Blocks;
 using UnityEngine;
+using UnityEngine.UI;
 using UnityEngine.Networking;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 namespace WW2NavalAssembly
 {
+
     public class AircraftElevator : MonoBehaviour
     {
         public float delayTime = 0.2f;
@@ -22,7 +25,7 @@ namespace WW2NavalAssembly
 
         public bool upOperating = false;
         public bool downOperating = false;
-        
+
         public void AddUpQueue(Aircraft aircraft)
         {
             Aircraft contradiction = null;
@@ -104,14 +107,15 @@ namespace WW2NavalAssembly
         IEnumerator LiftCoroutine()
         {
             upOperating = true;
-            Aircraft a = UpQueue.Count>0? UpQueue.Dequeue():null;
+            Aircraft a = UpQueue.Count > 0 ? UpQueue.Dequeue() : null;
             if (a && a.status == Aircraft.Status.InHangar)
             {
                 a.FindDeck();
-                Debug.Log("elevator lift aircraft: " + a.myGuid + "...");
+                MyLogger.Instance.Log("Elevator lift aircraft: [" + a.Group.Value + "](" + a.myTeamIndex + ")...");
                 yield return new WaitForSeconds(delayTime);
+                MyLogger.Instance.Log("\tFinished");
                 a.SwitchToOnBoard();
-                //Debug.Log("Finish");
+                //MyLogger.Instance.Log("Finish");
             }
             upOperating = false;
             yield break;
@@ -123,10 +127,11 @@ namespace WW2NavalAssembly
             Aircraft a = DownQueue.Count > 0 ? DownQueue.Dequeue() : null;
             if (a && a.status == Aircraft.Status.OnBoard)
             {
-                Debug.Log("elevator drop aircraft: " + a.myGuid + "...");
+                MyLogger.Instance.Log("Elevator drop aircraft: [" + a.Group.Value + "](" + a.myTeamIndex + ")...");
                 yield return new WaitForSeconds(delayTime);
+                MyLogger.Instance.Log("\tFinished");
                 a.SwitchToInHangar();
-                //Debug.Log("Finish");
+                //MyLogger.Instance.Log("Finish");
             }
             downOperating = false;
             yield break;
@@ -183,13 +188,13 @@ namespace WW2NavalAssembly
             Aircraft a = takeOffQueue.Count > 0 ? takeOffQueue.Dequeue() : null;
             if (a && a.status == Aircraft.Status.OnBoard)
             {
-                Debug.Log("move aircraft: " + a.myGuid + " to take off spot...");
+                MyLogger.Instance.Log("Move aircraft: [" + a.Group.Value + "](" + a.myTeamIndex + ") to take off spot...");
                 yield return new WaitForSeconds(delayTime);
                 a.ChangeDeckSpot(FlightDataBase.Instance.DeckObjects[a.myPlayerID].transform.Find("TakeOff").GetChild(0), true);
-                Debug.Log("taking off ...");
+                MyLogger.Instance.Log("\tTaking off ...");
                 yield return new WaitForSeconds(delayTime);
                 a.SwitchToTakingOff();
-                Debug.Log("Finish take off");
+                MyLogger.Instance.Log("\tFinish taking off");
             }
             takeOffOperating = false;
             yield break;
@@ -210,7 +215,7 @@ namespace WW2NavalAssembly
 
         }
     }
-    public class CruisePoint:MonoBehaviour
+    public class CruisePoint : MonoBehaviour
     {
         public Vector3 Position;
         public Vector2 Direction;
@@ -252,7 +257,7 @@ namespace WW2NavalAssembly
         public bool inTacticalView
         {
             get { return _inTacticalView; }
-            set { 
+            set {
                 _inTacticalView = value;
                 SingleInstanceFindOnly<MouseOrbit>.Instance.isActive = !_inTacticalView;
                 if (_inTacticalView)
@@ -281,7 +286,7 @@ namespace WW2NavalAssembly
 
         public GameObject DrawBoard;
         public Dictionary<string, LineRenderer> RouteLines = new Dictionary<string, LineRenderer>();
-        public Dictionary<string,Queue<CruisePoint>> Routes = new Dictionary<string, Queue<CruisePoint>>();
+        public Dictionary<string, Queue<CruisePoint>> Routes = new Dictionary<string, Queue<CruisePoint>>();
         public Dictionary<string, GameObject> GroupIcon = new Dictionary<string, GameObject>();
 
         private Aircraft currentLeader;
@@ -317,7 +322,7 @@ namespace WW2NavalAssembly
                             line.Value.SetColors(Color.gray, Color.gray);
                             line.Value.SetWidth(0.5f, 0.5f);
                         }
-                        
+
                     }
                     foreach (var icon in GroupIcon)
                     {
@@ -375,6 +380,20 @@ namespace WW2NavalAssembly
             }
         }
 
+        public bool JudgeCurrentLeaderValid()
+        {
+            if (CurrentLeader.status == Aircraft.Status.ShootDown ||
+            CurrentLeader.status == Aircraft.Status.Exploded ||
+            CurrentLeader.status == Aircraft.Status.Deprecated)
+            {
+                MyLogger.Instance.Log("[" + CurrentLeader.Group.Value + "] leader is down");
+                return false;
+            }
+            else
+            {
+                return true;
+            }
+        }  
         public void InitDrawBoard()
         {
             DrawBoard = new GameObject("DrawBoard");
@@ -394,26 +413,30 @@ namespace WW2NavalAssembly
         }
         public void UpdateRouteLine(string group)
         {
-            if (!Routes.ContainsKey(group))
+            if (Grouper.Instance.AircraftLeaders[myPlayerID].ContainsKey(group))
             {
-                Routes.Add(group, new Queue<CruisePoint>());
-                GameObject routeRoot = new GameObject("Route_" + group);
-                routeRoot.transform.parent = DrawBoard.transform;
-                LineRenderer LR = routeRoot.AddComponent<LineRenderer>();
-                LR.material = new Material(Shader.Find("Particles/Additive"));
-                RouteLines.Add(group, LR);
+                RouteLines[group].SetVertexCount(Routes[group].Count + 1);
+                RouteLines[group].SetPosition(0, Grouper.Instance.AircraftLeaders[myPlayerID][group].Value.transform.position);
+                int i = 1;
+                foreach (var routePoint in Routes[group])
+                {
+                    RouteLines[group].SetPosition(i, routePoint.Position);
+                    i++;
+                }
             }
-            RouteLines[group].SetVertexCount(Routes[group].Count + 1);
-            RouteLines[group].SetPosition(0, Grouper.Instance.AircraftLeaders[myPlayerID][group].Value.transform.position);
-            int i = 1;
-            foreach (var routePoint in Routes[group])
+            else
             {
-                RouteLines[group].SetPosition(i, routePoint.Position);
-                i++;
+                foreach (var point in Routes[group])
+                {
+                    if (point.Icon)
+                    {
+                        point.Icon.SetActive(false);
+                    }
+                }
+                Routes[group].Clear();
+                RouteLines[group].gameObject.SetActive(false);
             }
 
-            // disable other route lines
-            
 
         }
         public void UpdateGroupIcon(string group)
@@ -431,9 +454,14 @@ namespace WW2NavalAssembly
                     GroupIcon[group].transform.localScale = _orthoSize / 200f * Vector3.one;
                 }
                 catch { }
-                
+
+            }
+            else
+            {
+                GroupIcon[group].SetActive(false);
             }
         }
+
         public void AddRoutePoint(string group, Vector2 position, int type = 0)
         {
             if (!Routes.ContainsKey(group))
@@ -769,13 +797,13 @@ namespace WW2NavalAssembly
                     {
                         if (Continuous.IsHeld)
                         {
-                            if (Input.GetMouseButtonDown(1))
+                            if (Input.GetMouseButtonDown(1) && JudgeCurrentLeaderValid())
                             {
                                 Vector2 screenPosition = new Vector2(Input.mousePosition.x, Input.mousePosition.y);
                                 Vector3 worldPosition = Camera.main.ScreenToWorldPoint(screenPosition);
                                 AddRoutePoint(CurrentLeader.Group.Value, new Vector2(worldPosition.x, worldPosition.z), 0);
                             }
-                            else if (Attack.IsPressed)
+                            else if (Attack.IsPressed && JudgeCurrentLeaderValid())
                             {
                                 Vector2 screenPosition = new Vector2(Input.mousePosition.x, Input.mousePosition.y);
                                 Vector3 worldPosition = Camera.main.ScreenToWorldPoint(screenPosition);
@@ -784,13 +812,13 @@ namespace WW2NavalAssembly
                         }
                         else
                         {
-                            if (Input.GetMouseButtonDown(1))
+                            if (Input.GetMouseButtonDown(1) && JudgeCurrentLeaderValid())
                             {
                                 Vector2 screenPosition = new Vector2(Input.mousePosition.x, Input.mousePosition.y);
                                 Vector3 worldPosition = Camera.main.ScreenToWorldPoint(screenPosition);
                                 ResetRoutePoint(CurrentLeader.Group.Value, new Vector2(worldPosition.x, worldPosition.z), 0);
                             }
-                            else if (Attack.IsPressed)
+                            else if (Attack.IsPressed && JudgeCurrentLeaderValid())
                             {
                                 Vector2 screenPosition = new Vector2(Input.mousePosition.x, Input.mousePosition.y);
                                 Vector3 worldPosition = Camera.main.ScreenToWorldPoint(screenPosition);
@@ -800,7 +828,7 @@ namespace WW2NavalAssembly
                     }
                     
 
-                    if (ReturnKey.IsPressed)
+                    if (ReturnKey.IsPressed && JudgeCurrentLeaderValid())
                     {
                         bool allinCruise = true;
                         foreach(var a in CurrentLeader.myGroup)
@@ -830,7 +858,7 @@ namespace WW2NavalAssembly
                         }
                         else
                         {
-                            Debug.Log("Cannot return because not all aircraft in cruise");
+                            MyLogger.Instance.Log("["+ CurrentLeader.Group.Value + "] cannot return because not all aircraft in cruise");
                         }
 
                         
@@ -841,7 +869,7 @@ namespace WW2NavalAssembly
                 {
                     UpdateRouteLine(group.Key);
                 }
-                foreach (var group in Grouper.Instance.AircraftGroups[myPlayerID])
+                foreach (var group in GroupIcon)
                 {
                     UpdateGroupIcon(group.Key);
                 }
@@ -883,7 +911,7 @@ namespace WW2NavalAssembly
         }
         public override void SimulateUpdateHost() // key responding
         {
-            if (ElevatorDown.IsPressed && CurrentLeader)
+            if (ElevatorDown.IsPressed && CurrentLeader && JudgeCurrentLeaderValid())
             {
                 bool allOnCarrier = true;
                 foreach (var aircraft in CurrentLeader.myGroup)
@@ -903,16 +931,16 @@ namespace WW2NavalAssembly
                 }
                 else
                 {
-                    Debug.Log("Not all aircraft in the team on Carrier");
+                    MyLogger.Instance.Log("Not all aircrafts of [" + CurrentLeader.Group.Value + "] on Carrier");
                 }
                 
             }
 
-            if (ElevatorUp.IsPressed && CurrentLeader)
+            if (ElevatorUp.IsPressed && CurrentLeader && JudgeCurrentLeaderValid())
             {
                 if (CurrentLeader.myGroup.Count + FlightDataBase.Instance.Decks[myPlayerID].Occupied_num > FlightDataBase.Instance.Decks[myPlayerID].Total_num)
                 {
-                    Debug.Log("Not enough space on deck for the entire group");
+                    MyLogger.Instance.Log("Not enough space on deck for [" + CurrentLeader.Group.Value + "]");
                 }
                 else
                 {
@@ -924,7 +952,7 @@ namespace WW2NavalAssembly
                 }
             }
 
-            if (TakeOffKey.IsPressed)
+            if (TakeOffKey.IsPressed && JudgeCurrentLeaderValid())
             {
                 if (CurrentLeader)
                 {
@@ -939,7 +967,7 @@ namespace WW2NavalAssembly
                     }
                     if (!allOnBoard)
                     {
-                        Debug.Log("Not all aircrafts are on board");
+                        MyLogger.Instance.Log("Not all aircrafts of [" + CurrentLeader.Group.Value + "] are on board");
                     }
                     else
                     {
