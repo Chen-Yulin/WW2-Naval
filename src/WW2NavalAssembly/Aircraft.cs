@@ -10,6 +10,7 @@ using Modding.Blocks;
 using UnityEngine;
 using UnityEngine.Networking;
 using System.Linq;
+using UnityEngine.Assertions.Must;
 
 namespace WW2NavalAssembly
 {
@@ -59,7 +60,6 @@ namespace WW2NavalAssembly
                 if (value != colliderActive)
                 {
                     transform.Find("Colliders").gameObject.SetActive(value);
-                    myRigid.useGravity = value;
                     colliderActive = value;
                 }
             }
@@ -261,6 +261,7 @@ namespace WW2NavalAssembly
         public Vector3 fightPosition;
         public Transform FightTarget; // remember to clear on exist dogfighting
         public GameObject MachineGun;
+        public bool inTurnoverRoutine;
         public bool Shoot
         {
             set
@@ -348,7 +349,22 @@ namespace WW2NavalAssembly
             inAttackRoutine = false;
             yield break;
         }
+        IEnumerator TurnOverCoroutine()
+        {
+            inTurnoverRoutine = true;
 
+            Vector3 horizonRight = (transform.forward.y > 0 ? 1 : -1) * Vector3.ProjectOnPlane(transform.right, Vector3.up).normalized;
+
+            int i = 0;
+            while (i < 100)
+            {
+                Vector3 RollTorque = Vector3.Cross(transform.right, horizonRight.normalized) * 30;
+                myRigid.AddTorque(-horizonRight * 10f + RollTorque);
+                yield return new WaitForFixedUpdate();
+                i++;
+            }
+            inTurnoverRoutine = false;
+        }
         IEnumerator LandOnBoardCoroutine()
         {
             onboard = true;
@@ -1076,7 +1092,7 @@ namespace WW2NavalAssembly
         }
         public void ReduceHP(int value = 1)
         {
-            if (nextTeammate && nextTeammate.status == Status.Cruise)
+            if (nextTeammate && (nextTeammate.status == Status.Cruise || nextTeammate.status == Status.DogFighting || nextTeammate.status == Status.Attacking))
             {
                 nextTeammate.ReduceHP(value);
             }
@@ -1093,6 +1109,7 @@ namespace WW2NavalAssembly
         {
             if (status != Status.ShootDown)
             {
+                ColliderActive = true;
                 status = Status.ShootDown;
                 GameObject smoke = (GameObject)Instantiate(AssetManager.Instance.Aircraft.AircraftShootDown, transform.position, Quaternion.identity, transform);
                 Destroy(smoke, 10);
@@ -1101,6 +1118,7 @@ namespace WW2NavalAssembly
                 myRigid.useGravity = true;
                 Thrust = 0f;
                 DeckSliding = false;
+                Shoot = false;
                 try
                 {
                     RemoveFromGroup();
@@ -1110,6 +1128,7 @@ namespace WW2NavalAssembly
         }
         public void SwitchToDogFighting(Aircraft a)
         {
+            ColliderActive = false;
             if (Rank.Value == 1)
             {
                 bool allInCruise = true;
@@ -1231,6 +1250,7 @@ namespace WW2NavalAssembly
                 }
             }else if (status == Status.DogFighting)
             {
+                ColliderActive = true;
                 Shoot = false;
                 if (Rank.Value == 1)
                 {
@@ -1899,6 +1919,7 @@ namespace WW2NavalAssembly
                     }
                 case Status.DogFighting:
                     {
+                        ColliderActive = false;
                         Aircraft targetAircraft = FightTarget.GetComponent<Aircraft>();
                         if (targetAircraft.status != Status.Cruise && targetAircraft.status != Status.Attacking && targetAircraft.status != Status.DogFighting)
                         {
@@ -1913,53 +1934,48 @@ namespace WW2NavalAssembly
                                 break;
                             }
                         }
+                        // limit height
+                        if (targetAircraft.status == Status.DogFighting && transform.position.y > 70)
+                        {
+                            myRigid.AddForce(0, (70 - transform.position.y) * 0.1f, 0);
+                        }
 
-                        AddAeroForce();
                         Thrust = 60f;
                         DeckSliding = false;
                         myRigid.angularDrag = 10f;
+                        myRigid.drag = 0.6f;
                         float dist = (transform.position - FightTarget.position).magnitude;
                         if (dist < 15f)
                         {
-                            transform.rotation = Quaternion.Lerp(transform.rotation,Quaternion.LookRotation(Vector3.up + transform.up, transform.up), 0.1f);
-                            myRigid.AddRelativeTorque(-16f, 0, 0);
+                            if (!inTurnoverRoutine)
+                            {
+                                StartCoroutine(TurnOverCoroutine());
+                            }
+                            
                         }
                         else
                         {
                             Vector3 targetDirection = FightTarget.position - transform.position;
-                            bool targetOnUpper = Vector3.Dot(targetDirection, transform.forward) > 0;
+                            float AngleDiff = Vector3.Angle(-transform.up, targetDirection);
+                            Vector3 torque = Vector3.Cross(-transform.up, targetDirection).normalized * Mathf.Clamp(AngleDiff * AngleDiff * 0.2f, -7, 7);
+                            Vector3 RollTorque = Vector3.Cross(transform.right, -torque.normalized) * 30;
+                            Vector3 StableTorque = (transform.forward.y > 0? 1 : -1) * Vector3.Cross(transform.right, Vector3.up) * 0.5f;
+                            myRigid.AddTorque(torque + RollTorque + StableTorque);
 
-                            float directionDiff = Vector3.Angle(-transform.up, targetDirection);
-
-                            Vector3 targetForward = Vector3.ProjectOnPlane(transform.forward, Vector3.Cross(targetDirection, -transform.up)) * (targetOnUpper ? 1 : -1);
-                            float pitchAngle = 90 - Vector3.Angle(targetForward, targetDirection);
-                            if ((pitchAngle < -3f || pitchAngle > 3) && directionDiff > 3)
-                            {
-                                Quaternion targetRotation = Quaternion.LookRotation(targetForward, transform.up);
-                                transform.rotation = Quaternion.Lerp(transform.rotation, targetRotation, 0.1f);
-                            }
-                            else
-                            {
-                                // stable TODO...
-                            }
-
-                            
-
-
-                            pitchAngle = Vector3.Angle(transform.forward, targetDirection);
-                            float yawAngle = Vector3.Angle(transform.right, Vector3.ProjectOnPlane(targetDirection, transform.forward));
-                            float yawAngle2 = Vector3.Angle(-transform.up, Vector3.ProjectOnPlane(targetDirection, transform.forward));
-                            yawAngle = yawAngle > 90f ? -yawAngle2 : yawAngle2;
-
-                            myRigid.AddRelativeTorque(Mathf.Clamp((pitchAngle - 90f) * 0.4f, -15, 3), 0, Mathf.Clamp(yawAngle * 0.1f, -2, 2));
-
-                            bool canShoot = Mathf.Abs(pitchAngle - 90f) < 7;
+                            bool canShoot = AngleDiff < 3;
                             Shoot = canShoot;
                             if (canShoot)
                             {
                                 targetAircraft.ReduceHP(1);
                             }
                         }
+
+                        Vector3 velocity = myRigid.velocity;
+                        velocity = transform.InverseTransformDirection(velocity);
+                        velocity.x *= 0.9f;
+                        velocity.z *= 0.9f;
+                        myRigid.velocity = transform.TransformDirection(velocity);
+
                         Vector3 rigidTargetPosition = myRigid.position;
                         rigidTargetPosition.y = Mathf.Clamp(rigidTargetPosition.y, 21, 1000);
                         myRigid.MovePosition(rigidTargetPosition);

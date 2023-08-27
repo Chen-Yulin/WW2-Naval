@@ -1139,7 +1139,7 @@ namespace WW2NavalAssembly
         public bool DetectSelfHost()
         {
             bool res = false;
-            Ray GunRay = new Ray(transform.position + transform.forward, transform.forward);
+            Ray GunRay = new Ray(transform.position + 3 * transform.forward * transform.localScale.z, transform.forward);
             RaycastHit[] hitList = Physics.RaycastAll(GunRay, 20f);
             foreach (var hit in hitList)
             {
