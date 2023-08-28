@@ -1120,6 +1120,17 @@ namespace WW2NavalAssembly
             ColliderActive = false;
             if (Rank.Value == 1)
             {
+                if (a.status == Status.DogFighting && myGroup.ContainsValue(a.FightTarget.gameObject.GetComponent<Aircraft>()))
+                {
+                    Vector3 f_pos = (transform.position + a.transform.position) / 2f;
+                    f_pos.y = 60f;
+                    fightPosition = f_pos;
+                    a.fightPosition = f_pos;
+                }
+                else
+                {
+                    fightPosition = Vector3.zero;
+                }
                 bool allInCruise = true;
                 foreach (var member in myGroup)
                 {
@@ -1159,7 +1170,15 @@ namespace WW2NavalAssembly
                     member.Value.status = Status.DogFighting;
                     i++;
                 }
-                MyLogger.Instance.Log("[" + Group.Value + "] is dogfighting with [" + a.Group.Value + "]");
+                if (fightPosition != Vector3.zero)
+                {
+                    MyLogger.Instance.Log("[" + Group.Value + "] is dogfighting with [" + a.Group.Value + "] at " + fightPosition.ToString());
+                }
+                else
+                {
+                    MyLogger.Instance.Log("[" + Group.Value + "] is dogfighting with [" + a.Group.Value + "]");
+                }
+                
             }
         }
         public void SwitchToLanding()
@@ -1977,11 +1996,6 @@ namespace WW2NavalAssembly
                                 break;
                             }
                         }
-                        // limit height
-                        if (targetAircraft.status == Status.DogFighting && transform.position.y > 70)
-                        {
-                            myRigid.AddForce(0, (70 - transform.position.y) * 0.5f, 0);
-                        }
 
                         Thrust = 60f;
                         DeckSliding = false;
@@ -2025,6 +2039,13 @@ namespace WW2NavalAssembly
                         Vector3 rigidTargetPosition = myRigid.position;
                         rigidTargetPosition.y = Mathf.Clamp(rigidTargetPosition.y, 21, 1000);
                         myRigid.MovePosition(rigidTargetPosition);
+
+                        // restrict fight position
+                        if (fightPosition != Vector3.zero)
+                        {
+                            myRigid.AddForce((fightPosition - transform.position) * 1f);
+                        }
+
                         break;
                     }
                 default : break;

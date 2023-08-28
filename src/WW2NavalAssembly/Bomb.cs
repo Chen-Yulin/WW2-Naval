@@ -603,19 +603,12 @@ namespace WW2NavalAssembly
         }
         public void Start()
         {
-            name = "Gun";
+            name = "Bomb";
             myRigid = gameObject.GetComponent<Rigidbody>();
             if (BombType == 0)
             {
                 penetration = Weight * 0.12f;
             }
-
-            TrailRenderer TR = gameObject.GetComponent<TrailRenderer>();
-            if (BombType == 0)
-            {
-                TR.material.SetColor("_TintColor", new Color(1,1,1,0.1f));
-            }
-
         }
         public void FixedUpdate()
         {
