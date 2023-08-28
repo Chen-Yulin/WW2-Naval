@@ -111,6 +111,19 @@ namespace WW2NavalAssembly
                     AircraftLeaders[playerID][key] = new KeyValuePair<int, Aircraft>(guid, ac);
                 }
             }
+            else
+            {
+                foreach (var leader in AircraftLeaders[playerID])
+                {
+
+                    if (leader.Value.Key == guid)
+                    {
+                        AircraftLeaders[playerID].Remove(leader.Key);
+                        break;
+                    }
+
+                }
+            }
 
             var sortedDict = AircraftGroups[playerID][key].OrderBy(entry => entry.Value.Rank.Value != 1).ToDictionary(pair => pair.Key, pair => pair.Value);
             AircraftGroups[playerID][key] = sortedDict;

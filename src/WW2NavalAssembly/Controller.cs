@@ -854,7 +854,7 @@ namespace WW2NavalAssembly
                     OrienPredIcon.Clear();
                     TorpedoAimIcon.Clear();
                     TorpedoPreIcon.Clear();
-                    Debug.Log("Clear Finish");
+                    //Debug.Log("Clear Finish");
                 }
             }
             catch { }
@@ -901,7 +901,7 @@ namespace WW2NavalAssembly
                     OrienPredIcon.Clear();
                     TorpedoAimIcon.Clear();
                     TorpedoPreIcon.Clear();
-                    Debug.Log("Clear Finish");
+                    //Debug.Log("Clear Finish");
                 }
             }
             catch { }
