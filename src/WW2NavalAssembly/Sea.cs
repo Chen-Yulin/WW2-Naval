@@ -26,8 +26,8 @@ namespace WW2NavalAssembly
         public bool disablePixelLights = true;
         public int textureSize = 256;
         public float clipPlaneOffset = 0.07f;
-        public LayerMask reflectLayers = -8388609;
-        public LayerMask refractLayers = -8388609;
+        public LayerMask reflectLayers = ~((1<<20)|(1<<4));
+        public LayerMask refractLayers = ~((1 << 20) | (1 << 4));
 
 
         private Dictionary<Camera, Camera> m_ReflectionCameras = new Dictionary<Camera, Camera>(); // Camera -> Camera table

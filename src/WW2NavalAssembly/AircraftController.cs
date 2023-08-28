@@ -379,21 +379,7 @@ namespace WW2NavalAssembly
                 return this._viewCamera;
             }
         }
-
-        public bool JudgeCurrentLeaderValid()
-        {
-            if (CurrentLeader.status == Aircraft.Status.ShootDown ||
-            CurrentLeader.status == Aircraft.Status.Exploded ||
-            CurrentLeader.status == Aircraft.Status.Deprecated)
-            {
-                MyLogger.Instance.Log("[" + CurrentLeader.Group.Value + "] leader is down");
-                return false;
-            }
-            else
-            {
-                return true;
-            }
-        }  
+ 
         public void InitDrawBoard()
         {
             DrawBoard = new GameObject("DrawBoard");
@@ -461,7 +447,51 @@ namespace WW2NavalAssembly
                 GroupIcon[group].SetActive(false);
             }
         }
-
+        public void UpdateCurrentLeaderInfo()
+        {
+            if (CurrentLeader)
+            {
+                foreach (var icon in GroupIcon)
+                {
+                    TextMesh txt = icon.Value.GetComponentInChildren<TextMesh>();
+                    
+                    if (icon.Key == CurrentLeader.Group.Value)
+                    {
+                        txt.characterSize = 2;
+                        string[] mateStatus = new string[CurrentLeader.targetTeamCount];
+                        List<Aircraft> mateList = new List<Aircraft>(CurrentLeader.myGroup.Values);
+                        for (int i = 0; i < currentLeader.targetTeamCount; i++)
+                        {
+                            if (i >= mateList.Count)
+                            {
+                                mateStatus[i] = "XXXXX";
+                            }
+                            else
+                            {
+                                mateStatus[i] = mateList[i].status.ToString() + " " + 
+                                                "[Fuel:"+(mateList[i].Fuel * 100f).ToString("F1") + "%]" +
+                                                "[HP:" + (mateList[i].HP / 5f).ToString("F1") + "%]";
+                            }
+                        }
+                        txt.text = "[" + icon.Key + "]\n\t" + string.Join("\n\t", mateStatus);
+                    }
+                    else
+                    {
+                        txt.characterSize = 3;
+                        txt.text = icon.Key;
+                    }
+                }
+            }
+            else
+            {
+                foreach (var icon in GroupIcon)
+                {
+                    TextMesh txt = icon.Value.GetComponentInChildren<TextMesh>();
+                    txt.characterSize = 3;
+                    txt.text = icon.Key;
+                }
+            }
+        }
         public void AddRoutePoint(string group, Vector2 position, int type = 0)
         {
             if (!Routes.ContainsKey(group))
@@ -797,13 +827,13 @@ namespace WW2NavalAssembly
                     {
                         if (Continuous.IsHeld)
                         {
-                            if (Input.GetMouseButtonDown(1) && JudgeCurrentLeaderValid())
+                            if (Input.GetMouseButtonDown(1))
                             {
                                 Vector2 screenPosition = new Vector2(Input.mousePosition.x, Input.mousePosition.y);
                                 Vector3 worldPosition = Camera.main.ScreenToWorldPoint(screenPosition);
                                 AddRoutePoint(CurrentLeader.Group.Value, new Vector2(worldPosition.x, worldPosition.z), 0);
                             }
-                            else if (Attack.IsPressed && JudgeCurrentLeaderValid())
+                            else if (Attack.IsPressed)
                             {
                                 Vector2 screenPosition = new Vector2(Input.mousePosition.x, Input.mousePosition.y);
                                 Vector3 worldPosition = Camera.main.ScreenToWorldPoint(screenPosition);
@@ -812,13 +842,13 @@ namespace WW2NavalAssembly
                         }
                         else
                         {
-                            if (Input.GetMouseButtonDown(1) && JudgeCurrentLeaderValid())
+                            if (Input.GetMouseButtonDown(1))
                             {
                                 Vector2 screenPosition = new Vector2(Input.mousePosition.x, Input.mousePosition.y);
                                 Vector3 worldPosition = Camera.main.ScreenToWorldPoint(screenPosition);
                                 ResetRoutePoint(CurrentLeader.Group.Value, new Vector2(worldPosition.x, worldPosition.z), 0);
                             }
-                            else if (Attack.IsPressed && JudgeCurrentLeaderValid())
+                            else if (Attack.IsPressed)
                             {
                                 Vector2 screenPosition = new Vector2(Input.mousePosition.x, Input.mousePosition.y);
                                 Vector3 worldPosition = Camera.main.ScreenToWorldPoint(screenPosition);
@@ -828,7 +858,7 @@ namespace WW2NavalAssembly
                     }
                     
 
-                    if (ReturnKey.IsPressed && JudgeCurrentLeaderValid())
+                    if (ReturnKey.IsPressed)
                     {
                         bool allinCruise = true;
                         foreach(var a in CurrentLeader.myGroup)
@@ -873,6 +903,7 @@ namespace WW2NavalAssembly
                 {
                     UpdateGroupIcon(group.Key);
                 }
+                UpdateCurrentLeaderInfo();
             }
             else
             {
@@ -911,7 +942,7 @@ namespace WW2NavalAssembly
         }
         public override void SimulateUpdateHost() // key responding
         {
-            if (ElevatorDown.IsPressed && CurrentLeader && JudgeCurrentLeaderValid())
+            if (ElevatorDown.IsPressed && CurrentLeader)
             {
                 bool allOnCarrier = true;
                 foreach (var aircraft in CurrentLeader.myGroup)
@@ -936,7 +967,7 @@ namespace WW2NavalAssembly
                 
             }
 
-            if (ElevatorUp.IsPressed && CurrentLeader && JudgeCurrentLeaderValid())
+            if (ElevatorUp.IsPressed && CurrentLeader)
             {
                 if (CurrentLeader.myGroup.Count + FlightDataBase.Instance.Decks[myPlayerID].Occupied_num > FlightDataBase.Instance.Decks[myPlayerID].Total_num)
                 {
@@ -952,7 +983,7 @@ namespace WW2NavalAssembly
                 }
             }
 
-            if (TakeOffKey.IsPressed && JudgeCurrentLeaderValid())
+            if (TakeOffKey.IsPressed)
             {
                 if (CurrentLeader)
                 {

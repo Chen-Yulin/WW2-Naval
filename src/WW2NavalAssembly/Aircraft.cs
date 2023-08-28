@@ -1049,6 +1049,11 @@ namespace WW2NavalAssembly
                 }
                 Grouper.Instance.AircraftGroups[myPlayerID].Remove(Group.Value);
                 Grouper.Instance.AircraftLeaders[myPlayerID].Remove(Group.Value);
+                if (FlightDataBase.Instance.aircraftController[myPlayerID].CurrentLeader == this)
+                {
+                    FlightDataBase.Instance.aircraftController[myPlayerID].CurrentLeader = null;
+                }
+                
             }
         }
         public void GetReturningWayPoint()
@@ -1563,7 +1568,7 @@ namespace WW2NavalAssembly
                     case3 = (a.myPlayerID == myPlayerID);
                 }
                 
-                if ((case1 && case3) || case2)
+                if ((case1 && !case3) || case2)
                 {
                     GameObject explo = (GameObject)Instantiate(AssetManager.Instance.Aircraft.AircraftExplo, transform.position, Quaternion.identity);
                     Destroy(explo, 5);
@@ -1659,7 +1664,7 @@ namespace WW2NavalAssembly
                 case 0:
                     break;
                 case 1:
-                    if (SwitchActive.IsPressed)
+                    if (SwitchActive.IsPressed && status != Status.Exploded && status != Status.Deprecated && status != Status.ShootDown)
                     {
                         if (FlightDataBase.Instance.aircraftController[myPlayerID].CurrentLeader == this)
                         {
