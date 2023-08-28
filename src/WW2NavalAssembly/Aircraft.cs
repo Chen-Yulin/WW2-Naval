@@ -238,6 +238,9 @@ namespace WW2NavalAssembly
         public int myTeamIndex = 0;
         public int targetTeamCount = 0;
 
+        // ============== for hanger ===================
+        public bool hasFindBackup = false;
+
         // ============== for takingOff =================
         public Vector2 TakeOffDirection;
         public float TakeOffLift = 0;
@@ -476,25 +479,6 @@ namespace WW2NavalAssembly
             MeshRenderer MRtmp = CannonVis.AddComponent<MeshRenderer>();
             MRtmp.material.mainTexture = ModResource.GetTexture("Engine Texture").Texture;
 
-
-            TrailRenderer TRtmp = BombPrefab.AddComponent<TrailRenderer>();
-            TRtmp.autodestruct = false;
-
-            TRtmp.receiveShadows = false;
-            TRtmp.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-
-            TRtmp.startWidth = Mathf.Clamp(0.001f * 1000, 0.05f, 0.5f);
-            TRtmp.endWidth = 0f;
-
-            TRtmp.material = new Material(Shader.Find("Particles/Additive"));
-
-            TRtmp.material.SetColor("_TintColor", Color.white - 0.8f * Color.blue);
-
-
-            TRtmp.enabled = true;
-            TRtmp.time = 0.1f;
-
-
             BombPrefab.SetActive(false);
         }
         GameObject InitGun()
@@ -571,7 +555,6 @@ namespace WW2NavalAssembly
             myGroup = Grouper.Instance.GetAircraft(myPlayerID, Group.Value);
 
             GenerateFormation(status == Status.Attacking);
-            
 
             // team up the order
             preTeammate = null;
@@ -580,6 +563,7 @@ namespace WW2NavalAssembly
             {
                 if (aircraft.Value != this)
                 {
+                    aircraft.Value.myLeader = this;
                     groupWithoutLeader.Add(aircraft.Value);
                 }
             }
@@ -603,12 +587,6 @@ namespace WW2NavalAssembly
 
                 }
             }
-            
-
-            
-
-            // assign teammate to target
-
 
         }
         public void GenerateFormation(bool attack = false)
@@ -1012,6 +990,7 @@ namespace WW2NavalAssembly
                 GameObject Bomb = (GameObject)Instantiate(BombPrefab, LoadObject.transform.position, Quaternion.identity,
                                                                 BlockBehaviour.ParentMachine.transform.Find("Simulation Machine"));
                 Bomb.transform.rotation = Quaternion.LookRotation(LoadObject.transform.forward, LoadObject.transform.up);
+                Bomb.transform.localScale = Vector3.one * 4;
                 Bomb.GetComponent<Rigidbody>().velocity = myRigid.velocity;
                 Bomb.GetComponent<Bomb>().randomForce = new Vector3(UnityEngine.Random.value - 0.5f, UnityEngine.Random.value - 0.5f, UnityEngine.Random.value - 0.5f);
                 Bomb.GetComponent<Bomb>().parent = gameObject;
@@ -1321,6 +1300,7 @@ namespace WW2NavalAssembly
             }
             else if (status == Status.Landing)
             {
+                hasFindBackup = false;
                 MyDeck = null;
                 status = Status.InHangar;
                 SettleSpot(MyHangar, true);
@@ -1332,9 +1312,56 @@ namespace WW2NavalAssembly
         public void InHangarBehaviourFU()
         {
             SettleSpot(MyHangar,false);
-        }
-        public void InHangarBehaviourUpdate()
-        {
+            if (Fuel < 1)
+            {
+                Fuel = Mathf.Clamp(Fuel + 0.0004f, 0, 1);
+            }
+            if (HP < 500 && myseed == ModController.Instance.state % 10)
+            {
+                HP = Mathf.Clamp(HP + 1, 0, 500);
+            }
+
+            if (Rank.Value == 1 && !hasFindBackup)
+            {
+                hasFindBackup=true;
+                if (targetTeamCount > myGroup.Count)
+                {
+                    int vacancy = targetTeamCount - myGroup.Count;
+                    int addNum = 0;
+                    if (Grouper.Instance.AircraftGroups[myPlayerID].ContainsKey("backup"))
+                    {
+                        Stack<Aircraft> backup = new Stack<Aircraft>();
+
+                        foreach (var a in Grouper.Instance.AircraftGroups[myPlayerID]["backup"])
+                        {
+                            if (a.Value.Type.Value == Type.Value)
+                            {
+                                addNum++;
+                                backup.Push(a.Value);
+                            }
+                            if (addNum == vacancy)
+                            {
+                                break;
+                            }
+                        }
+
+                        foreach (var a in backup)
+                        {
+                            a.Rank.SetValue(0);
+                            a.Group.SetValue(Group.Value);
+                            Grouper.Instance.AddAircraft(myPlayerID, Group.Value, a.myGuid, a);
+                        }
+
+                        TeamUpByLeader();
+                        MyLogger.Instance.Log("[" + Group.Value + "] replenish " + addNum.ToString() + "/" + vacancy.ToString());
+                    }
+                    else
+                    {
+                        MyLogger.Instance.Log("No backup queue");
+                    }
+                        
+                }
+            }
             
         }
         public void OnBoardBehaviourFU()
@@ -1401,7 +1428,7 @@ namespace WW2NavalAssembly
 
             if (ModController.Instance.state % 10 == myseed)
             {
-                Grouper.Instance.AddAircraft(myPlayerID, Rank.Value == 2? "null" : Group.Value, BlockBehaviour.Guid.GetHashCode(), this);
+                Grouper.Instance.AddAircraft(myPlayerID, Rank.Value == 2? "backup" : Group.Value, BlockBehaviour.Guid.GetHashCode(), this);
             }
             bool appearChanged = false;
             if (preType != Type.Selection)
@@ -1484,7 +1511,7 @@ namespace WW2NavalAssembly
         public override void OnSimulateStart()
         {
             myGuid = BlockBehaviour.BuildingBlock.Guid.GetHashCode();
-            Grouper.Instance.AddAircraft(myPlayerID, Rank.Value == 2 ? "null" : Group.Value, myGuid, this);
+            Grouper.Instance.AddAircraft(myPlayerID, Rank.Value == 2 ? "backup" : Group.Value, myGuid, this);
             if (Rank.Value == 1)
             {
                 myGroup = Grouper.Instance.GetAircraft(myPlayerID, Group.Value);
@@ -1493,7 +1520,7 @@ namespace WW2NavalAssembly
             else
             {
                 myGroup = new Dictionary<int, Aircraft>();
-                myLeader = Grouper.Instance.GetLeader(myPlayerID, Rank.Value == 2 ? "null" : Group.Value);
+                myLeader = Grouper.Instance.GetLeader(myPlayerID, Rank.Value == 2 ? "backup" : Group.Value);
             }
             MyHangar = null;
             myRigid = BlockBehaviour.Rigidbody;
@@ -1633,7 +1660,7 @@ namespace WW2NavalAssembly
                     break;
                 case 2:
                     myGroup = new Dictionary<int, Aircraft>();
-                    myLeader = Grouper.Instance.GetLeader(myPlayerID, "null");
+                    myLeader = Grouper.Instance.GetLeader(myPlayerID, "backup");
                     break;
                 default:
                     break;
@@ -2037,9 +2064,9 @@ namespace WW2NavalAssembly
         }
         public void OnGUI()
         {
-            if (status == Status.TakingOff && Rank.Value == 1)
+            if (Rank.Value == 1)
             {
-                //GUI.Box(new Rect(100, 300, 200, 30), myRigid.useGravity.ToString());
+                //GUI.Box(new Rect(100, 300, 200, 30), (Grouper.Instance.GetLeader(myPlayerID, Group.Value) == this).ToString());
             }
         }
     }

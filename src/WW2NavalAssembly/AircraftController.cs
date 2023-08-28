@@ -387,7 +387,7 @@ namespace WW2NavalAssembly
             DrawBoard.SetActive(false);
             foreach (var group in Grouper.Instance.AircraftGroups[myPlayerID])
             {
-                if (group.Key == "null")
+                if (group.Key == "null" || group.Key == "backup")
                 {
                     continue;
                 }
