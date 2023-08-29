@@ -742,7 +742,7 @@ namespace WW2NavalAssembly
         {
             if (hasDeck)
             {
-                // local frequency
+                // low frequency
                 if (ModController.Instance.state % 10 == mySeed)
                 {
                     if (StatMaster.isMP)
@@ -771,7 +771,7 @@ namespace WW2NavalAssembly
             }
             if (hasHangar)
             {
-                // local frequency
+                // low frequency
                 if (ModController.Instance.state % 10 == mySeed)
                 {
                     if (StatMaster.isMP)

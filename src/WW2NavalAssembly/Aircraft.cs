@@ -1496,18 +1496,18 @@ namespace WW2NavalAssembly
                 Collider[] ExploCol = Physics.OverlapSphere(transform.position, 2);
                 foreach (Collider hitedCollider in ExploCol)
                 {
-                    
-                    Aircraft a = hitedCollider.attachedRigidbody.GetComponent<Aircraft>();
-                    if (a)
-                    {
-                        float hittedPossi = a.hasLoad ? 0.9f : 1.1f;
-                        if (a.status == Status.InHangar || a.status == Status.OnBoard && UnityEngine.Random.value > myPossi * hittedPossi)
-                        {
-                            a.BeginExplo(false);
-                        }
-                    }
                     try
                     {
+                        Aircraft a = hitedCollider.attachedRigidbody.GetComponent<Aircraft>();
+                        if (a)
+                        {
+                            float hittedPossi = a.hasLoad ? 0.9f : 1.1f;
+                            if (a.status == Status.InHangar || a.status == Status.OnBoard && UnityEngine.Random.value > myPossi * hittedPossi)
+                            {
+                                a.BeginExplo(false);
+                            }
+                        }
+                    
                         hitedCollider.attachedRigidbody.AddExplosionForce(a?100:8000, transform.position, 2);
                     }
                     catch { }
@@ -1520,18 +1520,18 @@ namespace WW2NavalAssembly
                 Collider[] ExploCol = Physics.OverlapSphere(transform.position, 1.5f);
                 foreach (Collider hitedCollider in ExploCol)
                 {
-                    
-                    Aircraft a = hitedCollider.attachedRigidbody.GetComponent<Aircraft>();
-                    if (a)
-                    {
-                        float hittedPossi = a.hasLoad ? 0.9f : 1.1f;
-                        if (a.status == Status.InHangar || a.status == Status.OnBoard && UnityEngine.Random.value > myPossi * hittedPossi)
-                        {
-                            a.BeginExplo(false);
-                        }
-                    }
+
                     try
                     {
+                        Aircraft a = hitedCollider.attachedRigidbody.GetComponent<Aircraft>();
+                        if (a)
+                        {
+                            float hittedPossi = a.hasLoad ? 0.9f : 1.1f;
+                            if (a.status == Status.InHangar || a.status == Status.OnBoard && UnityEngine.Random.value > myPossi * hittedPossi)
+                            {
+                                a.BeginExplo(false);
+                            }
+                        }
                         hitedCollider.attachedRigidbody.AddExplosionForce(a ? 50 : 4000, transform.position, 1.5f);
                     }
                     catch { }
