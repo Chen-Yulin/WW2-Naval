@@ -255,6 +255,7 @@ namespace WW2NavalAssembly
 
         // ================== for attacking ==================
         public bool hasAttacked = false;
+        public bool hasLoad = false;
         public bool inAttackRoutine = false;
         public float divingTime = 2.5f;
 
@@ -291,15 +292,33 @@ namespace WW2NavalAssembly
                 if (foldWing)
                 {
                     transform.Find("Vis").GetComponent<MeshFilter>().sharedMesh = AircraftAssetManager.Instance.GetMesh05(preAppearance);
-                    transform.Find("Vis").GetComponent<MeshRenderer>().material.mainTexture = AircraftAssetManager.Instance.GetTex05(preAppearance);
+                    if (status == Status.ShootDown || status == Status.Exploded)
+                    {
+                        transform.Find("Vis").GetComponent<MeshRenderer>().material.mainTexture = AircraftAssetManager.Instance.Destroyed_Tex;
+                    }
+                    else
+                    {
+                        transform.Find("Vis").GetComponent<MeshRenderer>().material.mainTexture = AircraftAssetManager.Instance.GetTex05(preAppearance);
+                    }
+                    
                 }
                 else
                 {
                     transform.Find("Vis").GetComponent<MeshFilter>().sharedMesh = AircraftAssetManager.Instance.GetMesh0(preAppearance);
-                    transform.Find("Vis").GetComponent<MeshRenderer>().material.mainTexture = AircraftAssetManager.Instance.GetTex0(preAppearance);
+                    if (status == Status.ShootDown || status == Status.Exploded)
+                    {
+                        transform.Find("Vis").GetComponent<MeshRenderer>().material.mainTexture = AircraftAssetManager.Instance.Destroyed_Tex;
+                    }
+                    else
+                    {
+                        transform.Find("Vis").GetComponent<MeshRenderer>().material.mainTexture = AircraftAssetManager.Instance.GetTex0(preAppearance);
+                    }
                 }
             }
         }
+
+        // ================= for explo ==================
+        public bool inExploCoroutine = false;
 
         IEnumerator TorpedoCoroutine()
         {
@@ -376,6 +395,23 @@ namespace WW2NavalAssembly
             MyLogger.Instance.Log("\tFinish transfer");
             SwitchToInHangar();
             onboard = false;
+            yield break;
+        }
+        IEnumerator ReloadCorouting()
+        {
+            yield return new WaitForSeconds(2f + UnityEngine.Random.value);
+            RecoverLoad();
+            yield break;
+        }
+        IEnumerator ExploCoroutine(bool instant)
+        {
+            inExploCoroutine = true;
+            if (!instant)
+            {
+                yield return new WaitForSeconds(0.5f + UnityEngine.Random.value * 2);
+            }
+            Explo();
+            inExploCoroutine = false;
             yield break;
         }
         public void InitPropellerUndercart()
@@ -667,6 +703,7 @@ namespace WW2NavalAssembly
             switch (Type.Selection)
             {
                 case "Bomb":
+                    hasLoad = true;
                     LoadMass = 0.5f;
                     mf.sharedMesh = ModResource.GetMesh("Bomb Mesh");
                     mr.material.mainTexture = ModResource.GetTexture("Engine Texture").Texture;
@@ -686,6 +723,7 @@ namespace WW2NavalAssembly
                     }
                     break;
                 case "Torpedo":
+                    hasLoad = true;
                     LoadMass = 1f;
                     mf.sharedMesh = ModResource.GetMesh("Torpedo Mesh");
                     mr.material.mainTexture = ModResource.GetTexture("Torpedo Texture").Texture;
@@ -965,8 +1003,14 @@ namespace WW2NavalAssembly
         }
         public void DropLoad()
         {
+            if (!hasLoad)
+            {
+                return;
+            }
             if (Type.Value == 1)
             {
+                LoadMass = 0;
+                hasLoad = false;
                 GameObject Torpedo = (GameObject)Instantiate(   TorpedoPrefab, LoadObject.transform.position, Quaternion.identity, 
                                                                 BlockBehaviour.ParentMachine.transform.Find("Simulation Machine"));
                 Torpedo.transform.rotation = Quaternion.LookRotation(transform.forward, transform.up);
@@ -987,6 +1031,8 @@ namespace WW2NavalAssembly
             }
             else if (Type.Value == 2)
             {
+                LoadMass = 0;
+                hasLoad = false;
                 GameObject Bomb = (GameObject)Instantiate(BombPrefab, LoadObject.transform.position, Quaternion.identity,
                                                                 BlockBehaviour.ParentMachine.transform.Find("Simulation Machine"));
                 Bomb.transform.rotation = Quaternion.LookRotation(LoadObject.transform.forward, LoadObject.transform.up);
@@ -1000,6 +1046,24 @@ namespace WW2NavalAssembly
                 Bomb.SetActive(true);
 
                 LoadObject.SetActive(false);
+            }
+        }
+        public void RecoverLoad()
+        {
+            if (Type.Value == 1 || Type.Value == 2)
+            {
+                hasLoad = true;
+                LoadObject.SetActive(true);
+                switch (Type.Selection)
+                {
+                    case "Bomb":
+                        LoadMass = 0.5f;
+                        break;
+                    case "Torpedo":
+                        LoadMass = 1f;
+                        break;
+                    default: break;
+                }
             }
         }
         public void RemoveFromGroup()
@@ -1092,12 +1156,24 @@ namespace WW2NavalAssembly
                 }
             }
         }
+        public void BeginExplo(bool instant)
+        {
+            if (status == Status.Exploded)
+            {
+                return;
+            }
+            if (!inExploCoroutine)
+            {
+                StartCoroutine(ExploCoroutine(instant));
+            }
+        }
         public void SwitchToShootDown()
         {
             if (status != Status.ShootDown)
             {
                 ColliderActive = true;
                 status = Status.ShootDown;
+                FoldWing = FoldWing;
                 GameObject smoke = (GameObject)Instantiate(AssetManager.Instance.Aircraft.AircraftShootDown, transform.position, Quaternion.identity, transform);
                 Destroy(smoke, 10);
                 myRigid.drag = 0.2f;
@@ -1192,7 +1268,7 @@ namespace WW2NavalAssembly
                 WayPoint = targetPoint;
                 WayPointType = 0;
                 WayHeight = deck.height + 0.3f;
-                Thrust = 30f;
+                Thrust = 23f;
                 UndercartObject.SetActive(true);
             }
         }
@@ -1319,6 +1395,7 @@ namespace WW2NavalAssembly
             }
             else if (status == Status.Landing)
             {
+                hasAttacked = false;
                 hasFindBackup = false;
                 MyDeck = null;
                 status = Status.InHangar;
@@ -1326,6 +1403,10 @@ namespace WW2NavalAssembly
                 Propeller.enabled = false;
                 Thrust = 0;
                 FoldWing = true;
+                if (!hasLoad)
+                {
+                    StartCoroutine(ReloadCorouting());
+                }
             }
         }
         public void InHangarBehaviourFU()
@@ -1353,7 +1434,7 @@ namespace WW2NavalAssembly
 
                         foreach (var a in Grouper.Instance.AircraftGroups[myPlayerID]["backup"])
                         {
-                            if (a.Value.Type.Value == Type.Value)
+                            if (a.Value.Type.Value == Type.Value && a.Value.status == Status.InHangar)
                             {
                                 addNum++;
                                 backup.Push(a.Value);
@@ -1386,6 +1467,76 @@ namespace WW2NavalAssembly
         public void OnBoardBehaviourFU()
         {
             SettleSpot(MyDeck,false);
+        }
+
+        public void Explo()
+        {
+            GameObject explo = (GameObject)Instantiate(AssetManager.Instance.Aircraft.AircraftExplo, transform.position, Quaternion.identity);
+            Destroy(explo, 5);
+            GameObject smoke = (GameObject)Instantiate(AssetManager.Instance.Aircraft.AircraftShootDown, transform.position, Quaternion.identity, transform);
+            Destroy(smoke, 10);
+            MyLogger.Instance.Log("[" + Group.Value + "](" + myTeamIndex + ") exploded!");
+            status = Status.Exploded;
+            FoldWing = FoldWing;
+            myRigid.drag = 0.2f;
+            myRigid.angularDrag = 0.2f;
+            myRigid.useGravity = true;
+            Thrust = 0f;
+            DeckSliding = false;
+            try
+            {
+                RemoveFromGroup();
+            }
+            catch { }
+
+            if (hasLoad)
+            {
+                float myPossi = 0.9f;
+                explo.transform.localScale = Vector3.one;
+                Collider[] ExploCol = Physics.OverlapSphere(transform.position, 2);
+                foreach (Collider hitedCollider in ExploCol)
+                {
+                    
+                    Aircraft a = hitedCollider.attachedRigidbody.GetComponent<Aircraft>();
+                    if (a)
+                    {
+                        float hittedPossi = a.hasLoad ? 0.9f : 1.1f;
+                        if (a.status == Status.InHangar || a.status == Status.OnBoard && UnityEngine.Random.value > myPossi * hittedPossi)
+                        {
+                            a.BeginExplo(false);
+                        }
+                    }
+                    try
+                    {
+                        hitedCollider.attachedRigidbody.AddExplosionForce(a?100:8000, transform.position, 2);
+                    }
+                    catch { }
+                }
+            }
+            else
+            {
+                float myPossi = 1.1f;
+                explo.transform.localScale = Vector3.one * 0.5f;
+                Collider[] ExploCol = Physics.OverlapSphere(transform.position, 1.5f);
+                foreach (Collider hitedCollider in ExploCol)
+                {
+                    
+                    Aircraft a = hitedCollider.attachedRigidbody.GetComponent<Aircraft>();
+                    if (a)
+                    {
+                        float hittedPossi = a.hasLoad ? 0.9f : 1.1f;
+                        if (a.status == Status.InHangar || a.status == Status.OnBoard && UnityEngine.Random.value > myPossi * hittedPossi)
+                        {
+                            a.BeginExplo(false);
+                        }
+                    }
+                    try
+                    {
+                        hitedCollider.attachedRigidbody.AddExplosionForce(a ? 50 : 4000, transform.position, 1.5f);
+                    }
+                    catch { }
+                }
+            }
         }
 
         public override void SafeAwake()
@@ -1556,6 +1707,10 @@ namespace WW2NavalAssembly
 
             Fuel = 1;
         }
+        public override void OnSimulateStop()
+        {
+            BlockBehaviour.BuildingBlock.GetComponent<Aircraft>().UpdateAppearance(preAppearance);
+        }
         public void OnDestroy()
         {
             if (BlockBehaviour.isSimulating)
@@ -1605,33 +1760,23 @@ namespace WW2NavalAssembly
             float collisionForce = collision.impulse.magnitude / Time.fixedDeltaTime;
             try
             {
-                bool case1 = collisionForce > 2000f;
+                bool case1 = collisionForce > 2000f && status != Status.InHangar;
                 bool case2 = (status == Status.Landing && collision.rigidbody.name == "Aircraft");
                 bool case3 = true;
-                Aircraft a = collision.rigidbody.gameObject.GetComponent<Aircraft>();
-                if (a)
+                try
                 {
-                    case3 = (a.myPlayerID == myPlayerID);
-                }
-                
-                if ((case1 && !case3) || case2)
-                {
-                    GameObject explo = (GameObject)Instantiate(AssetManager.Instance.Aircraft.AircraftExplo, transform.position, Quaternion.identity);
-                    Destroy(explo, 5);
-                    GameObject smoke = (GameObject)Instantiate(AssetManager.Instance.Aircraft.AircraftShootDown, transform.position, Quaternion.identity, transform);
-                    Destroy(smoke, 10);
-                    MyLogger.Instance.Log("["+ Group.Value + "](" + myTeamIndex + ") exploded!");
-                    status = Status.Exploded;
-                    myRigid.drag = 0.2f;
-                    myRigid.angularDrag = 0.2f;
-                    myRigid.useGravity = true;
-                    Thrust = 0f;
-                    DeckSliding = false;
-                    try
+                    Aircraft a = collision.rigidbody.gameObject.GetComponent<Aircraft>();
+                    if (a)
                     {
-                        RemoveFromGroup();
+                        case3 = (a.myPlayerID != myPlayerID);
                     }
-                    catch { }
+                }
+                catch { }
+                
+                
+                if ((case1 && case3) || case2)
+                {
+                    BeginExplo(true);
                 }
             }
             catch { }
@@ -2061,7 +2206,7 @@ namespace WW2NavalAssembly
             // water hit
             if (!hasHitWater && ModController.Instance.showSea && status != Status.OnBoard && status != Status.InHangar)
             {
-                if (transform.position.y<20f && transform.position.y > 18f && myRigid.velocity.y < 0f)
+                if (transform.position.y<20f && transform.position.y > 18f && myRigid.velocity.y < 2f)
                 {
                     hasHitWater = true;
                     try

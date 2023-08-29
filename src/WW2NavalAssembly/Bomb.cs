@@ -5,6 +5,7 @@ using System.Linq;
 using System.Security.Policy;
 using System.Text;
 using UnityEngine;
+using static WW2NavalAssembly.Aircraft;
 
 namespace WW2NavalAssembly
 {
@@ -548,7 +549,7 @@ namespace WW2NavalAssembly
         
         private void ExploDestroyBalloon(Vector3 pos, bool AP = true)
         {
-            float exploPenetration = Weight / 20f * (AP ? 1f : 1.5f);
+            float exploPenetration = 35f;
             try
             {
                 //Debug.Log(armourGuid);
@@ -557,7 +558,45 @@ namespace WW2NavalAssembly
                 {
                     try
                     {
-
+                        try
+                        {
+                            Aircraft a = hitedCollider.attachedRigidbody.GetComponent<Aircraft>();
+                            if (a)
+                            {
+                                float ArmourBetween = 0;
+                                Ray Ray = new Ray(pos, hitedCollider.transform.position - pos);
+                                RaycastHit[] hitList = Physics.RaycastAll(Ray, (hitedCollider.transform.position - pos).magnitude);
+                                foreach (RaycastHit raycastHit in hitList)
+                                {
+                                    try
+                                    {
+                                        //Debug.Log(raycastHit.rigidbody.name);
+                                        if (!pericedBlock.Contains(raycastHit.collider.attachedRigidbody.GetComponent<BlockBehaviour>().BuildingBlock.Guid.GetHashCode())
+                                            && raycastHit.collider.attachedRigidbody.GetComponent<WoodenArmour>())
+                                        {
+                                            //Debug.Log(raycastHit.collider.transform.parent.GetComponent<WoodenArmour>().thickness);
+                                            ArmourBetween += raycastHit.collider.transform.parent.GetComponent<WoodenArmour>().thickness;
+                                        }
+                                    }
+                                    catch { }
+                                    
+                                }
+                                //Debug.Log(ArmourBetween + " VS "+exploPenetration);
+                                if (ArmourBetween > exploPenetration)
+                                {
+                                }
+                                else
+                                {
+                                    float hittedPossi = a.hasLoad ? 0.9f : 0.97f;
+                                    if (a.status == Status.InHangar || a.status == Status.OnBoard && UnityEngine.Random.value > hittedPossi)
+                                    {
+                                        a.BeginExplo(false);
+                                    }
+                                }
+                                
+                            }
+                        }
+                        catch { }
                         //Debug.Log(hitedCollider.transform.parent.name);
                         if ((hitedCollider.transform.parent.name == "Balloon" || hitedCollider.transform.parent.name == "SqrBalloon")
                             && damagedBallon.Count == 0)
@@ -597,6 +636,7 @@ namespace WW2NavalAssembly
                         }
                     }
                     catch { }
+                    
                 }
             }
             catch { }

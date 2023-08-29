@@ -468,7 +468,8 @@ namespace WW2NavalAssembly
                             }
                             else
                             {
-                                mateStatus[i] = mateList[i].status.ToString() + " " + 
+                                mateStatus[i] = (mateList[i].hasLoad? "■" : "□") +
+                                                mateList[i].status.ToString() + " " + 
                                                 "[Fuel:"+(mateList[i].Fuel * 100f).ToString("F1") + "%]" +
                                                 "[HP:" + (mateList[i].HP / 5f).ToString("F1") + "%]";
                             }

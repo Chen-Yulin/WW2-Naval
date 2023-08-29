@@ -12,6 +12,8 @@ namespace WW2NavalAssembly
 
         public bool Loaded = false;
 
+        public Texture Destroyed_Tex;
+
         //=======================Zero=======================
         public Mesh Zero_0_Mesh;
         public Mesh Zero_05_Mesh;
@@ -134,6 +136,8 @@ namespace WW2NavalAssembly
 
         public void LoadAsset()
         {
+            Destroyed_Tex = ModResource.GetTexture("Aircraft Destroyed Texture").Texture;
+
             Zero_0_Mesh = ModResource.GetMesh("A-Zero-0 Mesh").Mesh;
             Zero_05_Mesh = ModResource.GetMesh("A-Zero-0.5 Mesh").Mesh;
             Zero_1_Mesh = ModResource.GetMesh("A-Zero-1 Mesh").Mesh;
