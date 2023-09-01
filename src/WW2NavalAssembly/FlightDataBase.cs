@@ -72,6 +72,7 @@ namespace WW2NavalAssembly
             {
                 valid = false;
             }
+            //brand new
             public Deck(Vector2 center, float width, float length, Vector2 forward, Vector2 right, float height, bool isHangar = false, int occupied_num = 0)
             {
                 if (isHangar)
@@ -99,7 +100,34 @@ namespace WW2NavalAssembly
                 this.RightMargin = (Width - (Width_num - 1) * AIRCRAFT_WIDTH) / 2f;
                 this.Occupied_num = occupied_num;
             }
+            //inherit
+            public Deck(Vector2 center, float width, float length, Vector2 forward, Vector2 right, float height, int width_num, int length_num, bool isHangar = false,  int occupied_num = 0)
+            {
+                if (isHangar)
+                {
+                    AIRCRAFT_LENGTH = 2f;
+                }
+                else
+                {
+                    AIRCRAFT_LENGTH = 3f;
+                }
 
+                valid = true;
+                this.Center = center;
+                this.Width = width;
+                this.Length = length;
+                this.Forward = forward;
+                this.Right = right;
+                this.height = height;
+                this.Anchor = Center - Forward * Length / 2 + right * width / 2;
+
+                this.Width_num = width_num;
+                this.Length_num = length_num;
+                this.Total_num = Width_num * Length_num;
+
+                this.RightMargin = (Width - (Width_num - 1) * AIRCRAFT_WIDTH) / 2f;
+                this.Occupied_num = occupied_num;
+            }
         }
         public void GetTakeOffPosition(int playerID)
         {
@@ -456,7 +484,7 @@ namespace WW2NavalAssembly
                 }// turn off hangar line
             }
         }
-        public Deck CalculateDeck(int playerID)
+        public Deck CalculateDeck(int playerID, bool inherit = false)
         {
             List<int> tobeRemoved = new List<int>();
 
@@ -560,12 +588,27 @@ namespace WW2NavalAssembly
             else
             {
                 int occupied_num = Decks[playerID].Occupied_num;
+                
                 float width = Mathf.Abs(deckCorners[1].x - deckCorners[3].x);
                 float length = Mathf.Abs(deckCorners[0].y - deckCorners[2].y);
                 Vector2 forwardLeft = new Vector2(deckCorners[3].x, deckCorners[0].y);
                 Vector2 center = forwardLeft + new Vector2(width / 2, -length / 2);
-                return new Deck(MathTool.PointRotate(Vector2.zero,center,-orien), width, length, DeckForward[playerID], DeckRight[playerID], height, false, occupied_num);
+                if (inherit)
+                {
+                    int width_num = Decks[playerID].Width_num;
+                    int length_num = Decks[playerID].Length_num;
+                    return new Deck(MathTool.PointRotate(Vector2.zero, center, -orien), width, length, DeckForward[playerID], DeckRight[playerID], height, width_num, length_num, false, occupied_num);
+                }
+                else
+                {
+                    return new Deck(MathTool.PointRotate(Vector2.zero, center, -orien), width, length, DeckForward[playerID], DeckRight[playerID], height, false, occupied_num);
+                }
+                
             }
+        }
+        public void UpdateDeck(int playerID, bool inherit = false)
+        {
+            Decks[playerID] = CalculateDeck(playerID, inherit);
         }
         public void CalculateHangar(int playerID)
         {
@@ -768,10 +811,6 @@ namespace WW2NavalAssembly
             {
                 if (!StatMaster.isClient)
                 {
-                    for (int i = 0; i < 16; i++)
-                    {
-                        Decks[i] = CalculateDeck(i);
-                    }
                     for (int i = 0;i < 16; i++)
                     {
                         CalculateHangar(i);
@@ -780,14 +819,12 @@ namespace WW2NavalAssembly
                 }
                 else
                 {
-                    Decks[PlayerData.localPlayer.networkId] = CalculateDeck(PlayerData.localPlayer.networkId);
                     CalculateHangar(PlayerData.localPlayer.networkId);
                     ShowDeckHangarVis(PlayerData.localPlayer.networkId);
                 }
             }
             else
             {
-                Decks[0] = CalculateDeck(0);
                 CalculateHangar(0);
                 ShowDeckHangarVis(0);
             }

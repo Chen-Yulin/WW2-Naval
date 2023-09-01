@@ -1884,7 +1884,7 @@ namespace WW2NavalAssembly
                     TeamUpByLeader();
                 }
             }
-            if (ModController.Instance.state % 10 == myseed && !TriedFindHangar && frameCount > 20)
+            if (ModController.Instance.state % 10 == myseed && !TriedFindHangar && frameCount > 40)
             {
                 if (!MyHangar)
                 {

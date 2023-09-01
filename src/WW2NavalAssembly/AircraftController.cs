@@ -86,6 +86,10 @@ namespace WW2NavalAssembly
                     {
                         newUpQueue.Enqueue(a);
                     }
+                    else
+                    {
+                        FlightDataBase.Instance.Decks[a.myPlayerID].Occupied_num--;
+                    }
                 }
                 UpQueue = newUpQueue;
             }
@@ -667,6 +671,11 @@ namespace WW2NavalAssembly
             Attack = AddKey("Attack", "Attack", KeyCode.C);
         }
 
+        public override void BuildingFixedUpdate()
+        {
+            FlightDataBase.Instance.UpdateDeck(myPlayerID, false);
+        }
+
         public void Start()
         {
             gameObject.name = "Aircraft Captain";
@@ -740,6 +749,7 @@ namespace WW2NavalAssembly
 
         public override void SimulateFixedUpdateAlways()
         {
+            FlightDataBase.Instance.UpdateDeck(myPlayerID, true);
             if (hasDeck)
             {
                 // low frequency
@@ -970,18 +980,38 @@ namespace WW2NavalAssembly
 
             if (ElevatorUp.IsPressed && CurrentLeader)
             {
-                if (CurrentLeader.myGroup.Count + FlightDataBase.Instance.Decks[myPlayerID].Occupied_num > FlightDataBase.Instance.Decks[myPlayerID].Total_num)
+                bool allInHangar = true;
+                foreach (var aircraft in CurrentLeader.myGroup)
                 {
-                    MyLogger.Instance.Log("Not enough space on deck for [" + CurrentLeader.Group.Value + "]");
+                    if (aircraft.Value.status != Aircraft.Status.InHangar)
+                    {
+                        allInHangar = false;
+                        break;
+                    }
+                }
+                if (!allInHangar)
+                {
+                    MyLogger.Instance.Log("Not all aircrafts of [" + CurrentLeader.Group.Value + "] in hangar");
                 }
                 else
                 {
-                    FlightDataBase.Instance.Decks[myPlayerID].Occupied_num += CurrentLeader.myGroup.Count;
-                    foreach (var aircraft in CurrentLeader.myGroup.Reverse())
+                    if (CurrentLeader.myGroup.Count + FlightDataBase.Instance.Decks[myPlayerID].Occupied_num > FlightDataBase.Instance.Decks[myPlayerID].Total_num)
                     {
-                        Elevator.AddUpQueue(aircraft.Value);
+                        MyLogger.Instance.Log("Not enough space on deck for [" + CurrentLeader.Group.Value + "]");
+                        MyLogger.Instance.Log("Need: " + CurrentLeader.myGroup.Count.ToString() + ", Occupy: " +
+                                                FlightDataBase.Instance.Decks[myPlayerID].Occupied_num.ToString() + "/" +
+                                                FlightDataBase.Instance.Decks[myPlayerID].Total_num.ToString());
+                    }
+                    else
+                    {
+                        FlightDataBase.Instance.Decks[myPlayerID].Occupied_num += CurrentLeader.myGroup.Count;
+                        foreach (var aircraft in CurrentLeader.myGroup.Reverse())
+                        {
+                            Elevator.AddUpQueue(aircraft.Value);
+                        }
                     }
                 }
+                
             }
 
             if (TakeOffKey.IsPressed)
@@ -1055,7 +1085,8 @@ namespace WW2NavalAssembly
             {
                 GUI.Box(new Rect(100, 200, 200, 30), CurrentLeader.Group.Value.ToString());
             }
-            //GUI.Box(new Rect(100, 300, 200, 30), FlightDataBase.Instance.Decks[myPlayerID].Occupied_num.ToString());
+            GUI.Box(new Rect(100, 300, 200, 30), FlightDataBase.Instance.Decks[myPlayerID].Occupied_num.ToString() + "/" +
+                    FlightDataBase.Instance.Decks[myPlayerID].Total_num.ToString());
 
 
         }
