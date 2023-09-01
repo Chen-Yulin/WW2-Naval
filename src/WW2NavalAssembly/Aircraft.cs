@@ -1977,7 +1977,19 @@ namespace WW2NavalAssembly
                             float distFromWayPoint = (MathTool.Get2DCoordinate(transform.position) - WayPoint).magnitude;
                             if (distFromWayPoint < 200f && WayPointType != 0 && !hasAttacked)
                             {
-                                SwitchToAttack();
+                                bool allInCruise = true;
+                                foreach (var item in myGroup)
+                                {
+                                    if (item.Value.status != Status.Cruise)
+                                    {
+                                        allInCruise = false;
+                                        break;
+                                    }
+                                }
+                                if (allInCruise)
+                                {
+                                    SwitchToAttack();
+                                }
                             }
                             else if (distFromWayPoint < 75f)
                             {

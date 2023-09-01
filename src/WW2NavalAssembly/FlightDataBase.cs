@@ -238,6 +238,7 @@ namespace WW2NavalAssembly
             return DeckObjects[playerID];
         }
 
+        
         public GameObject GenerateHangarOnStart(int playerID, Transform t)
         {
             if (t == null)
@@ -610,6 +611,15 @@ namespace WW2NavalAssembly
         {
             Decks[playerID] = CalculateDeck(playerID, inherit);
         }
+        public void UpdateHangar(int playerID)
+        {
+            CalculateHangar(playerID);
+        }
+        public void ClearDeckHangar(int playerID)
+        {
+            Decks[playerID] = new Deck();
+            Hangars[playerID] = new Dictionary<string, Deck>();
+        }
         public void CalculateHangar(int playerID)
         {
             List<int> tobeRemoved = new List<int>();
@@ -811,21 +821,15 @@ namespace WW2NavalAssembly
             {
                 if (!StatMaster.isClient)
                 {
-                    for (int i = 0;i < 16; i++)
-                    {
-                        CalculateHangar(i);
-                    }
                     ShowDeckHangarVis(0);
                 }
                 else
                 {
-                    CalculateHangar(PlayerData.localPlayer.networkId);
                     ShowDeckHangarVis(PlayerData.localPlayer.networkId);
                 }
             }
             else
             {
-                CalculateHangar(0);
                 ShowDeckHangarVis(0);
             }
         }

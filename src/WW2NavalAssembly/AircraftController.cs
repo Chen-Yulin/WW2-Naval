@@ -674,6 +674,7 @@ namespace WW2NavalAssembly
         public override void BuildingFixedUpdate()
         {
             FlightDataBase.Instance.UpdateDeck(myPlayerID, false);
+            FlightDataBase.Instance.UpdateHangar(myPlayerID);
         }
 
         public void Start()
@@ -750,6 +751,7 @@ namespace WW2NavalAssembly
         public override void SimulateFixedUpdateAlways()
         {
             FlightDataBase.Instance.UpdateDeck(myPlayerID, true);
+            FlightDataBase.Instance.UpdateHangar(myPlayerID);
             if (hasDeck)
             {
                 // low frequency
@@ -1067,16 +1069,21 @@ namespace WW2NavalAssembly
 
         public override void OnSimulateStop()
         {
-            foreach (var hangar in FlightDataBase.Instance.Hangars[myPlayerID])
+            FlightDataBase.Instance.ClearDeckHangar(myPlayerID);
+            try
             {
-                hangar.Value.Occupied_num = 0;
+                inTacticalView = false;
             }
-            FlightDataBase.Instance.Decks[myPlayerID].Occupied_num = 0;
-            inTacticalView = false;
+            catch { }
         }
         public void OnDestroy()
         {
-            inTacticalView = false;
+            FlightDataBase.Instance.ClearDeckHangar(myPlayerID);
+            try
+            {
+                inTacticalView = false;
+            }
+            catch { }
         }
 
         public void OnGUI()
@@ -1085,8 +1092,13 @@ namespace WW2NavalAssembly
             {
                 GUI.Box(new Rect(100, 200, 200, 30), CurrentLeader.Group.Value.ToString());
             }
-            GUI.Box(new Rect(100, 300, 200, 30), FlightDataBase.Instance.Decks[myPlayerID].Occupied_num.ToString() + "/" +
+
+            if ((Camera.main.transform.position - transform.position).magnitude < 30 && BlockBehaviour.isSimulating)
+            {
+                Vector3 onScreenPosition = Camera.main.WorldToScreenPoint(transform.position);
+                GUI.Box(new Rect(onScreenPosition.x, Camera.main.pixelHeight - onScreenPosition.y, 200, 30), "Deck space: " + FlightDataBase.Instance.Decks[myPlayerID].Occupied_num.ToString() + "/" +
                     FlightDataBase.Instance.Decks[myPlayerID].Total_num.ToString());
+            }
 
 
         }
