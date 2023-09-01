@@ -5,11 +5,11 @@
 	<Name>WW2Naval</Name>
 	<Author>Chen, Yulin</Author> <!-- FIX: Insert your name here. -->
 	<!-- Major.Minor.Build -->
-	<Version>0.6.37</Version>
+	<Version>0.6.38</Version>
 	
 	<Description>
-    Version 0.6.37
-	Finish aircraft recover routine
+    Version 0.6.38
+	Fix sea reflection bug, better water WaterHit
 	</Description>
 
 	<Icon name="icon"/>
@@ -117,7 +117,7 @@
 		<AudioClip name="GunShot Audio" path="Gun\fire.wav" />
 		<AudioClip name="GunExplo Audio" path="Gun\explo.wav" />
 		<AudioClip name="GunPierce Audio" path="Gun\pierce.wav" />
-		<AudioClip name="GunWaterHit Audio" path="Gun\waterhit.wav" />
+		<AudioClip name="GunWaterHit Audio" path="Gun\explo.wav" />
 
 		<AssetBundle name="CannonHit AB" path="cannonhit.ab"/>
 		<AssetBundle name="WaterHit AB" path="waterhit.ab"/>
