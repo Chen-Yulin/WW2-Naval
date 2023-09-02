@@ -1,9 +1,9 @@
 ManifestFileVersion: 0
-CRC: 1877705548
+CRC: 1722664270
 Hashes:
   AssetFileHash:
     serializedVersion: 2
-    Hash: 4f1f34bd28b2566b456f4c2df1ce9168
+    Hash: 8eb92f4e3bcd312a50284d48ed05aee9
   TypeTreeHash:
     serializedVersion: 2
     Hash: 36daabf0a26aaa21fe4dae37acd3e3e0
@@ -27,5 +27,6 @@ ClassTypes:
   Script: {instanceID: 0}
 Assets:
 - Assets/explo/CannonHitWithSmoke.prefab
+- Assets/explo/CannonHitSmall.prefab
 - Assets/explo/CannonHit.prefab
 Dependencies: []

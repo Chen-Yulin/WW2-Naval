@@ -131,10 +131,12 @@ namespace WW2NavalAssembly
     {
         public GameObject explo;
         public GameObject exploWithSmoke;
+        public GameObject exploSmall;
         public Asset_CannonHit(ModAssetBundle modAssetBundle)
         {
             explo = modAssetBundle.LoadAsset<GameObject>("CannonHit");
             exploWithSmoke = modAssetBundle.LoadAsset<GameObject>("CannonHitWithSmoke");
+            exploSmall = modAssetBundle.LoadAsset<GameObject>("CannonHitSmall");
         }
     }
     public class Asset_WaterHit

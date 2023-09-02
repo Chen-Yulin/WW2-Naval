@@ -9,6 +9,7 @@ using Modding;
 using Modding.Blocks;
 using UnityEngine;
 using UnityEngine.Networking;
+using static KillingHandler;
 
 namespace WW2NavalAssembly
 {
@@ -41,7 +42,7 @@ namespace WW2NavalAssembly
         {
             public Vector3 position = Vector3.zero;
             public float Caliber = 0;
-            public int type = 0;// 0 for explosion, 1 for pierce, 2 for large explosion, 3 for explosion with smoke
+            public int type = 0;// 0 for explosion, 1 for pierce, 2 for large explosion, 3 for explosion with smoke, 4 for small explosion
             public exploInfo(Vector3 position, float caliber, int type)
             {
                 this.position = position;
@@ -136,6 +137,108 @@ namespace WW2NavalAssembly
             CannonType[(int)msg.GetData(0)][(int)msg.GetData(1)] = (bool)msg.GetData(3);
             NextCannonType[(int)msg.GetData(0)][(int)msg.GetData(1)] = (bool)msg.GetData(4);
             CannonNum[(int)msg.GetData(0)][(int)msg.GetData(1)] = (int)msg.GetData(5);
+        }
+
+        // solve explo
+        public void AddExploSound(Transform t, float size)
+        {
+            AudioSource exploAS = t.gameObject.AddComponent<AudioSource>();
+            //t.gameObject.AddComponent<MakeAudioSourceFixedPitch>();
+            exploAS.clip = ModResource.GetAudioClip("GunExplo Audio");
+            exploAS.Play();
+            exploAS.spatialBlend = 1.0f;
+            exploAS.volume = size / 100;
+            exploAS.rolloffMode = AudioRolloffMode.Linear;
+            exploAS.maxDistance = 300;
+            exploAS.SetSpatializerFloat(1, 1f);
+            exploAS.SetSpatializerFloat(2, 0);
+            exploAS.SetSpatializerFloat(3, 12);
+            exploAS.SetSpatializerFloat(4, 1000f);
+            exploAS.SetSpatializerFloat(5, 1f);
+        }
+        public void AddPierceSound(Transform t, float size)
+        {
+            AudioSource AS = t.gameObject.AddComponent<AudioSource>();
+            //t.gameObject.AddComponent<MakeAudioSourceFixedPitch>();
+            AS.clip = ModResource.GetAudioClip("GunPierce Audio");
+            AS.Play();
+            AS.spatialBlend = 1.0f;
+            AS.volume = size / 1000;
+            AS.rolloffMode = AudioRolloffMode.Linear;
+            AS.maxDistance = 200;
+            AS.SetSpatializerFloat(1, 1f);
+            AS.SetSpatializerFloat(2, 0);
+            AS.SetSpatializerFloat(3, 12);
+            AS.SetSpatializerFloat(4, 1000f);
+            AS.SetSpatializerFloat(5, 1f);
+        }
+        public void PlayExploOnClient(int playerID)
+        {
+            foreach (exploInfo exploInfo in ExploInfo[playerID])
+            {
+                Vector3 exploPosition = exploInfo.position;
+                switch (exploInfo.type)
+                {
+                    case 0:
+                        {
+                            GameObject explo = (GameObject)Instantiate(AssetManager.Instance.CannonHit.explo, exploPosition, Quaternion.identity);
+                            explo.SetActive(true);
+                            explo.transform.localScale = exploInfo.Caliber / 800 * Vector3.one;
+                            Destroy(explo, 3);
+                            AddExploSound(explo.transform, exploInfo.Caliber);
+                            break;
+                        }
+                    case 1:
+                        {
+                            GameObject pierceEffect = (GameObject)Instantiate(AssetManager.Instance.Pierce.Pierce, exploPosition, Quaternion.identity);
+                            pierceEffect.transform.localScale = exploInfo.Caliber / 400f * Vector3.one;
+                            Destroy(pierceEffect, 1);
+                            AddPierceSound(pierceEffect.transform, exploInfo.Caliber);
+                            break;
+                        }
+                    case 2:
+                        {
+                            GameObject explo = (GameObject)Instantiate(AssetManager.Instance.CannonHit.explo, exploPosition, Quaternion.identity);
+                            explo.SetActive(true);
+                            explo.transform.localScale = exploInfo.Caliber / 400 * Vector3.one;
+                            Destroy(explo, 3);
+                            AddExploSound(explo.transform, exploInfo.Caliber);
+                            break;
+                        }
+                    case 3:
+                        {
+                            GameObject explo = (GameObject)Instantiate(AssetManager.Instance.CannonHit.exploWithSmoke, transform.position, Quaternion.identity);
+                            explo.SetActive(true);
+                            explo.transform.localScale = exploInfo.Caliber / 400f * Vector3.one;
+                            Destroy(explo, 3);
+                            AddExploSound(explo.transform, exploInfo.Caliber);
+                            break;
+                        }
+                    case 4:
+                        {
+                            GameObject explo = (GameObject)Instantiate(AssetManager.Instance.CannonHit.exploSmall, exploPosition, Quaternion.identity);
+                            explo.SetActive(true);
+                            explo.transform.localScale = exploInfo.Caliber / 800 * Vector3.one;
+                            Destroy(explo, 3);
+                            AddExploSound(explo.transform, exploInfo.Caliber);
+                            break;
+                        }
+                    default:
+                        break;
+                }
+            }
+            WeaponMsgReceiver.Instance.ExploInfo[playerID].Clear();
+        }
+
+        public void Update()
+        {
+            if (StatMaster.isClient)
+            {
+                for (int i = 0; i < 16; i++)
+                {
+                    PlayExploOnClient(i);
+                }
+            }
         }
     }
 
@@ -595,47 +698,6 @@ namespace WW2NavalAssembly
                 }
             }
         }
-        public void CannonDetectCollisionClient()
-        {
-            foreach (WeaponMsgReceiver.exploInfo exploInfo in WeaponMsgReceiver.Instance.ExploInfo[myPlayerID])
-            {
-                Vector3 exploPosition = exploInfo.position;
-                switch (exploInfo.type)
-                {
-                    case 0:
-                        {
-                            GameObject explo = (GameObject)Instantiate(AssetManager.Instance.CannonHit.explo, exploPosition, Quaternion.identity);
-                            explo.SetActive(true);
-                            explo.transform.localScale = exploInfo.Caliber / 800 * Vector3.one;
-                            Destroy(explo, 3);
-                            AddExploSound(explo.transform);
-                            break;
-                        }
-                    case 1:
-                        {
-                            GameObject pierceEffect = (GameObject)Instantiate(AssetManager.Instance.Pierce.Pierce, exploPosition, Quaternion.identity);
-                            pierceEffect.transform.localScale = Caliber / 400 * Vector3.one;
-                            Destroy(pierceEffect, 1);
-                            AddPierceSound(pierceEffect.transform);
-                            break;
-                        }
-                    case 2:
-                        {
-                            GameObject explo = (GameObject)Instantiate(AssetManager.Instance.CannonHit.explo, exploPosition, Quaternion.identity);
-                            explo.SetActive(true);
-                            explo.transform.localScale = exploInfo.Caliber / 400 * Vector3.one;
-                            Destroy(explo, 3);
-                            AddExploSound(explo.transform);
-                            break;
-                        }
-                    default:
-                        break;
-                }
-                
-                
-            }
-            WeaponMsgReceiver.Instance.ExploInfo[myPlayerID].Clear();
-        }
         public void CannonDetectWaterHost()
         {
             if (transform.position.y < 20f)
@@ -755,7 +817,16 @@ namespace WW2NavalAssembly
         {
             try
             {
-                GameObject explo = (GameObject)Instantiate(AssetManager.Instance.CannonHit.explo, hit.point - myRigid.velocity.normalized * Caliber / 800f, Quaternion.identity);
+                GameObject explo;
+                if (Caliber < 100)
+                {
+                    explo = (GameObject)Instantiate(AssetManager.Instance.CannonHit.exploSmall, transform.position, Quaternion.identity);
+                }
+                else
+                {
+                    explo = (GameObject)Instantiate(AssetManager.Instance.CannonHit.explo, transform.position, Quaternion.identity);
+                }
+                explo.name = "Explo Hit";
                 explo.SetActive(true);
                 explo.transform.localScale = Caliber / 800 * (AP ? 1 : 2) * Vector3.one;
                 Destroy(explo, 3);
@@ -764,7 +835,14 @@ namespace WW2NavalAssembly
                 exploded = true;
 
                 //send to client
-                ModNetworking.SendToAll(WeaponMsgReceiver.ExploMsg.CreateMessage(myPlayerID, hit.point, Caliber, AP?0:2));
+                if (Caliber < 100)
+                {
+                    ModNetworking.SendToAll(WeaponMsgReceiver.ExploMsg.CreateMessage(myPlayerID, transform.position, Caliber, 4));
+                }
+                else
+                {
+                    ModNetworking.SendToAll(WeaponMsgReceiver.ExploMsg.CreateMessage(myPlayerID, transform.position, Caliber, AP ? 0 : 2));
+                }
 
                 try
                 {
@@ -787,7 +865,17 @@ namespace WW2NavalAssembly
         }
         private void PlayExploInAir(bool AP = true)
         {
-            GameObject explo = (GameObject)Instantiate(AssetManager.Instance.CannonHit.explo, transform.position, Quaternion.identity);
+            
+            GameObject explo;
+            if (Caliber < 100)
+            {
+                explo = (GameObject)Instantiate(AssetManager.Instance.CannonHit.exploSmall, transform.position, Quaternion.identity);
+            }
+            else
+            {
+                explo = (GameObject)Instantiate(AssetManager.Instance.CannonHit.explo, transform.position, Quaternion.identity); 
+            }
+            explo.name = "Explo Air";
             explo.SetActive(true);
             explo.transform.localScale = Caliber / 800 * (AP?1:2) * Vector3.one;
             Destroy(explo, 3);
@@ -795,8 +883,15 @@ namespace WW2NavalAssembly
 
             exploded = true;
 
-            //send to client
-            ModNetworking.SendToAll(WeaponMsgReceiver.ExploMsg.CreateMessage(myPlayerID, transform.position, Caliber, AP?0:2));
+            if (Caliber < 100)
+            {
+                ModNetworking.SendToAll(WeaponMsgReceiver.ExploMsg.CreateMessage(myPlayerID, transform.position, Caliber, 4));
+            }
+            else
+            {
+                ModNetworking.SendToAll(WeaponMsgReceiver.ExploMsg.CreateMessage(myPlayerID, transform.position, Caliber, AP ? 0 : 2));
+            }
+
 
             ExploDestroyBalloon(transform.position, AP);
             if (transform.FindChild("CannonVis"))
@@ -934,7 +1029,6 @@ namespace WW2NavalAssembly
         }
         public void FixedUpdate()
         {
-            
             if (fire)
             {
                 if (!thrustOn)
@@ -985,9 +1079,7 @@ namespace WW2NavalAssembly
                 }
                 else
                 {
-                    CannonDetectCollisionClient();
                     CannonDetectWaterClient();
-                    
                 }
                 
             }
