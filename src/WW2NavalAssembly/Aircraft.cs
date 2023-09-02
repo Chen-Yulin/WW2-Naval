@@ -1480,6 +1480,7 @@ namespace WW2NavalAssembly
             FoldWing = FoldWing;
             myRigid.drag = 0.2f;
             myRigid.angularDrag = 0.2f;
+            myRigid.constraints = RigidbodyConstraints.None;
             myRigid.useGravity = true;
             Thrust = 0f;
             DeckSliding = false;
