@@ -1872,6 +1872,7 @@ namespace WW2NavalAssembly
                     targetTeamCount = Grouper.Instance.GetAircraft(myPlayerID, Group.Value).Count();
                     TeamUpByLeader();
                 }
+                frameCount++;
             }
             if (ModController.Instance.state % 10 == myseed && !TriedFindHangar && frameCount > 40)
             {
@@ -2228,6 +2229,26 @@ namespace WW2NavalAssembly
             }
 
 
+        }
+        public override void SimulateFixedUpdateClient()
+        {
+            if (frameCount == 0)
+            {
+                if (Rank.Value == 1)
+                {
+                    targetTeamCount = Grouper.Instance.GetAircraft(myPlayerID, Group.Value).Count();
+                    myGroup = Grouper.Instance.GetAircraft(myPlayerID, Group.Value);
+                }else if (Rank.Value == 0)
+                {
+                    myLeader = Grouper.Instance.GetLeader(myPlayerID, Group.Value);
+                    //Debug.Log("get leader " + (myLeader?"true":"false"));
+                }
+                frameCount++;
+            }
+            else
+            {
+                frameCount++;
+            }
         }
         public void OnGUI()
         {

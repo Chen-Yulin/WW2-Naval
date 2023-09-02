@@ -21,6 +21,7 @@ namespace WW2NavalAssembly
         public override string Name { get; } = "Aircraft Controller Msg Receiver";
 
         public static MessageType MouseRouteMsg = ModNetworking.CreateMessageType(DataType.String, DataType.Vector3, DataType.Integer);// group, position, type
+        public static MessageType CurrentLeaderMsg = ModNetworking.CreateMessageType(DataType.Integer, DataType.String);// playerID, group
 
         public class MouseRouteInfo
         {
@@ -35,13 +36,25 @@ namespace WW2NavalAssembly
                 this.group = group;
             }
         }
+        public class CurrentLeaderInfo
+        {
+            public bool valid = false;
+            public string group;
+            public CurrentLeaderInfo(string group)
+            {
+                this.group = group;
+                valid = true;
+            }
+        }
         public Queue<MouseRouteInfo>[] mouseRouteInfo = new Queue<MouseRouteInfo>[16];
+        public CurrentLeaderInfo[] currentLeaderInfos = new CurrentLeaderInfo[16];
 
         public AircraftControllerMsgReceiver()
         {
             for (int i = 0; i < 16; i++)
             {
                 mouseRouteInfo[i] = new Queue<MouseRouteInfo>();
+                currentLeaderInfos[i] = new CurrentLeaderInfo("");
             }
         }
         public void MouseRouteMsgReceiver(Message msg)
@@ -51,6 +64,13 @@ namespace WW2NavalAssembly
             int type = (int)msg.GetData(2);
             mouseRouteInfo[msg.Sender.NetworkId].Enqueue(new MouseRouteInfo(group, worldPos, type));
             Debug.Log("Receive mouse route msg: " + group + " | " + worldPos + " | " + type);   
+        }
+        public void CurrentLeaderMsgReceiver(Message msg)
+        {
+            int playerID = (int)msg.GetData(0);
+            string group = (string)msg.GetData(1);
+            currentLeaderInfos[playerID] = new CurrentLeaderInfo(group);
+            Debug.Log("Player " + playerID + " receive current leader msg: " + group);
         }
 
     }
@@ -343,6 +363,20 @@ namespace WW2NavalAssembly
                 if (value != currentLeader)
                 {
                     currentLeader = value;
+
+                    if (!StatMaster.isClient && PlayerData.localPlayer.networkId != myPlayerID)
+                    {
+                        if (value)
+                        {
+                            ModNetworking.SendToAll(AircraftControllerMsgReceiver.CurrentLeaderMsg.CreateMessage(myPlayerID, value.Group.Value));
+                        }
+                        else
+                        {
+                            ModNetworking.SendToAll(AircraftControllerMsgReceiver.CurrentLeaderMsg.CreateMessage(myPlayerID, "null"));
+                        }
+                        
+                    }
+
                     // update the line visual
                     foreach (var line in RouteLines)
                     {
@@ -849,8 +883,28 @@ namespace WW2NavalAssembly
             }
         }
 
+        public override void SimulateUpdateClient()
+        {
+            if (AircraftControllerMsgReceiver.Instance.currentLeaderInfos[myPlayerID].valid)
+            {
+                string group = AircraftControllerMsgReceiver.Instance.currentLeaderInfos[myPlayerID].group;
+                if (group == "null")
+                {
+                    CurrentLeader = null;
+                }
+                else
+                {
+                    CurrentLeader = Grouper.Instance.GetLeader(myPlayerID, group);
+                }
+                
+                Debug.Log(CurrentLeader != null);
+                Debug.Log(Grouper.Instance.AircraftLeaders[myPlayerID].Count());
+                AircraftControllerMsgReceiver.Instance.currentLeaderInfos[myPlayerID].valid = false;
+            }
+        }
         public override void SimulateUpdateAlways()
         {
+
             if (myPlayerID == PlayerData.localPlayer.networkId)
             {
                 if (TacticalView.IsPressed)
@@ -1226,6 +1280,10 @@ namespace WW2NavalAssembly
 
         public void OnGUI()
         {
+            if (PlayerData.localPlayer.networkId != myPlayerID)
+            {
+                return;
+            }
             if (CurrentLeader)
             {
                 GUI.Box(new Rect(100, 200, 200, 30), CurrentLeader.Group.Value.ToString() + " " + CurrentLeader.status.ToString());
