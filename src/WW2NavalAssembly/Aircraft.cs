@@ -1843,17 +1843,8 @@ namespace WW2NavalAssembly
         }
         public override void SimulateUpdateHost()
         {
-            switch (status)
-            {
-                case Status.InHangar:
-                    break;
-                default: break;
-            }
-
             switch (Rank.Value)
             {
-                case 0:
-                    break;
                 case 1:
                     if (SwitchActive.IsPressed && status != Status.Exploded && status != Status.Deprecated && status != Status.ShootDown)
                     {
@@ -1866,8 +1857,6 @@ namespace WW2NavalAssembly
                             FlightDataBase.Instance.aircraftController[myPlayerID].CurrentLeader = this;
                         }
                     }
-                    break;
-                case 2:
                     break;
                 default:
                     break;

@@ -28,6 +28,7 @@ namespace WW2NavalAssembly
             ModNetworking.Callbacks[GunnerMsgReceiver.TargetMsg] += GunnerMsgReceiver.Instance.TargetReceiver;
             ModNetworking.Callbacks[GunnerMsgReceiver.GunnerActiveMsg] += GunnerMsgReceiver.Instance.GunnerActiveReceiver;
             ModNetworking.Callbacks[EngineMsgReceiver.EngineStateMsg] += EngineMsgReceiver.Instance.MsgReceiver;
+            ModNetworking.Callbacks[AircraftControllerMsgReceiver.MouseRouteMsg] += AircraftControllerMsgReceiver.Instance.MouseRouteMsgReceiver;
         }
     }
 }

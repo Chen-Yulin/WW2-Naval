@@ -12,10 +12,48 @@ using UnityEngine.UI;
 using UnityEngine.Networking;
 using System.Linq;
 using System.Text.RegularExpressions;
+using static WW2NavalAssembly.WeaponMsgReceiver;
 
 namespace WW2NavalAssembly
 {
+    public class AircraftControllerMsgReceiver : SingleInstance<AircraftControllerMsgReceiver>
+    {
+        public override string Name { get; } = "Aircraft Controller Msg Receiver";
 
+        public static MessageType MouseRouteMsg = ModNetworking.CreateMessageType(DataType.String, DataType.Vector3, DataType.Integer);// group, position, type
+
+        public class MouseRouteInfo
+        {
+            public Vector3 worldPos;
+            public int type;
+            public string group;
+
+            public MouseRouteInfo(string group, Vector3 worldPos, int type)
+            {
+                this.worldPos = worldPos;
+                this.type = type;
+                this.group = group;
+            }
+        }
+        public Queue<MouseRouteInfo>[] mouseRouteInfo = new Queue<MouseRouteInfo>[16];
+
+        public AircraftControllerMsgReceiver()
+        {
+            for (int i = 0; i < 16; i++)
+            {
+                mouseRouteInfo[i] = new Queue<MouseRouteInfo>();
+            }
+        }
+        public void MouseRouteMsgReceiver(Message msg)
+        {
+            string group = (string)msg.GetData(0);
+            Vector3 worldPos = (Vector3)msg.GetData(1);
+            int type = (int)msg.GetData(2);
+            mouseRouteInfo[msg.Sender.NetworkId].Enqueue(new MouseRouteInfo(group, worldPos, type));
+            Debug.Log("Receive mouse route msg: " + group + " | " + worldPos + " | " + type);   
+        }
+
+    }
     public class AircraftElevator : MonoBehaviour
     {
         public float delayTime = 0.2f;
@@ -813,115 +851,219 @@ namespace WW2NavalAssembly
 
         public override void SimulateUpdateAlways()
         {
-            if (TacticalView.IsPressed)
+            if (myPlayerID == PlayerData.localPlayer.networkId)
             {
-                inTacticalView = !inTacticalView;
-                if (inTacticalView && CurrentLeader)
+                if (TacticalView.IsPressed)
                 {
-                    MainCamera.transform.position = CurrentLeader.transform.position;
-                }
-            }
-            if (inTacticalView)
-            {
-                DrawBoard.SetActive(true);
-                float mouseY = Input.mouseScrollDelta.y;
-                _orthoSize = Mathf.Clamp(_orthoSize * (mouseY > 0 ? 1f / (1f + mouseY * 0.2f) : (1f - mouseY * 0.2f)), 50, 2000);
-                MainCamera.transform.position += _orthoSize * ViewSensitivity.Value * Time.deltaTime * (
-                                                                    Vector3.forward * (ViewUp.IsHeld ? 1 : 0) +
-                                                                    Vector3.back * (ViewDown.IsHeld ? 1 : 0) +
-                                                                    Vector3.left * (ViewLeft.IsHeld ? 1 : 0) +
-                                                                    Vector3.right * (ViewRight.IsHeld ? 1 : 0));
-
-
-
-                if (CurrentLeader)
-                {
-                    if (CurrentLeader.status != Aircraft.Status.Returning && CurrentLeader.status != Aircraft.Status.Landing)
+                    inTacticalView = !inTacticalView;
+                    if (inTacticalView && CurrentLeader)
                     {
-                        if (Continuous.IsHeld)
-                        {
-                            if (Input.GetMouseButtonDown(1))
-                            {
-                                Vector2 screenPosition = new Vector2(Input.mousePosition.x, Input.mousePosition.y);
-                                Vector3 worldPosition = Camera.main.ScreenToWorldPoint(screenPosition);
-                                AddRoutePoint(CurrentLeader.Group.Value, new Vector2(worldPosition.x, worldPosition.z), 0);
-                            }
-                            else if (Attack.IsPressed)
-                            {
-                                Vector2 screenPosition = new Vector2(Input.mousePosition.x, Input.mousePosition.y);
-                                Vector3 worldPosition = Camera.main.ScreenToWorldPoint(screenPosition);
-                                AddRoutePoint(CurrentLeader.Group.Value, new Vector2(worldPosition.x, worldPosition.z), CurrentLeader.Type.Value);
-                            }
-                        }
-                        else
-                        {
-                            if (Input.GetMouseButtonDown(1))
-                            {
-                                Vector2 screenPosition = new Vector2(Input.mousePosition.x, Input.mousePosition.y);
-                                Vector3 worldPosition = Camera.main.ScreenToWorldPoint(screenPosition);
-                                ResetRoutePoint(CurrentLeader.Group.Value, new Vector2(worldPosition.x, worldPosition.z), 0);
-                            }
-                            else if (Attack.IsPressed)
-                            {
-                                Vector2 screenPosition = new Vector2(Input.mousePosition.x, Input.mousePosition.y);
-                                Vector3 worldPosition = Camera.main.ScreenToWorldPoint(screenPosition);
-                                ResetRoutePoint(CurrentLeader.Group.Value, new Vector2(worldPosition.x, worldPosition.z), CurrentLeader.Type.Value);
-                            }
-                        }
+                        MainCamera.transform.position = CurrentLeader.transform.position;
                     }
-                    
+                }
 
-                    if (ReturnKey.IsPressed)
+                if (StatMaster.isClient) // self is client
+                {
+                    if (inTacticalView)
                     {
-                        bool allinCruise = true;
-                        foreach(var a in CurrentLeader.myGroup)
+                        DrawBoard.SetActive(true);
+                        float mouseY = Input.mouseScrollDelta.y;
+                        _orthoSize = Mathf.Clamp(_orthoSize * (mouseY > 0 ? 1f / (1f + mouseY * 0.2f) : (1f - mouseY * 0.2f)), 50, 2000);
+                        MainCamera.transform.position += _orthoSize * ViewSensitivity.Value * Time.deltaTime * (
+                                                                            Vector3.forward * (ViewUp.IsHeld ? 1 : 0) +
+                                                                            Vector3.back * (ViewDown.IsHeld ? 1 : 0) +
+                                                                            Vector3.left * (ViewLeft.IsHeld ? 1 : 0) +
+                                                                            Vector3.right * (ViewRight.IsHeld ? 1 : 0));
+
+                        if (CurrentLeader)
                         {
-                            if (a.Value.status != Aircraft.Status.Cruise)
+                            if (CurrentLeader.status != Aircraft.Status.Returning && CurrentLeader.status != Aircraft.Status.Landing)
                             {
-                                allinCruise = false;
-                                break;
-                            }
-                        }
-                        if (allinCruise)
-                        {
-                            string group = CurrentLeader.Group.Value;
-                            if (Routes.ContainsKey(group))
-                            {
-                                foreach (var point in Routes[group])
+                                if (Continuous.IsHeld)
                                 {
-                                    if (point.Icon)
+                                    if (Input.GetMouseButtonDown(1))
                                     {
-                                        Destroy(point.Icon);
+                                        Vector2 screenPosition = new Vector2(Input.mousePosition.x, Input.mousePosition.y);
+                                        Vector3 worldPosition = Camera.main.ScreenToWorldPoint(screenPosition);
+                                        AddRoutePoint(CurrentLeader.Group.Value, new Vector2(worldPosition.x, worldPosition.z), 0);
+                                    }
+                                    else if (Attack.IsPressed)
+                                    {
+                                        Vector2 screenPosition = new Vector2(Input.mousePosition.x, Input.mousePosition.y);
+                                        Vector3 worldPosition = Camera.main.ScreenToWorldPoint(screenPosition);
+                                        AddRoutePoint(CurrentLeader.Group.Value, new Vector2(worldPosition.x, worldPosition.z), CurrentLeader.Type.Value);
                                     }
                                 }
-                                Routes[group].Clear();
+                                else
+                                {
+                                    if (Input.GetMouseButtonDown(1))
+                                    {
+                                        Vector2 screenPosition = new Vector2(Input.mousePosition.x, Input.mousePosition.y);
+                                        Vector3 worldPosition = Camera.main.ScreenToWorldPoint(screenPosition);
+                                        ResetRoutePoint(CurrentLeader.Group.Value, new Vector2(worldPosition.x, worldPosition.z), 0);
+                                    }
+                                    else if (Attack.IsPressed)
+                                    {
+                                        Vector2 screenPosition = new Vector2(Input.mousePosition.x, Input.mousePosition.y);
+                                        Vector3 worldPosition = Camera.main.ScreenToWorldPoint(screenPosition);
+                                        ResetRoutePoint(CurrentLeader.Group.Value, new Vector2(worldPosition.x, worldPosition.z), CurrentLeader.Type.Value);
+                                    }
+                                }
                             }
 
-                            CurrentLeader.SwitchToReturn();
-                        }
-                        else
-                        {
-                            MyLogger.Instance.Log("["+ CurrentLeader.Group.Value + "] cannot return because not all aircraft in cruise");
+
+                            if (ReturnKey.IsPressed)
+                            {
+                                bool allinCruise = true;
+                                foreach (var a in CurrentLeader.myGroup)
+                                {
+                                    if (a.Value.status != Aircraft.Status.Cruise)
+                                    {
+                                        allinCruise = false;
+                                        break;
+                                    }
+                                }
+                                if (allinCruise)
+                                {
+                                    string group = CurrentLeader.Group.Value;
+                                    if (Routes.ContainsKey(group))
+                                    {
+                                        foreach (var point in Routes[group])
+                                        {
+                                            if (point.Icon)
+                                            {
+                                                Destroy(point.Icon);
+                                            }
+                                        }
+                                        Routes[group].Clear();
+                                    }
+
+                                    CurrentLeader.SwitchToReturn();
+                                }
+                                else
+                                {
+                                    MyLogger.Instance.Log("[" + CurrentLeader.Group.Value + "] cannot return because not all aircraft in cruise");
+                                }
+
+
+                            }
+
                         }
 
-                        
                     }
+                }
+                else
+                {
+                    if (inTacticalView)
+                    {
+                        DrawBoard.SetActive(true);
+                        float mouseY = Input.mouseScrollDelta.y;
+                        _orthoSize = Mathf.Clamp(_orthoSize * (mouseY > 0 ? 1f / (1f + mouseY * 0.2f) : (1f - mouseY * 0.2f)), 50, 2000);
+                        MainCamera.transform.position += _orthoSize * ViewSensitivity.Value * Time.deltaTime * (
+                                                                            Vector3.forward * (ViewUp.IsHeld ? 1 : 0) +
+                                                                            Vector3.back * (ViewDown.IsHeld ? 1 : 0) +
+                                                                            Vector3.left * (ViewLeft.IsHeld ? 1 : 0) +
+                                                                            Vector3.right * (ViewRight.IsHeld ? 1 : 0));
 
-                }
-                foreach (var group in Routes)
-                {
-                    UpdateRouteLine(group.Key);
-                }
-                foreach (var group in GroupIcon)
-                {
-                    UpdateGroupIcon(group.Key);
-                }
-                UpdateCurrentLeaderInfo();
+
+
+                        if (CurrentLeader)
+                        {
+                            if (CurrentLeader.status != Aircraft.Status.Returning && CurrentLeader.status != Aircraft.Status.Landing)
+                            {
+                                if (Continuous.IsHeld)
+                                {
+                                    if (Input.GetMouseButtonDown(1))
+                                    {
+                                        Vector2 screenPosition = new Vector2(Input.mousePosition.x, Input.mousePosition.y);
+                                        Vector3 worldPosition = Camera.main.ScreenToWorldPoint(screenPosition);
+                                        AddRoutePoint(CurrentLeader.Group.Value, new Vector2(worldPosition.x, worldPosition.z), 0);
+                                    }
+                                    else if (Attack.IsPressed)
+                                    {
+                                        Vector2 screenPosition = new Vector2(Input.mousePosition.x, Input.mousePosition.y);
+                                        Vector3 worldPosition = Camera.main.ScreenToWorldPoint(screenPosition);
+                                        AddRoutePoint(CurrentLeader.Group.Value, new Vector2(worldPosition.x, worldPosition.z), CurrentLeader.Type.Value);
+                                    }
+                                }
+                                else
+                                {
+                                    if (Input.GetMouseButtonDown(1))
+                                    {
+                                        Vector2 screenPosition = new Vector2(Input.mousePosition.x, Input.mousePosition.y);
+                                        Vector3 worldPosition = Camera.main.ScreenToWorldPoint(screenPosition);
+                                        ResetRoutePoint(CurrentLeader.Group.Value, new Vector2(worldPosition.x, worldPosition.z), 0);
+                                    }
+                                    else if (Attack.IsPressed)
+                                    {
+                                        Vector2 screenPosition = new Vector2(Input.mousePosition.x, Input.mousePosition.y);
+                                        Vector3 worldPosition = Camera.main.ScreenToWorldPoint(screenPosition);
+                                        ResetRoutePoint(CurrentLeader.Group.Value, new Vector2(worldPosition.x, worldPosition.z), CurrentLeader.Type.Value);
+                                    }
+                                }
+                            }
+
+
+                            if (ReturnKey.IsPressed)
+                            {
+                                bool allinCruise = true;
+                                foreach (var a in CurrentLeader.myGroup)
+                                {
+                                    if (a.Value.status != Aircraft.Status.Cruise)
+                                    {
+                                        allinCruise = false;
+                                        break;
+                                    }
+                                }
+                                if (allinCruise)
+                                {
+                                    string group = CurrentLeader.Group.Value;
+                                    if (Routes.ContainsKey(group))
+                                    {
+                                        foreach (var point in Routes[group])
+                                        {
+                                            if (point.Icon)
+                                            {
+                                                Destroy(point.Icon);
+                                            }
+                                        }
+                                        Routes[group].Clear();
+                                    }
+
+                                    CurrentLeader.SwitchToReturn();
+                                }
+                                else
+                                {
+                                    MyLogger.Instance.Log("[" + CurrentLeader.Group.Value + "] cannot return because not all aircraft in cruise");
+                                }
+
+
+                            }
+
+                        }
+                        foreach (var group in Routes)
+                        {
+                            UpdateRouteLine(group.Key);
+                        }
+                        foreach (var group in GroupIcon)
+                        {
+                            UpdateGroupIcon(group.Key);
+                        }
+                        UpdateCurrentLeaderInfo();
+                    }
+                    else
+                    {
+                        DrawBoard.SetActive(false);
+                    }
+                } // self is host
+
+
             }
-            else
+            else if (!StatMaster.isClient) // host solve the msg from client
             {
-                DrawBoard.SetActive(false);
+
             }
+            
             
 
             if (hasDeck)
@@ -1059,10 +1201,6 @@ namespace WW2NavalAssembly
             {
                 inTacticalView = true;
             }
-            else
-            {
-
-            }
 
 
         }
@@ -1090,7 +1228,7 @@ namespace WW2NavalAssembly
         {
             if (CurrentLeader)
             {
-                GUI.Box(new Rect(100, 200, 200, 30), CurrentLeader.Group.Value.ToString());
+                GUI.Box(new Rect(100, 200, 200, 30), CurrentLeader.Group.Value.ToString() + " " + CurrentLeader.status.ToString());
             }
 
             if ((Camera.main.transform.position - transform.position).magnitude < 30 && BlockBehaviour.isSimulating)
