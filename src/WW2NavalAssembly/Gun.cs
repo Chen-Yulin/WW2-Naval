@@ -207,7 +207,7 @@ namespace WW2NavalAssembly
                         }
                     case 3:
                         {
-                            GameObject explo = (GameObject)Instantiate(AssetManager.Instance.CannonHit.exploWithSmoke, transform.position, Quaternion.identity);
+                            GameObject explo = (GameObject)Instantiate(AssetManager.Instance.CannonHit.exploWithSmoke, exploPosition, Quaternion.identity);
                             explo.SetActive(true);
                             explo.transform.localScale = exploInfo.Caliber / 400f * Vector3.one;
                             Destroy(explo, 3);

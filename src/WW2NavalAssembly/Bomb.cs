@@ -490,6 +490,7 @@ namespace WW2NavalAssembly
             try
             {
                 GameObject explo = (GameObject)Instantiate(AssetManager.Instance.CannonHit.exploWithSmoke, hit.point - myRigid.velocity.normalized * Weight / 800f, Quaternion.identity);
+
                 explo.SetActive(true);
                 explo.transform.localScale = Weight / 800 * (AP ? 1 : 2) * Vector3.one;
                 Destroy(explo, 3);
