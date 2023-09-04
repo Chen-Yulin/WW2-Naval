@@ -2341,6 +2341,44 @@ namespace WW2NavalAssembly
             {
                 frameCount++;
             }
+
+            switch (status)
+            {
+                case Status.Cruise:
+                    {
+                        if (Rank.Value == 1)
+                        {
+                            float distFromWayPoint = (MathTool.Get2DCoordinate(transform.position) - WayPoint).magnitude;
+                            if (distFromWayPoint < 75f)
+                            {
+                                if (FlightDataBase.Instance.aircraftController[myPlayerID].Routes.ContainsKey(Group.Value))
+                                {
+                                    if (FlightDataBase.Instance.aircraftController[myPlayerID].Routes[Group.Value].Count > 0)
+                                    {
+                                        Vector3 peekPos = FlightDataBase.Instance.aircraftController[myPlayerID].Routes[Group.Value].Peek().Position;
+                                        Vector2 peekDir = FlightDataBase.Instance.aircraftController[myPlayerID].Routes[Group.Value].Peek().Direction;
+                                        int type = FlightDataBase.Instance.aircraftController[myPlayerID].Routes[Group.Value].Peek().Type;
+                                        if (WayPoint.x == peekPos.x && WayPoint.y == peekPos.z && FlightDataBase.Instance.aircraftController[myPlayerID].Routes[Group.Value].Count > 1)
+                                        {
+                                            FlightDataBase.Instance.aircraftController[myPlayerID].DequeueRoutePoint(Group.Value);
+                                            peekPos = FlightDataBase.Instance.aircraftController[myPlayerID].Routes[Group.Value].Peek().Position;
+                                            peekDir = FlightDataBase.Instance.aircraftController[myPlayerID].Routes[Group.Value].Peek().Direction;
+                                            type = FlightDataBase.Instance.aircraftController[myPlayerID].Routes[Group.Value].Peek().Type;
+                                        }
+                                        WayPoint = new Vector2(peekPos.x, peekPos.z);
+                                        WayDirection = peekDir;
+                                        WayHeight = peekPos.y;
+                                        WayPointType = type;
+                                    }
+                                }
+
+                            }
+                        }
+                        break;
+                    }
+                default: break;
+            }
+
         }
         public void OnGUI()
         {

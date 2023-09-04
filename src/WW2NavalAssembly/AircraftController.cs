@@ -21,27 +21,46 @@ namespace WW2NavalAssembly
     {
         public override string Name { get; } = "Aircraft Controller Msg Receiver";
 
-        public static MessageType MouseRouteMsg = ModNetworking.CreateMessageType(DataType.String, DataType.Vector3, DataType.Integer);// group, position, type
+        public static MessageType MouseRouteMsg = ModNetworking.CreateMessageType(DataType.String, DataType.Vector3, DataType.Integer, DataType.Boolean);// group, position, type, reset
         public static MessageType CurrentLeaderMsg = ModNetworking.CreateMessageType(DataType.Integer, DataType.String);// playerID, group
-
+        public static MessageType ReturnMsg = ModNetworking.CreateMessageType(DataType.String);
         public class MouseRouteInfo
         {
             public Vector3 worldPos;
             public int type;
             public string group;
-
-            public MouseRouteInfo(string group, Vector3 worldPos, int type)
+            public bool reset;
+            public MouseRouteInfo(string group, Vector3 worldPos, int type, bool reset)
             {
                 this.worldPos = worldPos;
                 this.type = type;
                 this.group = group;
+                this.reset = reset;
             }
         }
         public class CurrentLeaderInfo
         {
             public bool valid = false;
             public string group;
+            public CurrentLeaderInfo()
+            {
+                valid = false;
+            }
             public CurrentLeaderInfo(string group)
+            {
+                this.group = group;
+                valid = true;
+            }
+        }
+        public class ReturnInfo
+        {
+            public bool valid = false;
+            public string group;
+            public ReturnInfo()
+            {
+                valid = false;
+            }
+            public ReturnInfo(string group)
             {
                 this.group = group;
                 valid = true;
@@ -49,13 +68,15 @@ namespace WW2NavalAssembly
         }
         public Queue<MouseRouteInfo>[] mouseRouteInfo = new Queue<MouseRouteInfo>[16];
         public CurrentLeaderInfo[] currentLeaderInfos = new CurrentLeaderInfo[16];
+        public ReturnInfo[] returnPressed = new ReturnInfo[16];
 
         public AircraftControllerMsgReceiver()
         {
             for (int i = 0; i < 16; i++)
             {
                 mouseRouteInfo[i] = new Queue<MouseRouteInfo>();
-                currentLeaderInfos[i] = new CurrentLeaderInfo("");
+                currentLeaderInfos[i] = new CurrentLeaderInfo();
+                returnPressed[i] = new ReturnInfo();
             }
         }
         public void MouseRouteMsgReceiver(Message msg)
@@ -63,17 +84,25 @@ namespace WW2NavalAssembly
             string group = (string)msg.GetData(0);
             Vector3 worldPos = (Vector3)msg.GetData(1);
             int type = (int)msg.GetData(2);
-            mouseRouteInfo[msg.Sender.NetworkId].Enqueue(new MouseRouteInfo(group, worldPos, type));
-            Debug.Log("Receive mouse route msg: " + group + " | " + worldPos + " | " + type);   
+            bool reset = (bool)msg.GetData(3);
+            mouseRouteInfo[msg.Sender.NetworkId].Enqueue(new MouseRouteInfo(group, worldPos, type, reset));
+            Debug.Log("Receive mouse route msg: " + group + " | " + worldPos + " | " + type + " | " + reset);
         }
         public void CurrentLeaderMsgReceiver(Message msg)
         {
             int playerID = (int)msg.GetData(0);
             string group = (string)msg.GetData(1);
-            currentLeaderInfos[playerID] = new CurrentLeaderInfo(group);
+            currentLeaderInfos[playerID].group = group;
+            currentLeaderInfos[playerID].valid = true;
             Debug.Log("Player " + playerID + " receive current leader msg: " + group);
         }
-
+        public void ReturnMsgReceiver(Message msg)
+        {
+            string group = (string)msg.GetData(0);
+            returnPressed[msg.Sender.NetworkId].group = group;
+            returnPressed[msg.Sender.NetworkId].valid = true;
+            Debug.Log("Receive return msg: " + group);
+        }
     }
     public class AircraftElevator : MonoBehaviour
     {
@@ -944,12 +973,22 @@ namespace WW2NavalAssembly
                                     Vector2 screenPosition = new Vector2(Input.mousePosition.x, Input.mousePosition.y);
                                     Vector3 worldPosition = Camera.main.ScreenToWorldPoint(screenPosition);
                                     AddRoutePoint(CurrentLeader.Group.Value, new Vector2(worldPosition.x, worldPosition.z), 0);
+                                    if (StatMaster.isClient)
+                                    {
+                                        ModNetworking.SendToHost(AircraftControllerMsgReceiver.MouseRouteMsg.CreateMessage(
+                                                                    CurrentLeader.Group.Value, worldPosition, 0, false));
+                                    }
                                 }
                                 else if (Attack.IsPressed)
                                 {
                                     Vector2 screenPosition = new Vector2(Input.mousePosition.x, Input.mousePosition.y);
                                     Vector3 worldPosition = Camera.main.ScreenToWorldPoint(screenPosition);
                                     AddRoutePoint(CurrentLeader.Group.Value, new Vector2(worldPosition.x, worldPosition.z), CurrentLeader.Type.Value);
+                                    if (StatMaster.isClient)
+                                    {
+                                        ModNetworking.SendToHost(AircraftControllerMsgReceiver.MouseRouteMsg.CreateMessage(
+                                                                    CurrentLeader.Group.Value, worldPosition, CurrentLeader.Type.Value, false));
+                                    }
                                 }
                             }
                             else
@@ -959,12 +998,22 @@ namespace WW2NavalAssembly
                                     Vector2 screenPosition = new Vector2(Input.mousePosition.x, Input.mousePosition.y);
                                     Vector3 worldPosition = Camera.main.ScreenToWorldPoint(screenPosition);
                                     ResetRoutePoint(CurrentLeader.Group.Value, new Vector2(worldPosition.x, worldPosition.z), 0);
+                                    if (StatMaster.isClient)
+                                    {
+                                        ModNetworking.SendToHost(AircraftControllerMsgReceiver.MouseRouteMsg.CreateMessage(
+                                                                    CurrentLeader.Group.Value, worldPosition, 0, true));
+                                    }
                                 }
                                 else if (Attack.IsPressed)
                                 {
                                     Vector2 screenPosition = new Vector2(Input.mousePosition.x, Input.mousePosition.y);
                                     Vector3 worldPosition = Camera.main.ScreenToWorldPoint(screenPosition);
                                     ResetRoutePoint(CurrentLeader.Group.Value, new Vector2(worldPosition.x, worldPosition.z), CurrentLeader.Type.Value);
+                                    if (StatMaster.isClient)
+                                    {
+                                        ModNetworking.SendToHost(AircraftControllerMsgReceiver.MouseRouteMsg.CreateMessage(
+                                                                    CurrentLeader.Group.Value, CurrentLeader.Type.Value, 0, true));
+                                    }
                                 }
                             }
                         }
@@ -997,6 +1046,11 @@ namespace WW2NavalAssembly
                                 }
 
                                 CurrentLeader.SwitchToReturn();
+
+                                if (StatMaster.isClient)
+                                {
+                                    ModNetworking.SendToHost(AircraftControllerMsgReceiver.ReturnMsg.CreateMessage(CurrentLeader.Group.Value));
+                                }
                             }
                             else
                             {
@@ -1026,7 +1080,39 @@ namespace WW2NavalAssembly
             }
             else if (!StatMaster.isClient) // host solve the msg from client
             {
+                while(AircraftControllerMsgReceiver.Instance.mouseRouteInfo[myPlayerID].Count>0)
+                {
+                    AircraftControllerMsgReceiver.MouseRouteInfo info = AircraftControllerMsgReceiver.Instance.mouseRouteInfo[myPlayerID].Dequeue();
+                    switch (info.reset)
+                    {
+                        case false:
+                            AddRoutePoint(info.group, new Vector2(info.worldPos.x, info.worldPos.z), info.type);
+                            break;
+                        case true:
+                            ResetRoutePoint(info.group, new Vector2(info.worldPos.x, info.worldPos.z), info.type);
+                            break;
+                        default:
+                            break;
+                    }
+                }
+                if (AircraftControllerMsgReceiver.Instance.returnPressed[myPlayerID].valid)
+                {
+                    AircraftControllerMsgReceiver.Instance.returnPressed[myPlayerID].valid = false;
+                    string group = AircraftControllerMsgReceiver.Instance.returnPressed[myPlayerID].group;
 
+                    if (Routes.ContainsKey(group))
+                    {
+                        foreach (var point in Routes[group])
+                        {
+                            if (point.Icon)
+                            {
+                                Destroy(point.Icon);
+                            }
+                        }
+                        Routes[group].Clear();
+                    }
+                    CurrentLeader.SwitchToReturn();
+                }
             }
             
             
