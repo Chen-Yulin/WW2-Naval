@@ -933,7 +933,6 @@ namespace WW2NavalAssembly
                                                                         Vector3.right * (ViewRight.IsHeld ? 1 : 0));
 
 
-
                     if (CurrentLeader)
                     {
                         if (CurrentLeader.status != Aircraft.Status.Returning && CurrentLeader.status != Aircraft.Status.Landing)

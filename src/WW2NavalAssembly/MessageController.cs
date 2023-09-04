@@ -30,6 +30,8 @@ namespace WW2NavalAssembly
             ModNetworking.Callbacks[EngineMsgReceiver.EngineStateMsg] += EngineMsgReceiver.Instance.MsgReceiver;
             ModNetworking.Callbacks[AircraftControllerMsgReceiver.MouseRouteMsg] += AircraftControllerMsgReceiver.Instance.MouseRouteMsgReceiver;
             ModNetworking.Callbacks[AircraftControllerMsgReceiver.CurrentLeaderMsg] += AircraftControllerMsgReceiver.Instance.CurrentLeaderMsgReceiver;
+            ModNetworking.Callbacks[AircraftMsgReceiver.ChangeStatusMsg] += AircraftMsgReceiver.Instance.StatusMsgReceiver;
+            ModNetworking.Callbacks[AircraftMsgReceiver.WingFoldMsg] += AircraftMsgReceiver.Instance.WingFoldMsgReceiver;
         }
     }
 }

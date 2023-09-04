@@ -12,9 +12,59 @@ using UnityEngine.Networking;
 using System.Linq;
 using UnityEngine.Assertions.Must;
 using static ProjectileScript;
+using UnityEngine.UI;
+using Modding.Common;
 
 namespace WW2NavalAssembly
 {
+    public class AircraftMsgReceiver : SingleInstance<AircraftMsgReceiver>
+    {
+        public override string Name { get; } = "Aircraft Msg Receiver";
+
+        public static MessageType ChangeStatusMsg = ModNetworking.CreateMessageType(DataType.Integer, DataType.Integer, DataType.Integer);// playerid, guid, status
+        public static MessageType WingFoldMsg = ModNetworking.CreateMessageType(DataType.Integer, DataType.Integer, DataType.Boolean);
+
+        public Dictionary<int, Aircraft.Status>[] ChangedStatus = new Dictionary<int, Aircraft.Status>[16];
+        public Dictionary<int, bool>[] ChangedWingFold = new Dictionary<int, bool>[16];
+
+        public AircraftMsgReceiver()
+        {
+            for (int i = 0; i < 16; i++)
+            {
+                ChangedStatus[i] = new Dictionary<int, Aircraft.Status>();
+                ChangedWingFold[i] = new Dictionary<int, bool>();
+            }
+        }
+
+        public void StatusMsgReceiver(Message msg)
+        {
+            int playerid = (int)msg.GetData(0);
+            int guid = (int)msg.GetData(1);
+            Aircraft.Status status = (Aircraft.Status)msg.GetData(2);
+            if (ChangedStatus[playerid].ContainsKey(guid))
+            {
+                ChangedStatus[playerid][guid] = status;
+            }
+            else
+            {
+                ChangedStatus[playerid].Add(guid, status);
+            }
+        }
+        public void WingFoldMsgReceiver(Message msg)
+        {
+            int playerid = (int)msg.GetData(0);
+            int guid = (int)msg.GetData(1);
+            bool wingfold = (bool)msg.GetData(2);
+            if (ChangedWingFold[playerid].ContainsKey(guid))
+            {
+                ChangedWingFold[playerid][guid] = wingfold;
+            }
+            else
+            {
+                ChangedWingFold[playerid].Add(guid, wingfold);
+            }
+        }
+    }
 
     public class Aircraft : BlockScript
     {
@@ -41,7 +91,22 @@ namespace WW2NavalAssembly
         public MText Group;
         public MKey SwitchActive;
 
-        public Status status = Status.Deprecated;
+        private Status _status = Status.Deprecated;
+        public Status status
+        {
+            get { return _status; }
+            set {
+                if (value != _status)
+                {
+                    _status = value;
+                    if (StatMaster.isMP && myPlayerID != PlayerData.localPlayer.networkId && !StatMaster.isClient)
+                    {
+                        Player p = Player.From((ushort)myPlayerID);
+                        ModNetworking.SendTo(p, AircraftMsgReceiver.ChangeStatusMsg.CreateMessage(myPlayerID, myGuid, (int)_status));
+                    }
+                }
+            }
+        }
 
         public int myseed;
         public int myPlayerID;
@@ -288,7 +353,15 @@ namespace WW2NavalAssembly
             }
             set
             {
-                foldWing = value;
+                if (foldWing != value)
+                {
+                    foldWing = value;
+                    if (StatMaster.isMP && myPlayerID != PlayerData.localPlayer.networkId && !StatMaster.isClient)
+                    {
+                        Player p = Player.From((ushort)myPlayerID);
+                        ModNetworking.SendTo(p, AircraftMsgReceiver.WingFoldMsg.CreateMessage(myPlayerID, myGuid, foldWing));
+                    }
+                }
                 if (foldWing)
                 {
                     transform.Find("Vis").GetComponent<MeshFilter>().sharedMesh = AircraftAssetManager.Instance.GetMesh05(preAppearance);
@@ -300,7 +373,7 @@ namespace WW2NavalAssembly
                     {
                         transform.Find("Vis").GetComponent<MeshRenderer>().material.mainTexture = AircraftAssetManager.Instance.GetTex05(preAppearance);
                     }
-                    
+
                 }
                 else
                 {
@@ -314,6 +387,8 @@ namespace WW2NavalAssembly
                         transform.Find("Vis").GetComponent<MeshRenderer>().material.mainTexture = AircraftAssetManager.Instance.GetTex0(preAppearance);
                     }
                 }
+                
+                
             }
         }
 
@@ -1863,6 +1938,22 @@ namespace WW2NavalAssembly
                     break;
             }
 
+        }
+        public override void SimulateUpdateClient()
+        {
+            if (myPlayerID == PlayerData.localPlayer.networkId)
+            {
+                if (AircraftMsgReceiver.Instance.ChangedStatus[myPlayerID].ContainsKey(myGuid))
+                {
+                    status = AircraftMsgReceiver.Instance.ChangedStatus[myPlayerID][myGuid];
+                    AircraftMsgReceiver.Instance.ChangedStatus[myPlayerID].Remove(myGuid);
+                }
+                if (AircraftMsgReceiver.Instance.ChangedWingFold[myPlayerID].ContainsKey(myGuid))
+                {
+                    FoldWing = AircraftMsgReceiver.Instance.ChangedWingFold[myPlayerID][myGuid];
+                    AircraftMsgReceiver.Instance.ChangedWingFold[myPlayerID].Remove(myGuid);
+                }
+            }
         }
         public override void SimulateFixedUpdateHost()
         {
