@@ -113,6 +113,7 @@ namespace WW2NavalAssembly
 
         public bool upOperating = false;
         public bool downOperating = false;
+        public int myPlayerID = 0;
 
         public void AddUpQueue(Aircraft aircraft)
         {
@@ -203,9 +204,9 @@ namespace WW2NavalAssembly
             if (a && a.status == Aircraft.Status.InHangar)
             {
                 a.FindDeck();
-                MyLogger.Instance.Log("Elevator lift aircraft: [" + a.Group.Value + "](" + a.myTeamIndex + ")...");
+                MyLogger.Instance.Log("Elevator lift aircraft: [" + a.Group.Value + "](" + a.myTeamIndex + ")...", myPlayerID);
                 yield return new WaitForSeconds(delayTime);
-                MyLogger.Instance.Log("\tFinished");
+                MyLogger.Instance.Log("\tFinished", myPlayerID);
                 a.SwitchToOnBoard();
                 //MyLogger.Instance.Log("Finish");
             }
@@ -219,9 +220,9 @@ namespace WW2NavalAssembly
             Aircraft a = DownQueue.Count > 0 ? DownQueue.Dequeue() : null;
             if (a && a.status == Aircraft.Status.OnBoard)
             {
-                MyLogger.Instance.Log("Elevator drop aircraft: [" + a.Group.Value + "](" + a.myTeamIndex + ")...");
+                MyLogger.Instance.Log("Elevator drop aircraft: [" + a.Group.Value + "](" + a.myTeamIndex + ")...", myPlayerID);
                 yield return new WaitForSeconds(delayTime);
-                MyLogger.Instance.Log("\tFinished");
+                MyLogger.Instance.Log("\tFinished", myPlayerID);
                 a.SwitchToInHangar();
                 //MyLogger.Instance.Log("Finish");
             }
@@ -265,6 +266,7 @@ namespace WW2NavalAssembly
 
         bool takeOffOperating = false;
         public float delayTime = 0.5f;
+        public int myPlayerID;
 
         public void AddAircraft(Aircraft aircraft)
         {
@@ -280,13 +282,13 @@ namespace WW2NavalAssembly
             Aircraft a = takeOffQueue.Count > 0 ? takeOffQueue.Dequeue() : null;
             if (a && a.status == Aircraft.Status.OnBoard)
             {
-                MyLogger.Instance.Log("Move aircraft: [" + a.Group.Value + "](" + a.myTeamIndex + ") to take off spot...");
+                MyLogger.Instance.Log("Move aircraft: [" + a.Group.Value + "](" + a.myTeamIndex + ") to take off spot...", myPlayerID);
                 yield return new WaitForSeconds(delayTime);
                 a.ChangeDeckSpot(FlightDataBase.Instance.DeckObjects[a.myPlayerID].transform.Find("TakeOff").GetChild(0), true);
-                MyLogger.Instance.Log("\tTaking off ...");
+                MyLogger.Instance.Log("\tTaking off ...", myPlayerID);
                 yield return new WaitForSeconds(delayTime);
                 a.SwitchToTakingOff();
-                MyLogger.Instance.Log("\tFinish taking off");
+                MyLogger.Instance.Log("\tFinish taking off", myPlayerID);
             }
             takeOffOperating = false;
             yield break;
@@ -793,7 +795,9 @@ namespace WW2NavalAssembly
         {
             myGuid = BlockBehaviour.BuildingBlock.Guid.GetHashCode();
             Elevator = gameObject.AddComponent<AircraftElevator>();
+            Elevator.myPlayerID = myPlayerID;
             Runway = gameObject.AddComponent<AircraftRunway>();
+            Runway.myPlayerID = myPlayerID;
 
             // use database to generate deck and hangar
             if (StatMaster.isMP)
@@ -1054,7 +1058,7 @@ namespace WW2NavalAssembly
                             }
                             else
                             {
-                                MyLogger.Instance.Log("[" + CurrentLeader.Group.Value + "] cannot return because not all aircraft in cruise");
+                                MyLogger.Instance.Log("[" + CurrentLeader.Group.Value + "] cannot return because not all aircraft in cruise", myPlayerID);
                             }
 
 
@@ -1168,7 +1172,7 @@ namespace WW2NavalAssembly
                 }
                 else
                 {
-                    MyLogger.Instance.Log("Not all aircrafts of [" + CurrentLeader.Group.Value + "] on Carrier");
+                    MyLogger.Instance.Log("Not all aircrafts of [" + CurrentLeader.Group.Value + "] on Carrier", myPlayerID);
                 }
                 
             }
@@ -1186,16 +1190,16 @@ namespace WW2NavalAssembly
                 }
                 if (!allInHangar)
                 {
-                    MyLogger.Instance.Log("Not all aircrafts of [" + CurrentLeader.Group.Value + "] in hangar");
+                    MyLogger.Instance.Log("Not all aircrafts of [" + CurrentLeader.Group.Value + "] in hangar", myPlayerID);
                 }
                 else
                 {
                     if (CurrentLeader.myGroup.Count + FlightDataBase.Instance.Decks[myPlayerID].Occupied_num > FlightDataBase.Instance.Decks[myPlayerID].Total_num)
                     {
-                        MyLogger.Instance.Log("Not enough space on deck for [" + CurrentLeader.Group.Value + "]");
+                        MyLogger.Instance.Log("Not enough space on deck for [" + CurrentLeader.Group.Value + "]", myPlayerID);
                         MyLogger.Instance.Log("Need: " + CurrentLeader.myGroup.Count.ToString() + ", Occupy: " +
                                                 FlightDataBase.Instance.Decks[myPlayerID].Occupied_num.ToString() + "/" +
-                                                FlightDataBase.Instance.Decks[myPlayerID].Total_num.ToString());
+                                                FlightDataBase.Instance.Decks[myPlayerID].Total_num.ToString(), myPlayerID);
                     }
                     else
                     {
@@ -1224,7 +1228,7 @@ namespace WW2NavalAssembly
                     }
                     if (!allOnBoard)
                     {
-                        MyLogger.Instance.Log("Not all aircrafts of [" + CurrentLeader.Group.Value + "] are on board");
+                        MyLogger.Instance.Log("Not all aircrafts of [" + CurrentLeader.Group.Value + "] are on board", myPlayerID);
                     }
                     else
                     {

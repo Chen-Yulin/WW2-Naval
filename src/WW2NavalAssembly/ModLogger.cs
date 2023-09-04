@@ -4,20 +4,78 @@ using System.Linq;
 using System.Text;
 using UnityEngine.UI;
 using UnityEngine;
+using Modding;
+using Modding.Common;
 
 namespace WW2NavalAssembly
 {
+    public class LogMsgReceiver : SingleInstance<LogMsgReceiver>
+    {
+        public override string Name { get; } = "WW2 LogMsgReceiver";
+
+        public static MessageType LogMsg = ModNetworking.CreateMessageType(DataType.String);
+
+        public Queue<string>[] logStr = new Queue<string>[16];
+
+        public LogMsgReceiver() 
+        {
+            for (int i = 0; i < 16; i++)
+            {
+                logStr[i] = new Queue<string>();
+            }
+        }
+
+        public void Receive(Message msg)
+        {
+            if (StatMaster.isClient)
+            {
+                string info = (string)msg.GetData(0);
+                logStr[PlayerData.localPlayer.networkId].Enqueue(info);
+            }
+            
+        }
+
+        public void Update()
+        {
+            if (StatMaster.isClient)
+            {
+                while (logStr[PlayerData.localPlayer.networkId].Count()>0)
+                {
+                    MyLogger.Instance.Log(logStr[PlayerData.localPlayer.networkId].Dequeue(), PlayerData.localPlayer.networkId);
+                }
+            }
+        }
+
+    }
     public class MyLogger : SingleInstance<MyLogger>
     {
         public override string Name { get; } = "WW2 Logger";
         public ModLogger logger;
 
-        public void Log(string message)
+        public void Log(string message, int LoggerPlayerID = 0)
         {
-            if (logger != null)
+            if (StatMaster.isMP)
             {
-                logger.WriteLine(message);
+                if (PlayerData.localPlayer.networkId == LoggerPlayerID)
+                {
+                    if (logger != null)
+                    {
+                        logger.WriteLine(message);
+                    }
+                }else if (!StatMaster.isClient)
+                {
+                    Player p = Player.From((ushort)LoggerPlayerID);
+                    ModNetworking.SendTo(p, LogMsgReceiver.LogMsg.CreateMessage(message));
+                }
             }
+            else
+            {
+                if (logger != null)
+                {
+                    logger.WriteLine(message);
+                }
+            }
+            
         }
 
     }

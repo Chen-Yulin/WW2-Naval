@@ -201,6 +201,19 @@ namespace WW2NavalAssembly
 
         bool hasHitWater = false;
 
+        Quaternion rotationLast;
+        Quaternion rotationDelta;
+        public Vector3 angularVelocityClient
+        {
+            get
+            {
+                float angleInDegrees;
+                Vector3 rotationAxis;
+                rotationDelta.ToAngleAxis(out angleInDegrees, out rotationAxis);
+                return rotationAxis * angleInDegrees * Mathf.Deg2Rad / Time.fixedDeltaTime;
+            }
+        }
+
         // ============== for aircraft mass =================
         float _fuel = 1;
         float _loadmass = 0;
@@ -404,7 +417,7 @@ namespace WW2NavalAssembly
             {
                 yield return new WaitForFixedUpdate();
             }
-            MyLogger.Instance.Log("["+ Group.Value + "](" + myTeamIndex + ") Drop Torpedo");
+            MyLogger.Instance.Log("["+ Group.Value + "](" + myTeamIndex + ") Drop Torpedo", myPlayerID);
             foreach (var a in myGroup)
             {
                 a.Value.DropLoad();
@@ -441,7 +454,7 @@ namespace WW2NavalAssembly
                 Roll = targetRoll;
             }
             
-            MyLogger.Instance.Log("["+ Group.Value + "](" + myTeamIndex + ") Drop Bomb");
+            MyLogger.Instance.Log("["+ Group.Value + "](" + myTeamIndex + ") Drop Bomb", myPlayerID);
             DropLoad();
             SwitchToCruise();
             inAttackRoutine = false;
@@ -464,10 +477,10 @@ namespace WW2NavalAssembly
         }
         IEnumerator LandOnBoardCoroutine()
         {
-            MyLogger.Instance.Log("[" + Group.Value + "](" + myTeamIndex + ") land on deck successfully, transfer to hangar ...");
+            MyLogger.Instance.Log("[" + Group.Value + "](" + myTeamIndex + ") land on deck successfully, transfer to hangar ...", myPlayerID);
             onboard = true;
             yield return new WaitForSeconds(2f);
-            MyLogger.Instance.Log("\tFinish transfer");
+            MyLogger.Instance.Log("\tFinish transfer", myPlayerID);
             SwitchToInHangar();
             onboard = false;
             yield break;
@@ -1262,7 +1275,7 @@ namespace WW2NavalAssembly
                     RemoveFromGroup();
                 }
                 catch { }
-                MyLogger.Instance.Log("[" + Group.Value + "](" + myTeamIndex + ") is shot down");
+                MyLogger.Instance.Log("[" + Group.Value + "](" + myTeamIndex + ") is shot down", myPlayerID);
             }
         }
         public void SwitchToDogFighting(Aircraft a)
@@ -1323,11 +1336,11 @@ namespace WW2NavalAssembly
                 }
                 if (fightPosition != Vector3.zero)
                 {
-                    MyLogger.Instance.Log("[" + Group.Value + "] is dogfighting with [" + a.Group.Value + "] at " + fightPosition.ToString());
+                    MyLogger.Instance.Log("[" + Group.Value + "] is dogfighting with [" + a.Group.Value + "] at " + fightPosition.ToString(), myPlayerID);
                 }
                 else
                 {
-                    MyLogger.Instance.Log("[" + Group.Value + "] is dogfighting with [" + a.Group.Value + "]");
+                    MyLogger.Instance.Log("[" + Group.Value + "] is dogfighting with [" + a.Group.Value + "]", myPlayerID);
                 }
                 
             }
@@ -1528,11 +1541,11 @@ namespace WW2NavalAssembly
                         }
 
                         TeamUpByLeader();
-                        MyLogger.Instance.Log("[" + Group.Value + "] replenish " + addNum.ToString() + "/" + vacancy.ToString());
+                        MyLogger.Instance.Log("[" + Group.Value + "] replenish " + addNum.ToString() + "/" + vacancy.ToString(), myPlayerID);
                     }
                     else
                     {
-                        MyLogger.Instance.Log("No backup queue");
+                        MyLogger.Instance.Log("No backup queue" , myPlayerID);
                     }
                         
                 }
@@ -1550,7 +1563,7 @@ namespace WW2NavalAssembly
             Destroy(explo, 5);
             GameObject smoke = (GameObject)Instantiate(AssetManager.Instance.Aircraft.AircraftShootDown, transform.position, Quaternion.identity, transform);
             Destroy(smoke, 10);
-            MyLogger.Instance.Log("[" + Group.Value + "](" + myTeamIndex + ") exploded!");
+            MyLogger.Instance.Log("[" + Group.Value + "](" + myTeamIndex + ") exploded!", myPlayerID);
             status = Status.Exploded;
             FoldWing = FoldWing;
             myRigid.drag = 0.2f;
@@ -2310,13 +2323,16 @@ namespace WW2NavalAssembly
                     catch { }
                     
                     status = Status.Deprecated;
-                    MyLogger.Instance.Log("["+ Group.Value + "](" + myTeamIndex + ") drop sea!");
+                    MyLogger.Instance.Log("["+ Group.Value + "](" + myTeamIndex + ") drop sea!", myPlayerID);
 
                     GameObject waterhit;
                     waterhit = (GameObject)Instantiate(AssetManager.Instance.WaterHit.waterhit2, new Vector3(transform.position.x, 20, transform.position.z), Quaternion.identity);
                     waterhit.transform.localScale = 250f/381f * Vector3.one;
                     Destroy(waterhit, 3);
-                    ModNetworking.SendToAll(WeaponMsgReceiver.WaterHitMsg.CreateMessage(myPlayerID, new Vector3(transform.position.x, 20, transform.position.z), 250f));
+                    if (StatMaster.isMP && !StatMaster.isClient)
+                    {
+                        ModNetworking.SendToAll(WeaponMsgReceiver.WaterHitMsg.CreateMessage(myPlayerID, new Vector3(transform.position.x, 20, transform.position.z), 250f));
+                    }
                 }
             }
 
@@ -2324,6 +2340,8 @@ namespace WW2NavalAssembly
         }
         public override void SimulateFixedUpdateClient()
         {
+            rotationDelta = Quaternion.Inverse(rotationLast) * transform.rotation;
+            rotationLast = transform.rotation;
             if (frameCount == 0)
             {
                 if (Rank.Value == 1)
@@ -2344,6 +2362,15 @@ namespace WW2NavalAssembly
 
             switch (status)
             {
+                case Status.InHangar:
+                    Roll = 0;
+                    break;
+                case Status.OnBoard:
+                    Roll = 0;
+                    break;
+                case Status.Landing:
+                    Roll = 0;
+                    break;
                 case Status.Cruise:
                     {
                         if (Rank.Value == 1)
@@ -2371,12 +2398,14 @@ namespace WW2NavalAssembly
                                         WayPointType = type;
                                     }
                                 }
-
                             }
                         }
+                        Roll = Roll + (-angularVelocityClient.y * 2000 - Roll) * 0.05f;
                         break;
                     }
-                default: break;
+                default:
+                    Roll = Roll + (-angularVelocityClient.y * 2000 - Roll) * 0.05f;
+                    break;
             }
 
         }
