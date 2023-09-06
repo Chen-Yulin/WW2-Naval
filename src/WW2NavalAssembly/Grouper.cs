@@ -133,7 +133,7 @@ namespace WW2NavalAssembly
         {
             if (!AircraftGroups[playerID].ContainsKey(key))
             {
-                return null;
+                return new Dictionary<int, Aircraft>();
             }
             else
             {

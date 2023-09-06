@@ -32,7 +32,12 @@ namespace WW2NavalAssembly
             ModNetworking.Callbacks[AircraftControllerMsgReceiver.ReturnMsg] += AircraftControllerMsgReceiver.Instance.ReturnMsgReceiver;
             ModNetworking.Callbacks[AircraftControllerMsgReceiver.CurrentLeaderMsg] += AircraftControllerMsgReceiver.Instance.CurrentLeaderMsgReceiver;
             ModNetworking.Callbacks[AircraftMsgReceiver.ChangeStatusMsg] += AircraftMsgReceiver.Instance.StatusMsgReceiver;
-            ModNetworking.Callbacks[AircraftMsgReceiver.WingFoldMsg] += AircraftMsgReceiver.Instance.WingFoldMsgReceiver;
+            ModNetworking.Callbacks[AircraftMsgReceiver.RemovedMsg] += AircraftMsgReceiver.Instance.RemovedMsgReceiver;
+            ModNetworking.Callbacks[AircraftMsgReceiver.ExploMsg] += AircraftMsgReceiver.Instance.ExploMsgReceiver;
+            ModNetworking.Callbacks[AircraftMsgReceiver.ShootDownMsg] += AircraftMsgReceiver.Instance.ShootDownMsgReceiver;
+            ModNetworking.Callbacks[AircraftMsgReceiver.GunShootMsg] += AircraftMsgReceiver.Instance.GunShootMsgReceiver;
+            ModNetworking.Callbacks[AircraftMsgReceiver.LoadMsg] += AircraftMsgReceiver.Instance.LoadMsgReceiver;
+            ModNetworking.Callbacks[AircraftMsgReceiver.AddBackupMsg] += AircraftMsgReceiver.Instance.BackupMsgReceiver;
             ModNetworking.Callbacks[LogMsgReceiver.LogMsg] += LogMsgReceiver.Instance.Receive;
         }
     }

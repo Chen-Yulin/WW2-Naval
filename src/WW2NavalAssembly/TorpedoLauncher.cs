@@ -202,7 +202,7 @@ namespace WW2NavalAssembly
             {
                 if (StatMaster.isClient)
                 {
-                    WeaponMsgReceiver.Instance.Fire[myPlayerID].Add(myGuid, new WeaponMsgReceiver.firePara(false, Vector3.zero, Vector3.zero));
+                    WeaponMsgReceiver.Instance.Fire[myPlayerID].Add(myGuid, new WeaponMsgReceiver.firePara(false, Vector3.zero, Vector3.zero, Vector3.zero));
                 }
             }
             catch { }
@@ -306,7 +306,7 @@ namespace WW2NavalAssembly
 
                 if (StatMaster.isMP)
                 {
-                    ModNetworking.SendToAll(WeaponMsgReceiver.FireMsg.CreateMessage(myPlayerID, myGuid, Vector3.zero, Cannon.transform.eulerAngles));
+                    ModNetworking.SendToAll(WeaponMsgReceiver.FireMsg.CreateMessage(myPlayerID, myGuid, Vector3.zero, Cannon.transform.eulerAngles, Vector3.zero));
                 }
             }
         }
@@ -414,7 +414,7 @@ namespace WW2NavalAssembly
                     Destroy(Cannon, 27.8f);
                 }
 
-                ModNetworking.SendToAll(WeaponMsgReceiver.FireMsg.CreateMessage(myPlayerID, myGuid, Vector3.zero, Cannon.transform.eulerAngles));
+                ModNetworking.SendToAll(WeaponMsgReceiver.FireMsg.CreateMessage(myPlayerID, myGuid, Vector3.zero, Cannon.transform.eulerAngles, Vector3.zero));
             }
         }
         public override void SimulateFixedUpdateClient()

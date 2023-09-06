@@ -457,33 +457,6 @@ namespace WW2NavalAssembly
         }
         public void CannonDetectWaterClient()
         {
-
-            foreach (WeaponMsgReceiver.waterhitInfo waterhitInfo in WeaponMsgReceiver.Instance.waterHitInfo[myPlayerID])
-            {
-                GameObject waterhit;
-                if (waterhitInfo.Caliber >= 283)
-                {
-                    waterhit = (GameObject)Instantiate(AssetManager.Instance.WaterHit.waterhit1, waterhitInfo.position, Quaternion.identity);
-                    waterhit.transform.localScale = waterhitInfo.Caliber / 381f * Vector3.one;
-                    Destroy(waterhit, 3);
-                }
-                else if (waterhitInfo.Caliber >= 100)
-                {
-                    waterhit = (GameObject)Instantiate(AssetManager.Instance.WaterHit.waterhit2, waterhitInfo.position, Quaternion.identity);
-                    waterhit.transform.localScale = waterhitInfo.Caliber / 381f * Vector3.one;
-                    Destroy(waterhit, 3);
-                }
-                else
-                {
-                    waterhit = (GameObject)Instantiate(AssetManager.Instance.WaterHit.waterhit3, waterhitInfo.position, Quaternion.identity);
-                    waterhit.transform.localScale = Weight / 381f * Vector3.one;
-                    Destroy(waterhit, 3);
-                }
-
-                AddWaterHitSound(waterhit.transform);
-
-            }
-            WeaponMsgReceiver.Instance.waterHitInfo[myPlayerID].Clear();
         }
         private void PlayExploHit(RaycastHit hit, bool AP = true)
         {

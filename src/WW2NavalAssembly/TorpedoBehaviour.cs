@@ -339,7 +339,7 @@ namespace WW2NavalAssembly
                                 ModNetworking.SendToAll(TorpedoMsgReceiver.TorpedoDataMsg.CreateMessage(myPlayerID, parentGuid, transform.position, true));
                                 Destroy(gameObject);
                             }
-                            else if(mySeed == ModController.Instance.state) 
+                            else if(mySeed % 40 == ModController.Instance.state) 
                             {
                                 ModNetworking.SendToAll(TorpedoMsgReceiver.TorpedoDataMsg.CreateMessage(myPlayerID, parentGuid, transform.position, false));
                             }
@@ -361,6 +361,7 @@ namespace WW2NavalAssembly
                         TorpedoMsgReceiver.Instance.torpedoData[myPlayerID][parentGuid].updated = false;
                         //Debug.Log("Client Torpedo justify");
                         transform.position = TorpedoMsgReceiver.Instance.torpedoData[myPlayerID][parentGuid].position;
+                        //Debug.Log("Update Position " + transform.position.ToString());
                         if (TorpedoMsgReceiver.Instance.torpedoData[myPlayerID][parentGuid].exploded)
                         {
                             TorpedoExploClient();

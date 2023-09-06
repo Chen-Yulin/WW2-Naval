@@ -980,7 +980,7 @@ namespace WW2NavalAssembly
                                     if (StatMaster.isClient)
                                     {
                                         ModNetworking.SendToHost(AircraftControllerMsgReceiver.MouseRouteMsg.CreateMessage(
-                                                                    CurrentLeader.Group.Value, worldPosition, 0, false));
+                                                                    CurrentLeader.Group.Value, worldPosition, (int)0, false));
                                     }
                                 }
                                 else if (Attack.IsPressed)
@@ -1005,7 +1005,7 @@ namespace WW2NavalAssembly
                                     if (StatMaster.isClient)
                                     {
                                         ModNetworking.SendToHost(AircraftControllerMsgReceiver.MouseRouteMsg.CreateMessage(
-                                                                    CurrentLeader.Group.Value, worldPosition, 0, true));
+                                                                    CurrentLeader.Group.Value, worldPosition, (int)0, true));
                                     }
                                 }
                                 else if (Attack.IsPressed)
@@ -1016,7 +1016,7 @@ namespace WW2NavalAssembly
                                     if (StatMaster.isClient)
                                     {
                                         ModNetworking.SendToHost(AircraftControllerMsgReceiver.MouseRouteMsg.CreateMessage(
-                                                                    CurrentLeader.Group.Value, CurrentLeader.Type.Value, 0, true));
+                                                                    CurrentLeader.Group.Value, worldPosition, CurrentLeader.Type.Value, true));
                                     }
                                 }
                             }
@@ -1294,12 +1294,13 @@ namespace WW2NavalAssembly
                 GUI.Box(new Rect(100, 200, 200, 30), CurrentLeader.Group.Value.ToString() + " " + CurrentLeader.status.ToString());
             }
 
-            if ((Camera.main.transform.position - transform.position).magnitude < 30 && BlockBehaviour.isSimulating)
-            {
-                Vector3 onScreenPosition = Camera.main.WorldToScreenPoint(transform.position);
-                GUI.Box(new Rect(onScreenPosition.x, Camera.main.pixelHeight - onScreenPosition.y, 200, 30), "Deck space: " + FlightDataBase.Instance.Decks[myPlayerID].Occupied_num.ToString() + "/" +
-                    FlightDataBase.Instance.Decks[myPlayerID].Total_num.ToString());
-            }
+            
+            //if ((Camera.main.transform.position - transform.position).magnitude < 30 && BlockBehaviour.isSimulating)
+            //{
+            //    Vector3 onScreenPosition = Camera.main.WorldToScreenPoint(transform.position);
+            //    GUI.Box(new Rect(onScreenPosition.x, Camera.main.pixelHeight - onScreenPosition.y, 200, 30), "Deck space: " + FlightDataBase.Instance.Decks[myPlayerID].Occupied_num.ToString() + "/" +
+            //        FlightDataBase.Instance.Decks[myPlayerID].Total_num.ToString());
+            //}
 
 
         }

@@ -73,6 +73,7 @@ namespace WW2NavalAssembly
                 valid = false;
             }
             //brand new
+            
             public Deck(Vector2 center, float width, float length, Vector2 forward, Vector2 right, float height, bool isHangar = false, int occupied_num = 0)
             {
                 if (isHangar)

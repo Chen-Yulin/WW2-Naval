@@ -17,7 +17,7 @@ namespace WW2NavalAssembly
     {
         public override string Name { get; } = "Gun Msg Receiver";
 
-        public static MessageType FireMsg = ModNetworking.CreateMessageType(DataType.Integer, DataType.Integer, DataType.Vector3, DataType.Vector3);// playerID, guid, randomForce, forward
+        public static MessageType FireMsg = ModNetworking.CreateMessageType(DataType.Integer, DataType.Integer, DataType.Vector3, DataType.Vector3, DataType.Vector3);// playerID, guid, randomForce, forward, vel
         public static MessageType ExploMsg = ModNetworking.CreateMessageType(DataType.Integer, DataType.Vector3, DataType.Single, DataType.Integer);//PlayerID, position, Caliber
         public static MessageType WaterHitMsg = ModNetworking.CreateMessageType(DataType.Integer, DataType.Vector3, DataType.Single);//PlayerID, position
         public static MessageType HitHoleMsg = ModNetworking.CreateMessageType
@@ -30,11 +30,13 @@ namespace WW2NavalAssembly
             public bool fire = false;
             public Vector3 fireForce = Vector3.zero;
             public Vector3 forward = Vector3.zero;
-            public firePara(bool fire, Vector3 fireForce, Vector3 forward)
+            public Vector3 vel = Vector3.zero;
+            public firePara(bool fire, Vector3 fireForce, Vector3 forward, Vector3 vel)
             {
                 this.fire = fire;
                 this.fireForce = fireForce;
                 this.forward = forward;
+                this.vel = vel;
             }
         }
 
@@ -112,7 +114,7 @@ namespace WW2NavalAssembly
             {
                 return;
             }
-            Fire[(int)msg.GetData(0)][(int)msg.GetData(1)] = new firePara(true,(Vector3)msg.GetData(2), (Vector3)msg.GetData(3));
+            Fire[(int)msg.GetData(0)][(int)msg.GetData(1)] = new firePara(true,(Vector3)msg.GetData(2), (Vector3)msg.GetData(3), (Vector3)msg.GetData(4));
         }
         public void waterHitMsgReceiver(Message msg)
         {
@@ -166,6 +168,21 @@ namespace WW2NavalAssembly
             AS.volume = size / 1000;
             AS.rolloffMode = AudioRolloffMode.Linear;
             AS.maxDistance = 200;
+            AS.SetSpatializerFloat(1, 1f);
+            AS.SetSpatializerFloat(2, 0);
+            AS.SetSpatializerFloat(3, 12);
+            AS.SetSpatializerFloat(4, 1000f);
+            AS.SetSpatializerFloat(5, 1f);
+        }
+        public void AddWaterHitSound(Transform t, float size)
+        {
+            AudioSource AS = t.gameObject.AddComponent<AudioSource>();
+            AS.clip = ModResource.GetAudioClip("GunWaterHit Audio");
+            AS.Play();
+            AS.spatialBlend = 1.0f;
+            AS.volume = size / 800;
+            AS.rolloffMode = AudioRolloffMode.Linear;
+            AS.maxDistance = 500;
             AS.SetSpatializerFloat(1, 1f);
             AS.SetSpatializerFloat(2, 0);
             AS.SetSpatializerFloat(3, 12);
@@ -229,6 +246,35 @@ namespace WW2NavalAssembly
             }
             WeaponMsgReceiver.Instance.ExploInfo[playerID].Clear();
         }
+        public void PlayWaterHitOnClient(int playerID)
+        {
+            foreach (var WaterhitInfo in waterHitInfo[playerID])
+            {
+                GameObject waterhit;
+                if (WaterhitInfo.Caliber >= 283)
+                {
+                    waterhit = (GameObject)Instantiate(AssetManager.Instance.WaterHit.waterhit1, WaterhitInfo.position, Quaternion.identity);
+                    waterhit.transform.localScale = WaterhitInfo.Caliber / 381 * Vector3.one;
+                    Destroy(waterhit, 3);
+                }
+                else if (WaterhitInfo.Caliber >= 100)
+                {
+                    waterhit = (GameObject)Instantiate(AssetManager.Instance.WaterHit.waterhit2, WaterhitInfo.position, Quaternion.identity);
+                    waterhit.transform.localScale = WaterhitInfo.Caliber / 381 * Vector3.one;
+                    Destroy(waterhit, 3);
+                }
+                else
+                {
+                    waterhit = (GameObject)Instantiate(AssetManager.Instance.WaterHit.waterhit3, WaterhitInfo.position, Quaternion.identity);
+                    waterhit.transform.localScale = WaterhitInfo.Caliber / 381 * Vector3.one;
+                    Destroy(waterhit, 3);
+                }
+
+                AddWaterHitSound(waterhit.transform, WaterhitInfo.Caliber);
+
+            }
+            waterHitInfo[playerID].Clear();
+        }
 
         public void Update()
         {
@@ -237,6 +283,7 @@ namespace WW2NavalAssembly
                 for (int i = 0; i < 16; i++)
                 {
                     PlayExploOnClient(i);
+                    PlayWaterHitOnClient(i);
                 }
             }
         }
@@ -355,7 +402,7 @@ namespace WW2NavalAssembly
         public void AddWaterHitSound(Transform t)
         {
             AudioSource AS = t.gameObject.AddComponent<AudioSource>();
-            t.gameObject.AddComponent<MakeAudioSourceFixedPitch>();
+            //t.gameObject.AddComponent<MakeAudioSourceFixedPitch>();
             AS.clip = ModResource.GetAudioClip("GunWaterHit Audio");
             AS.Play();
             AS.spatialBlend = 1.0f;
@@ -786,32 +833,6 @@ namespace WW2NavalAssembly
                 }
             }
 
-            foreach (WeaponMsgReceiver.waterhitInfo waterhitInfo in WeaponMsgReceiver.Instance.waterHitInfo[myPlayerID])
-            {
-                GameObject waterhit;
-                if (waterhitInfo.Caliber >= 283)
-                {
-                    waterhit = (GameObject)Instantiate(AssetManager.Instance.WaterHit.waterhit1, waterhitInfo.position, Quaternion.identity);
-                    waterhit.transform.localScale = waterhitInfo.Caliber / 381 * Vector3.one;
-                    Destroy(waterhit, 3);
-                }
-                else if (waterhitInfo.Caliber >= 100)
-                {
-                    waterhit = (GameObject)Instantiate(AssetManager.Instance.WaterHit.waterhit2, waterhitInfo.position, Quaternion.identity);
-                    waterhit.transform.localScale = waterhitInfo.Caliber / 381 * Vector3.one;
-                    Destroy(waterhit, 3);
-                }
-                else
-                {
-                    waterhit = (GameObject)Instantiate(AssetManager.Instance.WaterHit.waterhit3, waterhitInfo.position, Quaternion.identity);
-                    waterhit.transform.localScale = Caliber / 381 * Vector3.one;
-                    Destroy(waterhit, 3);
-                }
-
-                AddWaterHitSound(waterhit.transform);
-
-            }
-            WeaponMsgReceiver.Instance.waterHitInfo[myPlayerID].Clear();
         }
         private void PlayExploHit(RaycastHit hit, bool AP = true)
         {
@@ -1305,7 +1326,7 @@ namespace WW2NavalAssembly
             {
                 if (StatMaster.isClient)
                 {
-                    WeaponMsgReceiver.Instance.Fire[myPlayerID].Add(myGuid, new WeaponMsgReceiver.firePara(false,Vector3.zero,Vector3.zero));
+                    WeaponMsgReceiver.Instance.Fire[myPlayerID].Add(myGuid, new WeaponMsgReceiver.firePara(false,Vector3.zero,Vector3.zero,Vector3.zero));
                 }
             }
             catch { }
@@ -1408,7 +1429,7 @@ namespace WW2NavalAssembly
                 CannonType = NextCannonType;
                 if (StatMaster.isMP)
                 {
-                    ModNetworking.SendToAll(WeaponMsgReceiver.FireMsg.CreateMessage(myPlayerID, myGuid, randomForce, transform.forward));
+                    ModNetworking.SendToAll(WeaponMsgReceiver.FireMsg.CreateMessage(myPlayerID, myGuid, randomForce, transform.forward, Vector3.zero));
                 }
                 
                 if (!TrackOn.isDefaultValue)
@@ -1513,7 +1534,7 @@ namespace WW2NavalAssembly
                 Destroy(Cannon, 10);
                 CannonType = NextCannonType;
 
-                ModNetworking.SendToAll(WeaponMsgReceiver.FireMsg.CreateMessage(myPlayerID, myGuid, randomForce, transform.forward));
+                ModNetworking.SendToAll(WeaponMsgReceiver.FireMsg.CreateMessage(myPlayerID, myGuid, randomForce, transform.forward, Vector3.zero));
 
                 if (!TrackOn.isDefaultValue)
                 {

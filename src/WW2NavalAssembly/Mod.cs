@@ -33,6 +33,7 @@ namespace WW2NavalAssembly
 			myMod.AddComponent<MyLogger>();
 			myMod.AddComponent<AircraftControllerMsgReceiver>();
 			myMod.AddComponent<AircraftController>();
+			myMod.AddComponent<AircraftMsgReceiver>();
 			Debug.Log("Hello, this is WW2 naval mod!");
 		}
 	}

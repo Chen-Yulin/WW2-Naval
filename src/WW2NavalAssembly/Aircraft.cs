@@ -22,17 +22,30 @@ namespace WW2NavalAssembly
         public override string Name { get; } = "Aircraft Msg Receiver";
 
         public static MessageType ChangeStatusMsg = ModNetworking.CreateMessageType(DataType.Integer, DataType.Integer, DataType.Integer);// playerid, guid, status
-        public static MessageType WingFoldMsg = ModNetworking.CreateMessageType(DataType.Integer, DataType.Integer, DataType.Boolean);
+        public static MessageType RemovedMsg = ModNetworking.CreateMessageType(DataType.Integer, DataType.Integer);
+        public static MessageType ExploMsg = ModNetworking.CreateMessageType(DataType.Vector3);
+        public static MessageType ShootDownMsg = ModNetworking.CreateMessageType(DataType.Integer, DataType.Integer);
+        public static MessageType GunShootMsg = ModNetworking.CreateMessageType(DataType.Integer, DataType.Integer, DataType.Boolean);
+        public static MessageType AddBackupMsg = ModNetworking.CreateMessageType(DataType.Integer, DataType.String, DataType.Integer);
+        public static MessageType LoadMsg = ModNetworking.CreateMessageType(DataType.Integer, DataType.Integer, DataType.Boolean); // 0 for drop, 1 for recover
 
         public Dictionary<int, Aircraft.Status>[] ChangedStatus = new Dictionary<int, Aircraft.Status>[16];
-        public Dictionary<int, bool>[] ChangedWingFold = new Dictionary<int, bool>[16];
+        public Dictionary<int, bool>[] GunShoot = new Dictionary<int, bool>[16];
+        public Dictionary<int, bool>[] LoadChange = new Dictionary<int, bool>[16];
+        public List<int>[] Removed = new List<int>[16];
+        public List<int>[] ShootDown = new List<int>[16];
+        public Dictionary<string, List<int>>[] Backup = new Dictionary<string, List<int>>[16];
 
         public AircraftMsgReceiver()
         {
             for (int i = 0; i < 16; i++)
             {
                 ChangedStatus[i] = new Dictionary<int, Aircraft.Status>();
-                ChangedWingFold[i] = new Dictionary<int, bool>();
+                GunShoot[i] = new Dictionary<int, bool>();
+                LoadChange[i] = new Dictionary<int, bool>();
+                Removed[i] = new List<int>();
+                ShootDown[i] = new List<int>();
+                Backup[i] = new Dictionary<string, List<int>>();
             }
         }
 
@@ -50,18 +63,66 @@ namespace WW2NavalAssembly
                 ChangedStatus[playerid].Add(guid, status);
             }
         }
-        public void WingFoldMsgReceiver(Message msg)
+        public void GunShootMsgReceiver(Message msg)
         {
             int playerid = (int)msg.GetData(0);
             int guid = (int)msg.GetData(1);
-            bool wingfold = (bool)msg.GetData(2);
-            if (ChangedWingFold[playerid].ContainsKey(guid))
+            bool shoot = (bool)msg.GetData(2);
+            if (GunShoot[playerid].ContainsKey(guid))
             {
-                ChangedWingFold[playerid][guid] = wingfold;
+                GunShoot[playerid][guid] = shoot;
             }
             else
             {
-                ChangedWingFold[playerid].Add(guid, wingfold);
+                GunShoot[playerid].Add(guid, shoot);
+            }
+        }
+        public void LoadMsgReceiver(Message msg)
+        {
+            int playerid = (int)msg.GetData(0);
+            int guid = (int)msg.GetData(1);
+            bool load = (bool)msg.GetData(2);
+            if (LoadChange[playerid].ContainsKey(guid))
+            {
+                LoadChange[playerid][guid] = load;
+            }
+            else
+            {
+                LoadChange[playerid].Add(guid, load);
+            }
+        }
+        public void RemovedMsgReceiver(Message msg)
+        {
+            int playerid = (int)msg.GetData(0);
+            int guid = (int)msg.GetData(1);
+            Removed[playerid].Add(guid);
+        }
+        public void ExploMsgReceiver(Message msg)
+        {
+            Vector3 pos = (Vector3)msg.GetData(0);
+            GameObject explo = (GameObject)Instantiate(AssetManager.Instance.Aircraft.AircraftExplo, pos, Quaternion.identity);
+            Destroy(explo, 5);
+            GameObject smoke = (GameObject)Instantiate(AssetManager.Instance.Aircraft.AircraftShootDown, pos, Quaternion.identity, transform);
+            Destroy(smoke, 10);
+        }
+        public void ShootDownMsgReceiver(Message msg)
+        {
+            int playerid = (int)msg.GetData(0);
+            int guid = (int)msg.GetData(1);
+            ShootDown[playerid].Add(guid);
+        }
+        public void BackupMsgReceiver(Message msg)
+        {
+            int playerid = (int)msg.GetData(0);
+            string group = (string)msg.GetData(1);
+            int guid = (int)msg.GetData(2);
+            if (Backup[playerid].ContainsKey(group))
+            {
+                Backup[playerid][group].Add(guid);
+            }
+            else
+            {
+                Backup[playerid].Add(group, new List<int> { guid });
             }
         }
     }
@@ -99,10 +160,9 @@ namespace WW2NavalAssembly
                 if (value != _status)
                 {
                     _status = value;
-                    if (StatMaster.isMP && myPlayerID != PlayerData.localPlayer.networkId && !StatMaster.isClient)
+                    if (StatMaster.isMP && !StatMaster.isClient)
                     {
-                        Player p = Player.From((ushort)myPlayerID);
-                        ModNetworking.SendTo(p, AircraftMsgReceiver.ChangeStatusMsg.CreateMessage(myPlayerID, myGuid, (int)_status));
+                        ModNetworking.SendToAll(AircraftMsgReceiver.ChangeStatusMsg.CreateMessage(myPlayerID, myGuid, (int)_status));
                     }
                 }
             }
@@ -306,6 +366,32 @@ namespace WW2NavalAssembly
             }
         }
         public float CruiseHeight = 60f;
+        public float PropellerSpeed
+        {
+            set
+            {
+                if (Propeller)
+                {
+                    if (value <= 0.1f)
+                    {
+                        Propeller.enabled = false;
+                    }
+                    else
+                    {
+                        Propeller.enabled = true;
+                        Propeller.Speed = new Vector3(0, 0, value);
+                    }
+                }
+                
+            }
+        }
+        public bool isFlying
+        {
+            get
+            {
+                return (status == Status.Cruise || status == Status.Attacking || status == Status.DogFighting || status == Status.Returning);
+            }
+        }
 
         // ================== for team up ==================
         GameObject TeamBase = null;
@@ -351,7 +437,15 @@ namespace WW2NavalAssembly
             {
                 if (MachineGun)
                 {
-                    MachineGun.SetActive(value);
+                    if (MachineGun.activeSelf != value)
+                    {
+                        if (StatMaster.isMP && !StatMaster.isClient)
+                        {
+                            ModNetworking.SendToAll(AircraftMsgReceiver.GunShootMsg.CreateMessage(myPlayerID, myGuid, value));
+                        }
+                        
+                        MachineGun.SetActive(value);
+                    }
                 }
             }
         }
@@ -369,11 +463,6 @@ namespace WW2NavalAssembly
                 if (foldWing != value)
                 {
                     foldWing = value;
-                    if (StatMaster.isMP && myPlayerID != PlayerData.localPlayer.networkId && !StatMaster.isClient)
-                    {
-                        Player p = Player.From((ushort)myPlayerID);
-                        ModNetworking.SendTo(p, AircraftMsgReceiver.WingFoldMsg.CreateMessage(myPlayerID, myGuid, foldWing));
-                    }
                 }
                 if (foldWing)
                 {
@@ -511,8 +600,7 @@ namespace WW2NavalAssembly
                 PropellerObject.transform.localScale = Vector3.one;
                 PropellerObject.transform.localEulerAngles = Vector3.zero;
                 Propeller = PropellerObject.AddComponent<PropellerBehaviour>();
-                Propeller.enabled = false;
-                Propeller.Speed = new Vector3(0, 0, 11f);
+                PropellerSpeed = 0f;
 
                 GameObject PropellerChild = new GameObject("PropellerChild");
                 PropellerChild.transform.SetParent(PropellerObject.transform);
@@ -1089,7 +1177,7 @@ namespace WW2NavalAssembly
                 myRigid.MovePosition(rigidTargetPosition);
             }
         }
-        public void DropLoad()
+        public void DropLoad(bool client = false, Vector3 rotation = default, Vector3 vel = default, Vector3 randomForce = default)
         {
             if (!hasLoad)
             {
@@ -1097,11 +1185,21 @@ namespace WW2NavalAssembly
             }
             if (Type.Value == 1)
             {
-                LoadMass = 0;
                 hasLoad = false;
-                GameObject Torpedo = (GameObject)Instantiate(   TorpedoPrefab, LoadObject.transform.position, Quaternion.identity, 
+                GameObject Torpedo = null;
+                if (!client)
+                {
+                    LoadMass = 0;
+                    Torpedo = (GameObject)Instantiate(TorpedoPrefab, LoadObject.transform.position, transform.rotation,
                                                                 BlockBehaviour.ParentMachine.transform.Find("Simulation Machine"));
-                Torpedo.transform.rotation = Quaternion.LookRotation(transform.forward, transform.up);
+                }
+                else
+                {
+                    Torpedo = (GameObject)Instantiate(TorpedoPrefab, LoadObject.transform.position, transform.rotation,
+                                                                BlockBehaviour.ParentMachine.transform.Find("Simulation Machine"));
+                }
+                    
+                
                 Torpedo.name = "Torpedo" + myPlayerID.ToString();
                 Torpedo.SetActive(true);
                 TorpedoBehaviour TB = Torpedo.GetComponent<TorpedoBehaviour>();
@@ -1109,35 +1207,67 @@ namespace WW2NavalAssembly
                 TB.mode = 2;
                 TB.parentGuid = myGuid;
                 TB.depth = 0.5f;
-                Destroy(Torpedo, 25f);
 
-                if (StatMaster.isMP)
+                if (!client)
                 {
-                    ModNetworking.SendToAll(WeaponMsgReceiver.FireMsg.CreateMessage(myPlayerID, myGuid, Vector3.zero, Torpedo.transform.eulerAngles));
+                    Torpedo.GetComponent<Rigidbody>().velocity = myRigid.velocity;
+                    if (StatMaster.isMP)
+                    {
+                        ModNetworking.SendToAll(WeaponMsgReceiver.FireMsg.CreateMessage(myPlayerID, myGuid, Vector3.zero, Torpedo.transform.eulerAngles, myRigid.velocity));
+                    }
                 }
+                else
+                {
+                    Torpedo.GetComponent<Rigidbody>().velocity = vel;
+                }
+                
                 LoadObject.SetActive(false);
+                Destroy(Torpedo, 25f);
             }
             else if (Type.Value == 2)
             {
-                LoadMass = 0;
+                if (!client)
+                {
+                    LoadMass = 0;
+                }
                 hasLoad = false;
                 GameObject Bomb = (GameObject)Instantiate(BombPrefab, LoadObject.transform.position, Quaternion.identity,
                                                                 BlockBehaviour.ParentMachine.transform.Find("Simulation Machine"));
                 Bomb.transform.rotation = Quaternion.LookRotation(LoadObject.transform.forward, LoadObject.transform.up);
                 Bomb.transform.localScale = Vector3.one * 4;
-                Bomb.GetComponent<Rigidbody>().velocity = myRigid.velocity;
-                Bomb.GetComponent<Bomb>().randomForce = new Vector3(UnityEngine.Random.value - 0.5f, UnityEngine.Random.value - 0.5f, UnityEngine.Random.value - 0.5f);
+
                 Bomb.GetComponent<Bomb>().parent = gameObject;
                 Bomb.name = "Bomb" + myPlayerID.ToString();
 
 
                 Bomb.SetActive(true);
 
+                if (!client)
+                {
+                    Bomb.GetComponent<Rigidbody>().velocity = myRigid.velocity;
+                    Bomb.GetComponent<Bomb>().randomForce = new Vector3(UnityEngine.Random.value - 0.5f, UnityEngine.Random.value - 0.5f, UnityEngine.Random.value - 0.5f);
+
+                    if (StatMaster.isMP)
+                    {
+                        ModNetworking.SendToAll(WeaponMsgReceiver.FireMsg.CreateMessage(myPlayerID, myGuid, Bomb.GetComponent<Bomb>().randomForce, Bomb.transform.eulerAngles, myRigid.velocity));
+                    }
+                }
+                else
+                {
+                    Bomb.GetComponent<Rigidbody>().velocity = vel;
+                    Bomb.GetComponent<Bomb>().randomForce = randomForce;
+                    //Debug.Log(Bomb.GetComponent<Bomb>().randomForce);
+                }
+
                 LoadObject.SetActive(false);
             }
         }
         public void RecoverLoad()
         {
+            if (StatMaster.isMP)
+            {
+                ModNetworking.SendToAll(AircraftMsgReceiver.LoadMsg.CreateMessage(myPlayerID, myGuid, true));
+            }
             if (Type.Value == 1 || Type.Value == 2)
             {
                 hasLoad = true;
@@ -1158,6 +1288,10 @@ namespace WW2NavalAssembly
         {
             if (Rank.Value == 0)
             {
+                if (StatMaster.isMP && !StatMaster.isClient)
+                {
+                    ModNetworking.SendToAll(AircraftMsgReceiver.RemovedMsg.CreateMessage(myPlayerID, myGuid));
+                }
                 if (Grouper.Instance.AircraftGroups[myPlayerID].ContainsKey(Group.Value))
                 {
                     Grouper.Instance.AircraftGroups[myPlayerID][Group.Value].Remove(myGuid);
@@ -1166,8 +1300,13 @@ namespace WW2NavalAssembly
                         myLeader.TeamUpByLeader();
                     }
                 }
-            }else if (Rank.Value == 1)
+            }
+            else if (Rank.Value == 1)
             {
+                if (StatMaster.isMP && !StatMaster.isClient)
+                {
+                    ModNetworking.SendToAll(AircraftMsgReceiver.RemovedMsg.CreateMessage(myPlayerID, myGuid));
+                }
                 if (myGroup != null)
                 {
                     foreach (var a in myGroup)
@@ -1185,6 +1324,35 @@ namespace WW2NavalAssembly
                     FlightDataBase.Instance.aircraftController[myPlayerID].CurrentLeader = null;
                 }
                 
+            }
+        }
+        public void RemoveFromGroupClient()
+        {
+            if (Rank.Value == 0)
+            {
+                if (Grouper.Instance.AircraftGroups[myPlayerID].ContainsKey(Group.Value))
+                {
+                    Grouper.Instance.AircraftGroups[myPlayerID][Group.Value].Remove(myGuid);
+                    if (myLeader)
+                    {
+                        myLeader.TeamUpByLeader();
+                    }
+                }
+            }
+            else if (Rank.Value == 1)
+            {
+                if (myGroup != null)
+                {
+                    foreach (var a in myGroup)
+                    {
+                        if (a.Value && a.Value != this)
+                        {
+                            a.Value.status = Status.Deprecated;
+                        }
+                    }
+                }
+                Grouper.Instance.AircraftGroups[myPlayerID].Remove(Group.Value);
+                Grouper.Instance.AircraftLeaders[myPlayerID].Remove(Group.Value);
             }
         }
         public void GetReturningWayPoint()
@@ -1215,16 +1383,20 @@ namespace WW2NavalAssembly
             {
                 foreach (var leader in cv)
                 {
-                    if (leader.Value.Value == this)
+                    try
                     {
-                        continue;
+                        a = leader.Value.Value;
+                        if (a.myPlayerID == myPlayerID || a.BlockBehaviour.Team.Equals(BlockBehaviour.Team))
+                        {
+                            continue;
+                        }
+                        if ((a.status == Status.Cruise || a.status == Status.Attacking || a.status == Status.Returning || a.status == Status.DogFighting)
+                            && (MathTool.Get2DCoordinate(a.transform.position) - MathTool.Get2DCoordinate(transform.position)).magnitude < 130f)
+                        {
+                            return a;
+                        }
                     }
-                    a = leader.Value.Value;
-                    if ((a.status == Status.Cruise || a.status == Status.Attacking || a.status == Status.Returning || a.status == Status.DogFighting)
-                        && (MathTool.Get2DCoordinate(a.transform.position) - MathTool.Get2DCoordinate(transform.position)).magnitude < 130f )
-                    {
-                        return a;
-                    }
+                    catch { }
                 }
             }
             return null;
@@ -1259,6 +1431,10 @@ namespace WW2NavalAssembly
         {
             if (status != Status.ShootDown)
             {
+                if (StatMaster.isMP && !StatMaster.isClient)
+                {
+                    ModNetworking.SendToAll(AircraftMsgReceiver.ShootDownMsg.CreateMessage(myPlayerID, myGuid));
+                }
                 ColliderActive = true;
                 status = Status.ShootDown;
                 FoldWing = FoldWing;
@@ -1268,6 +1444,7 @@ namespace WW2NavalAssembly
                 myRigid.angularDrag = 0.2f;
                 myRigid.useGravity = true;
                 Thrust = 0f;
+                PropellerSpeed = 0f;
                 DeckSliding = false;
                 Shoot = false;
                 try
@@ -1441,8 +1618,7 @@ namespace WW2NavalAssembly
                 MyDeck = null;
                 deckHeight = 0;
                 TakeOffDirection = new Vector2(-transform.up.x, -transform.up.z);
-                Propeller.enabled = true;
-                Propeller.Speed = new Vector3(0, 0, 11);
+                PropellerSpeed = 11f;
                 Thrust = 40f;
                 WayPoint = MathTool.Get2DCoordinate(transform.position - transform.up * 300f);
                 WayHeight = 60;
@@ -1459,8 +1635,7 @@ namespace WW2NavalAssembly
                 }
                 status = Status.OnBoard;
                 SettleSpot(MyDeck, true);
-                Propeller.enabled = true;
-                Propeller.Speed = new Vector3(0, 0, 3);
+                PropellerSpeed = 3f;
                 Thrust = 0;
             }
         }
@@ -1474,7 +1649,7 @@ namespace WW2NavalAssembly
                 MyDeck = null;
                 status = Status.InHangar;
                 SettleSpot(MyHangar, true);
-                Propeller.enabled = false;
+                PropellerSpeed = 0;
                 Thrust = 0;
                 FoldWing = true;
             }
@@ -1488,7 +1663,7 @@ namespace WW2NavalAssembly
                 MyDeck = null;
                 status = Status.InHangar;
                 SettleSpot(MyHangar, true);
-                Propeller.enabled = false;
+                PropellerSpeed = 0;
                 Thrust = 0;
                 FoldWing = true;
                 if (!hasLoad)
@@ -1538,6 +1713,10 @@ namespace WW2NavalAssembly
                             a.Rank.SetValue(0);
                             a.Group.SetValue(Group.Value);
                             Grouper.Instance.AddAircraft(myPlayerID, Group.Value, a.myGuid, a);
+                            if (StatMaster.isMP && !StatMaster.isClient)
+                            {
+                                ModNetworking.SendToAll(AircraftMsgReceiver.AddBackupMsg.CreateMessage(myPlayerID, Group.Value, a.myGuid));
+                            }
                         }
 
                         TeamUpByLeader();
@@ -1556,9 +1735,13 @@ namespace WW2NavalAssembly
         {
             SettleSpot(MyDeck,false);
         }
-
         public void Explo()
         {
+            if (StatMaster.isMP && !StatMaster.isClient)
+            {
+                ModNetworking.SendToAll(AircraftMsgReceiver.ExploMsg.CreateMessage(transform.position));
+                ModNetworking.SendToAll(AircraftMsgReceiver.ShootDownMsg.CreateMessage(myPlayerID, myGuid));
+            }
             GameObject explo = (GameObject)Instantiate(AssetManager.Instance.Aircraft.AircraftExplo, transform.position, Quaternion.identity);
             Destroy(explo, 5);
             GameObject smoke = (GameObject)Instantiate(AssetManager.Instance.Aircraft.AircraftShootDown, transform.position, Quaternion.identity, transform);
@@ -1571,6 +1754,7 @@ namespace WW2NavalAssembly
             myRigid.constraints = RigidbodyConstraints.None;
             myRigid.useGravity = true;
             Thrust = 0f;
+            PropellerSpeed = 0f;
             DeckSliding = false;
             try
             {
@@ -1627,7 +1811,6 @@ namespace WW2NavalAssembly
                 }
             }
         }
-
         public override void SafeAwake()
         {
             name = "Aircraft";
@@ -1954,18 +2137,78 @@ namespace WW2NavalAssembly
         }
         public override void SimulateUpdateClient()
         {
-            if (myPlayerID == PlayerData.localPlayer.networkId)
+            if (AircraftMsgReceiver.Instance.ChangedStatus[myPlayerID].ContainsKey(myGuid))
             {
-                if (AircraftMsgReceiver.Instance.ChangedStatus[myPlayerID].ContainsKey(myGuid))
+                status = AircraftMsgReceiver.Instance.ChangedStatus[myPlayerID][myGuid];
+                AircraftMsgReceiver.Instance.ChangedStatus[myPlayerID].Remove(myGuid);
+            }
+
+            // sync remove behavior
+            if (AircraftMsgReceiver.Instance.Removed[myPlayerID].Contains(myGuid))
+            {
+                AircraftMsgReceiver.Instance.Removed[myPlayerID].Remove(myGuid);
+                RemoveFromGroupClient();
+            }
+
+            // sync shootdown behavior
+            if (AircraftMsgReceiver.Instance.ShootDown[myPlayerID].Contains(myGuid))
+            {
+                AircraftMsgReceiver.Instance.ShootDown[myPlayerID].Remove(myGuid);
+                GameObject smoke = (GameObject)Instantiate(AssetManager.Instance.Aircraft.AircraftShootDown, transform.position, Quaternion.identity, transform);
+                Destroy(smoke, 10);
+            }
+
+            // sync gun shoot behavior
+            if (AircraftMsgReceiver.Instance.GunShoot[myPlayerID].ContainsKey(myGuid))
+            {
+                Shoot = AircraftMsgReceiver.Instance.GunShoot[myPlayerID][myGuid];
+                AircraftMsgReceiver.Instance.GunShoot[myPlayerID].Remove(myGuid);
+            }
+
+            // sync add backup
+            if (Rank.Value == 1)
+            {
+                if (AircraftMsgReceiver.Instance.Backup[myPlayerID].ContainsKey(Group.Value))
                 {
-                    status = AircraftMsgReceiver.Instance.ChangedStatus[myPlayerID][myGuid];
-                    AircraftMsgReceiver.Instance.ChangedStatus[myPlayerID].Remove(myGuid);
+                    foreach (var backup in AircraftMsgReceiver.Instance.Backup[myPlayerID][Group.Value])
+                    {
+                        Aircraft backup_a = null;
+                        foreach (var a in Grouper.Instance.GetAircraft(myPlayerID, "backup"))
+                        {
+                            if (a.Key == backup)
+                            {
+                                backup_a = a.Value;
+                                break;
+                            }
+                        }
+                        if (backup_a)
+                        {
+                            backup_a.Rank.SetValue(0);
+                            backup_a.Group.SetValue(Group.Value);
+                            Grouper.Instance.AddAircraft(myPlayerID, Group.Value, backup_a.myGuid, backup_a);
+                            //Debug.Log("add backup" + backup);
+                        }
+                    }
+                    AircraftMsgReceiver.Instance.Backup[myPlayerID][Group.Value].Clear();
                 }
-                if (AircraftMsgReceiver.Instance.ChangedWingFold[myPlayerID].ContainsKey(myGuid))
-                {
-                    FoldWing = AircraftMsgReceiver.Instance.ChangedWingFold[myPlayerID][myGuid];
-                    AircraftMsgReceiver.Instance.ChangedWingFold[myPlayerID].Remove(myGuid);
-                }
+            }
+
+            // for change load vis
+            if (AircraftMsgReceiver.Instance.LoadChange[myPlayerID].ContainsKey(myGuid))
+            {
+                LoadObject.SetActive(AircraftMsgReceiver.Instance.LoadChange[myPlayerID][myGuid]);
+                hasLoad = AircraftMsgReceiver.Instance.LoadChange[myPlayerID][myGuid];
+                AircraftMsgReceiver.Instance.LoadChange[myPlayerID].Remove(myGuid);
+            }
+
+            // for drop load
+            if (WeaponMsgReceiver.Instance.Fire[myPlayerID].ContainsKey(myGuid))
+            {
+                Vector3 vel = WeaponMsgReceiver.Instance.Fire[myPlayerID][myGuid].vel;
+                Vector3 rotation = WeaponMsgReceiver.Instance.Fire[myPlayerID][myGuid].forward;
+                Vector3 randomForce = WeaponMsgReceiver.Instance.Fire[myPlayerID][myGuid].fireForce;
+                WeaponMsgReceiver.Instance.Fire[myPlayerID].Remove(myGuid);
+                DropLoad(true, rotation, vel, randomForce);
             }
         }
         public override void SimulateFixedUpdateHost()
@@ -2234,13 +2477,23 @@ namespace WW2NavalAssembly
                 case Status.DogFighting:
                     {
                         ColliderActive = false;
+                        if (!FightTarget)
+                        {
+                            SwitchToCruise();
+                            break;
+                        }
                         Aircraft targetAircraft = FightTarget.GetComponent<Aircraft>();
-                        if (targetAircraft.status != Status.Cruise && targetAircraft.status != Status.Attacking && targetAircraft.status != Status.DogFighting)
+                        if (!targetAircraft)
+                        {
+                            SwitchToCruise();
+                            break;
+                        }
+                        if (!targetAircraft.isFlying)
                         {
                             if (targetAircraft.preTeammate)
                             {
                                 FightTarget = targetAircraft.preTeammate.transform;
-                                targetAircraft = targetAircraft.preTeammate;
+                                break;
                             }
                             else
                             {
@@ -2342,6 +2595,7 @@ namespace WW2NavalAssembly
         {
             rotationDelta = Quaternion.Inverse(rotationLast) * transform.rotation;
             rotationLast = transform.rotation;
+
             if (frameCount == 0)
             {
                 if (Rank.Value == 1)
@@ -2364,15 +2618,28 @@ namespace WW2NavalAssembly
             {
                 case Status.InHangar:
                     Roll = 0;
+                    PropellerSpeed = 0;
+                    FoldWing = true;
+                    UndercartObject.SetActive(true);
                     break;
                 case Status.OnBoard:
                     Roll = 0;
+                    PropellerSpeed = 3;
+                    FoldWing = true;
+                    UndercartObject.SetActive(true);
                     break;
-                case Status.Landing:
+                case Status.TakingOff:
                     Roll = 0;
+                    PropellerSpeed = 11;
+                    FoldWing = false;
+                    UndercartObject.SetActive(true);
                     break;
                 case Status.Cruise:
                     {
+                        Roll = Roll + (-angularVelocityClient.y * 2000 - Roll) * 0.05f;
+                        PropellerSpeed = 11;
+                        FoldWing = false;
+                        UndercartObject.SetActive(false);
                         if (Rank.Value == 1)
                         {
                             float distFromWayPoint = (MathTool.Get2DCoordinate(transform.position) - WayPoint).magnitude;
@@ -2400,20 +2667,88 @@ namespace WW2NavalAssembly
                                 }
                             }
                         }
-                        Roll = Roll + (-angularVelocityClient.y * 2000 - Roll) * 0.05f;
+                        
                         break;
                     }
-                default:
+                case Status.Returning:
+                    PropellerSpeed = 11;
+                    FoldWing = false;
+                    UndercartObject.SetActive(false);
                     Roll = Roll + (-angularVelocityClient.y * 2000 - Roll) * 0.05f;
                     break;
+                case Status.Attacking:
+                    PropellerSpeed = 11;
+                    FoldWing = false;
+                    UndercartObject.SetActive(false);
+                    Roll = Roll + (-angularVelocityClient.y * 2000 - Roll) * 0.05f;
+                    break;
+                case Status.DogFighting:
+                    PropellerSpeed = 11;
+                    FoldWing = false;
+                    UndercartObject.SetActive(false);
+                    Roll = 0;
+                    break;
+                case Status.Landing:
+                    PropellerSpeed = 11;
+                    FoldWing = false;
+                    UndercartObject.SetActive(true);
+                    Roll = 0;
+                    break;
+                default:
+                    PropellerSpeed = 0;
+                    Roll = 0;
+                    break;
             }
+
+
 
         }
         public void OnGUI()
         {
-            if (Rank.Value == 1)
+            if (!(StatMaster.isMP && myPlayerID == PlayerData.localPlayer.networkId))
             {
-                //GUI.Box(new Rect(100, 300, 200, 30), (Grouper.Instance.GetLeader(myPlayerID, Group.Value) == this).ToString());
+                return;
+            }
+            if (Rank.Value == 1 && isFlying)
+            {
+                AircraftController ac = FlightDataBase.Instance.aircraftController[myPlayerID];
+                if (ac)
+                {
+                    if (ac.inTacticalView)
+                    {
+                        foreach (var cv in Grouper.Instance.AircraftLeaders)
+                        {
+                            foreach (var a in cv.Values)
+                            {
+                                try
+                                {
+                                    Aircraft target = a.Value;
+                                    if (target.myPlayerID == myPlayerID)
+                                    {
+                                        break;
+                                    }
+
+                                    if (Vector3.Distance(target.transform.position, transform.position) < (target.myGroup.Count * 150) + 400 &&
+                                        target.isFlying)
+                                    {
+                                        Vector3 onScreenPosition = Camera.main.WorldToScreenPoint(target.transform.position);
+                                        if (target.BlockBehaviour.Team.Equals(BlockBehaviour.Team))
+                                        {
+                                            GUI.contentColor = Color.yellow;
+                                        }
+                                        else
+                                        {
+                                            GUI.contentColor = Color.red;
+                                        }
+                                        GUI.Box(new Rect(onScreenPosition.x - 50, Camera.main.pixelHeight - onScreenPosition.y - 12, 100, 25), target.Type.Selection.ToString() + " *" + target.myGroup.Count.ToString() + "*");
+                                    }
+                                }
+                                catch { }
+                            }
+                        }
+                        
+                    }
+                }
             }
         }
     }
