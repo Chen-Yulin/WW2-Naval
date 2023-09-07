@@ -273,7 +273,7 @@ namespace WW2NavalAssembly
 
         public void Start()
         {
-            mySeed = (int)(UnityEngine.Random.value * 240);
+            mySeed = (int)(UnityEngine.Random.value * 400);
             
             InitTrail();
             myRigid = GetComponent<Rigidbody>();
@@ -339,7 +339,7 @@ namespace WW2NavalAssembly
                                 ModNetworking.SendToAll(TorpedoMsgReceiver.TorpedoDataMsg.CreateMessage(myPlayerID, parentGuid, transform.position, true));
                                 Destroy(gameObject);
                             }
-                            else if(mySeed % 40 == ModController.Instance.state) 
+                            else if(mySeed == ModController.Instance.longerState) 
                             {
                                 ModNetworking.SendToAll(TorpedoMsgReceiver.TorpedoDataMsg.CreateMessage(myPlayerID, parentGuid, transform.position, false));
                             }

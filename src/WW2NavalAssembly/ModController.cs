@@ -50,6 +50,7 @@ namespace WW2NavalAssembly
         public bool preFog = false;
 
         public int state;
+        public int longerState;
 
         public bool isFirstFrame = true;
         public GameObject skybox;
@@ -186,6 +187,14 @@ namespace WW2NavalAssembly
             else
             {
                 state++;
+            }
+            if (longerState == 400)
+            {
+                longerState = 0;
+            }
+            else
+            {
+                longerState++;
             }
 
         }

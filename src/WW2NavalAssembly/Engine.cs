@@ -226,14 +226,7 @@ namespace WW2NavalAssembly
         }
         public void Thrust()
         {
-            //UpdateAccel();
-            //CalculateTargetVelocity();
             CalculateThrustPercentage();
-
-            //float myVel = preVel;
-            //float targetAccel = TargetVelocity * HPPercent > preVel?  0.5f: -0.8f;
-            //forceModifier += Mathf.Clamp((TargetVelocity * HPPercent - myVel)/10f,-0.005f,0.005f);
-            //myforce += (TargetVelocity - myVel)*5;
 
             float PBSpeed = Mathf.Sign(ThrustPercentage*20) * Mathf.Sqrt(Mathf.Abs(ThrustPercentage *20 * HPPercent)) * 4;
             PropellerPB.Speed = (Mathf.Abs(PBSpeed)<1f?0:PBSpeed) * Vector3.up;
@@ -541,6 +534,15 @@ namespace WW2NavalAssembly
             }
             InitTrail();
             FindChimneys();
+            FlightDataBase.Instance.engines[myPlayerID].Add(this);
+        }
+        public override void OnSimulateStop()
+        {
+            FlightDataBase.Instance.engines[myPlayerID].Clear();
+        }
+        public void OnDestroy()
+        {
+            FlightDataBase.Instance.engines[myPlayerID].Clear();
         }
         public override void SimulateUpdateHost()
         {

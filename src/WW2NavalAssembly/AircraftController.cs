@@ -13,7 +13,7 @@ using UnityEngine.UI;
 using UnityEngine.Networking;
 using System.Linq;
 using System.Text.RegularExpressions;
-
+using UnityEngineInternal;
 
 namespace WW2NavalAssembly
 {
@@ -115,7 +115,7 @@ namespace WW2NavalAssembly
         public bool downOperating = false;
         public int myPlayerID = 0;
 
-        public void AddUpQueue(Aircraft aircraft)
+        public void AddUpQueue(Aircraft aircraft) // return whether duplication exists
         {
             Aircraft contradiction = null;
             foreach (Aircraft a in DownQueue)
@@ -127,7 +127,7 @@ namespace WW2NavalAssembly
                 }
             }
 
-            if (contradiction)// delete the existing aircraft
+            if (contradiction)// delete the existing contradicted aircraft
             {
                 Queue<Aircraft> newDownQueue = new Queue<Aircraft>();
                 foreach (Aircraft a in DownQueue)
@@ -139,6 +139,7 @@ namespace WW2NavalAssembly
                 }
                 DownQueue = newDownQueue;
             }
+
             bool exist = false;
             foreach (Aircraft a in UpQueue)
             {
@@ -148,9 +149,11 @@ namespace WW2NavalAssembly
                     break;
                 }
             }
+
             if (!exist)
             {
                 UpQueue.Enqueue(aircraft);
+                FlightDataBase.Instance.Decks[aircraft.myPlayerID].Occupied_num++;
             }
 
 
@@ -224,6 +227,7 @@ namespace WW2NavalAssembly
                 yield return new WaitForSeconds(delayTime);
                 MyLogger.Instance.Log("\tFinished", myPlayerID);
                 a.SwitchToInHangar();
+                FlightDataBase.Instance.Decks[myPlayerID].Occupied_num--;
                 //MyLogger.Instance.Log("Finish");
             }
             downOperating = false;
@@ -496,7 +500,6 @@ namespace WW2NavalAssembly
         public void InitDrawBoard()
         {
             DrawBoard = new GameObject("DrawBoard");
-            DrawBoard.transform.parent = BlockBehaviour.ParentMachine.transform.Find("Simulation Machine");
             DrawBoard.SetActive(false);
             foreach (var group in Grouper.Instance.AircraftGroups[myPlayerID])
             {
@@ -583,8 +586,7 @@ namespace WW2NavalAssembly
                             {
                                 mateStatus[i] = (mateList[i].hasLoad? "■" : "□") +
                                                 mateList[i].status.ToString() + " " + 
-                                                "[Fuel:"+(mateList[i].Fuel * 100f).ToString("F1") + "%]" +
-                                                "[HP:" + (mateList[i].HP / 5f).ToString("F1") + "%]";
+                                                "[Fuel:"+(mateList[i].Fuel * 100f).ToString("F1") + "%]";
                             }
                         }
                         txt.text = "[" + icon.Key + "]\n\t" + string.Join("\n\t", mateStatus);
@@ -1203,7 +1205,6 @@ namespace WW2NavalAssembly
                     }
                     else
                     {
-                        FlightDataBase.Instance.Decks[myPlayerID].Occupied_num += CurrentLeader.myGroup.Count;
                         foreach (var aircraft in CurrentLeader.myGroup.Reverse())
                         {
                             Elevator.AddUpQueue(aircraft.Value);
@@ -1268,6 +1269,10 @@ namespace WW2NavalAssembly
                 inTacticalView = false;
             }
             catch { }
+            if (DrawBoard)
+            {
+                Destroy(DrawBoard);
+            }
         }
         public void OnDestroy()
         {
@@ -1277,6 +1282,10 @@ namespace WW2NavalAssembly
                 inTacticalView = false;
             }
             catch { }
+            if (DrawBoard)
+            {
+                Destroy(DrawBoard);
+            }
         }
 
         public void OnGUI()

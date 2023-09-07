@@ -27,7 +27,8 @@ namespace WW2NavalAssembly
         public static MessageType ShootDownMsg = ModNetworking.CreateMessageType(DataType.Integer, DataType.Integer);
         public static MessageType GunShootMsg = ModNetworking.CreateMessageType(DataType.Integer, DataType.Integer, DataType.Boolean);
         public static MessageType AddBackupMsg = ModNetworking.CreateMessageType(DataType.Integer, DataType.String, DataType.Integer);
-        public static MessageType LoadMsg = ModNetworking.CreateMessageType(DataType.Integer, DataType.Integer, DataType.Boolean); // 0 for drop, 1 for recover
+        public static MessageType LoadMsg = ModNetworking.CreateMessageType(DataType.Integer, DataType.Integer, DataType.Boolean); // 0 for drop( deprecated, implemented by weaponMsg), 1 for recover
+        public static MessageType FuelMsg = ModNetworking.CreateMessageType(DataType.Integer, DataType.Integer, DataType.Single);
 
         public Dictionary<int, Aircraft.Status>[] ChangedStatus = new Dictionary<int, Aircraft.Status>[16];
         public Dictionary<int, bool>[] GunShoot = new Dictionary<int, bool>[16];
@@ -35,6 +36,7 @@ namespace WW2NavalAssembly
         public List<int>[] Removed = new List<int>[16];
         public List<int>[] ShootDown = new List<int>[16];
         public Dictionary<string, List<int>>[] Backup = new Dictionary<string, List<int>>[16];
+        public Dictionary<int, float>[] Fuel = new Dictionary<int, float>[16];
 
         public AircraftMsgReceiver()
         {
@@ -46,6 +48,7 @@ namespace WW2NavalAssembly
                 Removed[i] = new List<int>();
                 ShootDown[i] = new List<int>();
                 Backup[i] = new Dictionary<string, List<int>>();
+                Fuel[i] = new Dictionary<int, float>();
             }
         }
 
@@ -125,6 +128,20 @@ namespace WW2NavalAssembly
                 Backup[playerid].Add(group, new List<int> { guid });
             }
         }
+        public void FuelMsgReceiver(Message msg)
+        {
+            int playerid = (int)msg.GetData(0);
+            int guid = (int)msg.GetData(1);
+            float fuel = (float)msg.GetData(2);
+            if (Fuel[playerid].ContainsKey(guid))
+            {
+                Fuel[playerid][guid] = fuel;
+            }
+            else
+            {
+                Fuel[playerid].Add(guid, fuel);
+            }
+        }
     }
 
     public class Aircraft : BlockScript
@@ -169,6 +186,7 @@ namespace WW2NavalAssembly
         }
 
         public int myseed;
+        public int myLongerSeed;
         public int myPlayerID;
         public int myGuid;
 
@@ -284,7 +302,10 @@ namespace WW2NavalAssembly
             set
             {
                 _fuel = Mathf.Clamp(value, 0f, 1f);
-                myRigid.mass = 0.9f + _fuel * 0.1f + _loadmass *_loadCoeff;
+                if (myRigid)
+                {
+                    myRigid.mass = 0.9f + _fuel * 0.1f + _loadmass * _loadCoeff;
+                }
             }
             get
             {
@@ -1264,12 +1285,12 @@ namespace WW2NavalAssembly
         }
         public void RecoverLoad()
         {
-            if (StatMaster.isMP)
-            {
-                ModNetworking.SendToAll(AircraftMsgReceiver.LoadMsg.CreateMessage(myPlayerID, myGuid, true));
-            }
             if (Type.Value == 1 || Type.Value == 2)
             {
+                if (StatMaster.isMP)
+                {
+                    ModNetworking.SendToAll(AircraftMsgReceiver.LoadMsg.CreateMessage(myPlayerID, myGuid, true));
+                }
                 hasLoad = true;
                 LoadObject.SetActive(true);
                 switch (Type.Selection)
@@ -1644,7 +1665,6 @@ namespace WW2NavalAssembly
             if (status == Status.OnBoard)
             {
                 MyDeck.gameObject.GetComponent<ParkingSpot>().occupied = false;
-                FlightDataBase.Instance.Decks[myPlayerID].Occupied_num--;
                 FlightDataBase.Instance.GetTakeOffPosition(myPlayerID);
                 MyDeck = null;
                 status = Status.InHangar;
@@ -1816,6 +1836,7 @@ namespace WW2NavalAssembly
             name = "Aircraft";
             myPlayerID = transform.gameObject.GetComponent<BlockBehaviour>().ParentMachine.PlayerID;
             myseed = (int)(UnityEngine.Random.value * 10);
+            myLongerSeed = (int)(UnityEngine.Random.value * 400);
 
             preType = "";
             preAppearance = "";
@@ -2201,6 +2222,14 @@ namespace WW2NavalAssembly
                 AircraftMsgReceiver.Instance.LoadChange[myPlayerID].Remove(myGuid);
             }
 
+            // for sync fuel
+            if (AircraftMsgReceiver.Instance.Fuel[myPlayerID].ContainsKey(myGuid))
+            {
+                Fuel = AircraftMsgReceiver.Instance.Fuel[myPlayerID][myGuid];
+                AircraftMsgReceiver.Instance.Fuel[myPlayerID].Remove(myGuid);
+                Debug.Log("Sync Fuel to" + Fuel);
+            }
+
             // for drop load
             if (WeaponMsgReceiver.Instance.Fire[myPlayerID].ContainsKey(myGuid))
             {
@@ -2563,6 +2592,19 @@ namespace WW2NavalAssembly
                 Fuel -= Thrust / 3000000f;
             }
 
+            if (Thrust > 0)
+            {
+                // send fuel message
+                if (myLongerSeed == ModController.Instance.longerState)
+                {
+                    if (StatMaster.isMP && !StatMaster.isClient)
+                    {
+                        ModNetworking.SendToAll(AircraftMsgReceiver.FuelMsg.CreateMessage(myPlayerID, myGuid, Fuel));
+                    }
+                }
+
+            }
+
             // water hit
             if (!hasHitWater && ModController.Instance.showSea && status != Status.OnBoard && status != Status.InHangar)
             {
@@ -2617,18 +2659,25 @@ namespace WW2NavalAssembly
             switch (status)
             {
                 case Status.InHangar:
+                    Thrust = 0;
                     Roll = 0;
                     PropellerSpeed = 0;
                     FoldWing = true;
                     UndercartObject.SetActive(true);
+                    if (Fuel < 1)
+                    {
+                        Fuel = Mathf.Clamp(Fuel + 0.0004f, 0, 1);
+                    }
                     break;
                 case Status.OnBoard:
+                    Thrust = 0;
                     Roll = 0;
                     PropellerSpeed = 3;
                     FoldWing = true;
                     UndercartObject.SetActive(true);
                     break;
                 case Status.TakingOff:
+                    Thrust = 50;
                     Roll = 0;
                     PropellerSpeed = 11;
                     FoldWing = false;
@@ -2636,6 +2685,7 @@ namespace WW2NavalAssembly
                     break;
                 case Status.Cruise:
                     {
+                        Thrust = 60f;
                         Roll = Roll + (-angularVelocityClient.y * 2000 - Roll) * 0.05f;
                         PropellerSpeed = 11;
                         FoldWing = false;
@@ -2671,36 +2721,46 @@ namespace WW2NavalAssembly
                         break;
                     }
                 case Status.Returning:
+                    Thrust = 50;
                     PropellerSpeed = 11;
                     FoldWing = false;
                     UndercartObject.SetActive(false);
                     Roll = Roll + (-angularVelocityClient.y * 2000 - Roll) * 0.05f;
                     break;
                 case Status.Attacking:
+                    Thrust = 60;
                     PropellerSpeed = 11;
                     FoldWing = false;
                     UndercartObject.SetActive(false);
                     Roll = Roll + (-angularVelocityClient.y * 2000 - Roll) * 0.05f;
                     break;
                 case Status.DogFighting:
+                    Thrust = 60;
                     PropellerSpeed = 11;
                     FoldWing = false;
                     UndercartObject.SetActive(false);
                     Roll = 0;
                     break;
                 case Status.Landing:
+                    Thrust = 23;
                     PropellerSpeed = 11;
                     FoldWing = false;
                     UndercartObject.SetActive(true);
                     Roll = 0;
                     break;
                 default:
+                    Thrust = 0;
                     PropellerSpeed = 0;
                     Roll = 0;
                     break;
             }
 
+            if (Fuel > 0)
+            {
+                Fuel -= Thrust / 3000000f;
+            }
 
+            
 
         }
         public void OnGUI()

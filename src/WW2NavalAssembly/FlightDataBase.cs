@@ -38,8 +38,7 @@ namespace WW2NavalAssembly
         public GameObject[,] DeckLine = new GameObject[5, 16];
         public Dictionary<string, GameObject[]>[] HangarLine = new Dictionary<string, GameObject[]>[16];
 
-        public Texture GunnerAlertIcon;
-        int iconSize = 30;
+        public List<Engine>[] engines = new List<Engine>[16];
 
         float AIRCRAFT_WIDTH = 1.6f;
         float AIRCRAFT_LENGTH_HANGAR = 2f;
@@ -811,9 +810,9 @@ namespace WW2NavalAssembly
                 Hangars[i] = new Dictionary<string, Deck>();
                 HangarLine[i] = new Dictionary<string, GameObject[]>();
                 Decks[i] = new Deck();
+                engines[i] = new List<Engine>();
             }
             InitLine();
-            GunnerAlertIcon = ModResource.GetTexture("gunnerAlert Texture").Texture;
         }
 
         public void FixedUpdate()
