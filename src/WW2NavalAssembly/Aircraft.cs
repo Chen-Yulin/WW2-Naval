@@ -442,7 +442,6 @@ namespace WW2NavalAssembly
         public bool hasAttacked = false;
         public bool hasLoad = false;
         public bool inAttackRoutine = false;
-        public float divingTime = 2.5f;
 
         // ================== for landing ===================
         public bool onboard = false;
@@ -538,6 +537,11 @@ namespace WW2NavalAssembly
         }
         IEnumerator BombCoroutine()
         {
+            int target_PlayerID = -1;
+            List<Engine> target_engines = new List<Engine>();
+            float err = 0.2f + UnityEngine.Random.value;
+
+            float AttackHeight = transform.position.y;
             inAttackRoutine = true;
             Thrust = 20f;
             yield return new WaitForSeconds(myTeamIndex * 0.2f + UnityEngine.Random.value * 0.2f - 0.1f);
@@ -545,23 +549,100 @@ namespace WW2NavalAssembly
             float targetRoll = 0;
             while(Pitch > targetPitch)
             {
-                Pitch -= 0.5f;
-                targetRoll += 2;
+                Pitch -= 1f;
+                targetRoll += 4;
                 targetRoll = Mathf.Clamp(targetRoll, 0, 180);
                 Roll = targetRoll;
                 yield return new WaitForFixedUpdate();
             }
             Thrust = 10f;
 
-            float time = 0;
             targetRoll = -180;
-            while (time<divingTime)
+            while (transform.position.y > 120f)
             {
                 yield return new WaitForFixedUpdate();
-                time += Time.fixedDeltaTime;
-                targetRoll += 2;
+                targetRoll += 4;
                 targetRoll = Mathf.Clamp(targetRoll, -180, 0);
                 Roll = targetRoll;
+
+
+                // find target
+                if (target_PlayerID == -1)
+                {
+                    foreach (var ship in FlightDataBase.Instance.engines)
+                    {
+                        bool find = false;
+                        foreach (var engine in ship)
+                        {
+                            if (MathTool.Get2DDistance(engine.transform.position, transform.position) < 200)
+                            {
+                                find = true;
+                                target_PlayerID = engine.myPlayerID;
+                                target_engines.Add(engine);
+                            }
+                        }
+                        if (find)
+                        {
+                            break;
+                        }
+                    }
+                }
+                else
+                {
+                    Vector3 target_vel = Vector3.zero;
+                    Vector3 target_pos = Vector3.zero;
+                    foreach (var engine in target_engines)
+                    {
+                        target_pos += engine.transform.position;
+                        target_vel += engine.Rigidbody.velocity;
+                    }
+
+                    target_pos /= (float)target_engines.Count;
+                    target_vel /= (float)target_engines.Count;
+                    target_pos.y = 20f;
+                    target_vel.y = 0;
+
+                    Vector3 targetDirection = target_pos - transform.position;
+                    Vector2 dir2D = MathTool.Get2DCoordinate(targetDirection) * err;
+                    Vector2 vel2D = MathTool.Get2DCoordinate(myRigid.velocity);
+
+                    float ProjVel = Vector2.Dot(vel2D, dir2D.normalized);
+                    float EstimatedTime = dir2D.magnitude / ProjVel;
+                    Vector3 predict_pos = target_pos;
+                    for (int i = 0; i < 3; i++)
+                    {
+                        predict_pos = target_pos + EstimatedTime * target_vel;
+                        targetDirection = predict_pos - transform.position;
+                        dir2D = MathTool.Get2DCoordinate(targetDirection) * err;
+                        vel2D = MathTool.Get2DCoordinate(myRigid.velocity);
+                        ProjVel = Vector2.Dot(vel2D, dir2D.normalized);
+                        EstimatedTime = dir2D.magnitude / ProjVel;
+                    }
+                    target_pos = predict_pos;
+
+                    if (EstimatedTime > 0)
+                    {
+                        float targetHeight = -myRigid.velocity.y * 0.7f * EstimatedTime + 0.5f * 32.4f * Mathf.Pow(EstimatedTime, 2);
+                        target_pos.y += targetHeight;
+                        target_pos.y = Mathf.Clamp(target_pos.y, -20, transform.position.y);
+                    }
+
+                    // turn to target
+                    targetDirection = target_pos - transform.position;
+                    float AngleDiff = Vector3.Angle(myRigid.velocity, targetDirection);
+                    Vector3 torque = Vector3.Cross(myRigid.velocity, targetDirection).normalized * Mathf.Clamp(AngleDiff * 3f, -20, 20);
+                    myRigid.AddTorque(torque);
+                    Vector3 v_angularVel = myRigid.angularVelocity;
+                    Vector3 RollTorque = Vector3.Cross(transform.right, -v_angularVel.normalized) * 7;//5=>7
+                    myRigid.AddTorque(RollTorque);
+
+
+                }
+                
+                
+
+                
+
             }
             
             MyLogger.Instance.Log("["+ Group.Value + "](" + myTeamIndex + ") Drop Bomb", myPlayerID);
@@ -577,9 +658,9 @@ namespace WW2NavalAssembly
             Vector3 horizonRight = (transform.forward.y > 0 ? 1 : -1) * Vector3.ProjectOnPlane(transform.right, Vector3.up).normalized;
 
             int i = 0;
-            while (i < 140)
+            while (i < 70)
             {
-                myRigid.AddTorque(-horizonRight * 10f);
+                myRigid.AddTorque(-horizonRight * 12f);
                 yield return new WaitForFixedUpdate();
                 i++;
             }
@@ -700,7 +781,7 @@ namespace WW2NavalAssembly
             BBtmp.myPlayerID = myPlayerID;
             Rigidbody RBtmp = BombPrefab.AddComponent<Rigidbody>();
             RBtmp.mass = 0.2f;
-            RBtmp.drag = 0.1f;
+            RBtmp.drag = 0.02f;
             RBtmp.useGravity = true;
 
             GameObject CannonVis = new GameObject("BombVis");
@@ -1076,7 +1157,7 @@ namespace WW2NavalAssembly
         }
         public float AddAeroForce(bool flap = false)
         {
-            myRigid.angularDrag = Mathf.Clamp(myRigid.velocity.magnitude * 0.5f, 0.2f,150f);
+            myRigid.angularDrag = Mathf.Clamp(myRigid.velocity.magnitude * 0.5f, 0.2f,150f) * (flap ? 2 : 1);
             myRigid.drag = Mathf.Clamp(myRigid.velocity.magnitude * myRigid.mass * 0.01f, 0.2f, 10f) * (flap ? 2 : 1);
 
             // horizon
@@ -1397,7 +1478,7 @@ namespace WW2NavalAssembly
             WayPointType = 0;
             WayHeight = deck.height + 0.2f;
         }
-        public Aircraft AlertOnCruise()
+        public Aircraft AlertOnCruise(bool iff = true)
         {
             Aircraft a;
             foreach (var cv in Grouper.Instance.AircraftLeaders)
@@ -1407,10 +1488,18 @@ namespace WW2NavalAssembly
                     try
                     {
                         a = leader.Value.Value;
-                        if (a.myPlayerID == myPlayerID || a.BlockBehaviour.Team.Equals(BlockBehaviour.Team))
+                        if (a == this)
                         {
                             continue;
                         }
+                        if (iff)
+                        {
+                            if (a.myPlayerID == myPlayerID || a.BlockBehaviour.Team.Equals(BlockBehaviour.Team))
+                            {
+                                continue;
+                            }
+                        }
+                        
                         if ((a.status == Status.Cruise || a.status == Status.Attacking || a.status == Status.Returning || a.status == Status.DogFighting)
                             && (MathTool.Get2DCoordinate(a.transform.position) - MathTool.Get2DCoordinate(transform.position)).magnitude < 130f)
                         {
@@ -1482,16 +1571,20 @@ namespace WW2NavalAssembly
             ColliderActive = false;
             if (Rank.Value == 1)
             {
+                Vector3 f_pos;
                 if (a.status == Status.DogFighting && myGroup.ContainsValue(a.FightTarget.gameObject.GetComponent<Aircraft>()))
                 {
-                    Vector3 f_pos = (transform.position + a.transform.position) / 2f;
-                    f_pos.y = 60f;
-                    fightPosition = f_pos;
-                    a.fightPosition = f_pos;
+                    f_pos = (transform.position + a.transform.position) / 2f;
+                    f_pos.y = 120f;
+
+                    foreach (var a_member in a.myGroup)
+                    {
+                        a_member.Value.fightPosition = f_pos;
+                    }
                 }
                 else
                 {
-                    fightPosition = Vector3.zero;
+                    f_pos = Vector3.zero;
                 }
                 bool allInCruise = true;
                 foreach (var member in myGroup)
@@ -1532,6 +1625,12 @@ namespace WW2NavalAssembly
                     member.Value.status = Status.DogFighting;
                     i++;
                 }
+
+                foreach (var member in myGroup)
+                {
+                    member.Value.fightPosition = f_pos;
+                }
+
                 if (fightPosition != Vector3.zero)
                 {
                     MyLogger.Instance.Log("[" + Group.Value + "] is dogfighting with [" + a.Group.Value + "] at " + fightPosition.ToString(), myPlayerID);
@@ -2227,7 +2326,7 @@ namespace WW2NavalAssembly
             {
                 Fuel = AircraftMsgReceiver.Instance.Fuel[myPlayerID][myGuid];
                 AircraftMsgReceiver.Instance.Fuel[myPlayerID].Remove(myGuid);
-                Debug.Log("Sync Fuel to" + Fuel);
+                //Debug.Log("Sync Fuel to" + Fuel);
             }
 
             // for drop load
@@ -2536,7 +2635,7 @@ namespace WW2NavalAssembly
                         myRigid.angularDrag = 10f;
                         myRigid.drag = 0.6f;
                         float dist = (transform.position - FightTarget.position).magnitude;
-                        if (dist < 15f)
+                        if (dist < 8f)
                         {
                             if (!inTurnoverRoutine)
                             {
@@ -2552,7 +2651,7 @@ namespace WW2NavalAssembly
                             Vector3 StableTorque = (transform.forward.y > 0? 1 : -1) * Vector3.Cross(transform.right, Vector3.up) * 2f;
                             myRigid.AddTorque((torque + StableTorque) * (!inTurnoverRoutine?1:0.3f) );
 
-                            bool canShoot = AngleDiff < 3;
+                            bool canShoot = AngleDiff < 6;
                             Shoot = canShoot;
                             if (canShoot)
                             {
@@ -2560,7 +2659,7 @@ namespace WW2NavalAssembly
                             }
                         }
                         Vector3 v_angularVel = myRigid.angularVelocity;
-                        Vector3 RollTorque = Vector3.Cross(transform.right, -v_angularVel.normalized) * 5;
+                        Vector3 RollTorque = Vector3.Cross(transform.right, -v_angularVel.normalized) * 10;//5=>10
                         myRigid.AddTorque(RollTorque);
 
 

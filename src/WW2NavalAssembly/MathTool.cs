@@ -44,6 +44,10 @@ namespace WW2NavalAssembly
         {
             return new Vector2(v.x, v.z);
         }
+        public static float Get2DDistance(Vector3 v1, Vector3 v2)
+        {
+            return Vector2.Distance(Get2DCoordinate(v1), Get2DCoordinate(v2));
+        }
         public static Vector2 PointRotate(Vector2 center, Vector2 p1, float angle)
         {
             Vector2 tmp = new Vector2();
