@@ -13,7 +13,7 @@ using UnityEngine.UI;
 using UnityEngine.Networking;
 using System.Linq;
 using System.Text.RegularExpressions;
-using UnityEngineInternal;
+using static Modding.EventProperty;
 
 namespace WW2NavalAssembly
 {
@@ -342,10 +342,7 @@ namespace WW2NavalAssembly
         public MKey TakeOffKey;
         public MKey ElevatorUp;
         public MKey ElevatorDown;
-        public MKey ViewUp;
-        public MKey ViewDown;
-        public MKey ViewLeft;
-        public MKey ViewRight;
+        public MKey ViewMove;
         public MKey Continuous;
         public MKey Attack;
         public MSlider ViewSensitivity;
@@ -383,6 +380,9 @@ namespace WW2NavalAssembly
         public bool hasHangar = false;
 
         public GameObject DrawBoard;
+        public GameObject Ruler;
+        public Transform RulerDir;
+        public Transform RulerSize;
         public Dictionary<string, LineRenderer> RouteLines = new Dictionary<string, LineRenderer>();
         public Dictionary<string, Queue<CruisePoint>> Routes = new Dictionary<string, Queue<CruisePoint>>();
         public Dictionary<string, GameObject> GroupIcon = new Dictionary<string, GameObject>();
@@ -468,6 +468,8 @@ namespace WW2NavalAssembly
         public AircraftElevator Elevator;
         public AircraftRunway Runway;
 
+        public Vector3 dragOrigin;
+
         public Camera _viewCamera;
         public Camera MainCamera
         {
@@ -512,6 +514,10 @@ namespace WW2NavalAssembly
                 icon.transform.parent = DrawBoard.transform;
                 GroupIcon.Add(group.Key, icon);
             }
+            Ruler = (GameObject)Instantiate(AssetManager.Instance.Aircraft.Ruler, DrawBoard.transform);
+            Ruler.SetActive(false);
+            RulerDir = Ruler.transform.GetChild(0);
+            RulerSize = Ruler.transform.GetChild(1);
         }
         public void UpdateRouteLine(string group)
         {
@@ -762,6 +768,29 @@ namespace WW2NavalAssembly
             }
         }
 
+        public float CalculateRouteDist(Aircraft a)
+        {
+            if (!a)
+            {
+                return 0;
+            }
+            string group = a.Group.Value;
+            if (!Routes.ContainsKey(group))
+            {
+                return 0f;
+            }
+            else
+            {
+                float dist = 0f;
+                Vector3 prePosition = a.transform.position;
+                foreach (var point in Routes[group])
+                {
+                    dist += Vector3.Distance(prePosition, point.Position);
+                    prePosition = point.Position;
+                }
+                return dist;
+            }
+        }
         public override void SafeAwake()
         {
             gameObject.name = "Aircraft Captain";
@@ -769,10 +798,7 @@ namespace WW2NavalAssembly
             mySeed = (int)(UnityEngine.Random.value * 10);
 
             TacticalView = AddKey("Tactical View", "TacticalView", KeyCode.T);
-            ViewUp = AddKey("View Up", "ViewUp", KeyCode.Y);
-            ViewDown = AddKey("View Down", "ViewDown", KeyCode.H);
-            ViewLeft = AddKey("View Left", "ViewLeft", KeyCode.G);
-            ViewRight = AddKey("View Right", "ViewRight", KeyCode.J);
+            ViewMove = AddKey("Move View", "Move View", KeyCode.Mouse2);
             ReturnKey = AddKey("Aircraft Return", "ReturnKey", KeyCode.Backspace);
             TakeOffKey = AddKey("Aircraft Take Off", "TakeOffKey", KeyCode.Q);
             ElevatorUp = AddKey("Aircraft Elevator Up", "ElevatorUp", KeyCode.UpArrow);
@@ -959,13 +985,18 @@ namespace WW2NavalAssembly
                 if (inTacticalView)
                 {
                     DrawBoard.SetActive(true);
-                    float mouseY = Input.mouseScrollDelta.y;
-                    _orthoSize = Mathf.Clamp(_orthoSize * (mouseY > 0 ? 1f / (1f + mouseY * 0.2f) : (1f - mouseY * 0.2f)), 50, 2000);
-                    MainCamera.transform.position += _orthoSize * ViewSensitivity.Value * Time.deltaTime * (
-                                                                        Vector3.forward * (ViewUp.IsHeld ? 1 : 0) +
-                                                                        Vector3.back * (ViewDown.IsHeld ? 1 : 0) +
-                                                                        Vector3.left * (ViewLeft.IsHeld ? 1 : 0) +
-                                                                        Vector3.right * (ViewRight.IsHeld ? 1 : 0));
+                    float mouseScroll = Input.mouseScrollDelta.y;
+                    _orthoSize = Mathf.Clamp(_orthoSize * (mouseScroll > 0 ? 1f / (1f + mouseScroll * 0.2f) : (1f - mouseScroll * 0.2f)), 50, 2000);
+
+                    // move camera
+                    if (ViewMove.IsHeld)
+                    {
+                        float mouseX = Input.GetAxis("Mouse X");
+                        float mouseY = Input.GetAxis("Mouse Y");
+                        Vector3 moveDir = (mouseX * -Vector3.right + mouseY * -Vector3.forward);
+                        moveDir.y = 0;
+                        MainCamera.transform.position += _orthoSize * moveDir * 0.05f * ViewSensitivity.Value;
+                    }
 
 
                     if (CurrentLeader)
@@ -985,8 +1016,60 @@ namespace WW2NavalAssembly
                                                                     CurrentLeader.Group.Value, worldPosition, (int)0, false));
                                     }
                                 }
-                                else if (Attack.IsPressed)
+                                else if (Attack.IsHeld)
                                 {
+                                    // set ruler
+                                    Ruler.SetActive(true);
+                                    Vector2 screenPosition = new Vector2(Input.mousePosition.x, Input.mousePosition.y);
+                                    Vector3 worldPosition = Camera.main.ScreenToWorldPoint(screenPosition);
+                                    Ruler.transform.position = new Vector3(worldPosition.x, 20.5f, worldPosition.z);
+                                    Vector3 prePosition = Vector3.zero;
+                                    Vector2 direction = Vector2.zero;
+                                    
+                                    try
+                                    {
+                                        if (Routes[CurrentLeader.Group.Value].Count > 0)
+                                        {
+                                            prePosition = Routes[CurrentLeader.Group.Value].LastOrDefault().Position;
+                                        }
+                                        else
+                                        {
+                                            prePosition = CurrentLeader.transform.position;
+                                        }
+                                    }
+                                    catch
+                                    {
+                                        prePosition = CurrentLeader.transform.position;
+                                    }
+                                    
+
+                                    direction = MathTool.Get2DCoordinate(new Vector3(worldPosition.x, 60f, worldPosition.z) - prePosition).normalized;
+                                    RulerDir.rotation = Quaternion.LookRotation(new Vector3(direction.x, 0, direction.y), Vector3.up);
+
+                                    float RouteDist = 0;
+                                    RouteDist += MathTool.Get2DDistance(worldPosition, prePosition);
+                                    RouteDist += CalculateRouteDist(CurrentLeader);
+                                    float AircraftVel = 1000f;
+                                    switch (CurrentLeader.Type.Value)
+                                    {
+                                        case 0:
+                                            AircraftVel = 77f;
+                                            break;
+                                        case 1:
+                                            AircraftVel = 59f;
+                                            break;
+                                        case 2:
+                                            AircraftVel = 67f;
+                                            break;
+                                        default:
+                                            break;
+                                    }
+                                    float needTime = (RouteDist-200) / AircraftVel + 200f/40f;
+                                    RulerSize.transform.localScale = Vector3.one / 250f * needTime * 5 * 0.514f * 2;
+                                }
+                                else if (Attack.IsReleased)
+                                {
+                                    Ruler.SetActive(false);
                                     Vector2 screenPosition = new Vector2(Input.mousePosition.x, Input.mousePosition.y);
                                     Vector3 worldPosition = Camera.main.ScreenToWorldPoint(screenPosition);
                                     AddRoutePoint(CurrentLeader.Group.Value, new Vector2(worldPosition.x, worldPosition.z), CurrentLeader.Type.Value);
@@ -1010,8 +1093,43 @@ namespace WW2NavalAssembly
                                                                     CurrentLeader.Group.Value, worldPosition, (int)0, true));
                                     }
                                 }
-                                else if (Attack.IsPressed)
+                                else if (Attack.IsHeld)
                                 {
+                                    // set ruler
+                                    Ruler.SetActive(true);
+                                    Vector2 screenPosition = new Vector2(Input.mousePosition.x, Input.mousePosition.y);
+                                    Vector3 worldPosition = Camera.main.ScreenToWorldPoint(screenPosition);
+                                    Ruler.transform.position = new Vector3(worldPosition.x, 20.5f, worldPosition.z);
+                                    Vector3 prePosition = Vector3.zero;
+                                    Vector2 direction = Vector2.zero;
+                                    prePosition = CurrentLeader.transform.position;
+                                    
+                                    direction = MathTool.Get2DCoordinate(new Vector3(worldPosition.x, 60f, worldPosition.z) - prePosition).normalized;
+                                    RulerDir.rotation = Quaternion.LookRotation(new Vector3(direction.x, 0, direction.y), Vector3.up);
+
+                                    float RouteDist = 0;
+                                    RouteDist += MathTool.Get2DDistance(worldPosition, prePosition);
+                                    float AircraftVel = 1000f;
+                                    switch (CurrentLeader.Type.Value)
+                                    {
+                                        case 0:
+                                            AircraftVel = 77f;
+                                            break;
+                                        case 1:
+                                            AircraftVel = 59f;
+                                            break;
+                                        case 2:
+                                            AircraftVel = 67f;
+                                            break;
+                                        default:
+                                            break;
+                                    }
+                                    float needTime = (RouteDist - 200) / AircraftVel + 200f / 40f;
+                                    RulerSize.transform.localScale = Vector3.one / 250f * needTime * 5 * 0.514f * 2;
+                                }
+                                else if (Attack.IsReleased)
+                                {
+                                    Ruler.SetActive(false);
                                     Vector2 screenPosition = new Vector2(Input.mousePosition.x, Input.mousePosition.y);
                                     Vector3 worldPosition = Camera.main.ScreenToWorldPoint(screenPosition);
                                     ResetRoutePoint(CurrentLeader.Group.Value, new Vector2(worldPosition.x, worldPosition.z), CurrentLeader.Type.Value);

@@ -1157,7 +1157,7 @@ namespace WW2NavalAssembly
         }
         public float AddAeroForce(bool flap = false)
         {
-            myRigid.angularDrag = Mathf.Clamp(myRigid.velocity.magnitude * 0.5f, 0.2f,150f) * (flap ? 2 : 1);
+            myRigid.angularDrag = Mathf.Clamp(myRigid.velocity.magnitude * 0.5f, 0.2f,150f) * (flap && Type.Value ==2 ? 2.5f : 1);
             myRigid.drag = Mathf.Clamp(myRigid.velocity.magnitude * myRigid.mass * 0.01f, 0.2f, 10f) * (flap ? 2 : 1);
 
             // horizon
@@ -2260,6 +2260,7 @@ namespace WW2NavalAssembly
             if (AircraftMsgReceiver.Instance.ChangedStatus[myPlayerID].ContainsKey(myGuid))
             {
                 status = AircraftMsgReceiver.Instance.ChangedStatus[myPlayerID][myGuid];
+                FoldWing = FoldWing;
                 AircraftMsgReceiver.Instance.ChangedStatus[myPlayerID].Remove(myGuid);
             }
 
@@ -2655,7 +2656,7 @@ namespace WW2NavalAssembly
                             Shoot = canShoot;
                             if (canShoot)
                             {
-                                targetAircraft.ReduceHP(1);
+                                targetAircraft.ReduceHP(Type.Value == 0? 2 : 1);
                             }
                         }
                         Vector3 v_angularVel = myRigid.angularVelocity;
