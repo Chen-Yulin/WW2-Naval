@@ -548,13 +548,15 @@ namespace WW2NavalAssembly
                                             && raycastHit.collider.attachedRigidbody.GetComponent<WoodenArmour>())
                                         {
                                             //Debug.Log(raycastHit.collider.transform.parent.GetComponent<WoodenArmour>().thickness);
-                                            ArmourBetween += raycastHit.collider.transform.parent.GetComponent<WoodenArmour>().thickness;
+                                            ArmourBetween += raycastHit.collider.attachedRigidbody.GetComponent<WoodenArmour>().thickness;
                                         }
                                     }
-                                    catch { }
+                                    catch {
+                                        Debug.Log("something wrong");
+                                    }
                                     
                                 }
-                                //Debug.Log(ArmourBetween + " VS "+exploPenetration);
+                                Debug.Log(ArmourBetween + " VS "+exploPenetration);
                                 if (ArmourBetween > exploPenetration)
                                 {
                                 }
