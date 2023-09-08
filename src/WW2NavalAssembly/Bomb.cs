@@ -552,11 +552,9 @@ namespace WW2NavalAssembly
                                         }
                                     }
                                     catch {
-                                        Debug.Log("something wrong");
                                     }
                                     
                                 }
-                                Debug.Log(ArmourBetween + " VS "+exploPenetration);
                                 if (ArmourBetween > exploPenetration)
                                 {
                                 }
