@@ -9,7 +9,7 @@ using Modding;
 using Modding.Blocks;
 using UnityEngine;
 using UnityEngine.Networking;
-using static KillingHandler;
+using static WW2NavalAssembly.Aircraft;
 
 namespace WW2NavalAssembly
 {
@@ -309,19 +309,6 @@ namespace WW2NavalAssembly
             forward[(int)msg.GetData(0)][(int)msg.GetData(1)] = (Vector3)msg.GetData(2);
         }
     }
-
-    public class MakeAudioSourceFixedPitch : MonoBehaviour
-    {
-        protected AudioSource FixedAS;
-        protected void Start()
-        {
-            FixedAS = base.GetComponent<AudioSource>();
-        }
-        protected void Update()
-        {
-            FixedAS.pitch = Time.timeScale;
-        }
-    }
     public class BulletBehaviour : MonoBehaviour
     {
         public int myPlayerID;
@@ -432,29 +419,23 @@ namespace WW2NavalAssembly
                     if (!(hit.collider.transform.parent.parent.name == "Engine"))
                     {
 
-                        if (!hit.collider.transform.parent.GetComponent<BlockBehaviour>() && !hit.collider.transform.GetComponent<BlockBehaviour>())
+                        if (!hit.collider.attachedRigidbody.GetComponent<BlockBehaviour>())
                         {
                             Debug.Log("not a block");
                             return false;
                         }
-                        if (hit.collider.transform.parent.GetComponent<BlockBehaviour>())
+                        else
                         {
-                            if (pericedBlock.Contains(hit.collider.transform.parent.GetComponent<BlockBehaviour>().BuildingBlock.Guid.GetHashCode()))
+                            if (pericedBlock.Contains(hit.collider.attachedRigidbody.GetComponent<BlockBehaviour>().BuildingBlock.Guid.GetHashCode()))
                             {
                                 return true;
                             }
                         }
-                        else if (hit.collider.transform.GetComponent<BlockBehaviour>())
-                        {
-                            if (pericedBlock.Contains(hit.collider.transform.GetComponent<BlockBehaviour>().BuildingBlock.Guid.GetHashCode()))
-                            {
-                                return true;
-                            }
-                        }
+
                     }
                     else
                     {
-                        if (pericedBlock.Contains(hit.collider.transform.parent.parent.GetComponent<BlockBehaviour>().BuildingBlock.Guid.GetHashCode()))
+                        if (pericedBlock.Contains(hit.collider.attachedRigidbody.GetComponent<BlockBehaviour>().BuildingBlock.Guid.GetHashCode()))
                         {
                             return true;
                         }
@@ -465,6 +446,7 @@ namespace WW2NavalAssembly
                     return false;
                 }
 
+                
 
 
                 float angle = Vector3.Angle(hit.normal, -myRigid.velocity);
@@ -486,15 +468,15 @@ namespace WW2NavalAssembly
                 }
 
                 float Thickness;
-                if (hit.collider.transform.parent.GetComponent<WoodenArmour>())
+                if (hit.collider.attachedRigidbody.GetComponent<WoodenArmour>())
                 {
-                    Thickness = hit.collider.transform.parent.GetComponent<WoodenArmour>().thickness;
+                    Thickness = hit.collider.attachedRigidbody.GetComponent<WoodenArmour>().thickness;
                 }
-                else if (hit.collider.transform.parent.GetComponent<DefaultArmour>() || hit.collider.transform.GetComponent<DefaultArmour>())
+                else if (hit.collider.attachedRigidbody.GetComponent<DefaultArmour>() || hit.collider.transform.GetComponent<DefaultArmour>())
                 {
                     Thickness = 20;
                 }
-                else if (hit.collider.transform.parent.GetComponent<CannonWell>())
+                else if (hit.collider.attachedRigidbody.GetComponent<CannonWell>())
                 {
                     Vector3 CylinderUp = hit.collider.transform.parent.GetComponent<CannonWell>().WellVis.transform.up;
 
@@ -530,28 +512,32 @@ namespace WW2NavalAssembly
                     float eqThick = Thickness / Mathf.Cos(angle * Mathf.PI / 180);
                     myRigid.velocity *= 1 - eqThick * 0.8f / penetration;
                     penetration -= eqThick;
-                    if (hit.collider.transform.parent.parent.name == "Engine")
+                    pericedBlock.Push(hit.collider.attachedRigidbody.GetComponent<BlockBehaviour>().BuildingBlock.Guid.GetHashCode());
+
+                    try
                     {
-                        pericedBlock.Push(hit.collider.transform.parent.parent.GetComponent<BlockBehaviour>().BuildingBlock.Guid.GetHashCode());
+                        Aircraft a = hit.collider.attachedRigidbody.GetComponent<Aircraft>();
+                        float hittedPossi = 0.7f;
+                        if (a.status == Status.InHangar || a.status == Status.OnBoard && UnityEngine.Random.value > hittedPossi)
+                        {
+                            a.BeginExplo(false);
+                        }
                     }
-                    else
-                    {
-                        pericedBlock.Push(hit.collider.transform.parent.GetComponent<BlockBehaviour>().BuildingBlock.Guid.GetHashCode());
-                    }
+                    catch { }
 
 
-                    if (hit.collider.transform.parent.name != "SpinningBlock")    // add waterIn behaviour
+                    if (hit.collider.attachedRigidbody.name != "SpinningBlock")    // add waterIn behaviour
                     {
                         
                         GameObject waterinhole = new GameObject("waterInHole");
-                        waterinhole.transform.SetParent(hit.collider.transform.parent);
+                        waterinhole.transform.SetParent(hit.collider.attachedRigidbody.transform);
                         waterinhole.transform.localPosition = Vector3.zero;
                         waterinhole.transform.localRotation = Quaternion.identity;
                         waterinhole.transform.localScale = Vector3.one;
 
                         WaterInHole WH = waterinhole.AddComponent<WaterInHole>();
                         WH.hittedCaliber = Caliber;
-                        WH.position = hit.collider.transform.parent.InverseTransformPoint(hit.point);
+                        WH.position = hit.collider.attachedRigidbody.transform.InverseTransformPoint(hit.point);
                         if (pericedBlock.Count == 1)
                         {
                             WH.holeType = 0;
@@ -565,24 +551,24 @@ namespace WW2NavalAssembly
 
                     if (Caliber >= 100)
                     {
-                        string hittedname = hit.collider.transform.parent.name;
+                        string hittedname = hit.collider.attachedRigidbody.name;
                         if (hittedname == "DoubleWoodenBlock" || hittedname == "SingleWoodenBlock" || hittedname == "Log" || hittedname == "SpinningBlock")
                         {   // add hole projector
                             GameObject piercedhole = new GameObject("PiercedHole");
-                            piercedhole.transform.SetParent(hit.collider.transform.parent);
+                            piercedhole.transform.SetParent(hit.collider.attachedRigidbody.transform);
                             piercedhole.transform.localPosition = Vector3.zero;
                             piercedhole.transform.localRotation = Quaternion.identity;
                             piercedhole.transform.localScale = Vector3.one;
 
                             PiercedHole PH = piercedhole.AddComponent<PiercedHole>();
                             PH.hittedCaliber = Caliber;
-                            PH.position = hit.collider.transform.parent.InverseTransformPoint(hit.point);
+                            PH.position = hit.collider.attachedRigidbody.transform.InverseTransformPoint(hit.point);
                             PH.forward = myRigid.velocity.normalized;
 
                             if (StatMaster.isMP)
                             {
-                                ModNetworking.SendToAll(WeaponMsgReceiver.HitHoleMsg.CreateMessage((int)hit.collider.transform.parent.GetComponent<BlockBehaviour>().ParentMachine.PlayerID,
-                                                                                                    hit.collider.transform.parent.GetComponent<BlockBehaviour>().BuildingBlock.Guid.GetHashCode(),
+                                ModNetworking.SendToAll(WeaponMsgReceiver.HitHoleMsg.CreateMessage((int)hit.collider.attachedRigidbody.transform.GetComponent<BlockBehaviour>().ParentMachine.PlayerID,
+                                                                                                    hit.collider.attachedRigidbody.transform.GetComponent<BlockBehaviour>().BuildingBlock.Guid.GetHashCode(),
                                                                                                     Caliber, PH.position, PH.forward, 0));
                             }
                         }
@@ -729,7 +715,7 @@ namespace WW2NavalAssembly
                         {
                             if (!(hit.collider.transform.parent.name == "Balloon" || hit.collider.transform.parent.name == "SqrBalloon"))
                             {
-                                hit.collider.attachedRigidbody.AddForce(transform.forward * myRigid.velocity.magnitude * Caliber / 4, ForceMode.Force);
+                                hit.collider.attachedRigidbody.AddForce(transform.forward * myRigid.velocity.magnitude * Caliber / 12f, ForceMode.Force);
                             }
                         }
                         catch { }
@@ -782,7 +768,7 @@ namespace WW2NavalAssembly
                     Destroy(gameObject);
                 }
             }
-            if (transform.position.y < 20f && !hasHitWater && myRigid.velocity.y<0)
+            if (transform.position.y < 20f && !hasHitWater && myRigid.velocity.y< 0 && pericedBlock.Count == 0)
             {
                 
                 myRigid.drag = 11f/Mathf.Sqrt(Caliber)*20;
@@ -978,7 +964,45 @@ namespace WW2NavalAssembly
                 {
                     try
                     {
+                        try
+                        {
+                            Aircraft a = hitedCollider.attachedRigidbody.GetComponent<Aircraft>();
+                            if (a)
+                            {
+                                float ArmourBetween = 0;
+                                Ray Ray = new Ray(pos, hitedCollider.transform.position - pos);
+                                RaycastHit[] hitList = Physics.RaycastAll(Ray, (hitedCollider.transform.position - pos).magnitude);
+                                foreach (RaycastHit raycastHit in hitList)
+                                {
+                                    try
+                                    {
+                                        //Debug.Log(raycastHit.rigidbody.name);
+                                        if (!pericedBlock.Contains(raycastHit.collider.attachedRigidbody.GetComponent<BlockBehaviour>().BuildingBlock.Guid.GetHashCode())
+                                            && raycastHit.collider.attachedRigidbody.GetComponent<WoodenArmour>())
+                                        {
+                                            //Debug.Log(raycastHit.collider.transform.parent.GetComponent<WoodenArmour>().thickness);
+                                            ArmourBetween += raycastHit.collider.transform.parent.GetComponent<WoodenArmour>().thickness;
+                                        }
+                                    }
+                                    catch { }
 
+                                }
+                                //Debug.Log(ArmourBetween + " VS "+exploPenetration);
+                                if (ArmourBetween > exploPenetration)
+                                {
+                                }
+                                else
+                                {
+                                    float hittedPossi = a.hasLoad ? 0.9f : 0.97f;
+                                    if (a.status == Status.InHangar || a.status == Status.OnBoard && UnityEngine.Random.value > hittedPossi)
+                                    {
+                                        a.BeginExplo(false);
+                                    }
+                                }
+
+                            }
+                        }
+                        catch { }
                         //Debug.Log(hitedCollider.transform.parent.name);
                         if ((hitedCollider.transform.parent.name == "Balloon" || hitedCollider.transform.parent.name == "SqrBalloon")
                             && damagedBallon.Count == 0)

@@ -66,7 +66,6 @@ namespace WW2NavalAssembly
         public void AddWaterHitSound(Transform t)
         {
             AudioSource AS = t.gameObject.AddComponent<AudioSource>();
-            t.gameObject.AddComponent<MakeAudioSourceFixedPitch>();
             AS.clip = ModResource.GetAudioClip("GunWaterHit Audio");
             AS.Play();
             AS.spatialBlend = 1.0f;
