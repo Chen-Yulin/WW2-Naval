@@ -259,6 +259,25 @@ namespace WW2NavalAssembly
 
                     GUILayout.EndVertical();
                 });
+
+                if( GUILayout.Button("Apply", new GUILayoutOption[0]))
+                {
+                    SingleInstance<SpiderFucker>.Instance.Apply();
+                }
+                SingleInstance<SpiderFucker>.Instance.FloorDeactiveSwitch = GUILayout.Toggle(SingleInstance<SpiderFucker>.Instance.FloorDeactiveSwitch, "FloorDeactive", new GUILayoutOption[0]);
+                //SingleInstance<SpiderFucker>.Instance.ExpandFloorSwitch = GUILayout.Toggle(SingleInstance<SpiderFucker>.Instance.ExpandFloorSwitch, "空气墙扩大10倍", new GUILayoutOption[0]);
+                if (SingleInstance<SpiderFucker>.Instance.ExpandFloorSwitch && SingleInstance<SpiderFucker>.Instance.ExExpandFloorSwitch)
+                {
+                    SingleInstance<SpiderFucker>.Instance.ExExpandFloorSwitch = false;
+                }
+                SingleInstance<SpiderFucker>.Instance.ExExpandFloorSwitch = GUILayout.Toggle(SingleInstance<SpiderFucker>.Instance.ExExpandFloorSwitch, "空气墙自定义长度(m)", new GUILayoutOption[0]);
+                if (SingleInstance<SpiderFucker>.Instance.ExpandFloorSwitch && SingleInstance<SpiderFucker>.Instance.ExExpandFloorSwitch)
+                {
+                    SingleInstance<SpiderFucker>.Instance.ExpandFloorSwitch = false;
+                }
+                SingleInstance<SpiderFucker>.Instance.ExExpandScale = Convert.ToSingle(GUILayout.TextArea(SingleInstance<SpiderFucker>.Instance.ExExpandScale.ToString(), new GUILayoutOption[0]));
+
+
                 GUILayout.Label("Press Ctrl+W to hide");
             }
             
@@ -280,5 +299,6 @@ namespace WW2NavalAssembly
                 windowRect = GUILayout.Window(windowID, windowRect, new GUI.WindowFunction(MACWindow), "WW2-Naval Mod Setting");
             }
         }
+        
     }
 }

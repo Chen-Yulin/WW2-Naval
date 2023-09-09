@@ -23,3 +23,28 @@ S:\SteamLibrary\steamapps\common\Besiege\Besiege_Data\Mods\WW2-Naval Project\src
 S:\SteamLibrary\steamapps\common\Besiege\Besiege_Data\Mods\WW2-Naval Project\src\WW2NavalAssembly\obj\Debug\WW2NavalAssembly.dll
 S:\SteamLibrary\steamapps\common\Besiege\Besiege_Data\Mods\WW2-Naval Project\src\WW2NavalAssembly\obj\Debug\WW2NavalAssembly.pdb
 S:\SteamLibrary\steamapps\common\Besiege\Besiege_Data\Mods\WW2-Naval Project\src\WW2NavalAssembly\bin\Debug\UnityEngine.xml
+E:\steam\steamapps\common\Besiege\Besiege_Data\Mods\WW2-Naval\src\WW2NavalAssembly\obj\Debug\WW2NavalAssembly.csproj.AssemblyReference.cache
+E:\steam\steamapps\common\Besiege\Besiege_Data\Mods\WW2-Naval\src\WW2NavalAssembly\obj\Debug\WW2NavalAssembly.csproj.CoreCompileInputs.cache
+E:\steam\steamapps\common\Besiege\Besiege_Data\Mods\WW2-Naval\src\WW2NavalAssembly\obj\Debug\WW2NavalAssembly.dll
+E:\steam\steamapps\common\Besiege\Besiege_Data\Mods\WW2-Naval\src\WW2NavalAssembly\obj\Debug\WW2NavalAssembly.pdb
+E:\steam\steamapps\common\Besiege\Besiege_Data\Mods\WW2-Naval\src\WW2NavalAssembly\bin\Debug\WW2NavalAssembly.dll
+E:\steam\steamapps\common\Besiege\Besiege_Data\Mods\WW2-Naval\src\WW2NavalAssembly\bin\Debug\WW2NavalAssembly.pdb
+E:\steam\steamapps\common\Besiege\Besiege_Data\Mods\WW2-Naval\src\WW2NavalAssembly\bin\Debug\Assembly-CSharp.dll
+E:\steam\steamapps\common\Besiege\Besiege_Data\Mods\WW2-Naval\src\WW2NavalAssembly\bin\Debug\DynamicText.dll
+E:\steam\steamapps\common\Besiege\Besiege_Data\Mods\WW2-Naval\src\WW2NavalAssembly\bin\Debug\UnityEngine.dll
+E:\steam\steamapps\common\Besiege\Besiege_Data\Mods\WW2-Naval\src\WW2NavalAssembly\bin\Debug\UnityEngine.UI.dll
+E:\steam\steamapps\common\Besiege\Besiege_Data\Mods\WW2-Naval\src\WW2NavalAssembly\bin\Debug\Assembly-CSharp-firstpass.dll
+E:\steam\steamapps\common\Besiege\Besiege_Data\Mods\WW2-Naval\src\WW2NavalAssembly\bin\Debug\mcs.dll
+E:\steam\steamapps\common\Besiege\Besiege_Data\Mods\WW2-Naval\src\WW2NavalAssembly\bin\Debug\System.Threading.dll
+E:\steam\steamapps\common\Besiege\Besiege_Data\Mods\WW2-Naval\src\WW2NavalAssembly\bin\Debug\Mono.Cecil.dll
+E:\steam\steamapps\common\Besiege\Besiege_Data\Mods\WW2-Naval\src\WW2NavalAssembly\bin\Debug\UnityEngine.Networking.dll
+E:\steam\steamapps\common\Besiege\Besiege_Data\Mods\WW2-Naval\src\WW2NavalAssembly\bin\Debug\Open.Nat.dll
+E:\steam\steamapps\common\Besiege\Besiege_Data\Mods\WW2-Naval\src\WW2NavalAssembly\bin\Debug\RakNetSwig.dll
+E:\steam\steamapps\common\Besiege\Besiege_Data\Mods\WW2-Naval\src\WW2NavalAssembly\bin\Debug\Ookii.Dialogs.dll
+E:\steam\steamapps\common\Besiege\Besiege_Data\Mods\WW2-Naval\src\WW2NavalAssembly\bin\Debug\ch.sycoforge.Decal.dll
+E:\steam\steamapps\common\Besiege\Besiege_Data\Mods\WW2-Naval\src\WW2NavalAssembly\bin\Debug\Ionic.Zip.Unity.dll
+E:\steam\steamapps\common\Besiege\Besiege_Data\Mods\WW2-Naval\src\WW2NavalAssembly\bin\Debug\NATTraversalForUNET.dll
+E:\steam\steamapps\common\Besiege\Besiege_Data\Mods\WW2-Naval\src\WW2NavalAssembly\bin\Debug\Newtonsoft.Json.dll
+E:\steam\steamapps\common\Besiege\Besiege_Data\Mods\WW2-Naval\src\WW2NavalAssembly\bin\Debug\System.Runtime.Serialization.dll
+E:\steam\steamapps\common\Besiege\Besiege_Data\Mods\WW2-Naval\src\WW2NavalAssembly\bin\Debug\UnityEngine.xml
+E:\steam\steamapps\common\Besiege\Besiege_Data\Mods\WW2-Naval\src\WW2NavalAssembly\obj\Debug\WW2NavalAssembly.csproj.CopyComplete
