@@ -653,7 +653,6 @@ namespace skpCustomModule
 				{
 					this.TerainChecker = SkyBoxChanger.TerainType.Barren;
 				}
-				Debug.Log("ACM:TerainChecker : " + this.TerainChecker.ToString());
 				this.EnvironmentsObject = GameObject.Find("MULTIPLAYER LEVEL/Environments/");
 				switch (this.TerainChecker)
 				{
