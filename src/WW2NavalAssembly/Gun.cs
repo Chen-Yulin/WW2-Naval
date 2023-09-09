@@ -342,7 +342,7 @@ namespace WW2NavalAssembly
 
         public bool AA
         {
-            get { return timeFaze == 20f; }
+            get { return timeFaze != 20f; }
         }
 
 
@@ -1091,7 +1091,7 @@ namespace WW2NavalAssembly
             {
                 if (!thrustOn)
                 {
-                    myRigid.velocity = transform.forward * (130 + 0.08f * (Caliber + 50) + ((18000) / (Caliber + 100))) * (AA?1 : 2);
+                    myRigid.velocity = transform.forward * (130 + 0.08f * (Caliber + 50) + ((18000) / (Caliber + 100))) * (AA?2 : 1);
                     thrustOn = true;
                     PlayGunShot();
                 } // add initial speed

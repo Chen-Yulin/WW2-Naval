@@ -198,7 +198,7 @@ namespace WW2NavalAssembly
             foreach (var gun in FireGun)
             {
                 gun.triggeredByGunner = flag;
-                gun.timeFaze = targetTime;
+                gun.timeFaze = 20f;
             }
         }
         public void TurnUp(float delta)
@@ -552,7 +552,7 @@ namespace WW2NavalAssembly
                         {
                             targetPitch = ControllerDataManager.Instance.ControllerFCResult[myPlayerID][bindedCaliber].Pitch;
                             targetPos = ControllerDataManager.Instance.ControllerFCResult[myPlayerID][bindedCaliber].predPosition;
-                            targetTime = ControllerDataManager.Instance.ControllerFCResult[myPlayerID][bindedCaliber].timer;
+                            targetTime = 20f;
                             hasTarget = true;
                         }
                         else
