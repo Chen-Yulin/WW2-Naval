@@ -1,5 +1,6 @@
 using System;
 using Modding;
+using skpCustomModule;
 using UnityEngine;
 
 namespace WW2NavalAssembly
@@ -11,7 +12,7 @@ namespace WW2NavalAssembly
 		{
 			myMod = new GameObject("WW2 Naval Mod");
 			UnityEngine.Object.DontDestroyOnLoad(myMod);
-
+			myMod.AddComponent<AdCustomModuleMod>();
 			myMod.AddComponent<CustomBlockController>();
 			myMod.AddComponent<ModController>();
 			myMod.AddComponent<WeaponMsgReceiver>();
@@ -36,5 +37,12 @@ namespace WW2NavalAssembly
 			myMod.AddComponent<AircraftMsgReceiver>();
 			Debug.Log("Hello, this is WW2 naval mod!");
 		}
-	}
+        public void OnEntityPrefabCreation(int entityId, GameObject prefab)
+        {
+            if (entityId == 1)
+            {
+                prefab.AddComponent<skpCustomModule.AdLevelBlockBehaviour>();
+            }
+        }
+    }
 }
