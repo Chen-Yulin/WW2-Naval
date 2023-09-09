@@ -337,6 +337,14 @@ namespace WW2NavalAssembly
         public bool exploded = false;
         public bool spotted = false;
 
+        public float timeFaze = 20f;
+        float currentTime = 0f;
+
+        public bool AA
+        {
+            get { return timeFaze == 20f; }
+        }
+
 
         public void AddFireSound(Transform t)
         {
@@ -890,14 +898,18 @@ namespace WW2NavalAssembly
 
             exploded = true;
 
-            if (Caliber < 100)
+            if (!AA)
             {
-                ModNetworking.SendToAll(WeaponMsgReceiver.ExploMsg.CreateMessage(myPlayerID, transform.position, Caliber, 4));
+                if (Caliber < 100)
+                {
+                    ModNetworking.SendToAll(WeaponMsgReceiver.ExploMsg.CreateMessage(myPlayerID, transform.position, Caliber, 4));
+                }
+                else
+                {
+                    ModNetworking.SendToAll(WeaponMsgReceiver.ExploMsg.CreateMessage(myPlayerID, transform.position, Caliber, AP ? 0 : 2));
+                }
             }
-            else
-            {
-                ModNetworking.SendToAll(WeaponMsgReceiver.ExploMsg.CreateMessage(myPlayerID, transform.position, Caliber, AP ? 0 : 2));
-            }
+            
 
 
             ExploDestroyBalloon(transform.position, AP);
@@ -1048,7 +1060,7 @@ namespace WW2NavalAssembly
         }
         public void Start()
         {
-            name = "Gun";
+            name = "Bullet";
             myRigid = gameObject.GetComponent<Rigidbody>();
             if (CannonType == 0)
             {
@@ -1074,11 +1086,12 @@ namespace WW2NavalAssembly
         }
         public void FixedUpdate()
         {
+            
             if (fire)
             {
                 if (!thrustOn)
                 {
-                    myRigid.velocity = transform.forward * (130 + 0.08f * (Caliber + 50) + ((18000) / (Caliber + 100)));
+                    myRigid.velocity = transform.forward * (130 + 0.08f * (Caliber + 50) + ((18000) / (Caliber + 100))) * (AA?1 : 2);
                     thrustOn = true;
                     PlayGunShot();
                 } // add initial speed
@@ -1142,6 +1155,12 @@ namespace WW2NavalAssembly
                 Destroy(this.gameObject);
             }
 
+            if (timeFaze < currentTime)
+            {
+                PlayExploInAir(false);
+            }
+
+            currentTime += Time.fixedDeltaTime;
         }
     }
     public class Gun:BlockScript
@@ -1160,7 +1179,7 @@ namespace WW2NavalAssembly
         public MText GunGroup;
         public MMenu DefaultCannon;
         public bool triggeredByGunner;
-        public float timeFaze;
+        public float timeFaze = 20f;
 
         public int CannonType;
         public int NextCannonType;
@@ -1431,11 +1450,6 @@ namespace WW2NavalAssembly
 
             if ((FireKey.IsPressed || triggeredByGunner) && noShutter)
             {
-                if (triggeredByGunner)
-                {
-                    triggeredByGunner = false;
-                }
-                
                 currentReloadTime = 0;
                 muzzleStage = 0;
                 gameObject.GetComponent<Rigidbody>().AddForce(-Caliber.Value * transform.forward*5);
@@ -1448,6 +1462,7 @@ namespace WW2NavalAssembly
                 Cannon.GetComponent<BulletBehaviour>().fire = true;
                 Cannon.GetComponent<BulletBehaviour>().randomForce = randomForce;
                 Cannon.GetComponent<BulletBehaviour>().CannonType = CannonType;
+                Cannon.GetComponent<BulletBehaviour>().timeFaze = timeFaze;
                 Destroy(Cannon, 10);
 
                 CannonType = NextCannonType;
@@ -1464,7 +1479,13 @@ namespace WW2NavalAssembly
                     }
                     catch { }
                 }
-                
+
+                if (triggeredByGunner)
+                {
+                    triggeredByGunner = false;
+                    timeFaze = 20;
+                }
+
             }
         }
         public override void SimulateUpdateClient()
@@ -1505,6 +1526,7 @@ namespace WW2NavalAssembly
                 Cannon.GetComponent<BulletBehaviour>().fire = true;
                 Cannon.GetComponent<BulletBehaviour>().randomForce = WeaponMsgReceiver.Instance.Fire[myPlayerID][myGuid].fireForce;
                 Cannon.GetComponent<BulletBehaviour>().CannonType = CannonType;
+                Cannon.GetComponent<BulletBehaviour>().timeFaze = timeFaze;
                 Destroy(Cannon, 10);
 
                 CannonType = NextCannonType;
@@ -1543,6 +1565,7 @@ namespace WW2NavalAssembly
 
             if (FireKey.EmulationPressed() && noShutter)
             {
+                timeFaze = 20;
                 currentReloadTime = 0;
                 muzzleStage = 0;
                 gameObject.GetComponent<Rigidbody>().AddForce(-Caliber.Value * transform.forward * 5);
@@ -1555,6 +1578,7 @@ namespace WW2NavalAssembly
                 Cannon.GetComponent<BulletBehaviour>().fire = true;
                 Cannon.GetComponent<BulletBehaviour>().randomForce = randomForce;
                 Cannon.GetComponent<BulletBehaviour>().CannonType = CannonType;
+                Cannon.GetComponent<BulletBehaviour>().timeFaze = timeFaze;
                 Destroy(Cannon, 10);
                 CannonType = NextCannonType;
 

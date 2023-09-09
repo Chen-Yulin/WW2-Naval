@@ -81,6 +81,8 @@ namespace WW2NavalAssembly
         public bool[] synchronized = new bool[16];
 
         public Dictionary<float, Controller.FCResult>[] ControllerFCResult = new Dictionary<float, Controller.FCResult>[16];
+        public Dictionary<float, Controller.FCResult>[] AAControllerFCResult = new Dictionary<float, Controller.FCResult>[16];
+        public AAController[] aaController = new AAController[16];
 
         public ControllerDataManager()
         {
@@ -89,8 +91,10 @@ namespace WW2NavalAssembly
                 lockData[i] = new LockData();
                 cameraData[i] = new CameraData();
                 ControllerFCResult[i] = new Dictionary<float, Controller.FCResult>();
+                AAControllerFCResult[i] = new Dictionary<float, Controller.FCResult>();
                 ControllerObject[i] = new GameObject();
                 synchronized[i] = false;
+                aaController[i] = null;
             }
         }
         public void LockDataReceiver(Message msg)
@@ -224,25 +228,27 @@ namespace WW2NavalAssembly
             public float Pitch;
             public bool hasRes;
             public Vector2 predPosition;
-            public float timer = 0;
+            public float timer = 20;
             public FCResult(float orien)
             {
                 Orien = orien;
                 hasRes = false;
             }
-            public FCResult(float orien, float pitch, Vector2 PredPosition)
+            public FCResult(float orien, float pitch, Vector2 PredPosition, float Timer = 20)
             {
                 Orien = orien;
                 Pitch = pitch;
                 hasRes = true;
                 predPosition = PredPosition;
+                timer = Timer;
             }
-            public void Set(float orien, float pitch, bool HasRes, Vector2 PredPosition)
+            public void Set(float orien, float pitch, bool HasRes, Vector2 PredPosition, float Timer = 20)
             {
                 Orien = orien;
                 Pitch = pitch;
                 hasRes = HasRes;
                 predPosition = PredPosition;
+                timer = Timer;
             }
             public float getTurrentAngle(Vector2 forward, Vector2 turrentPos)
             {
@@ -1029,7 +1035,7 @@ namespace WW2NavalAssembly
                     offsetData.Reset();
                     ResetBaseRandomError();
                     Debug.Log("SendCamera");
-                    ModNetworking.SendToAll(ControllerDataManager.CameraMsg.CreateMessage(myPlayerID, Camera.main.ScreenPointToRay(Input.mousePosition).origin,
+                    ModNetworking.SendToHost(ControllerDataManager.CameraMsg.CreateMessage(myPlayerID, Camera.main.ScreenPointToRay(Input.mousePosition).origin,
                                                                                                 Camera.main.ScreenPointToRay(Input.mousePosition).direction));
                 }
             }

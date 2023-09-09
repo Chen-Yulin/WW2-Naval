@@ -128,13 +128,6 @@ namespace WW2NavalAssembly
             }
         }
 
-        public void UpdateAccel()
-        {
-            float Vel = GetCurrentSpeed();
-            Accel = (Vel - preVel) / Time.fixedDeltaTime;
-            preVel = Vel;
-        }
-
         public void InitTrail()
         {
             Trail = (GameObject)Instantiate(AssetManager.Instance.TorpedoTrail.ShipWave, transform);
@@ -164,39 +157,6 @@ namespace WW2NavalAssembly
             ArmMat.SetColor("_TintColor", new Color(HPPercent,HPPercent,HPPercent,1));
             SendEngineData();
         }
-        public float GetCurrentSpeed()
-        {
-            float captainSpeed = 0;
-            float mySpeed = Vector3.Dot(myRigid.velocity, -transform.up);
-            try
-            {
-                captainSpeed = ControllerDataManager.Instance.ControllerObject[myPlayerID].GetComponent<Controller>().GetCurrentSpeed();
-            }
-            catch 
-            {
-                return mySpeed;
-            }
-            if (Mathf.Abs(captainSpeed-mySpeed)>5)
-            {
-                return mySpeed;
-            }
-            else
-            {
-                return captainSpeed;
-            }
-            
-        }
-        //public void CalculateTargetVelocity()
-        //{
-        //    if (TargetVelocity >= TapPosition / 4 * ThrustValue.Value/1.94f + 0.008f)
-        //    {
-        //        TargetVelocity -= 0.008f;
-        //    }
-        //    else if (TargetVelocity <= TapPosition / 4 * ThrustValue.Value / 1.94f - 0.005f)
-        //    {
-        //        TargetVelocity += 0.005f;
-        //    }
-        //}
 
         public void CalculateThrustPercentage()
         {

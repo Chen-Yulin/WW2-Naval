@@ -133,20 +133,13 @@ namespace WW2NavalAssembly
         public MKey UpKey;
         public MKey DownKey;
         public MKey FireKey;
+        public MKey AASwitch;
         public MText GunGroup;
         public MSlider OrienFaultTolerance;
         public MSlider ElevationFaultTolerance;
         public MSlider TurningSpeed;
         public MLimits Limit;
 
-        public int leftEmulateStage = 0;
-        public int rightEmulateStage = 0;
-        public int upEmulateStage = 0;
-        public int downEmulateStage = 0;
-        public int fireEmulateStage = 0;
-
-        public int PreOrienDiection = 0;
-        public int PrePitchDiection = 0;
 
         GameObject[] GunLine = new GameObject[4];
         GameObject AngleCenter;
@@ -161,6 +154,7 @@ namespace WW2NavalAssembly
         public bool OrienLimitValid;
         public float PitchCenterAngle;
         public float PitchGunSpan;
+        public bool AA = false;
 
         public float turningSpeed = 1;
 
@@ -204,6 +198,7 @@ namespace WW2NavalAssembly
             foreach (var gun in FireGun)
             {
                 gun.triggeredByGunner = flag;
+                gun.timeFaze = targetTime;
             }
         }
         public void TurnUp(float delta)
@@ -547,22 +542,29 @@ namespace WW2NavalAssembly
         }
         public void GetFCPara()
         {
-            if (ControllerDataManager.Instance.lockData[myPlayerID].valid)
+            if (!AA)
             {
-                if (ControllerDataManager.Instance.ControllerFCResult[myPlayerID].ContainsKey(bindedCaliber))
+                if (ControllerDataManager.Instance.lockData[myPlayerID].valid)
                 {
-                    if (ControllerDataManager.Instance.ControllerFCResult[myPlayerID][bindedCaliber].hasRes)
+                    if (ControllerDataManager.Instance.ControllerFCResult[myPlayerID].ContainsKey(bindedCaliber))
                     {
-                        targetPitch = ControllerDataManager.Instance.ControllerFCResult[myPlayerID][bindedCaliber].Pitch;
-                        targetPos = ControllerDataManager.Instance.ControllerFCResult[myPlayerID][bindedCaliber].predPosition;
-                        targetTime = ControllerDataManager.Instance.ControllerFCResult[myPlayerID][bindedCaliber].timer;
-                        hasTarget = true;
+                        if (ControllerDataManager.Instance.ControllerFCResult[myPlayerID][bindedCaliber].hasRes)
+                        {
+                            targetPitch = ControllerDataManager.Instance.ControllerFCResult[myPlayerID][bindedCaliber].Pitch;
+                            targetPos = ControllerDataManager.Instance.ControllerFCResult[myPlayerID][bindedCaliber].predPosition;
+                            targetTime = ControllerDataManager.Instance.ControllerFCResult[myPlayerID][bindedCaliber].timer;
+                            hasTarget = true;
+                        }
+                        else
+                        {
+                            hasTarget = false;
+                        }
+
                     }
                     else
                     {
                         hasTarget = false;
                     }
-
                 }
                 else
                 {
@@ -571,12 +573,40 @@ namespace WW2NavalAssembly
             }
             else
             {
-                hasTarget = false;
-            }
+                if (!ControllerDataManager.Instance.aaController[myPlayerID])
+                {
+                    hasTarget = false;
+                    return;
+                }
+                if (ControllerDataManager.Instance.aaController[myPlayerID].hasTarget)
+                {
+                    if (ControllerDataManager.Instance.AAControllerFCResult[myPlayerID].ContainsKey(bindedCaliber))
+                    {
+                        if (ControllerDataManager.Instance.AAControllerFCResult[myPlayerID][bindedCaliber].hasRes)
+                        {
+                            targetPitch = ControllerDataManager.Instance.AAControllerFCResult[myPlayerID][bindedCaliber].Pitch;
+                            targetPos = ControllerDataManager.Instance.AAControllerFCResult[myPlayerID][bindedCaliber].predPosition;
+                            targetTime = ControllerDataManager.Instance.AAControllerFCResult[myPlayerID][bindedCaliber].timer;
+                            hasTarget = true;
+                        }
+                        else
+                        {
+                            hasTarget = false;
+                        }
 
+                    }
+                    else
+                    {
+                        hasTarget = false;
+                    }
+                }
+                else
+                {
+                    hasTarget = false;
+                }
+            }
             
         }
-
         public void SendTargetToHost()
         {
             if (mySeed == ModController.Instance.state % 10)
@@ -584,73 +614,6 @@ namespace WW2NavalAssembly
                 ModNetworking.SendToHost(GunnerMsgReceiver.TargetMsg.CreateMessage(myPlayerID,myGuid,hasTarget,targetPos.x,targetPos.y,targetPitch));
             }
         }
-        //public void ReceiveEmulateControl()
-        //{
-        //    //Orien
-        //    if (GunnerMsgReceiver.Instance.EmulateOrien[myPlayerID][myGuid] == 1)
-        //    {
-        //        if (leftEmulateStage == 0)
-        //        {
-        //            EmulateKeys(BlockBehaviour.KeyList.ToArray(), LeftKey, true);
-        //            leftEmulateStage++;
-        //        }
-        //    }
-        //    else if (GunnerMsgReceiver.Instance.EmulateOrien[myPlayerID][myGuid] == -1)
-        //    {
-        //        if (rightEmulateStage == 0)
-        //        {
-        //            EmulateKeys(BlockBehaviour.KeyList.ToArray(), RightKey, true);
-        //            rightEmulateStage++;
-        //        }
-        //    }
-        //    else
-        //    {
-        //        if (leftEmulateStage == 1)
-        //        {
-        //            EmulateKeys(BlockBehaviour.KeyList.ToArray(), LeftKey, false);
-        //            leftEmulateStage--;
-        //        }
-        //        if (rightEmulateStage == 1)
-        //        {
-        //            EmulateKeys(BlockBehaviour.KeyList.ToArray(), RightKey, false);
-        //            rightEmulateStage--;
-        //        }
-        //    }
-
-        //    //Pitch
-        //    if (GunnerMsgReceiver.Instance.EmulatePitch[myPlayerID][myGuid] == 1)
-        //    {
-        //        if (upEmulateStage == 0)
-        //        {
-        //            EmulateKeys(BlockBehaviour.KeyList.ToArray(), UpKey, true);
-        //            upEmulateStage++;
-        //        }
-        //    }
-        //    else if (GunnerMsgReceiver.Instance.EmulatePitch[myPlayerID][myGuid] == -1)
-        //    {
-        //        if (downEmulateStage == 0)
-        //        {
-        //            EmulateKeys(BlockBehaviour.KeyList.ToArray(), DownKey, true);
-        //            downEmulateStage++;
-        //        }
-        //    }
-        //    else
-        //    {
-        //        if (upEmulateStage == 1)
-        //        {
-        //            EmulateKeys(BlockBehaviour.KeyList.ToArray(), UpKey, false);
-        //            upEmulateStage--;
-        //        }
-        //        if (downEmulateStage == 1)
-        //        {
-        //            EmulateKeys(BlockBehaviour.KeyList.ToArray(), DownKey, false);
-        //            downEmulateStage--;
-        //        }
-        //    }
-
-        //} // deprecated
-
-
         public void ControlTurrent(bool controlling, bool OutOfSpan = false, float OrienDelta = 0, float TargetOrien = 0, float PitchDelta = 0)
         {
             if (controlling)
@@ -739,151 +702,6 @@ namespace WW2NavalAssembly
                 ControlTurrent(false);
             }
         }
-        //public void EmulateControl()
-        //{
-        //    if (hasTarget && bindedGuns[0])
-        //    {
-        //        bool GunReady = true;
-        //        Vector2 GunForward = bindedGuns[0].GetComponent<Gun>().GetFCOrienPara();
-        //        Vector2 CenterForward = new Vector2();
-        //        if (limitValid)
-        //        {
-        //            CenterForward = new Vector2(AngleCenter.transform.forward.x, AngleCenter.transform.forward.z);
-        //        }
-        //        Vector2 targetVector = targetPos - new Vector2(bindedGuns[0].transform.position.x, bindedGuns[0].transform.position.z);
-        //        bool OutOfSpan = limitValid ? (Vector2.Angle(targetVector, CenterForward) > GunSpan ||
-        //            (   Mathf.Sign(MathTool.SignedAngle(targetVector,-CenterForward)) == Mathf.Sign(MathTool.SignedAngle(targetVector,GunForward)) && 
-        //                Vector2.Angle(targetVector, -CenterForward) < Vector2.Angle(targetVector, GunForward)
-        //                )
-        //            ) : false ;
-        //        //Debug.Log(OutOfSpan+" "+ MathTool.SignedAngle(CenterForward, targetVector));
-        //        if ((!OutOfSpan && MathTool.SignedAngle(GunForward, targetVector) > OrienFaultTolerance.Value) ||
-        //            (OutOfSpan && MathTool.SignedAngle(CenterForward, targetVector) > 0))
-        //        {
-        //            GunReady = false;
-        //            if (leftEmulateStage == 0)
-        //            {
-        //                EmulateKeys(BlockBehaviour.KeyList.ToArray(), LeftKey, true);
-        //                leftEmulateStage ++;
-        //            }
-        //        }
-        //        else
-        //        {
-        //            if (leftEmulateStage == 1)
-        //            {
-        //                EmulateKeys(BlockBehaviour.KeyList.ToArray(), LeftKey, false);
-        //                leftEmulateStage --;
-        //            }
-        //        }
-        //        if ((!OutOfSpan && MathTool.SignedAngle(GunForward, targetVector) < -OrienFaultTolerance.Value) ||
-        //            (OutOfSpan && MathTool.SignedAngle(CenterForward, targetVector) < 0))
-        //        {
-        //            GunReady = false;
-        //            if (rightEmulateStage == 0)
-        //            {
-        //                EmulateKeys(BlockBehaviour.KeyList.ToArray(), RightKey, true);
-        //                rightEmulateStage ++;
-        //            }
-                    
-        //        }
-        //        else
-        //        {
-        //            if (rightEmulateStage == 1)
-        //            {
-        //                EmulateKeys(BlockBehaviour.KeyList.ToArray(), RightKey, false);
-        //                rightEmulateStage --;
-        //            }
-        //        }
-
-        //        if (targetPitch - bindedGuns[0].GetComponent<Gun>().GetFCPitchPara() > ElevationFaultTolerance.Value)
-        //        {
-        //            GunReady = false;
-        //            if (upEmulateStage == 0)
-        //            {
-        //                EmulateKeys(BlockBehaviour.KeyList.ToArray(), UpKey, true);
-        //                upEmulateStage++;
-        //            }
-        //        }
-        //        else
-        //        {
-        //            if (upEmulateStage == 1)
-        //            {
-        //                EmulateKeys(BlockBehaviour.KeyList.ToArray(), UpKey, false);
-        //                upEmulateStage--;
-        //            }
-        //        }
-
-        //        if (targetPitch - bindedGuns[0].GetComponent<Gun>().GetFCPitchPara() < -ElevationFaultTolerance.Value)
-        //        {
-        //            GunReady = false;
-        //            if (downEmulateStage == 0)
-        //            {
-        //                EmulateKeys(BlockBehaviour.KeyList.ToArray(), DownKey, true);
-        //                downEmulateStage++;
-        //            }
-        //        }
-        //        else
-        //        {
-        //            if (downEmulateStage == 1)
-        //            {
-        //                EmulateKeys(BlockBehaviour.KeyList.ToArray(), DownKey, false);
-        //                downEmulateStage--;
-        //            }
-        //        }
-
-        //        if (GunReady)
-        //        {
-        //            if (fireEmulateStage == 0)
-        //            {
-        //                EmulateKeys(BlockBehaviour.KeyList.ToArray(), FireKey, true);
-        //                fireEmulateStage++;
-        //            }
-        //            else
-        //            {
-        //                EmulateKeys(BlockBehaviour.KeyList.ToArray(), FireKey, false);
-        //                fireEmulateStage--;
-        //            }
-        //        }
-        //        else
-        //        {
-        //            if (fireEmulateStage == 1)
-        //            {
-        //                EmulateKeys(BlockBehaviour.KeyList.ToArray(), FireKey, false);
-        //                fireEmulateStage--;
-        //            }
-        //        }
-
-        //    }
-        //    else
-        //    {
-        //        if (leftEmulateStage == 1)
-        //        {
-        //            EmulateKeys(BlockBehaviour.KeyList.ToArray(), LeftKey, false);
-        //            leftEmulateStage--;
-        //        }
-        //        if (rightEmulateStage == 1)
-        //        {
-        //            EmulateKeys(BlockBehaviour.KeyList.ToArray(), RightKey, false);
-        //            rightEmulateStage--;
-        //        }
-        //        if (upEmulateStage == 1)
-        //        {
-        //            EmulateKeys(BlockBehaviour.KeyList.ToArray(), UpKey, false);
-        //            upEmulateStage--;
-        //        }
-        //        if (downEmulateStage == 1)
-        //        {
-        //            EmulateKeys(BlockBehaviour.KeyList.ToArray(), DownKey, false);
-        //            downEmulateStage--;
-        //        }
-        //        if (fireEmulateStage == 1)
-        //        {
-        //            EmulateKeys(BlockBehaviour.KeyList.ToArray(), FireKey, false);
-        //            fireEmulateStage--;
-        //        }
-        //    }
-            
-        //}
         public void EmulateControl()
         {
             if (hasTarget && bindedGuns[0])
@@ -1001,6 +819,7 @@ namespace WW2NavalAssembly
         public override void SafeAwake()
         {
             ActiveSwitch = AddKey("Switch Active", "ActiveGunner", KeyCode.None);
+            AASwitch = AddKey("Switch AA", "AASwitch", KeyCode.None);
             FireKey = AddEmulatorKey("Fire Key", "FireKey", KeyCode.None);
             LeftKey = AddEmulatorKey("Left Key", "LeftKey", KeyCode.G);
             RightKey = AddEmulatorKey("Right Key", "RightKey", KeyCode.J);
@@ -1111,6 +930,10 @@ namespace WW2NavalAssembly
                     ModNetworking.SendToAll(GunnerMsgReceiver.GunnerActiveMsg.CreateMessage(myPlayerID, myGuid, GunnerActive));
                 }
             }
+            if (AASwitch.IsPressed)
+            {
+                AA = !AA;
+            }
         }
         public override void SimulateUpdateClient()
         {
@@ -1193,12 +1016,6 @@ namespace WW2NavalAssembly
             {
                 SendTargetToHost();
             }
-            
-        }
-        public override void SendKeyEmulationUpdateHost()
-        {
-
-
             
         }
         public void OnGUI()
