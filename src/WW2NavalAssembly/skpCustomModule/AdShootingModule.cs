@@ -355,24 +355,6 @@ namespace skpCustomModule
 		// Token: 0x060000DE RID: 222 RVA: 0x00012218 File Offset: 0x00010418
 		private void AddScript(Block block)
 		{
-			BlockBehaviour internalObject = block.BuildingBlock.InternalObject;
-			bool flag = this.ScriptAttachContainer.ContainsKey(internalObject.BlockID);
-			if (flag)
-			{
-				Type type = this.ScriptAttachContainer[internalObject.BlockID];
-				try
-				{
-					bool flag2 = internalObject.GetComponent(type) == null;
-					if (flag2)
-					{
-						internalObject.gameObject.AddComponent(type);
-					}
-				}
-				catch
-				{
-					ModConsole.Log("AddScript Error");
-				}
-			}
 		}
 
 		// Token: 0x060000DF RID: 223 RVA: 0x000122A0 File Offset: 0x000104A0
@@ -478,11 +460,6 @@ namespace skpCustomModule
 		public Dictionary<int, GameObject> UImaskedimageContainer = new Dictionary<int, GameObject>();
 
 		// Token: 0x04000209 RID: 521
-		public Dictionary<int, Type> ScriptAttachContainer = new Dictionary<int, Type> { 
-		{
-			0,
-			typeof(BeaconScript)
-		} };
 
 		// Token: 0x0400020A RID: 522
 		public Dictionary<int, GameObject> UIEntitytextContainer = new Dictionary<int, GameObject>();

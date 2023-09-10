@@ -112,7 +112,6 @@
     <Compile Include="skpCustomModule\AdTransformValues.cs" />
     <Compile Include="skpCustomModule\AdWaterModule.cs" />
     <Compile Include="skpCustomModule\Asset_Explosion.cs" />
-    <Compile Include="skpCustomModule\BeaconScript.cs" />
     <Compile Include="skpCustomModule\CollisionType.cs" />
     <Compile Include="skpCustomModule\Color3.cs" />
     <Compile Include="skpCustomModule\CombineType.cs" />
