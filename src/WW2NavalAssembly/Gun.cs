@@ -882,7 +882,6 @@ namespace WW2NavalAssembly
         }
         private void PlayExploInAir(bool AP = true)
         {
-            
             GameObject explo;
             if (Caliber < 100)
             {
@@ -911,10 +910,35 @@ namespace WW2NavalAssembly
                     ModNetworking.SendToAll(WeaponMsgReceiver.ExploMsg.CreateMessage(myPlayerID, transform.position, Caliber, AP ? 0 : 2));
                 }
             }
-            
-
 
             ExploDestroyBalloon(transform.position, AP);
+            if (transform.FindChild("CannonVis"))
+            {
+                transform.FindChild("CannonVis").gameObject.SetActive(false);
+            }
+            Destroy(gameObject.GetComponent<Rigidbody>());
+            Destroy(gameObject.GetComponent<BulletBehaviour>());
+        }
+        private void PlayExploForAircraft()
+        {
+            GameObject explo;
+            if (Caliber < 100)
+            {
+                explo = (GameObject)Instantiate(AssetManager.Instance.CannonHit.exploSmall, transform.position, Quaternion.identity);
+            }
+            else
+            {
+                explo = (GameObject)Instantiate(AssetManager.Instance.CannonHit.explo, transform.position, Quaternion.identity);
+            }
+            explo.name = "Explo Air";
+            explo.SetActive(true);
+            explo.transform.localScale = Caliber / 200 * Vector3.one;
+            Destroy(explo, 3);
+            AddExploSound(explo.transform);
+
+            exploded = true;
+
+            ExploDestroyAircraft(transform.position);
             if (transform.FindChild("CannonVis"))
             {
                 transform.FindChild("CannonVis").gameObject.SetActive(false);
@@ -1060,6 +1084,31 @@ namespace WW2NavalAssembly
             }
             catch { }
         }
+        private void ExploDestroyAircraft(Vector3 pos)
+        {
+            if (StatMaster.isClient)
+            {
+                return;
+            }
+            //Debug.Log(armourGuid);
+            float radius = Caliber / 5f;
+            Collider[] ExploCol = Physics.OverlapSphere(transform.position, radius);
+            foreach (Collider hitedCollider in ExploCol)
+            {
+                try
+                {
+                    Aircraft a = hitedCollider.attachedRigidbody.GetComponent<Aircraft>();
+                    if (a)
+                    {
+                        float dist = Vector3.Distance(pos, a.transform.position);
+                        a.ReduceHP((int)(Caliber * Caliber / (dist * 50f)));
+                        a.StartCoroutine(a.DisturbedCoroutine(10, dist / radius));
+                        a.myRigid.AddExplosionForce(Caliber * 3f, pos, radius);
+                    }
+                }
+                catch { }
+            }
+        }
         public void Start()
         {
             name = "Bullet";
@@ -1099,49 +1148,50 @@ namespace WW2NavalAssembly
                 } // add initial speed
                 transform.rotation = Quaternion.LookRotation(myRigid.velocity);
                 myRigid.AddForce(randomForce);
-
-                if (!StatMaster.isClient)
+                if (!AA)
                 {
-                    if (CannonType == 0) // for AP
+                    if (!StatMaster.isClient)
                     {
-                        CannonDetectCollisionHost();
-                        if (ModController.Instance.showSea)
+                        if (CannonType == 0) // for AP
                         {
-                            CannonDetectWaterHost();
+                            CannonDetectCollisionHost();
+                            if (ModController.Instance.showSea)
+                            {
+                                CannonDetectWaterHost();
+                            }
+                            if (timerOn)
+                            {
+                                timer++;
+                            }
+                            if (timer > 5f && !exploded)
+                            {
+                                PlayExploInAir();
+                            }
                         }
-                        if (timerOn)
+                        else
                         {
-                            timer++;
+                            CannonDetectCollisionHost(false);
+                            if (pericedBlock.Count == 0 && ModController.Instance.showSea)
+                            {
+                                HEDetectWaterHost();
+                            }
+                            if (timerOn)
+                            {
+                                timer++;
+                            }
+                            if (timer > 3f && !exploded)
+                            {
+                                PlayExploInAir(false);
+                            }
+
                         }
-                        if (timer > 5f && !exploded)
-                        {
-                            PlayExploInAir();
-                        }
+
                     }
                     else
                     {
-                        CannonDetectCollisionHost(false);
-                        if (pericedBlock.Count == 0 && ModController.Instance.showSea)
-                        {
-                            HEDetectWaterHost();
-                        }
-                        if (timerOn)
-                        {
-                            timer++;
-                        }
-                        if (timer > 3f && !exploded)
-                        {
-                            PlayExploInAir(false);
-                        }
-
+                        CannonDetectWaterClient();
                     }
-                    
                 }
-                else
-                {
-                    CannonDetectWaterClient();
-                }
-                
             }
             if (CannonType == 0)
             {
@@ -1159,7 +1209,7 @@ namespace WW2NavalAssembly
 
             if (timeFaze < currentTime)
             {
-                PlayExploInAir(false);
+                PlayExploForAircraft();
             }
 
             currentTime += Time.fixedDeltaTime;
@@ -1464,6 +1514,14 @@ namespace WW2NavalAssembly
                 Cannon.GetComponent<BulletBehaviour>().fire = true;
                 Cannon.GetComponent<BulletBehaviour>().randomForce = randomForce;
                 Cannon.GetComponent<BulletBehaviour>().CannonType = CannonType;
+
+                if (timeFaze != 20)
+                {
+                    float randomFaze = timeFaze + 0.05f - 0.1f * UnityEngine.Random.value;
+                    randomFaze = Mathf.Clamp(randomFaze, 0.1f, 19f);
+                    timeFaze = randomFaze;
+                }
+                
                 Cannon.GetComponent<BulletBehaviour>().timeFaze = timeFaze;
                 Destroy(Cannon, 10);
 
@@ -1580,7 +1638,7 @@ namespace WW2NavalAssembly
                 Cannon.GetComponent<BulletBehaviour>().fire = true;
                 Cannon.GetComponent<BulletBehaviour>().randomForce = randomForce;
                 Cannon.GetComponent<BulletBehaviour>().CannonType = CannonType;
-                Cannon.GetComponent<BulletBehaviour>().timeFaze = timeFaze;
+                Cannon.GetComponent<BulletBehaviour>().timeFaze = 20f;
                 Destroy(Cannon, 10);
                 CannonType = NextCannonType;
 

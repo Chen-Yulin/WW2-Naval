@@ -140,6 +140,7 @@ namespace WW2NavalAssembly
         public MKey DownKey;
         public MKey FireKey;
         public MKey AASwitch;
+        public MToggle DefaultAA;
         public MText GunGroup;
         public MSlider OrienFaultTolerance;
         public MSlider ElevationFaultTolerance;
@@ -832,6 +833,7 @@ namespace WW2NavalAssembly
             RightKey = AddEmulatorKey("Right Key", "RightKey", KeyCode.J);
             UpKey = AddEmulatorKey("Up Key", "UpKey", KeyCode.Y);
             DownKey = AddEmulatorKey("Down Key", "DownKey", KeyCode.H);
+            DefaultAA = AddToggle("Default AA", "DefaultAA", false);
             OrienFaultTolerance = AddSlider("Orien Fault Tolerance", "OrienFaultTolerance", 1f, 0f, 5f);
             ElevationFaultTolerance = AddSlider("Elevation Fault Tolerance", "ElevationFaultTolerance", 0.3f, 0f, 2f);
             TurningSpeed = AddSlider("Speed", "TurningSpeed", 1f, 0.1f, 1f);
@@ -868,7 +870,7 @@ namespace WW2NavalAssembly
         }
         public override void OnSimulateStart()
         {
-            
+            AA = !DefaultAA.isDefaultValue;
             GunnerActive = true;
             myGuid = BlockBehaviour.BuildingBlock.Guid.GetHashCode();
             try
@@ -912,11 +914,11 @@ namespace WW2NavalAssembly
             }
             try
             {
-                GunnerMsgReceiver.Instance.GunnerAA[myPlayerID].Add(myGuid, false);
+                GunnerMsgReceiver.Instance.GunnerAA[myPlayerID].Add(myGuid, AA);
             }
             catch
             {
-                GunnerMsgReceiver.Instance.GunnerAA[myPlayerID][myGuid] = false;
+                GunnerMsgReceiver.Instance.GunnerAA[myPlayerID][myGuid] = AA;
             }
 
         }

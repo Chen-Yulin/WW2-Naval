@@ -292,6 +292,25 @@ namespace WW2NavalAssembly
             }
         }
 
+        Vector3 PositionLast;
+        Vector3 PositionDelta;
+        public Vector3 myVelocity
+        {
+            get
+            {
+                if (StatMaster.isClient)
+                {
+                    return PositionDelta / Time.deltaTime;
+                }
+                else
+                {
+                    return myRigid.velocity;
+                }
+                
+            }
+        }
+
+
         // ============== for aircraft mass =================
         float _fuel = 1;
         float _loadmass = 0;
@@ -665,6 +684,7 @@ namespace WW2NavalAssembly
                 i++;
             }
             inTurnoverRoutine = false;
+            yield break;
         }
         IEnumerator LandOnBoardCoroutine()
         {
@@ -691,6 +711,18 @@ namespace WW2NavalAssembly
             }
             Explo();
             inExploCoroutine = false;
+            yield break;
+        }
+        public IEnumerator DisturbedCoroutine(int time, float force)
+        {
+            int i = 0;
+            Vector3 torque = new Vector3(-2 * UnityEngine.Random.value, 0, 5 - 10 * UnityEngine.Random.value) * force;
+            while (i < time)
+            {
+                myRigid.AddRelativeTorque(torque);
+                yield return new WaitForFixedUpdate();
+                i++;
+            }
             yield break;
         }
         public void InitPropellerUndercart()
@@ -2176,6 +2208,8 @@ namespace WW2NavalAssembly
         }
         public void Update()
         {
+            PositionDelta = transform.position - PositionLast;
+            PositionLast = transform.position;
             if (BlockBehaviour.isSimulating && preAppearance == "")
             {
                 switch (Type.Value)
@@ -2514,7 +2548,7 @@ namespace WW2NavalAssembly
                         else if (Type.Value == 2)
                         {
                             float distFromWayPoint = (MathTool.Get2DCoordinate(transform.position) - WayPoint).magnitude;
-                            if (!inAttackRoutine && distFromWayPoint < 95f && Rank.Value == 1)
+                            if (!inAttackRoutine && distFromWayPoint < 50f && Rank.Value == 1)
                             {
                                 foreach (var a in myGroup)
                                 {

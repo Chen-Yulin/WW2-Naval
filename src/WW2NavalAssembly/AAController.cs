@@ -153,6 +153,21 @@ namespace WW2NavalAssembly
                     DetectedAircraft.Remove(a);
                 }
             }
+            Stack<Aircraft> invalidAircaft = new Stack<Aircraft>();
+            foreach (var leader in DetectedAircraft)
+            {
+                if (!leader)
+                {
+                    invalidAircaft.Push(leader);
+                }else if (!leader.isFlying)
+                {
+                    invalidAircaft.Push(leader);
+                }
+            }
+            foreach (var leader in invalidAircaft)
+            {
+                DetectedAircraft.Remove(leader);
+            }
         }
         public void UpdateAAResult()
         {
@@ -169,7 +184,15 @@ namespace WW2NavalAssembly
             {
                 Aircraft target = DetectedAircraft[CurrentTarget];
                 Vector3 targetPos = target.transform.position;
-                Vector3 targetVel = target.GetComponent<Rigidbody>().velocity;
+                Vector3 targetVel = target.myVelocity;
+                if (StatMaster.isClient)
+                {
+                    targetVel *= 1.8f - UnityEngine.Random.value * 0.4f;
+                }
+                else
+                {
+                    targetVel *= 1.0f - UnityEngine.Random.value * 0.4f;
+                }
                 foreach (var fcRes in FCResults)
                 {
                     FCResult res = CalculateGunFCPara(targetPos, targetVel, fcRes.Key);
@@ -207,7 +230,7 @@ namespace WW2NavalAssembly
         public void OnDestroy()
         {
         }
-        public override void SimulateUpdateHost()
+        public override void SimulateUpdateAlways()
         {
             if (SwitchTarget.IsPressed)
             {
@@ -236,6 +259,10 @@ namespace WW2NavalAssembly
 
         public void OnGUI()
         {
+            if (StatMaster.hudHidden)
+            {
+                return;
+            }
             if (StatMaster.isMP)
             {
                 if (myPlayerID != PlayerData.localPlayer.networkId)
@@ -275,7 +302,7 @@ namespace WW2NavalAssembly
                         }
                         if (onScreenPosition.z >= 0)
                         {
-                            GUI.Box(new Rect(onScreenPosition.x - 50, Camera.main.pixelHeight - onScreenPosition.y - 20, 100, 25), target.Type.Selection.ToString() + " *" + target.myGroup.Count.ToString() + "*");
+                            GUI.Box(new Rect(onScreenPosition.x - 50, Camera.main.pixelHeight - onScreenPosition.y - 40, 100, 25), target.Type.Selection.ToString() + " *" + target.myGroup.Count.ToString() + "*");
                         }
                     }
                 }
