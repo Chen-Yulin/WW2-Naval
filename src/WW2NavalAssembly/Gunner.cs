@@ -16,8 +16,8 @@ namespace WW2NavalAssembly
     {
         public override string Name { get; } = "GunnerMsgReceiver";
         public static MessageType EmulateMsg = ModNetworking.CreateMessageType(DataType.Integer, DataType.Integer, DataType.Integer, DataType.Integer);
-        public static MessageType TargetMsg = ModNetworking.CreateMessageType(DataType.Integer, DataType.Integer, DataType.Boolean, DataType.Single, DataType.Single, DataType.Single);
-        public static MessageType GunnerActiveMsg = ModNetworking.CreateMessageType(DataType.Integer, DataType.Integer, DataType.Boolean);
+        public static MessageType TargetMsg = ModNetworking.CreateMessageType(DataType.Integer, DataType.Integer, DataType.Boolean, DataType.Single, DataType.Single, DataType.Single, DataType.Single);
+        public static MessageType GunnerActiveMsg = ModNetworking.CreateMessageType(DataType.Integer, DataType.Integer, DataType.Boolean, DataType.Boolean);
 
         public Dictionary<int, int>[] EmulatePitch = new Dictionary<int, int>[16];
         public Dictionary<int, int>[] EmulateOrien = new Dictionary<int, int>[16];
@@ -25,7 +25,9 @@ namespace WW2NavalAssembly
         public Dictionary<int, bool>[] hasTarget = new Dictionary<int, bool>[16];
         public Dictionary<int, Vector2>[] TargetPredPos = new Dictionary<int, Vector2>[16];
         public Dictionary<int, float>[] TargrtPitch = new Dictionary<int, float>[16];
+        public Dictionary<int, float>[] TargetTime = new Dictionary<int, float>[16];
         public Dictionary<int, bool>[] GunnerActive = new Dictionary<int, bool>[16];
+        public Dictionary<int, bool>[] GunnerAA = new Dictionary<int, bool>[16];
 
         public GunnerMsgReceiver()
         {
@@ -37,6 +39,8 @@ namespace WW2NavalAssembly
                 TargetPredPos[i] = new Dictionary<int, Vector2>();
                 TargrtPitch[i] = new Dictionary<int, float>();
                 GunnerActive[i] = new Dictionary<int, bool>();
+                GunnerAA[i] = new Dictionary<int, bool>();
+                TargetTime[i] = new Dictionary<int, float>();
             }
         }
 
@@ -50,10 +54,12 @@ namespace WW2NavalAssembly
             hasTarget[(int)msg.GetData(0)][(int)msg.GetData(1)] = (bool)msg.GetData(2);
             TargetPredPos[(int)msg.GetData(0)][(int)msg.GetData(1)] = new Vector2((float)msg.GetData(3), (float)msg.GetData(4));
             TargrtPitch[(int)msg.GetData(0)][(int)msg.GetData(1)] = (float)msg.GetData(5);
+            TargetTime[(int)msg.GetData(0)][(int)msg.GetData(1)] = (float)msg.GetData(6);
         }
         public void GunnerActiveReceiver(Message msg)
         {
             GunnerActive[(int)msg.GetData(0)][(int)msg.GetData(1)] = (bool)msg.GetData(2);
+            GunnerAA[(int)msg.GetData(0)][(int)msg.GetData(1)] = (bool)msg.GetData(3);
         }
 
     }
@@ -144,7 +150,7 @@ namespace WW2NavalAssembly
         GameObject[] GunLine = new GameObject[4];
         GameObject AngleCenter;
 
-        public float targetTime;
+        public float targetTime = 20f;
         public float targetPitch;
         public Vector2 targetPos;
         public bool hasTarget;
@@ -161,6 +167,7 @@ namespace WW2NavalAssembly
         public bool initialized = false;
 
         public Texture GunnerAlertIcon;
+        public Texture GunnerAAIcon;
         int iconSize = 30;
 
         public override bool EmulatesAnyKeys { get { return true; } }
@@ -198,7 +205,7 @@ namespace WW2NavalAssembly
             foreach (var gun in FireGun)
             {
                 gun.triggeredByGunner = flag;
-                gun.timeFaze = 20f;
+                gun.timeFaze = targetTime;
             }
         }
         public void TurnUp(float delta)
@@ -611,7 +618,7 @@ namespace WW2NavalAssembly
         {
             if (mySeed == ModController.Instance.state % 10)
             {
-                ModNetworking.SendToHost(GunnerMsgReceiver.TargetMsg.CreateMessage(myPlayerID,myGuid,hasTarget,targetPos.x,targetPos.y,targetPitch));
+                ModNetworking.SendToHost(GunnerMsgReceiver.TargetMsg.CreateMessage(myPlayerID,myGuid,hasTarget,targetPos.x,targetPos.y,targetPitch, targetTime));
             }
         }
         public void ControlTurrent(bool controlling, bool OutOfSpan = false, float OrienDelta = 0, float TargetOrien = 0, float PitchDelta = 0)
@@ -694,7 +701,7 @@ namespace WW2NavalAssembly
                 float OrienDelta = MathTool.SignedAngle(GunForward, targetVector);
                 float PitchDelta = GunnerMsgReceiver.Instance.TargrtPitch[myPlayerID][myGuid] - bindedGuns[0].GetComponent<Gun>().GetFCPitchPara();
                 float TargetOrien = MathTool.SignedAngle(CenterForward, targetVector);
-
+                targetTime = GunnerMsgReceiver.Instance.TargetTime[myPlayerID][myGuid];
                 ControlTurrent(true, OutOfSpan, OrienDelta, TargetOrien, PitchDelta);
             }
             else
@@ -832,6 +839,7 @@ namespace WW2NavalAssembly
             myPlayerID = BlockBehaviour.ParentMachine.PlayerID;
             mySeed = (int)(UnityEngine.Random.value * 10);
             GunnerAlertIcon = ModResource.GetTexture("gunnerAlert Texture").Texture;
+            GunnerAAIcon = ModResource.GetTexture("AA Mode Icon").Texture;
             //FauxTransform iconInfo = new FauxTransform(new Vector3(0f, 0f, 0f), Quaternion.Euler(-90f, 0f, 0f), Vector3.one * 0.25f);
             //Limit = AddLimits("Limits", "Limits", 90f, 90f, 180f,iconInfo);
         }
@@ -902,6 +910,14 @@ namespace WW2NavalAssembly
             {
                 GunnerMsgReceiver.Instance.GunnerActive[myPlayerID][myGuid] = true;
             }
+            try
+            {
+                GunnerMsgReceiver.Instance.GunnerAA[myPlayerID].Add(myGuid, false);
+            }
+            catch
+            {
+                GunnerMsgReceiver.Instance.GunnerAA[myPlayerID][myGuid] = false;
+            }
 
         }
         public override void OnSimulateStop()
@@ -927,17 +943,22 @@ namespace WW2NavalAssembly
                 GunnerActive = !GunnerActive;
                 if (StatMaster.isMP)
                 {
-                    ModNetworking.SendToAll(GunnerMsgReceiver.GunnerActiveMsg.CreateMessage(myPlayerID, myGuid, GunnerActive));
+                    ModNetworking.SendToAll(GunnerMsgReceiver.GunnerActiveMsg.CreateMessage(myPlayerID, myGuid, GunnerActive, AA));
                 }
             }
             if (AASwitch.IsPressed)
             {
                 AA = !AA;
+                if (StatMaster.isMP)
+                {
+                    ModNetworking.SendToAll(GunnerMsgReceiver.GunnerActiveMsg.CreateMessage(myPlayerID, myGuid, GunnerActive, AA));
+                }
             }
         }
         public override void SimulateUpdateClient()
         {
             GunnerActive = GunnerMsgReceiver.Instance.GunnerActive[myPlayerID][myGuid];
+            AA = GunnerMsgReceiver.Instance.GunnerAA[myPlayerID][myGuid];
         }
         public override void SimulateFixedUpdateAlways()
         {
@@ -1039,6 +1060,10 @@ namespace WW2NavalAssembly
                     if (GunnerActive)
                     {
                         GUI.DrawTexture(new Rect(onScreenPosition.x - iconSize / 2, Camera.main.pixelHeight - onScreenPosition.y - iconSize / 2, iconSize, iconSize), GunnerAlertIcon);
+                    }
+                    if (AA)
+                    {
+                        GUI.DrawTexture(new Rect(onScreenPosition.x - iconSize / 2, Camera.main.pixelHeight - onScreenPosition.y - iconSize / 2 - 20, iconSize, iconSize), GunnerAAIcon);
                     }
                 }
             }

@@ -136,6 +136,50 @@ namespace WW2NavalAssembly
                 }
             }
         }
+        public void UpdateDetectedAircraft()
+        {
+            foreach (var leader in Grouper.Instance.AircraftLeaders[ModController.Instance.state % 16])
+            {
+                Aircraft a = leader.Value.Value;
+                if (Vector3.Distance(a.transform.position, transform.position) < 500 && a.isFlying)
+                {
+                    if (!DetectedAircraft.Contains(a))
+                    {
+                        DetectedAircraft.Add(a);
+                    }
+                }
+                else if (DetectedAircraft.Contains(a))
+                {
+                    DetectedAircraft.Remove(a);
+                }
+            }
+        }
+        public void UpdateAAResult()
+        {
+            CurrentTarget = Mathf.Clamp(CurrentTarget, -999, DetectedAircraft.Count - 1);
+            if (CurrentTarget < 0)
+            {
+
+                if (DetectedAircraft.Count != 0)
+                {
+                    CurrentTarget = 0;
+                }
+            }
+            else
+            {
+                Aircraft target = DetectedAircraft[CurrentTarget];
+                Vector3 targetPos = target.transform.position;
+                Vector3 targetVel = target.GetComponent<Rigidbody>().velocity;
+                foreach (var fcRes in FCResults)
+                {
+                    FCResult res = CalculateGunFCPara(targetPos, targetVel, fcRes.Key);
+                    fcRes.Value.Set(res.Orien, res.Pitch, res.hasRes, res.predPosition, res.timer);
+                    //Debug.Log(fcRes.Key + " " + res.hasRes + " " + res.Pitch);
+                }
+                ControllerDataManager.Instance.AAControllerFCResult[myPlayerID] = FCResults;
+
+            }
+        }
 
         public override void SafeAwake()
         {
@@ -174,59 +218,20 @@ namespace WW2NavalAssembly
                 }
             }
         }
-        public override void SimulateFixedUpdateHost()
+        public override void SimulateFixedUpdateAlways()
         {
             if (!AAFCInitialized)
             {
                 AAFCInitialized = true;
                 InitAAFireControl();
             }
-
-            // update detected aircraft
-            foreach (var leader in Grouper.Instance.AircraftLeaders[ModController.Instance.state % 16])
+            if (!StatMaster.isMP ||(StatMaster.isMP && PlayerData.localPlayer.networkId == myPlayerID))
             {
-                Aircraft a = leader.Value.Value;
-                if (Vector3.Distance(a.transform.position, transform.position) < 500 && a.isFlying)
-                {
-                    if (!DetectedAircraft.Contains(a))
-                    {
-                        DetectedAircraft.Add(a);
-                    }
-                }
-                else if (DetectedAircraft.Contains(a))
-                {
-                    DetectedAircraft.Remove(a);
-                }
+                // update detected aircraft
+                UpdateDetectedAircraft();
+                // update AA FC results
+                UpdateAAResult();
             }
-
-            // update AA FC results
-            CurrentTarget = Mathf.Clamp(CurrentTarget, -999, DetectedAircraft.Count - 1);
-            if (CurrentTarget < 0)
-            {
-
-                if (DetectedAircraft.Count != 0)
-                {
-                    CurrentTarget = 0;
-                }
-            }
-            else
-            {
-                Aircraft target = DetectedAircraft[CurrentTarget];
-                Vector3 targetPos = target.transform.position;
-                Vector3 targetVel = target.GetComponent<Rigidbody>().velocity;
-                foreach (var fcRes in FCResults)
-                {
-                    FCResult res = CalculateGunFCPara(targetPos, targetVel, fcRes.Key);
-                    fcRes.Value.Set(res.Orien, res.Pitch, res.hasRes, res.predPosition, res.timer);
-                    //Debug.Log(fcRes.Key + " " + res.hasRes + " " + res.Pitch);
-                }
-                ControllerDataManager.Instance.AAControllerFCResult[myPlayerID] = FCResults;
-
-            }
-
-
-
-
         }
 
         public void OnGUI()

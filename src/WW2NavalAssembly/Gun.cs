@@ -17,7 +17,7 @@ namespace WW2NavalAssembly
     {
         public override string Name { get; } = "Gun Msg Receiver";
 
-        public static MessageType FireMsg = ModNetworking.CreateMessageType(DataType.Integer, DataType.Integer, DataType.Vector3, DataType.Vector3, DataType.Vector3);// playerID, guid, randomForce, forward, vel
+        public static MessageType FireMsg = ModNetworking.CreateMessageType(DataType.Integer, DataType.Integer, DataType.Vector3, DataType.Vector3, DataType.Vector3, DataType.Single);// playerID, guid, randomForce, forward, vel, time
         public static MessageType ExploMsg = ModNetworking.CreateMessageType(DataType.Integer, DataType.Vector3, DataType.Single, DataType.Integer);//PlayerID, position, Caliber
         public static MessageType WaterHitMsg = ModNetworking.CreateMessageType(DataType.Integer, DataType.Vector3, DataType.Single);//PlayerID, position
         public static MessageType HitHoleMsg = ModNetworking.CreateMessageType
@@ -31,12 +31,14 @@ namespace WW2NavalAssembly
             public Vector3 fireForce = Vector3.zero;
             public Vector3 forward = Vector3.zero;
             public Vector3 vel = Vector3.zero;
-            public firePara(bool fire, Vector3 fireForce, Vector3 forward, Vector3 vel)
+            public float time = 20;
+            public firePara(bool fire, Vector3 fireForce, Vector3 forward, Vector3 vel, float time)
             {
                 this.fire = fire;
                 this.fireForce = fireForce;
                 this.forward = forward;
                 this.vel = vel;
+                this.time = time;
             }
         }
 
@@ -114,7 +116,7 @@ namespace WW2NavalAssembly
             {
                 return;
             }
-            Fire[(int)msg.GetData(0)][(int)msg.GetData(1)] = new firePara(true,(Vector3)msg.GetData(2), (Vector3)msg.GetData(3), (Vector3)msg.GetData(4));
+            Fire[(int)msg.GetData(0)][(int)msg.GetData(1)] = new firePara(true,(Vector3)msg.GetData(2), (Vector3)msg.GetData(3), (Vector3)msg.GetData(4), (float)msg.GetData(5));
         }
         public void waterHitMsgReceiver(Message msg)
         {
@@ -1369,7 +1371,7 @@ namespace WW2NavalAssembly
             {
                 if (StatMaster.isClient)
                 {
-                    WeaponMsgReceiver.Instance.Fire[myPlayerID].Add(myGuid, new WeaponMsgReceiver.firePara(false,Vector3.zero,Vector3.zero,Vector3.zero));
+                    WeaponMsgReceiver.Instance.Fire[myPlayerID].Add(myGuid, new WeaponMsgReceiver.firePara(false,Vector3.zero,Vector3.zero,Vector3.zero, (float)20));
                 }
             }
             catch { }
@@ -1468,7 +1470,7 @@ namespace WW2NavalAssembly
                 CannonType = NextCannonType;
                 if (StatMaster.isMP)
                 {
-                    ModNetworking.SendToAll(WeaponMsgReceiver.FireMsg.CreateMessage(myPlayerID, myGuid, randomForce, transform.forward, Vector3.zero));
+                    ModNetworking.SendToAll(WeaponMsgReceiver.FireMsg.CreateMessage(myPlayerID, myGuid, randomForce, transform.forward, Vector3.zero, timeFaze));
                 }
                 
                 if (!TrackOn.isDefaultValue)
@@ -1526,7 +1528,7 @@ namespace WW2NavalAssembly
                 Cannon.GetComponent<BulletBehaviour>().fire = true;
                 Cannon.GetComponent<BulletBehaviour>().randomForce = WeaponMsgReceiver.Instance.Fire[myPlayerID][myGuid].fireForce;
                 Cannon.GetComponent<BulletBehaviour>().CannonType = CannonType;
-                Cannon.GetComponent<BulletBehaviour>().timeFaze = timeFaze;
+                Cannon.GetComponent<BulletBehaviour>().timeFaze = WeaponMsgReceiver.Instance.Fire[myPlayerID][myGuid].time;
                 Destroy(Cannon, 10);
 
                 CannonType = NextCannonType;
@@ -1582,7 +1584,7 @@ namespace WW2NavalAssembly
                 Destroy(Cannon, 10);
                 CannonType = NextCannonType;
 
-                ModNetworking.SendToAll(WeaponMsgReceiver.FireMsg.CreateMessage(myPlayerID, myGuid, randomForce, transform.forward, Vector3.zero));
+                ModNetworking.SendToAll(WeaponMsgReceiver.FireMsg.CreateMessage(myPlayerID, myGuid, randomForce, transform.forward, Vector3.zero, timeFaze));
 
                 if (!TrackOn.isDefaultValue)
                 {

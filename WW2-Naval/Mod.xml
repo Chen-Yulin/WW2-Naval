@@ -114,6 +114,7 @@
 		<Texture name="Sunset1" path="Sky\Sunset1.png"/>
 		<Texture name="Sunset2" path="Sky\Sunset2.png"/>
 		<Texture name="AA Lock Icon" path="AAController\AALock.png"/>
+		<Texture name="AA Mode Icon" path="AAController\AAMode.png"/>
 
 
 

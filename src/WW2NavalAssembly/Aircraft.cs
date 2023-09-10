@@ -1315,7 +1315,7 @@ namespace WW2NavalAssembly
                     Torpedo.GetComponent<Rigidbody>().velocity = myRigid.velocity;
                     if (StatMaster.isMP)
                     {
-                        ModNetworking.SendToAll(WeaponMsgReceiver.FireMsg.CreateMessage(myPlayerID, myGuid, Vector3.zero, Torpedo.transform.eulerAngles, myRigid.velocity));
+                        ModNetworking.SendToAll(WeaponMsgReceiver.FireMsg.CreateMessage(myPlayerID, myGuid, Vector3.zero, Torpedo.transform.eulerAngles, myRigid.velocity, (float)20));
                     }
                 }
                 else
@@ -1351,7 +1351,7 @@ namespace WW2NavalAssembly
 
                     if (StatMaster.isMP)
                     {
-                        ModNetworking.SendToAll(WeaponMsgReceiver.FireMsg.CreateMessage(myPlayerID, myGuid, Bomb.GetComponent<Bomb>().randomForce, Bomb.transform.eulerAngles, myRigid.velocity));
+                        ModNetworking.SendToAll(WeaponMsgReceiver.FireMsg.CreateMessage(myPlayerID, myGuid, Bomb.GetComponent<Bomb>().randomForce, Bomb.transform.eulerAngles, myRigid.velocity, (float)20));
                     }
                 }
                 else
