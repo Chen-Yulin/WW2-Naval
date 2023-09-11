@@ -48,6 +48,15 @@ namespace WW2NavalAssembly
         public int skyboxSelector = 0;
         public bool skychanged = false;
         public bool preFog = false;
+        public string s_AAForce = "1";
+
+        public float AAForce
+        {
+            get
+            {
+                return float.Parse(s_AAForce);
+            }
+        }
 
         public int state;
         public int longerState;
@@ -277,6 +286,8 @@ namespace WW2NavalAssembly
                 }
                 SingleInstance<SpiderFucker>.Instance.ExExpandScale = Convert.ToSingle(GUILayout.TextArea(SingleInstance<SpiderFucker>.Instance.ExExpandScale.ToString(), new GUILayoutOption[0]));
 
+                GUILayout.Label("AA Efficiency");
+                s_AAForce = GUILayout.TextField(s_AAForce, 15);
 
                 GUILayout.Label("Press Ctrl+W to hide");
             }

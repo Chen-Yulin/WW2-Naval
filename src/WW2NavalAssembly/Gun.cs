@@ -1101,7 +1101,13 @@ namespace WW2NavalAssembly
                     if (a)
                     {
                         float dist = Vector3.Distance(pos, a.transform.position);
-                        a.ReduceHP((int)(Caliber * Caliber / (dist * 50f)));
+                        float AAForce = 1;
+                        try
+                        {
+                            AAForce = ModController.Instance.AAForce;
+                        }
+                        catch { Debug.Log("AAforce get wrong"); }
+                        a.ReduceHP((int)(Caliber * Caliber / (dist * 1500f) * AAForce));
                         a.StartCoroutine(a.DisturbedCoroutine(5, dist / radius));
                         a.myRigid.AddExplosionForce(Caliber, pos, radius);
                     }
