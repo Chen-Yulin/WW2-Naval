@@ -220,7 +220,7 @@ namespace WW2NavalAssembly
             myPlayerID = BlockBehaviour.ParentMachine.PlayerID;
             mySeed = (int)(UnityEngine.Random.value * 16);
 
-            SwitchTarget = AddKey("Switch Target", "Switch Target", KeyCode.T);
+            SwitchTarget = AddKey(LanguageManager.Instance.CurrentLanguage.SwitchAATarget, "Switch Target", KeyCode.T);
             LockIcon = ModResource.GetTexture("AA Lock Icon").Texture;
         }
         public void Start()

@@ -165,13 +165,13 @@ namespace WW2NavalAssembly
         public override void SafeAwake()
         {
             myPlayerID = BlockBehaviour.ParentMachine.PlayerID;
-            FireKey = AddKey("Fire", "Fire", KeyCode.C);
-            SwitchKey = AddKey("Switch Speed", "SwitchCannonType", KeyCode.R);
-            Caliber = AddSlider("Caliber (mm)", "Caliber", 533, 400, 610);
-            Depth0 = AddSlider("Depth 0", "Depth0", 0.5f, 0f, 5f);
-            Depth1 = AddSlider("Depth 1", "Depth1", 1.5f, 0f, 5f);
+            FireKey = AddKey(LanguageManager.Instance.CurrentLanguage.TorpedoFire, "Fire", KeyCode.C);
+            SwitchKey = AddKey(LanguageManager.Instance.CurrentLanguage.SwitchTorpedo, "SwitchCannonType", KeyCode.R);
+            Caliber = AddSlider(LanguageManager.Instance.CurrentLanguage.Caliber, "Caliber", 533, 400, 610);
+            Depth0 = AddSlider(LanguageManager.Instance.CurrentLanguage.TorpedoType0Depth, "Depth0", 0.5f, 0f, 5f);
+            Depth1 = AddSlider(LanguageManager.Instance.CurrentLanguage.TorpedoType1Depth, "Depth1", 1.5f, 0f, 5f);
             //TrackOn = AddToggle("Track Cannon", "TrackCannon", false);
-            FireControl = AddToggle("Fire Control", "FireControl", false);
+            FireControl = AddToggle(LanguageManager.Instance.CurrentLanguage.FireControl, "FireControl", false);
             //GunGroup = AddText("Gun Group", "GunGroup", "g0");
             ReloadHEOut = ModResource.GetTexture("ReloadHEOut Texture").Texture;
             ReloadHEIn = ModResource.GetTexture("ReloadHEIn Texture").Texture;

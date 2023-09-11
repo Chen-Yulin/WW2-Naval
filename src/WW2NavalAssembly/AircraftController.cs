@@ -343,6 +343,7 @@ namespace WW2NavalAssembly
         public MKey ElevatorUp;
         public MKey ElevatorDown;
         public MKey ViewMove;
+        public MKey ResetView;
         public MKey Continuous;
         public MKey Attack;
         public MSlider ViewSensitivity;
@@ -799,6 +800,7 @@ namespace WW2NavalAssembly
 
             TacticalView = AddKey("Tactical View", "TacticalView", KeyCode.T);
             ViewMove = AddKey("Move View", "Move View", KeyCode.Mouse2);
+            ResetView = AddKey("Reset View", "Reset View", KeyCode.None);
             ReturnKey = AddKey("Aircraft Return", "ReturnKey", KeyCode.Backspace);
             TakeOffKey = AddKey("Aircraft Take Off", "TakeOffKey", KeyCode.Q);
             ElevatorUp = AddKey("Aircraft Elevator Up", "ElevatorUp", KeyCode.UpArrow);
@@ -987,6 +989,11 @@ namespace WW2NavalAssembly
                     DrawBoard.SetActive(true);
                     float mouseScroll = Input.mouseScrollDelta.y;
                     _orthoSize = Mathf.Clamp(_orthoSize * (mouseScroll > 0 ? 1f / (1f + mouseScroll * 0.2f) : (1f - mouseScroll * 0.2f)), 50, 2000);
+
+                    if (ResetView.IsPressed)
+                    {
+                        MainCamera.transform.position = transform.position;
+                    }
 
                     // move camera
                     if (ViewMove.IsHeld)

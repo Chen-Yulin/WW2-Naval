@@ -302,7 +302,7 @@ namespace WW2NavalAssembly
         bool rigidActive = true;
         bool deckSliding = false;
 
-        public string preType;
+        public int preType;
         public string preAppearance;
         public int preRank;
 
@@ -1069,9 +1069,9 @@ namespace WW2NavalAssembly
             LoadObject.transform.localScale = Vector3.one * 1.5f;
             MeshFilter mf = LoadObject.AddComponent<MeshFilter>();
             MeshRenderer mr = LoadObject.AddComponent<MeshRenderer>();
-            switch (Type.Selection)
+            switch (Type.Value)
             {
-                case "Bomb":
+                case 2:
                     hasLoad = true;
                     LoadMass = 0.5f;
                     mf.sharedMesh = ModResource.GetMesh("Bomb Mesh");
@@ -1091,7 +1091,7 @@ namespace WW2NavalAssembly
                             break;
                     }
                     break;
-                case "Torpedo":
+                case 1:
                     hasLoad = true;
                     LoadMass = 1f;
                     mf.sharedMesh = ModResource.GetMesh("Torpedo Mesh");
@@ -1465,12 +1465,12 @@ namespace WW2NavalAssembly
                 }
                 hasLoad = true;
                 LoadObject.SetActive(true);
-                switch (Type.Selection)
+                switch (Type.Value)
                 {
-                    case "Bomb":
+                    case 2:
                         LoadMass = 0.5f;
                         break;
-                    case "Torpedo":
+                    case 1:
                         LoadMass = 1f;
                         break;
                     default: break;
@@ -2028,7 +2028,7 @@ namespace WW2NavalAssembly
             myseed = (int)(UnityEngine.Random.value * 10);
             myLongerSeed = (int)(UnityEngine.Random.value * 400);
 
-            preType = "";
+            preType = -1;
             preAppearance = "";
             preRank = -1;
             preSkinEnabled = OptionsMaster.skinsEnabled;
@@ -2037,16 +2037,11 @@ namespace WW2NavalAssembly
             InitPropellerUndercart();
             InitGroupLine();
 
-            SwitchActive = AddKey("Switch Active", "SwitchActive", KeyCode.Alpha1);
+            SwitchActive = AddKey(LanguageManager.Instance.CurrentLanguage.SwitchActive, "SwitchActive", KeyCode.Alpha1);
             
-            Group = AddText("Group", "AircraftGroup", "1");
+            Group = AddText(LanguageManager.Instance.CurrentLanguage.Group, "AircraftGroup", "1");
 
-            Type = AddMenu("Aircraft Type",0,new List<string>
-            {
-                "Fighter",
-                "Torpedo",
-                "Bomb"
-            });
+            Type = AddMenu("Aircraft Type",0, LanguageManager.Instance.CurrentLanguage.AircraftType);
             TorpedoType = AddMenu("TorpedoType", 0, new List<string>
             {
                 "SB2C",
@@ -2065,12 +2060,7 @@ namespace WW2NavalAssembly
                 "F4U",
                 "Spitfire"
             });
-            Rank = AddMenu("Rank", 0, new List<string>
-            {
-                "Slave",
-                "Leader",
-                "Backup",
-            });
+            Rank = AddMenu("Rank", 0, LanguageManager.Instance.CurrentLanguage.AircraftRank);
         }
         public void Start()
         {
@@ -2084,9 +2074,9 @@ namespace WW2NavalAssembly
                 Grouper.Instance.AddAircraft(myPlayerID, Rank.Value == 2? "backup" : Group.Value, BlockBehaviour.Guid.GetHashCode(), this);
             }
             bool appearChanged = false;
-            if (preType != Type.Selection)
+            if (preType != Type.Value)
             {
-                preType = Type.Selection;
+                preType = Type.Value;
                 appearChanged = true;
             }
             if (appearChanged)

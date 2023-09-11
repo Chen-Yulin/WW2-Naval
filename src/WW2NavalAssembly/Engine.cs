@@ -428,14 +428,14 @@ namespace WW2NavalAssembly
 
         public override void SafeAwake()
         {
-            ForwardKey = AddKey("Forward", "Forward", KeyCode.UpArrow);
-            BackKey = AddKey("Backward", "Backward", KeyCode.DownArrow);
-            ThrustValue = AddSlider("Thrust", "EngineThrust", 1000f, 0f, 1000f);
-            AxleLength = AddSlider("Axle Length", "AxleLength", 15f, 5f, 50f);
-            AxlePosX = AddSlider("Axle Position X", "AxlePosX", 0f, -1f, 1f);
-            AxlePosY = AddSlider("Axle Position Y", "Axle Position Y", 0.5f, 0f, 1f);
-            AxlePitch = AddSlider("Axle Pitch", "Axle Pitch", 0f, -10f, 10f);
-            PropellerSize = AddSlider("Propeller Size", "PropellerSize", 1f, 0.5f, 2f);
+            ForwardKey = AddKey(LanguageManager.Instance.CurrentLanguage.EngineUp, "Forward", KeyCode.UpArrow);
+            BackKey = AddKey(LanguageManager.Instance.CurrentLanguage.EngineDown, "Backward", KeyCode.DownArrow);
+            ThrustValue = AddSlider(LanguageManager.Instance.CurrentLanguage.EngineThrust, "EngineThrust", 1000f, 0f, 1000f);
+            AxleLength = AddSlider(LanguageManager.Instance.CurrentLanguage.EngineAxisLength, "AxleLength", 15f, 5f, 50f);
+            AxlePosX = AddSlider(LanguageManager.Instance.CurrentLanguage.EngineAxisXOffset, "AxlePosX", 0f, -1f, 1f);
+            AxlePosY = AddSlider(LanguageManager.Instance.CurrentLanguage.EngineAxisYOffset, "Axle Position Y", 0.5f, 0f, 1f);
+            AxlePitch = AddSlider(LanguageManager.Instance.CurrentLanguage.EngineAxisPitch, "Axle Pitch", 0f, -10f, 10f);
+            PropellerSize = AddSlider(LanguageManager.Instance.CurrentLanguage.PropellerSize, "PropellerSize", 1f, 0.5f, 2f);
             myPlayerID = BlockBehaviour.ParentMachine.PlayerID;
             InitVis();
             InitMaterial();

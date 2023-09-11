@@ -794,15 +794,15 @@ namespace WW2NavalAssembly
         {
             gameObject.name = "Captain";
             myPlayerID = BlockBehaviour.ParentMachine.PlayerID;
-            TrackCannon = AddKey("Track Cannon", "TrackCannon", KeyCode.T);
-            SwitchCannnon = AddKey("Switch Tracking Cannon", "SwitchTrackingCannon", KeyCode.RightShift);
-            FCPanelSize = AddSlider("Fire Control Size", "FCSize", 1f, 0.2f, 5f);
-            TurrentHeight = AddSlider("Turret Height", "TurrentHeight", 0.5f, -100f, 100f);
-            Lock = AddKey("Lock", "WW2Lock", KeyCode.X);
-            OffsetUp = AddKey("Offset Up", "OffsetUp", KeyCode.None);
-            OffsetDown = AddKey("Offset Down", "OffsetDown", KeyCode.None);
-            OffsetLeft = AddKey("Offset Left", "OffsetLeft", KeyCode.None);
-            OffsetRight = AddKey("Offset Right", "OffsetRight", KeyCode.None);
+            TrackCannon = AddKey(LanguageManager.Instance.CurrentLanguage.TrackCannon, "TrackCannon", KeyCode.T);
+            SwitchCannnon = AddKey(LanguageManager.Instance.CurrentLanguage.SwitchTrackCannon, "SwitchTrackingCannon", KeyCode.RightShift);
+            FCPanelSize = AddSlider(LanguageManager.Instance.CurrentLanguage.FireControlPanelSize, "FCSize", 1f, 0.2f, 5f);
+            TurrentHeight = AddSlider(LanguageManager.Instance.CurrentLanguage.TurretHeight, "TurrentHeight", 0.5f, -100f, 100f);
+            Lock = AddKey(LanguageManager.Instance.CurrentLanguage.Lock, "WW2Lock", KeyCode.X);
+            OffsetUp = AddKey(LanguageManager.Instance.CurrentLanguage.OffsetUp, "OffsetUp", KeyCode.None);
+            OffsetDown = AddKey(LanguageManager.Instance.CurrentLanguage.OffsetDown, "OffsetDown", KeyCode.None);
+            OffsetLeft = AddKey(LanguageManager.Instance.CurrentLanguage.OffsetLeft, "OffsetLeft", KeyCode.None);
+            OffsetRight = AddKey(LanguageManager.Instance.CurrentLanguage.OffsetRight, "OffsetRight", KeyCode.None);
 
             
             mySeed = (int)(UnityEngine.Random.value * 10);

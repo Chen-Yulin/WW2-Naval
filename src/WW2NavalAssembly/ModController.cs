@@ -270,7 +270,7 @@ namespace WW2NavalAssembly
                 {
                     SingleInstance<SpiderFucker>.Instance.ExExpandFloorSwitch = false;
                 }
-                SingleInstance<SpiderFucker>.Instance.ExExpandFloorSwitch = GUILayout.Toggle(SingleInstance<SpiderFucker>.Instance.ExExpandFloorSwitch, "空气墙自定义长度(m)", new GUILayoutOption[0]);
+                SingleInstance<SpiderFucker>.Instance.ExExpandFloorSwitch = GUILayout.Toggle(SingleInstance<SpiderFucker>.Instance.ExExpandFloorSwitch, "Customized Boundary (m)", new GUILayoutOption[0]);
                 if (SingleInstance<SpiderFucker>.Instance.ExpandFloorSwitch && SingleInstance<SpiderFucker>.Instance.ExExpandFloorSwitch)
                 {
                     SingleInstance<SpiderFucker>.Instance.ExpandFloorSwitch = false;
