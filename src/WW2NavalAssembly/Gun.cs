@@ -1102,8 +1102,8 @@ namespace WW2NavalAssembly
                     {
                         float dist = Vector3.Distance(pos, a.transform.position);
                         a.ReduceHP((int)(Caliber * Caliber / (dist * 50f)));
-                        a.StartCoroutine(a.DisturbedCoroutine(10, dist / radius));
-                        a.myRigid.AddExplosionForce(Caliber * 3f, pos, radius);
+                        a.StartCoroutine(a.DisturbedCoroutine(5, dist / radius));
+                        a.myRigid.AddExplosionForce(Caliber, pos, radius);
                     }
                 }
                 catch { }

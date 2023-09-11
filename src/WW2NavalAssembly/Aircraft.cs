@@ -29,6 +29,8 @@ namespace WW2NavalAssembly
         public static MessageType AddBackupMsg = ModNetworking.CreateMessageType(DataType.Integer, DataType.String, DataType.Integer);
         public static MessageType LoadMsg = ModNetworking.CreateMessageType(DataType.Integer, DataType.Integer, DataType.Boolean); // 0 for drop( deprecated, implemented by weaponMsg), 1 for recover
         public static MessageType FuelMsg = ModNetworking.CreateMessageType(DataType.Integer, DataType.Integer, DataType.Single);
+        public static MessageType VelocityMsg = ModNetworking.CreateMessageType(DataType.Integer, DataType.Integer, DataType.Vector3);
+        public static MessageType NeedVelocityMsg = ModNetworking.CreateMessageType(DataType.Integer, DataType.Integer, DataType.Boolean);
 
         public Dictionary<int, Aircraft.Status>[] ChangedStatus = new Dictionary<int, Aircraft.Status>[16];
         public Dictionary<int, bool>[] GunShoot = new Dictionary<int, bool>[16];
@@ -37,6 +39,9 @@ namespace WW2NavalAssembly
         public List<int>[] ShootDown = new List<int>[16];
         public Dictionary<string, List<int>>[] Backup = new Dictionary<string, List<int>>[16];
         public Dictionary<int, float>[] Fuel = new Dictionary<int, float>[16];
+        public Dictionary<int, Vector3>[] Velocity = new Dictionary<int, Vector3>[16];
+
+        public Dictionary<int, List<int>>[] ClientNeedVelocity = new Dictionary<int, List<int>>[16];
 
         public AircraftMsgReceiver()
         {
@@ -49,6 +54,8 @@ namespace WW2NavalAssembly
                 ShootDown[i] = new List<int>();
                 Backup[i] = new Dictionary<string, List<int>>();
                 Fuel[i] = new Dictionary<int, float>();
+                Velocity[i] = new Dictionary<int, Vector3>();
+                ClientNeedVelocity[i] = new Dictionary<int, List<int>>();
             }
         }
 
@@ -141,6 +148,52 @@ namespace WW2NavalAssembly
             {
                 Fuel[playerid].Add(guid, fuel);
             }
+        }
+        public void VelocityMsgReceiver(Message msg)
+        {
+            int playerid = (int)msg.GetData(0);
+            int guid = (int)msg.GetData(1);
+            Vector3 velocity = (Vector3)msg.GetData(2);
+            if (Velocity[playerid].ContainsKey(guid))
+            {
+                Velocity[playerid][guid] = velocity;
+            }
+            else
+            {
+                Velocity[playerid].Add(guid, velocity);
+            }
+            //Debug.Log(PlayerData.localPlayer.networkId + " receive velocity: " + velocity);
+        }
+        public void ClientNeedVelocityMsgReceiver(Message msg)
+        {
+            int client = msg.Sender.NetworkId;
+            if (client == 0)
+            {
+                return;
+            }
+            int playerid = (int)msg.GetData(0);
+            int guid = (int)msg.GetData(1);
+            bool need = (bool)msg.GetData(2);
+            if (need)
+            {
+                if (ClientNeedVelocity[playerid].ContainsKey(guid))
+                {
+                    ClientNeedVelocity[playerid][guid].Add(client);
+                }
+                else
+                {
+                    ClientNeedVelocity[playerid].Add(guid, new List<int> { client });
+                }
+            }
+            else
+            {
+                if (ClientNeedVelocity[playerid].ContainsKey(guid))
+                {
+                    ClientNeedVelocity[playerid][guid].Remove(client);
+                }
+            }
+            //Debug.Log("Receive client " + client + " " + need);
+            
         }
     }
 
@@ -292,24 +345,30 @@ namespace WW2NavalAssembly
             }
         }
 
-        Vector3 PositionLast;
-        Vector3 PositionDelta;
+        public Vector3 lastClientVelocity = Vector3.zero;
         public Vector3 myVelocity
         {
             get
             {
                 if (StatMaster.isClient)
                 {
-                    return PositionDelta / Time.deltaTime;
+                    Vector3 velocity = Vector3.zero;
+                    try
+                    {
+                        velocity = AircraftMsgReceiver.Instance.Velocity[myPlayerID][myGuid];
+                    }
+                    catch
+                    {
+                        velocity = Vector3.zero;
+                    }
+                    return velocity;
                 }
                 else
                 {
                     return myRigid.velocity;
                 }
-                
             }
         }
-
 
         // ============== for aircraft mass =================
         float _fuel = 1;
@@ -716,7 +775,7 @@ namespace WW2NavalAssembly
         public IEnumerator DisturbedCoroutine(int time, float force)
         {
             int i = 0;
-            Vector3 torque = new Vector3(-2 * UnityEngine.Random.value, 0, 5 - 10 * UnityEngine.Random.value) * force;
+            Vector3 torque = new Vector3(-2 * UnityEngine.Random.value, 0, 3 - 6 * UnityEngine.Random.value) * force;
             while (i < time)
             {
                 myRigid.AddRelativeTorque(torque);
@@ -2208,8 +2267,6 @@ namespace WW2NavalAssembly
         }
         public void Update()
         {
-            PositionDelta = transform.position - PositionLast;
-            PositionLast = transform.position;
             if (BlockBehaviour.isSimulating && preAppearance == "")
             {
                 switch (Type.Value)
@@ -2267,8 +2324,26 @@ namespace WW2NavalAssembly
                 GroupLine.SetActive(false);
             }
         }
+
         public override void SimulateUpdateHost()
         {
+            // send leader velocity if needed
+            if (Rank.Value == 1)
+            {
+                if (AircraftMsgReceiver.Instance.ClientNeedVelocity[myPlayerID].ContainsKey(myGuid))
+                {
+                    if ((myRigid.velocity - lastClientVelocity).magnitude > 10f)
+                    {
+                        lastClientVelocity = myRigid.velocity;
+                        foreach (var playerID in AircraftMsgReceiver.Instance.ClientNeedVelocity[myPlayerID][myGuid])
+                        {
+                            Player p = Player.From((ushort)playerID);
+                            ModNetworking.SendTo(p, AircraftMsgReceiver.VelocityMsg.CreateMessage(myPlayerID, myGuid, lastClientVelocity));
+                        }
+                        
+                    }
+                }
+            }
             switch (Rank.Value)
             {
                 case 1:
@@ -2713,7 +2788,6 @@ namespace WW2NavalAssembly
                         {
                             myRigid.AddForce((fightPosition - transform.position) * 1f);
                         }
-
                         break;
                     }
                 default : break;

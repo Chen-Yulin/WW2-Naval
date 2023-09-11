@@ -141,17 +141,30 @@ namespace WW2NavalAssembly
             foreach (var leader in Grouper.Instance.AircraftLeaders[ModController.Instance.state % 16])
             {
                 Aircraft a = leader.Value.Value;
-                if (Vector3.Distance(a.transform.position, transform.position) < 500 && a.isFlying)
+                try
                 {
-                    if (!DetectedAircraft.Contains(a))
+                    if (Vector3.Distance(a.transform.position, transform.position) < 500 && a.isFlying)
                     {
-                        DetectedAircraft.Add(a);
+                        if (!DetectedAircraft.Contains(a))
+                        {
+                            DetectedAircraft.Add(a);
+                            if (StatMaster.isMP && myPlayerID != 0)
+                            {
+                                ModNetworking.SendToHost(AircraftMsgReceiver.NeedVelocityMsg.CreateMessage(a.myPlayerID, a.myGuid, true));
+                            }
+                        }
+                    }
+                    else if (DetectedAircraft.Contains(a))
+                    {
+                        DetectedAircraft.Remove(a);
+                        if (StatMaster.isMP && myPlayerID != 0)
+                        {
+                            ModNetworking.SendToHost(AircraftMsgReceiver.NeedVelocityMsg.CreateMessage(a.myPlayerID, a.myGuid, false));
+                        }
                     }
                 }
-                else if (DetectedAircraft.Contains(a))
-                {
-                    DetectedAircraft.Remove(a);
-                }
+                catch { }
+                
             }
             Stack<Aircraft> invalidAircaft = new Stack<Aircraft>();
             foreach (var leader in DetectedAircraft)
@@ -167,6 +180,10 @@ namespace WW2NavalAssembly
             foreach (var leader in invalidAircaft)
             {
                 DetectedAircraft.Remove(leader);
+                if (StatMaster.isMP && myPlayerID != 0)
+                {
+                    ModNetworking.SendToHost(AircraftMsgReceiver.NeedVelocityMsg.CreateMessage(leader.myPlayerID, leader.myGuid, false));
+                }
             }
         }
         public void UpdateAAResult()
@@ -185,14 +202,7 @@ namespace WW2NavalAssembly
                 Aircraft target = DetectedAircraft[CurrentTarget];
                 Vector3 targetPos = target.transform.position;
                 Vector3 targetVel = target.myVelocity;
-                if (StatMaster.isClient)
-                {
-                    targetVel *= 1.8f - UnityEngine.Random.value * 0.4f;
-                }
-                else
-                {
-                    targetVel *= 1.0f - UnityEngine.Random.value * 0.4f;
-                }
+                targetVel *= 1.1f - UnityEngine.Random.value * 0.4f;
                 foreach (var fcRes in FCResults)
                 {
                     FCResult res = CalculateGunFCPara(targetPos, targetVel, fcRes.Key);
@@ -248,6 +258,7 @@ namespace WW2NavalAssembly
                 AAFCInitialized = true;
                 InitAAFireControl();
             }
+
             if (!StatMaster.isMP ||(StatMaster.isMP && PlayerData.localPlayer.networkId == myPlayerID))
             {
                 // update detected aircraft
