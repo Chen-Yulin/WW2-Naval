@@ -65,7 +65,7 @@ namespace WW2NavalAssembly
         public MText GunGroup;
         public float thickness;
         public GameObject WellVis;
-        public GameObject TurrentVis;
+        public GameObject TurretVis;
         GameObject AmmoVis;
         MeshRenderer WellVisRender;
         MeshRenderer AmmoVisRender;
@@ -473,18 +473,18 @@ namespace WW2NavalAssembly
                                                         AmmoThickness * resize * resize / (2 * transform.lossyScale.z),
                                                         Mathf.Clamp(totalCaliber / (450 * transform.lossyScale.y) * 1.1f / resize, 0.01f, 10f));
 
-            float TurrentThickness = Mathf.Clamp(Mathf.Sqrt(myCaliber) / 20,0.01f,10);
+            float TurretThickness = Mathf.Clamp(Mathf.Sqrt(myCaliber) / 20,0.01f,10);
 
             if (UseWell.isDefaultValue)
             {
-                TurrentVis.transform.localPosition = new Vector3(0, 0, (transform.localScale.z - Offset.Value) / transform.lossyScale.z);
-                TurrentVis.transform.localScale = new Vector3(WellVis.transform.localScale.x / 2.5f, TurrentThickness / (transform.lossyScale.z), WellVis.transform.localScale.z / 2.5f);
+                TurretVis.transform.localPosition = new Vector3(0, 0, (transform.localScale.z - Offset.Value) / transform.lossyScale.z);
+                TurretVis.transform.localScale = new Vector3(WellVis.transform.localScale.x / 2.5f, TurretThickness / (transform.lossyScale.z), WellVis.transform.localScale.z / 2.5f);
             }
             else
             {
-                TurrentThickness *= 1.5f;
-                TurrentVis.transform.localPosition = new Vector3(0, 0, (transform.localScale.z - Offset.Value) / transform.lossyScale.z);
-                TurrentVis.transform.localScale = new Vector3(WellVis.transform.localScale.x / 1.2f, TurrentThickness / (transform.lossyScale.z), WellVis.transform.localScale.z / 1.2f);
+                TurretThickness *= 1.5f;
+                TurretVis.transform.localPosition = new Vector3(0, 0, (transform.localScale.z - Offset.Value) / transform.lossyScale.z);
+                TurretVis.transform.localScale = new Vector3(WellVis.transform.localScale.x / 1.2f, TurretThickness / (transform.lossyScale.z), WellVis.transform.localScale.z / 1.2f);
             }
             
 
@@ -526,8 +526,8 @@ namespace WW2NavalAssembly
                 WellVis.SetActive(true);
                 AmmoVis = transform.Find("AmmoVis").gameObject;
                 AmmoVis.SetActive(true);
-                TurrentVis = transform.Find("TurrentVis").gameObject;
-                TurrentVis.SetActive(true);
+                TurretVis = transform.Find("TurrentVis").gameObject;
+                TurretVis.SetActive(true);
 
             }
             else
@@ -538,8 +538,8 @@ namespace WW2NavalAssembly
                 AmmoVis = (GameObject)Instantiate(AssetManager.Instance.ArmourVis.WellArmour, transform);
                 AmmoVis.name = "AmmoVis";
                 //Destroy(WellVis.GetComponent<MeshCollider>());
-                TurrentVis = (GameObject)Instantiate(AssetManager.Instance.ArmourVis.TurrentArmour, transform);
-                TurrentVis.name = "TurrentVis";
+                TurretVis = (GameObject)Instantiate(AssetManager.Instance.ArmourVis.TurrentArmour, transform);
+                TurretVis.name = "TurrentVis";
             }
 
             WellVis.transform.localPosition = new Vector3(0, 0, 0.5f);
@@ -559,12 +559,12 @@ namespace WW2NavalAssembly
             AmmoVis.SetActive(true);
             AmmoVisRender.material = AssetManager.Instance.TransparentMat;
 
-            TurrentVis.transform.localPosition = new Vector3(0, 0, 0.5f);
-            TurrentVis.transform.localScale = new Vector3(1f, 1f, 1f);
-            TurrentVis.transform.localRotation = Quaternion.Euler(90, 0, 0);
-            TurrentVisRender = TurrentVis.GetComponent<MeshRenderer>();
-            TurrentVis.layer = 25;
-            TurrentVis.SetActive(true);
+            TurretVis.transform.localPosition = new Vector3(0, 0, 0.5f);
+            TurretVis.transform.localScale = new Vector3(1f, 1f, 1f);
+            TurretVis.transform.localRotation = Quaternion.Euler(90, 0, 0);
+            TurrentVisRender = TurretVis.GetComponent<MeshRenderer>();
+            TurretVis.layer = 25;
+            TurretVis.SetActive(true);
             TurrentVisRender.material = AssetManager.Instance.TransparentMat;
         }
         public void InitEffect()
@@ -703,8 +703,8 @@ namespace WW2NavalAssembly
                     WellVisRender = WellVis.GetComponent<MeshRenderer>();
                     AmmoVis = transform.Find("AmmoVis").gameObject;
                     AmmoVisRender = AmmoVis.GetComponent<MeshRenderer>();
-                    TurrentVis = transform.Find("TurrentVis").gameObject;
-                    TurrentVisRender = TurrentVis.GetComponent<MeshRenderer>();
+                    TurretVis = transform.Find("TurrentVis").gameObject;
+                    TurrentVisRender = TurretVis.GetComponent<MeshRenderer>();
                 }
 
                 thickness = Thickness.Value;
@@ -761,7 +761,7 @@ namespace WW2NavalAssembly
                     {
                         WellVis.SetActive(false);
                         AmmoVis.SetActive(false);
-                        TurrentVis.SetActive(false);
+                        TurretVis.SetActive(false);
                     }
                 }
                 

@@ -797,7 +797,7 @@ namespace WW2NavalAssembly
             TrackCannon = AddKey("Track Cannon", "TrackCannon", KeyCode.T);
             SwitchCannnon = AddKey("Switch Tracking Cannon", "SwitchTrackingCannon", KeyCode.RightShift);
             FCPanelSize = AddSlider("Fire Control Size", "FCSize", 1f, 0.2f, 5f);
-            TurrentHeight = AddSlider("TurrentHeight", "TurrentHeight", 0.5f, -100f, 100f);
+            TurrentHeight = AddSlider("Turret Height", "TurrentHeight", 0.5f, -100f, 100f);
             Lock = AddKey("Lock", "WW2Lock", KeyCode.X);
             OffsetUp = AddKey("Offset Up", "OffsetUp", KeyCode.None);
             OffsetDown = AddKey("Offset Down", "OffsetDown", KeyCode.None);
