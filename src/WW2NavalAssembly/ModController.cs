@@ -286,8 +286,8 @@ namespace WW2NavalAssembly
                 }
                 SingleInstance<SpiderFucker>.Instance.ExExpandScale = Convert.ToSingle(GUILayout.TextArea(SingleInstance<SpiderFucker>.Instance.ExExpandScale.ToString(), new GUILayoutOption[0]));
 
-                GUILayout.Label("AA Efficiency");
-                s_AAForce = GUILayout.TextField(s_AAForce, 15);
+                //GUILayout.Label("AA Efficiency");
+                //s_AAForce = GUILayout.TextField(s_AAForce, 15);
 
                 GUILayout.Label("Press Ctrl+W to hide");
             }

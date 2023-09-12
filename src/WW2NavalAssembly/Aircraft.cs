@@ -647,21 +647,19 @@ namespace WW2NavalAssembly
                 // find target
                 if (target_PlayerID == -1)
                 {
+                    float dist = 100f;
                     foreach (var ship in FlightDataBase.Instance.engines)
                     {
-                        bool find = false;
                         foreach (var engine in ship)
                         {
-                            if (MathTool.Get2DDistance(engine.transform.position, transform.position) < 200)
+                            float MyDist = MathTool.Get2DDistance(engine.transform.position, transform.position);
+                            if ( MyDist < dist)
                             {
-                                find = true;
+                                dist = MyDist;
                                 target_PlayerID = engine.myPlayerID;
+                                target_engines.Clear();
                                 target_engines.Add(engine);
                             }
-                        }
-                        if (find)
-                        {
-                            break;
                         }
                     }
                 }
@@ -1945,6 +1943,27 @@ namespace WW2NavalAssembly
         {
             SettleSpot(MyDeck,false);
         }
+        public bool ArmourBetween(Vector3 pos, Vector3 target)
+        {
+            Ray Ray = new Ray(pos, target - pos);
+            RaycastHit[] hitList = Physics.RaycastAll(Ray, (target - pos).magnitude);
+            bool hasArmour = false;
+            foreach (RaycastHit raycastHit in hitList)
+            {
+                try
+                {
+                    if (raycastHit.collider.attachedRigidbody.GetComponent<WoodenArmour>())
+                    {
+                        hasArmour = true;
+                    }
+                }
+                catch
+                {
+                }
+
+            }
+            return hasArmour;
+        }
         public void Explo()
         {
             if (StatMaster.isMP && !StatMaster.isClient)
@@ -1977,8 +1996,15 @@ namespace WW2NavalAssembly
                 float myPossi = 0.9f;
                 explo.transform.localScale = Vector3.one;
                 Collider[] ExploCol = Physics.OverlapSphere(transform.position, 2);
+
                 foreach (Collider hitedCollider in ExploCol)
                 {
+                    
+                    if (ArmourBetween(myRigid.centerOfMass + transform.position, hitedCollider.transform.position))
+                    {
+                        continue;
+                    }
+
                     try
                     {
                         Aircraft a = hitedCollider.attachedRigidbody.GetComponent<Aircraft>();
@@ -2003,7 +2029,10 @@ namespace WW2NavalAssembly
                 Collider[] ExploCol = Physics.OverlapSphere(transform.position, 1.5f);
                 foreach (Collider hitedCollider in ExploCol)
                 {
-
+                    if (ArmourBetween(myRigid.centerOfMass + transform.position, hitedCollider.transform.position))
+                    {
+                        continue;
+                    }
                     try
                     {
                         Aircraft a = hitedCollider.attachedRigidbody.GetComponent<Aircraft>();
@@ -2322,13 +2351,20 @@ namespace WW2NavalAssembly
             {
                 if (AircraftMsgReceiver.Instance.ClientNeedVelocity[myPlayerID].ContainsKey(myGuid))
                 {
-                    if ((myRigid.velocity - lastClientVelocity).magnitude > 10f)
+                    if ((myRigid.velocity - lastClientVelocity).magnitude > 5f)
                     {
                         lastClientVelocity = myRigid.velocity;
                         foreach (var playerID in AircraftMsgReceiver.Instance.ClientNeedVelocity[myPlayerID][myGuid])
                         {
-                            Player p = Player.From((ushort)playerID);
-                            ModNetworking.SendTo(p, AircraftMsgReceiver.VelocityMsg.CreateMessage(myPlayerID, myGuid, lastClientVelocity));
+                            try
+                            {
+                                Player p = Player.From((ushort)playerID);
+                                ModNetworking.SendTo(p, AircraftMsgReceiver.VelocityMsg.CreateMessage(myPlayerID, myGuid, lastClientVelocity));
+                            }
+                            catch
+                            {
+                                AircraftMsgReceiver.Instance.ClientNeedVelocity[myPlayerID][myGuid].Remove(playerID);
+                            }
                         }
                         
                     }

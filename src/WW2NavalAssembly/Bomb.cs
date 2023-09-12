@@ -604,7 +604,7 @@ namespace WW2NavalAssembly
                         {
                             if (!(hitedCollider.transform.parent.name == "Balloon" || hitedCollider.transform.parent.name == "SqrBalloon"))
                             {
-                                hitedCollider.transform.parent.GetComponent<Rigidbody>().AddExplosionForce((AP ? 5f : 8f) * Weight, pos, Mathf.Sqrt(Weight) / (AP ? 8f : 5f));
+                                hitedCollider.transform.parent.GetComponent<Rigidbody>().AddExplosionForce(3f * Weight, pos, Mathf.Sqrt(Weight) / (AP ? 8f : 5f));
                             }
                         }
                     }
