@@ -194,9 +194,9 @@ namespace WW2NavalAssembly
         }
         public void UpdateArmVis()
         {
-            if (myseed != ModController.Instance.state)
+            if (ModController.Instance.ShowChanged)
             {
-                if (ModController.Instance.showArmour)
+                if (ModController.Instance.ShowArmour)
                 {
                     transform.Find("Vis").GetComponent<MeshRenderer>().material = ArmMat;
                 }

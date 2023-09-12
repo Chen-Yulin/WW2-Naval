@@ -337,7 +337,7 @@ namespace WW2NavalAssembly
 
         public void ShowDeckHangarVis(int playerID)
         {
-            if (ModController.Instance.showArmour)
+            if (ModController.Instance.ShowArmour)
             {
                 // ================================= flight deck =================================
                 if (Decks[playerID].valid)

@@ -283,6 +283,7 @@ namespace WW2NavalAssembly
                 GameObject Cannon = (GameObject)Instantiate(TorpedoPrefab, transform.position + 0.1f * transform.forward, transform.rotation);
                 Cannon.name = "Torpedo" + myPlayerID.ToString();
                 Cannon.SetActive(true);
+                Cannon.GetComponent<Rigidbody>().velocity = Rigidbody.velocity;
                 Cannon.GetComponent<TorpedoBehaviour>().fire = true;
                 Cannon.GetComponent<TorpedoBehaviour>().mode = TorpedoType;
                 Cannon.GetComponent<TorpedoBehaviour>().parentGuid = myGuid;
@@ -306,7 +307,7 @@ namespace WW2NavalAssembly
 
                 if (StatMaster.isMP)
                 {
-                    ModNetworking.SendToAll(WeaponMsgReceiver.FireMsg.CreateMessage(myPlayerID, myGuid, Vector3.zero, Cannon.transform.eulerAngles, Vector3.zero, (float)20));
+                    ModNetworking.SendToAll(WeaponMsgReceiver.FireMsg.CreateMessage(myPlayerID, myGuid, Vector3.zero, Cannon.transform.eulerAngles, Rigidbody.velocity, (float)20));
                 }
             }
         }
@@ -353,6 +354,7 @@ namespace WW2NavalAssembly
                                                             Quaternion.Euler(WeaponMsgReceiver.Instance.Fire[myPlayerID][myGuid].forward));
                 Cannon.name = "Torpedo" + myPlayerID.ToString();
                 Cannon.SetActive(true);
+                Cannon.GetComponent<Rigidbody>().velocity = WeaponMsgReceiver.Instance.Fire[myPlayerID][myGuid].vel;
                 Cannon.GetComponent<TorpedoBehaviour>().fire = true;
                 Cannon.GetComponent<TorpedoBehaviour>().mode = TorpedoType;
                 Cannon.GetComponent<TorpedoBehaviour>().parentGuid = myGuid;
@@ -394,6 +396,7 @@ namespace WW2NavalAssembly
                 GameObject Cannon = (GameObject)Instantiate(TorpedoPrefab, transform.position + 0.1f * transform.forward, transform.rotation);
                 Cannon.name = "Torpedo" + myPlayerID.ToString();
                 Cannon.SetActive(true);
+                Cannon.GetComponent<Rigidbody>().velocity = Rigidbody.velocity;
                 Cannon.GetComponent<TorpedoBehaviour>().fire = true;
                 Cannon.GetComponent<TorpedoBehaviour>().mode = TorpedoType;
                 Cannon.GetComponent<TorpedoBehaviour>().parentGuid = myGuid;
@@ -414,7 +417,7 @@ namespace WW2NavalAssembly
                     Destroy(Cannon, 27.8f);
                 }
 
-                ModNetworking.SendToAll(WeaponMsgReceiver.FireMsg.CreateMessage(myPlayerID, myGuid, Vector3.zero, Cannon.transform.eulerAngles, Vector3.zero, (float)20));
+                ModNetworking.SendToAll(WeaponMsgReceiver.FireMsg.CreateMessage(myPlayerID, myGuid, Vector3.zero, Cannon.transform.eulerAngles, Rigidbody.velocity, (float)20));
             }
         }
         public override void SimulateFixedUpdateClient()

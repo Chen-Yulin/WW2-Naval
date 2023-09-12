@@ -93,6 +93,8 @@ namespace WW2NavalAssembly
         public bool launched = false;
         public float LaunchForce = 500f;
 
+        public bool launchedByAircraft = false;
+
         GameObject Trail;
         public void UpdateVis()
         {
@@ -298,7 +300,11 @@ namespace WW2NavalAssembly
             {
                 launched = true;
                 fire = false;
-                myRigid.AddForce(-transform.up * LaunchForce);
+                if (!launchedByAircraft)
+                {
+                    myRigid.AddForce(-transform.up * LaunchForce);
+                }
+                
                 myRigid.angularDrag = 100;
                 
             }

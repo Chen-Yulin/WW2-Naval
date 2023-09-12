@@ -16,125 +16,142 @@ namespace WW2NavalAssembly
     {
         public int myseed = 0;
         public int myGuid;
+
+        public void UpdateVis(bool show)
+        {
+            try
+            {
+                if (show)
+                {
+                    if (gameObject.name == "Brace")
+                    {
+                        transform.Find("A").gameObject.GetComponent<MeshRenderer>().enabled = false;
+                        if (transform.Find("B"))
+                        {
+                            transform.Find("B").gameObject.GetComponent<MeshRenderer>().enabled = false;
+                        }
+                        if (transform.Find("Cylinder"))
+                        {
+                            transform.Find("Cylinder").gameObject.GetComponent<MeshRenderer>().enabled = false;
+                        }
+                    }
+                    else if (gameObject.name == "RopeWinch")
+                    {
+                        return;
+                    }
+                    else if (gameObject.name == "Spring")
+                    {
+                        return;
+                    }
+                    else if (gameObject.name == "Balloon")
+                    {
+                        return;
+                    }
+                    else if (gameObject.name == "SqrBalloon")
+                    {
+                        return;
+                    }
+                    // mod-related
+                    else if (gameObject.name == "Aircraft")
+                    {
+                        return;
+                    }
+                    else if (gameObject.name == "Gun")
+                    {
+                        return;
+                    }
+                    else if (gameObject.name == "Gunner")
+                    {
+                        return;
+                    }
+                    else if (gameObject.name == "Captain")
+                    {
+                        return;
+                    }
+                    else if (gameObject.name == "Aircraft Captain")
+                    {
+                        return;
+                    }
+                    else if (gameObject.name == "Engine")
+                    {
+                        return;
+                    }
+                    else if (gameObject.name == "FlyingBlock")
+                    {
+                        transform.Find("Rot").Find("Vis").gameObject.SetActive(false);
+                    }
+                    else if (gameObject.name == "SmallWheel")
+                    {
+                        transform.Find("rot").Find("Vis").gameObject.SetActive(false);
+                    }
+                    else
+                    {
+                        transform.Find("Vis").gameObject.SetActive(false);
+                    }
+
+                }
+                else
+                {
+                    if (gameObject.name == "Brace")
+                    {
+                        transform.Find("A").gameObject.GetComponent<MeshRenderer>().enabled = true;
+                        if (transform.Find("B"))
+                        {
+                            transform.Find("B").gameObject.GetComponent<MeshRenderer>().enabled = true;
+                        }
+                        if (transform.Find("Cylinder"))
+                        {
+                            transform.Find("Cylinder").gameObject.GetComponent<MeshRenderer>().enabled = true;
+                        }
+                    }
+                    else if (gameObject.name == "RopeWinch" || gameObject.name == "Balloon" || gameObject.name == "Spring" || gameObject.name == "SqrBalloon")
+                    {
+                        return;
+                    }
+                    else if (gameObject.name == "FlyingBlock")
+                    {
+                        transform.Find("Rot").Find("Vis").gameObject.SetActive(true);
+                    }
+                    else if (gameObject.name == "SmallWheel")
+                    {
+                        transform.Find("rot").Find("Vis").gameObject.SetActive(true);
+                    }
+                    else
+                    {
+                        transform.Find("Vis").gameObject.SetActive(true);
+                    }
+                }
+            }
+            catch
+            {
+                Debug.Log("Error: " + gameObject.name);
+            }
+        }
+        IEnumerator ChangeVis()
+        {
+            yield return new WaitForFixedUpdate();
+            ModController.Instance.ShowChanged = false;
+            yield return new WaitForSeconds(0.01f * myseed);
+
+            UpdateVis(ModController.Instance.ShowArmour);
+
+            yield break;
+        }
+
         public void Awake()
         {
-            myseed = (int)(UnityEngine.Random.value * 39);
+            myseed = (int)(UnityEngine.Random.value * 40f);
         }
         public void Start()
         {
         }
         public void FixedUpdate()
         {
-            try
+            if (ModController.Instance.ShowChanged)
             {
-                if (ModController.Instance.state == myseed)
-                {
-                    if (ModController.Instance.showArmour)
-                    {
-                        if (gameObject.name == "Brace")
-                        {
-                            transform.Find("A").gameObject.GetComponent<MeshRenderer>().enabled = false;
-                            if (transform.Find("B"))
-                            {
-                                transform.Find("B").gameObject.GetComponent<MeshRenderer>().enabled = false;
-                            }
-                            if (transform.Find("Cylinder"))
-                            {
-                                transform.Find("Cylinder").gameObject.GetComponent<MeshRenderer>().enabled = false;
-                            }
-                        }
-                        else if (gameObject.name == "RopeWinch")
-                        {
-                            return;
-                        }
-                        else if (gameObject.name == "Spring")
-                        {
-                            return;
-                        }
-                        else if (gameObject.name == "Balloon")
-                        {
-                            return;
-                        }
-                        else if (gameObject.name == "SqrBalloon")
-                        {
-                            return;
-                        }
-                        // mod-related
-                        else if (gameObject.name == "Aircraft")
-                        {
-                            return;
-                        }
-                        else if (gameObject.name == "Gun")
-                        {
-                            return;
-                        }
-                        else if (gameObject.name == "Gunner")
-                        {
-                            return;
-                        }
-                        else if (gameObject.name == "Captain")
-                        {
-                            return;
-                        }
-                        else if (gameObject.name == "Aircraft Captain")
-                        {
-                            return;
-                        }
-                        else if (gameObject.name == "Engine")
-                        {
-                            return;
-                        }
-                        else if (gameObject.name == "FlyingBlock")
-                        {
-                            transform.Find("Rot").Find("Vis").gameObject.SetActive(false);
-                        }
-                        else if (gameObject.name == "SmallWheel")
-                        {
-                            transform.Find("rot").Find("Vis").gameObject.SetActive(false);
-                        }
-                        else
-                        {
-                            transform.Find("Vis").gameObject.SetActive(false);
-                        }
+                StartCoroutine(ChangeVis());
+            }
 
-                    }
-                    else
-                    {
-                        if (gameObject.name == "Brace")
-                        {
-                            transform.Find("A").gameObject.GetComponent<MeshRenderer>().enabled = true;
-                            if (transform.Find("B"))
-                            {
-                                transform.Find("B").gameObject.GetComponent<MeshRenderer>().enabled = true;
-                            }
-                            if (transform.Find("Cylinder"))
-                            {
-                                transform.Find("Cylinder").gameObject.GetComponent<MeshRenderer>().enabled = true;
-                            }
-                        }
-                        else if (gameObject.name == "RopeWinch" || gameObject.name == "Balloon" || gameObject.name == "Spring" || gameObject.name == "SqrBalloon")
-                        {
-                            return;
-                        }
-                        else if (gameObject.name == "FlyingBlock")
-                        {
-                            transform.Find("Rot").Find("Vis").gameObject.SetActive(true);
-                        }
-                        else if (gameObject.name == "SmallWheel")
-                        {
-                            transform.Find("rot").Find("Vis").gameObject.SetActive(true);
-                        }
-                        else
-                        {
-                            transform.Find("Vis").gameObject.SetActive(true);
-                        }
-                    }
-                }
-            }
-            catch {
-                Debug.Log( "Error: " + gameObject.name);
-            }
-            
         }
     }
 }

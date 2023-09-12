@@ -856,7 +856,7 @@ namespace WW2NavalAssembly
         }
         public void Update()
         {
-            if (ModController.Instance.showArmour)
+            if (ModController.Instance.ShowArmour)
             {
                 ShowGroupLine();
             }

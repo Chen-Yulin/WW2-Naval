@@ -1398,6 +1398,7 @@ namespace WW2NavalAssembly
                 TB.mode = 2;
                 TB.parentGuid = myGuid;
                 TB.depth = 0.5f;
+                TB.launchedByAircraft = true;
 
                 if (!client)
                 {
@@ -2334,7 +2335,7 @@ namespace WW2NavalAssembly
 
 
 
-            if (ModController.Instance.showArmour)
+            if (ModController.Instance.ShowArmour)
             {
                 ShowGroupLine();
             }

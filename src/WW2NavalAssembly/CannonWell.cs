@@ -106,7 +106,7 @@ namespace WW2NavalAssembly
             else
             {
                 Color tmpColor = TurrentVisRender.material.color;
-                TurrentVisRender.material.color = new Color(tmpColor.r / 2, tmpColor.g / 2, tmpColor.b / 2, ModController.Instance.showArmour ? 1f : 0f);
+                TurrentVisRender.material.color = new Color(tmpColor.r / 2, tmpColor.g / 2, tmpColor.b / 2, ModController.Instance.ShowArmour ? 1f : 0f);
             }
             try
             {
@@ -679,7 +679,7 @@ namespace WW2NavalAssembly
         }
         public void Update()
         {
-            if (ModController.Instance.showArmour)
+            if (ModController.Instance.ShowArmour)
             {
                 ShowGroupLine();
             }
@@ -710,7 +710,7 @@ namespace WW2NavalAssembly
                 thickness = Thickness.Value;
                 
 
-                if (ModController.Instance.showArmour)
+                if (ModController.Instance.ShowArmour)
                 {
                     transform.Find("Vis").gameObject.SetActive(false);
                     WellVisRender.material = AssetManager.Instance.ArmorMat[Mathf.Clamp((int)(thickness / 10f),0,65)];

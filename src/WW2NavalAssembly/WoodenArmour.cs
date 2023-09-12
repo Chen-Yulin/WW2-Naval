@@ -27,6 +27,16 @@ namespace WW2NavalAssembly
         public int myPlayerID;
         public int myGuid;
 
+        IEnumerator ChangeVis()
+        {
+            yield return new WaitForFixedUpdate();
+            ModController.Instance.ShowChanged = false;
+            yield return new WaitForSeconds(0.01f * myseed);
+
+            UpdateVis(ModController.Instance.ShowArmour);
+
+            yield break;
+        }
         public void InitVis()
         {
             if (transform.Find("WoodenArmourVis"))
@@ -118,6 +128,19 @@ namespace WW2NavalAssembly
             WeaponMsgReceiver.Instance.BulletHoleInfo[myPlayerID][myGuid].Clear();
         }
 
+        public void UpdateVis(bool show)
+        {
+            if (show)
+            {
+                transform.Find("Vis").gameObject.SetActive(false);
+                VisRender.material = AssetManager.Instance.ArmorMat[Mathf.Clamp((int)(thickness / 10f), 0, 65)];
+            }
+            else
+            {
+                transform.Find("Vis").gameObject.SetActive(true);
+                VisRender.material = AssetManager.Instance.TransparentMat;
+            }
+        }
         public virtual void SafeAwake()
         {
             Thickness = BB.AddSlider("WW2-Naval Thickness", "WW2Thickness", 20f, 10f, 650f);
@@ -164,25 +187,19 @@ namespace WW2NavalAssembly
 
             if (ModController.Instance.state == myseed)
             {
-                if (ModController.Instance.showArmour)
-                {
-                    transform.Find("Vis").gameObject.SetActive(false);
-                    VisRender.material = AssetManager.Instance.ArmorMat[Mathf.Clamp((int)(thickness / 10f), 0, 65)];
-                }
-                else
-                {
-                    transform.Find("Vis").gameObject.SetActive(true);
-                    VisRender.material = AssetManager.Instance.TransparentMat;
-                }
-
                 if (StatMaster.isClient && transform.gameObject.GetComponent<BlockBehaviour>().isSimulating)
                 {
                     SyncBulletHole();
                 }
             }
 
-            
-            
+            if (ModController.Instance.ShowChanged)
+            {
+                StartCoroutine(ChangeVis());
+            }
+
+
+
         }
     }
 }

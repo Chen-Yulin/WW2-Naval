@@ -1,10 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-using Modding;
-
-using Modding.Common;
+﻿using Modding;
+using System;
 using UnityEngine;
 
 
@@ -41,7 +36,23 @@ namespace WW2NavalAssembly
         private Rect windowRect = new Rect(15f, 100f, 280f, 50f);
         private readonly int windowID = ModUtility.GetWindowId();
         public bool windowHidden = false;
-        public bool showArmour = false;
+        bool _showArmour = false;
+        public bool ShowChanged = false;
+        public bool ShowArmour
+        {
+            get
+            {
+                return _showArmour;
+            }
+            set
+            {
+                if (_showArmour != value)
+                {
+                    _showArmour = value;
+                    ShowChanged = true;
+                }
+            }
+        }
         public bool showSea = false;
         public bool deleteFog = false;
         public bool useSkyBox = false;
@@ -229,7 +240,7 @@ namespace WW2NavalAssembly
         {
             GUILayout.BeginVertical();
             {
-                showArmour = GUILayout.Toggle(showArmour, "Show Armour Layout");
+                ShowArmour = GUILayout.Toggle(ShowArmour, "Show Armour Layout");
                 showSea = GUILayout.Toggle(showSea, "Sea Toggle");
                 deleteFog = GUILayout.Toggle(deleteFog, "Delete Fog");
                 ToggleIndent("Use SkyBox", 20, ref useSkyBox, delegate

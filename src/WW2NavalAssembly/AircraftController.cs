@@ -839,12 +839,12 @@ namespace WW2NavalAssembly
                     if (DeckVis)
                     {
                         hasDeck = true;
-                        DeckVis.SetActive(ModController.Instance.showArmour);
+                        DeckVis.SetActive(ModController.Instance.ShowArmour);
                     }
                     if (HangarVis)
                     {
                         hasHangar = true;
-                        HangarVis.SetActive(ModController.Instance.showArmour);
+                        HangarVis.SetActive(ModController.Instance.ShowArmour);
                     }
                     FlightDataBase.Instance.aircraftController[myPlayerID] = this;
                 }
@@ -874,12 +874,12 @@ namespace WW2NavalAssembly
                 if (DeckVis)
                 {
                     hasDeck = true;
-                    DeckVis.SetActive(ModController.Instance.showArmour);
+                    DeckVis.SetActive(ModController.Instance.ShowArmour);
                 }
                 if (HangarVis)
                 {
                     hasHangar = true;
-                    HangarVis.SetActive(ModController.Instance.showArmour);
+                    HangarVis.SetActive(ModController.Instance.ShowArmour);
                 }
                 FlightDataBase.Instance.aircraftController[myPlayerID] = this;
             }
@@ -902,12 +902,12 @@ namespace WW2NavalAssembly
                     {
                         if (PlayerData.localPlayer.networkId == myPlayerID)
                         {
-                            DeckVis.SetActive(ModController.Instance.showArmour);
+                            DeckVis.SetActive(ModController.Instance.ShowArmour);
                         }
                     }
                     else
                     {
-                        DeckVis.SetActive(ModController.Instance.showArmour);
+                        DeckVis.SetActive(ModController.Instance.ShowArmour);
                     }
                 }
 
@@ -931,12 +931,12 @@ namespace WW2NavalAssembly
                     {
                         if (PlayerData.localPlayer.networkId == myPlayerID)
                         {
-                            HangarVis.SetActive(ModController.Instance.showArmour);
+                            HangarVis.SetActive(ModController.Instance.ShowArmour);
                         }
                     }
                     else
                     {
-                        HangarVis.SetActive(ModController.Instance.showArmour);
+                        HangarVis.SetActive(ModController.Instance.ShowArmour);
                     }
                 }
                 // high frequency
