@@ -78,24 +78,31 @@ namespace WW2NavalAssembly
         }
         public FCResult CalculateGunFCPara(Vector3 targetPosition, Vector3 velocity, float caliber)
         {
-            float targetHeight = targetPosition.y - 20f;
             Vector3 myPosition = new Vector3(transform.position.x, 21f, transform.position.z);
-            float dist2D = MathTool.Get2DDistance(targetPosition, myPosition);
+
+            float targetHeight = targetPosition.y - 20f;
+            Vector3 myTargetPosition = targetPosition;
+            float dist2D = MathTool.Get2DDistance(myTargetPosition, myPosition);
             Dist2PitchResult pitchRes = CalculateGunPitchFromDist(dist2D, caliber, targetHeight);
-            if (pitchRes.hasResult)
+
+            for (int i = 0; i <= 3; i++)
             {
-                targetPosition = targetPosition + velocity * pitchRes.time;
-                dist2D = MathTool.Get2DDistance(targetPosition, myPosition);
-                pitchRes = CalculateGunPitchFromDist(dist2D, caliber, targetHeight);
-                if (pitchRes.hasResult) // valid result
+                if (pitchRes.hasResult)
                 {
-                    float Orien = MathTool.SignedAngle(GetForward(), MathTool.Get2DCoordinate(targetPosition + velocity * pitchRes.time - myPosition));
-                    return new FCResult(Orien, pitchRes.pitch, MathTool.Get2DCoordinate(targetPosition + velocity * pitchRes.time), pitchRes.time);
+                    myTargetPosition = targetPosition + velocity * pitchRes.time;
+                    targetHeight = targetPosition.y - 20f;
+                    dist2D = MathTool.Get2DDistance(myTargetPosition, myPosition);
+                    pitchRes = CalculateGunPitchFromDist(dist2D, caliber, targetHeight);
                 }
                 else
                 {
-                    return new FCResult(MathTool.SignedAngle(GetForward(), MathTool.Get2DCoordinate(targetPosition - myPosition)));
+                    break;
                 }
+            }
+            if (pitchRes.hasResult) // valid result
+            {
+                float Orien = MathTool.SignedAngle(GetForward(), MathTool.Get2DCoordinate(targetPosition + velocity * pitchRes.time - myPosition));
+                return new FCResult(Orien, pitchRes.pitch, MathTool.Get2DCoordinate(targetPosition + velocity * pitchRes.time), pitchRes.time);
             }
             else
             {
@@ -213,7 +220,7 @@ namespace WW2NavalAssembly
                 Aircraft target = DetectedAircraft[CurrentTarget];
                 Vector3 targetPos = target.transform.position;
                 Vector3 targetVel = target.myVelocity;
-                targetVel *= 1.3f - UnityEngine.Random.value * 0.7f;
+                targetVel *= 1.3f - UnityEngine.Random.value * 0.6f;
                 foreach (var fcRes in FCResults)
                 {
                     FCResult res = CalculateGunFCPara(targetPos, targetVel, fcRes.Key);
@@ -282,7 +289,7 @@ namespace WW2NavalAssembly
 
         public void OnGUI()
         {
-            if (StatMaster.hudHidden)
+            if (ModController.Instance.hideUI)
             {
                 return;
             }

@@ -932,7 +932,7 @@ namespace WW2NavalAssembly
             }
             explo.name = "Explo Air";
             explo.SetActive(true);
-            explo.transform.localScale = Caliber / 200 * Vector3.one;
+            explo.transform.localScale = Caliber / 600 * Vector3.one;
             Destroy(explo, 3);
             AddExploSound(explo.transform);
 
@@ -1673,7 +1673,7 @@ namespace WW2NavalAssembly
         }
         public void OnGUI()
         {
-            if (StatMaster.hudHidden)
+            if (ModController.Instance.hideUI)
             {
                 return;
             }

@@ -60,6 +60,7 @@ namespace WW2NavalAssembly
         public bool skychanged = false;
         public bool preFog = false;
         public string s_AAForce = "1";
+        public bool hideUI = false;
 
         public float AAForce
         {
@@ -302,7 +303,9 @@ namespace WW2NavalAssembly
 
                 GUILayout.Label("Press Ctrl+W to hide");
             }
-            
+
+            hideUI = GUILayout.Toggle(hideUI, "Hide UI");
+
             GUILayout.EndVertical();
             GUILayout.FlexibleSpace();
             GUI.DragWindow();

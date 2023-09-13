@@ -569,7 +569,7 @@ namespace WW2NavalAssembly
         }
         public void OnGUI()
         {
-            if (StatMaster.hudHidden)
+            if (ModController.Instance.hideUI)
             {
                 return;
             }
