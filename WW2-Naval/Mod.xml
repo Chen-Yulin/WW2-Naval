@@ -5,11 +5,11 @@
 	<Name>WW2Naval</Name>
 	<Author>Chen, Yulin</Author> <!-- FIX: Insert your name here. -->
 	<!-- Major.Minor.Build -->
-	<Version>0.8.5</Version>
+	<Version>0.8.6</Version>
 	
 	<Description>
-    Version 0.8.5
-	Optimization in multiple fields
+    Version 0.8.6
+	Optimizatize AA controller
 	</Description>
 
 	<Icon name="icon"/>
