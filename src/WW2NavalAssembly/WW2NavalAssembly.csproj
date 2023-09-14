@@ -65,6 +65,7 @@
     <Compile Include="CannonTrackManager.cs" />
     <Compile Include="CannonWell.cs" />
     <Compile Include="Chimney.cs" />
+    <Compile Include="Constants.cs" />
     <Compile Include="Controller.cs" />
     <Compile Include="CustomBlockController.cs" />
     <Compile Include="DefaultArmour.cs" />

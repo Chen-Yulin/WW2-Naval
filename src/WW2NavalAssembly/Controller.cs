@@ -303,7 +303,7 @@ namespace WW2NavalAssembly
             float cannonDrag = caliber > 100 ? 5000f / (caliber * caliber) : 1 - caliber / 200f;
             //Debug.Log("Start Iterating");
             float initialSpeed = MathTool.GetInitialVel(caliber, false);
-            float g = 49f;
+            float g = Constants.BulletGravity;
             float vx;
             float vy;
             float sy;// gravity direction positive

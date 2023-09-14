@@ -633,7 +633,7 @@ namespace WW2NavalAssembly
             if (Routes[group].Count > 0)
             {
                 Vector3 prePosition = Routes[group].LastOrDefault().Position;
-                direction = MathTool.Get2DCoordinate(new Vector3(position.x, 60f, position.y) - prePosition).normalized;
+                direction = MathTool.Get2DCoordinate(new Vector3(position.x, Constants.CruiseHeight + Constants.SeaHeight, position.y) - prePosition).normalized;
                 switch (type)
                 {
                     case 1:
@@ -655,16 +655,16 @@ namespace WW2NavalAssembly
             switch (type)
             {
                 case 0:
-                    height = 60f;
+                    height = Constants.CruiseHeight + Constants.SeaHeight;
                     break;
                 case 1:
-                    height = 21.5f;
+                    height = Constants.TorpedoAttackHeight + Constants.SeaHeight;
                     break;
                 case 2:
-                    height = 250f;
+                    height = Constants.BombAttackHeight + Constants.SeaHeight;
                     break;
                 default:
-                    height = 60f;
+                    height = Constants.CruiseHeight + Constants.SeaHeight;
                     break;
             }
 
@@ -688,16 +688,16 @@ namespace WW2NavalAssembly
                 switch (type)
                 {
                     case 0:
-                        height = 60f;
+                        height = Constants.CruiseHeight + Constants.SeaHeight;
                         break;
                     case 1:
-                        height = 21.5f;
+                        height = Constants.TorpedoAttackHeight + Constants.SeaHeight;
                         break;
                     case 2:
-                        height = 250f;
+                        height = Constants.BombAttackHeight + Constants.SeaHeight;
                         break;
                     default:
-                        height = 60f;
+                        height = Constants.CruiseHeight + Constants.SeaHeight;
                         break;
                 }
 
@@ -1050,7 +1050,7 @@ namespace WW2NavalAssembly
                                     }
                                     
 
-                                    direction = MathTool.Get2DCoordinate(new Vector3(worldPosition.x, 60f, worldPosition.z) - prePosition).normalized;
+                                    direction = MathTool.Get2DCoordinate(new Vector3(worldPosition.x, Constants.CruiseHeight + Constants.SeaHeight, worldPosition.z) - prePosition).normalized;
                                     RulerDir.rotation = Quaternion.LookRotation(new Vector3(direction.x, 0, direction.y), Vector3.up);
 
                                     float RouteDist = 0;
@@ -1111,7 +1111,7 @@ namespace WW2NavalAssembly
                                     Vector2 direction = Vector2.zero;
                                     prePosition = CurrentLeader.transform.position;
                                     
-                                    direction = MathTool.Get2DCoordinate(new Vector3(worldPosition.x, 60f, worldPosition.z) - prePosition).normalized;
+                                    direction = MathTool.Get2DCoordinate(new Vector3(worldPosition.x, Constants.CruiseHeight + Constants.SeaHeight, worldPosition.z) - prePosition).normalized;
                                     RulerDir.rotation = Quaternion.LookRotation(new Vector3(direction.x, 0, direction.y), Vector3.up);
 
                                     float RouteDist = 0;

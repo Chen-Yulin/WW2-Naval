@@ -47,12 +47,12 @@ namespace WW2NavalAssembly
                 return new Vector2(-transform.up.x, -transform.up.z);
             }
         }
-        public Dist2PitchResult CalculateGunPitchFromDist(float dist, float caliber, float targetHeight = 60f)
+        public Dist2PitchResult CalculateGunPitchFromDist(float dist, float caliber, float targetHeight = Constants.CruiseHeight + Constants.SeaHeight)
         {
             float cannonDrag = caliber > 100 ? 5000f / (caliber * caliber) : 1 - caliber / 200f;
             //Debug.Log("Start Iterating");
             float initialSpeed = MathTool.GetInitialVel(caliber, true);
-            float g = 49f;
+            float g = Constants.BulletGravity;
             float vx;
             float vy;
             float sy;// gravity direction positive

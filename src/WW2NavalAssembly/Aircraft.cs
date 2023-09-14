@@ -464,7 +464,7 @@ namespace WW2NavalAssembly
                 return -90+angle;
             }
         }
-        public float CruiseHeight = 60f;
+        public float CruiseHeight = Constants.CruiseHeight + Constants.SeaHeight;
         public float PropellerSpeed
         {
             set
@@ -514,7 +514,7 @@ namespace WW2NavalAssembly
         public Vector2 WayPoint = new Vector2();
         public Vector2 WayDirection = Vector2.zero;
         public float WayHeight;
-        public int WayPointType = 0; // 0 for 60m cruise, 1 for 21m torpedo, 2 for 270m bomb
+        public int WayPointType = 0; // 0 for cruise, 1 for torpedo, 2 for bomb
 
         // ================== for attacking ==================
         public bool hasAttacked = false;
@@ -636,7 +636,7 @@ namespace WW2NavalAssembly
             Thrust = 10f;
 
             targetRoll = -180;
-            while (transform.position.y > 120f)
+            while (transform.position.y > Constants.SeaHeight + Constants.BombDropHeight)
             {
                 yield return new WaitForFixedUpdate();
                 targetRoll += 4;
@@ -698,7 +698,7 @@ namespace WW2NavalAssembly
 
                     if (EstimatedTime > 0)
                     {
-                        float targetHeight = -myRigid.velocity.y * 0.7f * EstimatedTime + 0.5f * 32.4f * Mathf.Pow(EstimatedTime, 2);
+                        float targetHeight = -myRigid.velocity.y * 0.7f * EstimatedTime + 0.5f * Constants.Gravity * Mathf.Pow(EstimatedTime, 2);
                         target_pos.y += targetHeight;
                         target_pos.y = Mathf.Clamp(target_pos.y, -20, transform.position.y);
                     }
@@ -1554,7 +1554,7 @@ namespace WW2NavalAssembly
                 WayDirection = Vector2.zero;
                 WayPoint = targetPoint;
                 WayPointType = 0;
-                WayHeight = 35f;
+                WayHeight = deck.height + Constants.LandHeight;
             }
         }
         public void GetLandingWayPoint()
@@ -1663,7 +1663,7 @@ namespace WW2NavalAssembly
                 if (a.status == Status.DogFighting && myGroup.ContainsValue(a.FightTarget.gameObject.GetComponent<Aircraft>()))
                 {
                     f_pos = (transform.position + a.transform.position) / 2f;
-                    f_pos.y = 120f;
+                    f_pos.y = Constants.SeaHeight + Constants.CruiseHeight;
 
                     foreach (var a_member in a.myGroup)
                     {
@@ -1829,7 +1829,7 @@ namespace WW2NavalAssembly
                 PropellerSpeed = 11f;
                 Thrust = 40f;
                 WayPoint = MathTool.Get2DCoordinate(transform.position - transform.up * 300f);
-                WayHeight = 60;
+                WayHeight = CruiseHeight;
                 WayPointType = 0;
             }
         }
