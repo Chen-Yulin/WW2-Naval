@@ -1141,6 +1141,7 @@ namespace WW2NavalAssembly
             }
             
         }
+
         public void FixedUpdate()
         {
             
@@ -1148,12 +1149,12 @@ namespace WW2NavalAssembly
             {
                 if (!thrustOn)
                 {
-                    myRigid.velocity = transform.forward * (130 + 0.08f * (Caliber + 50) + ((18000) / (Caliber + 100))) * (AA?2 : 1);
+                    myRigid.velocity = transform.forward * MathTool.GetInitialVel(Caliber, AA);
                     thrustOn = true;
                     PlayGunShot();
                 } // add initial speed
                 transform.rotation = Quaternion.LookRotation(myRigid.velocity);
-                myRigid.AddForce(randomForce);
+                myRigid.AddForce(randomForce * 2f);
                 if (!AA)
                 {
                     if (!StatMaster.isClient)
@@ -1199,15 +1200,7 @@ namespace WW2NavalAssembly
                     }
                 }
             }
-            if (CannonType == 0)
-            {
-                penetration *= decay;
-                //Debug.Log(penetration);
-            }
-            else
-            {
-                penetration *= decay;
-            }
+            penetration *= decay;
             if (transform.position.y < -1)
             {
                 Destroy(this.gameObject);
@@ -1294,7 +1287,7 @@ namespace WW2NavalAssembly
             Rigidbody RBtmp = CannonPrefab.AddComponent<Rigidbody>();
             RBtmp.mass = 0.2f;
             RBtmp.drag = Caliber.Value>100? 5000f/(Caliber.Value* Caliber.Value) : 1-Caliber.Value/200f;
-            RBtmp.useGravity = true;
+            RBtmp.useGravity = false;
             if (Caliber.Value >= 100)
             {
                 GameObject CannonVis = new GameObject("CannonVis");
@@ -1326,7 +1319,8 @@ namespace WW2NavalAssembly
             TRtmp.enabled = true;
             TRtmp.time = 0.1f;
 
-
+            GravityModifier gm = CannonPrefab.AddComponent<GravityModifier>();
+            gm.gravityScale = 1.5f;
             CannonPrefab.SetActive(false);
         }
         public void ClearCannon()

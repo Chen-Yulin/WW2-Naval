@@ -9,6 +9,7 @@ using Modding;
 using Modding.Blocks;
 using UnityEngine;
 using UnityEngine.Networking;
+using skpCustomModule;
 
 namespace WW2NavalAssembly
 {
@@ -68,6 +69,10 @@ namespace WW2NavalAssembly
             {
                 return Vector2.Angle(v1, v2);
             }
+        }
+        public static float GetInitialVel(float caliber, bool AA)
+        {
+            return (700 + 0.2f * (caliber - 100) + ((20000) / (caliber + 30))) * (AA? 1.5f : 1f)/2;
         }
     }
 }
