@@ -1519,7 +1519,7 @@ namespace WW2NavalAssembly
                 }
                 
                 Cannon.GetComponent<BulletBehaviour>().timeFaze = timeFaze;
-                Destroy(Cannon, 10);
+                Destroy(Cannon, timeFaze + 2f);
 
                 CannonType = NextCannonType;
                 if (StatMaster.isMP)
@@ -1583,7 +1583,7 @@ namespace WW2NavalAssembly
                 Cannon.GetComponent<BulletBehaviour>().randomForce = WeaponMsgReceiver.Instance.Fire[myPlayerID][myGuid].fireForce;
                 Cannon.GetComponent<BulletBehaviour>().CannonType = CannonType;
                 Cannon.GetComponent<BulletBehaviour>().timeFaze = WeaponMsgReceiver.Instance.Fire[myPlayerID][myGuid].time;
-                Destroy(Cannon, 10);
+                Destroy(Cannon, timeFaze + 1f);
 
                 CannonType = NextCannonType;
 
@@ -1635,7 +1635,7 @@ namespace WW2NavalAssembly
                 Cannon.GetComponent<BulletBehaviour>().randomForce = randomForce;
                 Cannon.GetComponent<BulletBehaviour>().CannonType = CannonType;
                 Cannon.GetComponent<BulletBehaviour>().timeFaze = 20f;
-                Destroy(Cannon, 10);
+                Destroy(Cannon, timeFaze + 2f);
                 CannonType = NextCannonType;
 
                 ModNetworking.SendToAll(WeaponMsgReceiver.FireMsg.CreateMessage(myPlayerID, myGuid, randomForce, transform.forward, Vector3.zero, timeFaze));

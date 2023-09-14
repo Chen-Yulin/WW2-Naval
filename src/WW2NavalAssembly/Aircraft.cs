@@ -1412,7 +1412,7 @@ namespace WW2NavalAssembly
                 }
                 
                 LoadObject.SetActive(false);
-                Destroy(Torpedo, 25f);
+                Destroy(Torpedo, Constants.FastTorpedoTime);
             }
             else if (Type.Value == 2)
             {
