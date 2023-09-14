@@ -345,7 +345,7 @@ namespace WW2NavalAssembly
             }
         }
 
-        public Vector3 lastClientVelocity = Vector3.zero;
+        public Vector3[] lastClientVelocity = new Vector3[16];
         public Vector3 myVelocity
         {
             get
@@ -711,8 +711,6 @@ namespace WW2NavalAssembly
                     Vector3 v_angularVel = myRigid.angularVelocity;
                     Vector3 RollTorque = Vector3.Cross(transform.right, -v_angularVel.normalized) * 7;//5=>7
                     myRigid.AddTorque(RollTorque);
-
-
                 }
                 
                 
@@ -2091,6 +2089,10 @@ namespace WW2NavalAssembly
                 "Spitfire"
             });
             Rank = AddMenu("Rank", 0, LanguageManager.Instance.CurrentLanguage.AircraftRank);
+            for (int i = 0; i < 16; i++)
+            {
+                lastClientVelocity[i] = Vector3.zero;
+            }
         }
         public void Start()
         {
@@ -2352,22 +2354,21 @@ namespace WW2NavalAssembly
             {
                 if (AircraftMsgReceiver.Instance.ClientNeedVelocity[myPlayerID].ContainsKey(myGuid))
                 {
-                    if ((myRigid.velocity - lastClientVelocity).magnitude > 5f)
+                    foreach (var playerID in AircraftMsgReceiver.Instance.ClientNeedVelocity[myPlayerID][myGuid])
                     {
-                        lastClientVelocity = myRigid.velocity;
-                        foreach (var playerID in AircraftMsgReceiver.Instance.ClientNeedVelocity[myPlayerID][myGuid])
+                        try
                         {
-                            try
+                            Player p = Player.From((ushort)playerID);
+                            if ((myRigid.velocity - lastClientVelocity[playerID]).magnitude > 5f)
                             {
-                                Player p = Player.From((ushort)playerID);
-                                ModNetworking.SendTo(p, AircraftMsgReceiver.VelocityMsg.CreateMessage(myPlayerID, myGuid, lastClientVelocity));
-                            }
-                            catch
-                            {
-                                AircraftMsgReceiver.Instance.ClientNeedVelocity[myPlayerID][myGuid].Remove(playerID);
+                                lastClientVelocity[playerID] = myRigid.velocity;
+                                ModNetworking.SendTo(p, AircraftMsgReceiver.VelocityMsg.CreateMessage(myPlayerID, myGuid, lastClientVelocity[playerID]));
                             }
                         }
-                        
+                        catch
+                        {
+                            AircraftMsgReceiver.Instance.ClientNeedVelocity[myPlayerID][myGuid].Remove(playerID);
+                        }
                     }
                 }
             }
