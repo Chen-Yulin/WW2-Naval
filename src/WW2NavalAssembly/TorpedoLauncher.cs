@@ -368,11 +368,11 @@ namespace WW2NavalAssembly
 
                 if (TorpedoType == 0)
                 {
-                    Destroy(Cannon, 90);
+                    Destroy(Cannon, Constants.FastTorpedoTime);
                 }
                 else
                 {
-                    Destroy(Cannon, 27.8f);
+                    Destroy(Cannon, Constants.FastTorpedoTime);
                 }
 
                 if (StatMaster.isMP)
@@ -439,11 +439,11 @@ namespace WW2NavalAssembly
 
                 if (TorpedoType == 0)
                 {
-                    Destroy(Cannon, 90);
+                    Destroy(Cannon, Constants.FastTorpedoTime);
                 }
                 else
                 {
-                    Destroy(Cannon, 27.8f);
+                    Destroy(Cannon, Constants.FastTorpedoTime);
                 }
             }
         }
@@ -480,11 +480,11 @@ namespace WW2NavalAssembly
                 }
                 if (TorpedoType == 0)
                 {
-                    Destroy(Cannon, 90);
+                    Destroy(Cannon, Constants.FastTorpedoTime);
                 }
                 else
                 {
-                    Destroy(Cannon, 27.8f);
+                    Destroy(Cannon, Constants.FastTorpedoTime);
                 }
 
                 ModNetworking.SendToAll(WeaponMsgReceiver.FireMsg.CreateMessage(myPlayerID, myGuid, Vector3.zero, Cannon.transform.eulerAngles, Rigidbody.velocity, (float)20));

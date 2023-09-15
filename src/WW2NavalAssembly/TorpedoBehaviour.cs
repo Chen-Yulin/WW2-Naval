@@ -287,9 +287,6 @@ namespace WW2NavalAssembly
             else
             {
             }
-
-            
-            
         }
 
         public void FixedUpdate()

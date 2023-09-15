@@ -16,5 +16,8 @@ namespace WW2NavalAssembly
         public const float BombAttackHeight = 250f;
         public const float BombDropHeight = 100f;
         public const float SeaHeight = 20f;
+
+        public const float SlowTorpedoTime = 180f;
+        public const float FastTorpedoTime = 60f;
     }
 }
