@@ -507,7 +507,7 @@ namespace WW2NavalAssembly
         /// </summary>
         public void UpdateGunIcon()
         {
-            if (ModController.Instance.hideUI)
+            if (StatMaster.hudHidden)
             {
                 FCCanvas.SetActive(false);
             }
@@ -1183,10 +1183,6 @@ namespace WW2NavalAssembly
 
         private void OnGUI()
         {
-            if (ModController.Instance.hideUI)
-            {
-                return;
-            }
             if (StatMaster.isMP)
             {
                 if (PlayerData.localPlayer.networkId != myPlayerID)

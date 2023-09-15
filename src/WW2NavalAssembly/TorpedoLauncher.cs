@@ -43,8 +43,52 @@ namespace WW2NavalAssembly
         Texture ReloadHEIn;
         Texture ReloadAPOut;
         Texture ReloadAPIn;
+        FollowerUI ReloadHEOutUI;
+        FollowerUI ReloadHEInUI;
+        FollowerUI ReloadAPOutUI;
+        FollowerUI ReloadAPInUI;
         int iconSize = 30;
 
+        public bool isSelf
+        {
+            get
+            {
+                return StatMaster.isMP ? myPlayerID == PlayerData.localPlayer.networkId : true;
+            }
+        }
+
+        public void UpdateUI()
+        {
+            if (StatMaster.hudHidden)
+            {
+                ReloadAPOutUI.show = false;
+                ReloadHEOutUI.show = false;
+                ReloadAPInUI.show = false;
+                ReloadHEInUI.show = false;
+            }
+            else
+            {
+                if (TorpedoType == 0)
+                {
+                    ReloadAPOutUI.show = true;
+                    ReloadHEOutUI.show = false;
+                    int currIconSize = (int)(iconSize * currentReloadTime / reloadTime);
+                    ReloadAPInUI.size = currIconSize;
+                    ReloadAPInUI.show = true;
+                    ReloadHEInUI.show = false;
+                }
+                else
+                {
+                    ReloadHEOutUI.show = true;
+                    ReloadAPOutUI.show = false;
+                    int currIconSize = (int)(iconSize * currentReloadTime / reloadTime);
+                    ReloadHEInUI.size = currIconSize;
+                    ReloadHEInUI.show = true;
+                    ReloadAPInUI.show = false;
+                }
+            }
+
+        }
         public void UpdateSelfToFC()
         {
             if (ModController.Instance.state % 10 == myseed)
@@ -240,6 +284,15 @@ namespace WW2NavalAssembly
                 }
             }
             catch { }
+
+            if (isSelf)
+            {
+                ReloadAPOutUI = BlockUIManager.Instance.CreateFollowerUI(transform, 30, ReloadAPOut);
+                ReloadHEOutUI = BlockUIManager.Instance.CreateFollowerUI(transform, 30, ReloadHEOut);
+                ReloadAPInUI = BlockUIManager.Instance.CreateFollowerUI(transform, 30, ReloadAPIn);
+                ReloadHEInUI = BlockUIManager.Instance.CreateFollowerUI(transform, 30, ReloadHEIn);
+            }
+
         }
         public override void OnSimulateStop()
         {
@@ -255,6 +308,13 @@ namespace WW2NavalAssembly
         public void OnDestroy()
         {
             RemoveSelfFromFC();
+        }
+        public override void SimulateUpdateAlways()
+        {
+            if (isSelf)
+            {
+                UpdateUI();
+            }
         }
         public override void SimulateUpdateHost()
         {
@@ -436,37 +496,6 @@ namespace WW2NavalAssembly
         }
         public void OnGUI()
         {
-            if (ModController.Instance.hideUI)
-            {
-                return;
-            }
-            if (StatMaster.isMP)
-            {
-                if (PlayerData.localPlayer.networkId != myPlayerID)
-                {
-                    return;
-                }
-            }
-            if ((Camera.main.transform.position - transform.position).magnitude < 30 && BlockBehaviour.isSimulating)
-            {
-                Vector3 onScreenPosition = Camera.main.WorldToScreenPoint(transform.position);
-                if (onScreenPosition.z >= 0)
-                {
-                    if (TorpedoType == 0)
-                    {
-                        int currIconSize = (int)(iconSize * currentReloadTime / reloadTime);
-                        GUI.DrawTexture(new Rect(onScreenPosition.x - iconSize / 2, Camera.main.pixelHeight - onScreenPosition.y - iconSize / 2, iconSize, iconSize), ReloadAPOut);
-                        GUI.DrawTexture(new Rect(onScreenPosition.x - currIconSize / 2, Camera.main.pixelHeight - onScreenPosition.y - currIconSize / 2, currIconSize, currIconSize), ReloadAPIn);
-                    }
-                    else
-                    {
-                        int currIconSize = (int)(iconSize * currentReloadTime / reloadTime);
-                        GUI.DrawTexture(new Rect(onScreenPosition.x - iconSize / 2, Camera.main.pixelHeight - onScreenPosition.y - iconSize / 2, iconSize, iconSize), ReloadHEOut);
-                        GUI.DrawTexture(new Rect(onScreenPosition.x - currIconSize / 2, Camera.main.pixelHeight - onScreenPosition.y - currIconSize / 2, currIconSize, currIconSize), ReloadHEIn);
-                    }
-
-                }
-            }
         }
     }
 }

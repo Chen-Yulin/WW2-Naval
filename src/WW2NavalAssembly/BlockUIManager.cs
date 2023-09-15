@@ -18,11 +18,15 @@ namespace WW2NavalAssembly
     public class FollowerUI:MonoBehaviour
     {
         private RectTransform rectTransform;
+        private RectTransform parentRect;
         public Transform target;
         public float size;
         public Image image;
+        public bool show = true;
+        public float DisplayDist = 30;
+        public Vector2 offset = Vector2.zero;
 
-        public FollowerUI(Transform t, float size, Texture texture)
+        public void Initialize(Transform t, float size, Texture texture, float dist)
         {
             image = gameObject.AddComponent<Image>();
 
@@ -32,22 +36,59 @@ namespace WW2NavalAssembly
 
             gameObject.transform.SetParent(BlockUIManager.Instance.Canvas.transform);
             rectTransform = GetComponent<RectTransform>();
+            parentRect = transform.parent.gameObject.GetComponent<RectTransform>();
 
             target = t;
             this.size = size;
+            this.DisplayDist = dist;
         }
 
         public void Update()
         {
-            // 将目标对象的世界坐标转换为屏幕坐标
-            Vector2 screenPosition = Camera.main.WorldToScreenPoint(target.transform.position);
+            if (!target)
+            {
+                Destroy(this.gameObject);
+            }
+            else
+            {
 
-            // 将屏幕坐标转换为Canvas的本地坐标
-            Vector2 localPosition;
-            RectTransformUtility.ScreenPointToLocalPointInRectangle((RectTransform)transform.parent, screenPosition, null, out localPosition);
+                if (show)
+                {
+                    // 将目标对象的世界坐标转换为屏幕坐标
+                    Vector3 screenPosition = Camera.main.WorldToScreenPoint(target.transform.position);
 
-            // 更新Image的位置
-            rectTransform.localPosition = localPosition;
+                    if (screenPosition.z > 0 && screenPosition.z < DisplayDist)
+                    {
+                        if (image.enabled == false)
+                        {
+                            image.enabled = true;
+                        }
+                        // 将屏幕坐标转换为Canvas的本地坐标
+                        Vector2 localPosition;
+                        RectTransformUtility.ScreenPointToLocalPointInRectangle(parentRect, (Vector2)screenPosition + offset, null, out localPosition);
+
+                        // 更新Image的位置
+                        rectTransform.localPosition = localPosition;
+                    }
+                    else
+                    {
+                        if (image.enabled == true)
+                        {
+                            image.enabled = false;
+                        }
+                    }
+
+                    rectTransform.localScale = Vector3.one * size / 100f;
+                }
+                else
+                {
+                    if (image.enabled == true)
+                    {
+                        image.enabled = false;
+                    }
+                }
+            }
+            
         }
 
 
@@ -57,11 +98,21 @@ namespace WW2NavalAssembly
         public override string Name { get; } = "BlockUIManager";
 
         public GameObject Canvas;
+
+        public FollowerUI CreateFollowerUI(Transform t, float size, Texture texture, float dist = 30f)
+        {
+            GameObject UIObject = new GameObject("Follower");
+            UIObject.transform.parent = Canvas.transform;
+            FollowerUI follower = UIObject.AddComponent<FollowerUI>();
+            follower.Initialize(t, size, texture, dist);
+            return follower;
+        }
         
         public void Awake()
         {
             Canvas = new GameObject("WW2BlockUI");
             Canvas.transform.parent = GameObject.Find("Canvas").transform;
+            Canvas.AddComponent<RectTransform>();
         }
 
     }

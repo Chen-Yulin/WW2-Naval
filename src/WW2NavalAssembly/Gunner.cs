@@ -147,6 +147,13 @@ namespace WW2NavalAssembly
         public MSlider TurningSpeed;
         public MLimits Limit;
 
+        public bool isSelf
+        {
+            get
+            {
+                return StatMaster.isMP ? myPlayerID == PlayerData.localPlayer.networkId : true;
+            }
+        }
 
         GameObject[] GunLine = new GameObject[4];
         GameObject AngleCenter;
@@ -1043,10 +1050,6 @@ namespace WW2NavalAssembly
         }
         public void OnGUI()
         {
-            if (ModController.Instance.hideUI)
-            {
-                return;
-            }
             if (StatMaster.isMP)
             {
                 if (PlayerData.localPlayer.networkId != myPlayerID)

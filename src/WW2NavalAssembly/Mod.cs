@@ -37,6 +37,7 @@ namespace WW2NavalAssembly
 			myMod.AddComponent<AircraftMsgReceiver>();
 			myMod.AddComponent<LogMsgReceiver>();
 			myMod.AddComponent<LanguageManager>();
+			myMod.AddComponent<BlockUIManager>();
 			Debug.Log("Hello, this is WW2 naval mod!");
 		}
         public void OnEntityPrefabCreation(int entityId, GameObject prefab)
