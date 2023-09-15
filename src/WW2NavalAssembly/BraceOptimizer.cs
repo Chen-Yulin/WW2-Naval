@@ -17,6 +17,40 @@ namespace WW2NavalAssembly
         BlockBehaviour BB;
         public int frameCount = 0;
         public bool optimized = false;
+
+        public bool isWooden(BlockBehaviour bb)
+        {
+            int blockID = bb.BlockID;
+            switch (blockID)
+            {
+                case (int)BlockType.SingleWoodenBlock:
+                    return true;
+                case (int)BlockType.DoubleWoodenBlock:
+                    return true;
+                case (int)BlockType.Log:
+                    return true;
+                default: 
+                    return false;
+            }
+        }
+        public void Optimize()
+        {
+            optimized = true;
+            int jointCount = 0;
+            foreach (var joints in BB.iJointTo)
+            {
+                if (isWooden(joints.connectedBody.GetComponent<BlockBehaviour>()))
+                {
+                    if (jointCount >= 5)
+                    {
+                        joints.breakForce = 0;
+                        joints.breakTorque = 0;
+                    }
+                    jointCount++;
+                }
+            }
+        }
+
         public void Start()
         {
             frameCount = 0;
@@ -30,17 +64,7 @@ namespace WW2NavalAssembly
             }
             if (frameCount > 4 && !optimized)
             {
-                optimized = true;
-                int jointCount = 0;
-                foreach (var joints in BB.iJointTo)
-                {
-                    if (jointCount >= 5)
-                    {
-                        joints.breakForce = 0;
-                        joints.breakTorque = 0;
-                    }
-                    jointCount++;
-                }
+                Optimize();
             }
         }
     }
