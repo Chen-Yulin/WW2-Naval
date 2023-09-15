@@ -34,6 +34,7 @@
 		<Block path="Engine.xml" />
 		<Block path="AircraftController.xml" />
 		<Block path="AAController.xml" />
+		<Block path="AABlock.xml" />
 	</Blocks>
 	
 	<!-- Any entities (level objects) your mod adds to the game.
@@ -221,6 +222,39 @@
 		<Texture name="A-Barracuda-1 Texture" path="Aircraft\Y\Barracuda\Barracuda 1.png"/>
 		<Texture name="A-Barracuda-2 Texture" path="Aircraft\Y\Barracuda\Barracuda 2.png"/>
 
+		<!-- AA -->
+		<Mesh name="AA-20-1 Mesh" path="AA\20\20 1.obj"/>
+		<Mesh name="AA-20-2 Mesh" path="AA\20\20 2.obj"/>
+		<Texture name="AA-20-1 Texture" path="AA\20\20 1.png"/>
+		<Texture name="AA-20-2 Texture" path="AA\20\20 2.png"/>
+
+		<Mesh name="AA-40-x2-1 Mesh" path="AA\40\x2\40 x2 1.obj"/>
+		<Mesh name="AA-40-x2-2 Mesh" path="AA\40\x2\40 x2 2.obj"/>
+		<Texture name="AA-40-x2-1 Texture" path="AA\40\x2\40 x2 1.png"/>
+		<Texture name="AA-40-x2-2 Texture" path="AA\40\x2\40 x2 2.png"/>
+
+		<Mesh name="AA-40-x4-1 Mesh" path="AA\40\x4\40 x4 1.obj"/>
+		<Mesh name="AA-40-x4-2 Mesh" path="AA\40\x4\40 x4 2.obj"/>
+		<Texture name="AA-40-x4-1 Texture" path="AA\40\x4\40 x4 1.png"/>
+		<Texture name="AA-40-x4-2 Texture" path="AA\40\x4\40 x4 2.png"/>
+
+		<Mesh name="AA-25-1 Mesh" path="AA\25\25 1.obj"/>
+		<Mesh name="AA-25-2 Mesh" path="AA\25\25 2.obj"/>
+		<Texture name="AA-25-1 Texture" path="AA\25\25 1.png"/>
+		<Texture name="AA-25-2 Texture" path="AA\25\25 2.png"/>
+
+		<Mesh name="AA-100-1 Mesh" path="AA\100\100 1.obj"/>
+		<Mesh name="AA-100-2 Mesh" path="AA\100\100 2.obj"/>
+		<Texture name="AA-100-1 Texture" path="AA\100\100 1.png"/>
+		<Texture name="AA-100-2 Texture" path="AA\100\100 2.png"/>
+
+		<Mesh name="AA-127-1 Mesh" path="AA\127\127 1.obj"/>
+		<Mesh name="AA-127-2 Mesh" path="AA\127\127 2.obj"/>
+		<Texture name="AA-127-1 Texture" path="AA\127\127 1.png"/>
+		<Texture name="AA-127-2 Texture" path="AA\127\127 2.png"/>
+
+		<Mesh name="AA-sample Mesh" path="AA\sample.obj"/>
+		<Texture name="AA-sample Texture" path="AA\sample.png"/>
 
 	</Resources>
 
