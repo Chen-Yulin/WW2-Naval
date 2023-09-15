@@ -1,3 +1,5 @@
 src/.vs/
 *.zip
 *.cache
+*.dll
+*.pdb
