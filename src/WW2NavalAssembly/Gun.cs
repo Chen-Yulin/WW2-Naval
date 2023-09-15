@@ -1280,48 +1280,60 @@ namespace WW2NavalAssembly
         }
         void InitCannon()
         {
-            CannonPrefab = new GameObject("NavaCannon");
-            BulletBehaviour BBtmp = CannonPrefab.AddComponent<BulletBehaviour>();
-            BBtmp.Caliber = Caliber.Value;
-            BBtmp.myPlayerID = myPlayerID;
-            Rigidbody RBtmp = CannonPrefab.AddComponent<Rigidbody>();
-            RBtmp.mass = 0.2f;
-            RBtmp.drag = Caliber.Value>100? 5000f/(Caliber.Value* Caliber.Value) : 1-Caliber.Value/200f;
-            RBtmp.useGravity = false;
-            if (Caliber.Value >= 100)
+            Transform PrefabParent = BlockBehaviour.ParentMachine.transform.Find("Simulation Machine");
+            string PrefabName = "NavalCannon [" + myPlayerID + "](" + Caliber.Value + ")";
+            if (PrefabParent.Find(PrefabName))
             {
-                GameObject CannonVis = new GameObject("CannonVis");
-                CannonVis.transform.SetParent(CannonPrefab.transform);
-                CannonVis.transform.localPosition = Vector3.zero;
-                CannonVis.transform.localRotation = Quaternion.Euler(90f, 0f, 0f);
-                CannonVis.transform.localScale = Vector3.one * Caliber.Value/120;
-                MeshFilter MFtmp = CannonVis.AddComponent<MeshFilter>();
-                MFtmp.sharedMesh = ModResource.GetMesh("Cannon Mesh").Mesh;
-                MeshRenderer MRtmp = CannonVis.AddComponent<MeshRenderer>();
-                MRtmp.material.mainTexture = ModResource.GetTexture("Cannon Texture").Texture;
+                CannonPrefab = PrefabParent.Find(PrefabName).gameObject;
             }
+            else
+            {
+                CannonPrefab = new GameObject(PrefabName);
+                CannonPrefab.transform.parent = PrefabParent;
+                BulletBehaviour BBtmp = CannonPrefab.AddComponent<BulletBehaviour>();
+                BBtmp.Caliber = Caliber.Value;
+                BBtmp.myPlayerID = myPlayerID;
+                Rigidbody RBtmp = CannonPrefab.AddComponent<Rigidbody>();
+                RBtmp.mass = 0.2f;
+                RBtmp.drag = Caliber.Value > 100 ? 5000f / (Caliber.Value * Caliber.Value) : 1 - Caliber.Value / 200f;
+                RBtmp.useGravity = false;
+                if (Caliber.Value >= 100)
+                {
+                    GameObject CannonVis = new GameObject("CannonVis");
+                    CannonVis.transform.SetParent(CannonPrefab.transform);
+                    CannonVis.transform.localPosition = Vector3.zero;
+                    CannonVis.transform.localRotation = Quaternion.Euler(90f, 0f, 0f);
+                    CannonVis.transform.localScale = Vector3.one * Caliber.Value / 120;
+                    MeshFilter MFtmp = CannonVis.AddComponent<MeshFilter>();
+                    MFtmp.sharedMesh = ModResource.GetMesh("Cannon Mesh").Mesh;
+                    MeshRenderer MRtmp = CannonVis.AddComponent<MeshRenderer>();
+                    MRtmp.material.mainTexture = ModResource.GetTexture("Cannon Texture").Texture;
+                }
+
+
+                TrailRenderer TRtmp = CannonPrefab.AddComponent<TrailRenderer>();
+                TRtmp.autodestruct = false;
+
+                TRtmp.receiveShadows = false;
+                TRtmp.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+
+                TRtmp.startWidth = Mathf.Clamp(0.001f * Caliber.Value, 0.05f, 0.5f);
+                TRtmp.endWidth = 0f;
+
+                TRtmp.material = new Material(Shader.Find("Particles/Additive"));
+
+                TRtmp.material.SetColor("_TintColor", Color.white - 0.8f * Color.blue);
+
+
+                TRtmp.enabled = true;
+                TRtmp.time = 0.1f;
+
+                GravityModifier gm = CannonPrefab.AddComponent<GravityModifier>();
+                gm.gravityScale = 1.5f;
+                CannonPrefab.SetActive(false);
+            }
+
             
-
-            TrailRenderer TRtmp = CannonPrefab.AddComponent<TrailRenderer>();
-            TRtmp.autodestruct = false;
-
-            TRtmp.receiveShadows = false;
-            TRtmp.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-
-            TRtmp.startWidth = Mathf.Clamp(0.001f * Caliber.Value, 0.05f,0.5f);
-            TRtmp.endWidth = 0f;
-
-            TRtmp.material = new Material(Shader.Find("Particles/Additive"));
-
-            TRtmp.material.SetColor("_TintColor", Color.white - 0.8f * Color.blue);
-            
-
-            TRtmp.enabled = true;
-            TRtmp.time = 0.1f;
-
-            GravityModifier gm = CannonPrefab.AddComponent<GravityModifier>();
-            gm.gravityScale = 1.5f;
-            CannonPrefab.SetActive(false);
         }
         public void ClearCannon()
         {

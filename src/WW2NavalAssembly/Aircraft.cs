@@ -822,65 +822,85 @@ namespace WW2NavalAssembly
         }
         void InitTorpedo()
         {
-            TorpedoPrefab = new GameObject("NavalTorpedo");
-            TorpedoPrefab.transform.localScale = new Vector3(1.5f, 1.5f, 1.5f);
-            TorpedoBehaviour TBtmp = TorpedoPrefab.AddComponent<TorpedoBehaviour>();
-            TBtmp.Caliber = 400f;
-            TBtmp.myPlayerID = myPlayerID;
-            Rigidbody RBtmp = TorpedoPrefab.AddComponent<Rigidbody>();
-            RBtmp.mass = 0.2f;
-            RBtmp.drag = 0.1f;
-            RBtmp.useGravity = true;
-            GameObject TorpedoVis = new GameObject("TorpedoVis");
-            TorpedoVis.transform.SetParent(TorpedoPrefab.transform);
-            TorpedoVis.transform.localPosition = Vector3.zero;
-            TorpedoVis.transform.localRotation = Quaternion.Euler(0f, 0f, 270f);
-            TorpedoVis.transform.localScale = Vector3.one;
-            MeshFilter MFtmp = TorpedoVis.AddComponent<MeshFilter>();
-            MFtmp.sharedMesh = ModResource.GetMesh("Torpedo Mesh").Mesh;
-            MeshRenderer MRtmp = TorpedoVis.AddComponent<MeshRenderer>();
-            MRtmp.material.mainTexture = ModResource.GetTexture("Torpedo Texture").Texture;
+            Transform PrefabParent = BlockBehaviour.ParentMachine.transform.Find("Simulation Machine");
+            string PrefabName = "NavalAircraftTorpedo [" + myPlayerID + "](" + 400 + ")";
+            if (PrefabParent.Find(PrefabName))
+            {
+                TorpedoPrefab = PrefabParent.Find(PrefabName).gameObject;
+            }
+            else
+            {
+                TorpedoPrefab = new GameObject(PrefabName);
+                TorpedoPrefab.transform.parent = PrefabParent;
+                TorpedoPrefab.transform.localScale = new Vector3(1.5f, 1.5f, 1.5f);
+                TorpedoBehaviour TBtmp = TorpedoPrefab.AddComponent<TorpedoBehaviour>();
+                TBtmp.Caliber = 400f;
+                TBtmp.myPlayerID = myPlayerID;
+                Rigidbody RBtmp = TorpedoPrefab.AddComponent<Rigidbody>();
+                RBtmp.mass = 0.2f;
+                RBtmp.drag = 0.1f;
+                RBtmp.useGravity = true;
+                GameObject TorpedoVis = new GameObject("TorpedoVis");
+                TorpedoVis.transform.SetParent(TorpedoPrefab.transform);
+                TorpedoVis.transform.localPosition = Vector3.zero;
+                TorpedoVis.transform.localRotation = Quaternion.Euler(0f, 0f, 270f);
+                TorpedoVis.transform.localScale = Vector3.one;
+                MeshFilter MFtmp = TorpedoVis.AddComponent<MeshFilter>();
+                MFtmp.sharedMesh = ModResource.GetMesh("Torpedo Mesh").Mesh;
+                MeshRenderer MRtmp = TorpedoVis.AddComponent<MeshRenderer>();
+                MRtmp.material.mainTexture = ModResource.GetTexture("Torpedo Texture").Texture;
 
-            GameObject Fan1 = new GameObject("Fan1");
-            Fan1.transform.SetParent(TorpedoPrefab.transform);
-            Fan1.transform.localPosition = Vector3.zero;
-            Fan1.transform.localRotation = Quaternion.Euler(0f, 0f, 270f);
-            Fan1.transform.localScale = Vector3.one;
-            Fan1.AddComponent<MeshFilter>().sharedMesh = ModResource.GetMesh("TorpedoFan1 Mesh").Mesh;
-            Fan1.AddComponent<MeshRenderer>().material.mainTexture = ModResource.GetTexture("TorpedoFan1 Texture").Texture;
-            Fan1.AddComponent<PropellerBehaviour>().Direction = false;
+                GameObject Fan1 = new GameObject("Fan1");
+                Fan1.transform.SetParent(TorpedoPrefab.transform);
+                Fan1.transform.localPosition = Vector3.zero;
+                Fan1.transform.localRotation = Quaternion.Euler(0f, 0f, 270f);
+                Fan1.transform.localScale = Vector3.one;
+                Fan1.AddComponent<MeshFilter>().sharedMesh = ModResource.GetMesh("TorpedoFan1 Mesh").Mesh;
+                Fan1.AddComponent<MeshRenderer>().material.mainTexture = ModResource.GetTexture("TorpedoFan1 Texture").Texture;
+                Fan1.AddComponent<PropellerBehaviour>().Direction = false;
 
-            GameObject Fan2 = new GameObject("Fan2");
-            Fan2.transform.SetParent(TorpedoPrefab.transform);
-            Fan2.transform.localPosition = Vector3.zero;
-            Fan2.transform.localRotation = Quaternion.Euler(0f, 0f, 270f);
-            Fan2.transform.localScale = Vector3.one;
-            Fan2.AddComponent<MeshFilter>().sharedMesh = ModResource.GetMesh("TorpedoFan2 Mesh").Mesh;
-            Fan2.AddComponent<MeshRenderer>().material.mainTexture = ModResource.GetTexture("TorpedoFan2 Texture").Texture;
-            Fan2.AddComponent<PropellerBehaviour>().Direction = true;
+                GameObject Fan2 = new GameObject("Fan2");
+                Fan2.transform.SetParent(TorpedoPrefab.transform);
+                Fan2.transform.localPosition = Vector3.zero;
+                Fan2.transform.localRotation = Quaternion.Euler(0f, 0f, 270f);
+                Fan2.transform.localScale = Vector3.one;
+                Fan2.AddComponent<MeshFilter>().sharedMesh = ModResource.GetMesh("TorpedoFan2 Mesh").Mesh;
+                Fan2.AddComponent<MeshRenderer>().material.mainTexture = ModResource.GetTexture("TorpedoFan2 Texture").Texture;
+                Fan2.AddComponent<PropellerBehaviour>().Direction = true;
 
-            TorpedoPrefab.SetActive(false);
+                TorpedoPrefab.SetActive(false);
+            }
         }
         void InitBomb()
         {
-            BombPrefab = new GameObject("BombPrefab");
-            Bomb BBtmp = BombPrefab.AddComponent<Bomb>();
-            BBtmp.myPlayerID = myPlayerID;
-            Rigidbody RBtmp = BombPrefab.AddComponent<Rigidbody>();
-            RBtmp.mass = 0.2f;
-            RBtmp.drag = 0.02f;
-            RBtmp.useGravity = true;
+            Transform PrefabParent = BlockBehaviour.ParentMachine.transform.Find("Simulation Machine");
+            string PrefabName = "NavalAircraftBomb [" + myPlayerID + "](" + 1000 + ")";
+            if (PrefabParent.Find(PrefabName))
+            {
+                BombPrefab = PrefabParent.Find(PrefabName).gameObject;
+            }
+            else
+            {
+                BombPrefab = new GameObject(PrefabName);
+                BombPrefab.transform.parent = PrefabParent;
+                Bomb BBtmp = BombPrefab.AddComponent<Bomb>();
+                BBtmp.myPlayerID = myPlayerID;
+                Rigidbody RBtmp = BombPrefab.AddComponent<Rigidbody>();
+                RBtmp.mass = 0.2f;
+                RBtmp.drag = 0.02f;
+                RBtmp.useGravity = true;
 
-            GameObject CannonVis = new GameObject("BombVis");
-            CannonVis.transform.SetParent(BombPrefab.transform);
-            CannonVis.transform.localPosition = Vector3.zero;
-            CannonVis.transform.localRotation = Quaternion.Euler(0f, 0f, 0f);
-            MeshFilter MFtmp = CannonVis.AddComponent<MeshFilter>();
-            MFtmp.sharedMesh = ModResource.GetMesh("Bomb Mesh").Mesh;
-            MeshRenderer MRtmp = CannonVis.AddComponent<MeshRenderer>();
-            MRtmp.material.mainTexture = ModResource.GetTexture("Engine Texture").Texture;
+                GameObject CannonVis = new GameObject("BombVis");
+                CannonVis.transform.SetParent(BombPrefab.transform);
+                CannonVis.transform.localPosition = Vector3.zero;
+                CannonVis.transform.localRotation = Quaternion.Euler(0f, 0f, 0f);
+                MeshFilter MFtmp = CannonVis.AddComponent<MeshFilter>();
+                MFtmp.sharedMesh = ModResource.GetMesh("Bomb Mesh").Mesh;
+                MeshRenderer MRtmp = CannonVis.AddComponent<MeshRenderer>();
+                MRtmp.material.mainTexture = ModResource.GetTexture("Engine Texture").Texture;
 
-            BombPrefab.SetActive(false);
+                BombPrefab.SetActive(false);
+            }
         }
         GameObject InitGun()
         {
