@@ -19,5 +19,10 @@ namespace WW2NavalAssembly
 
         public const float SlowTorpedoTime = 180f;
         public const float FastTorpedoTime = 60f;
+
+        public const float BulletUnderWaterForce = 0.3f;
+        public const float BulletUnderWaterDrag = 12f;
+        public const int BulletAPTimer = 3;
+        public const int BulletHETimer = 2;
     }
 }

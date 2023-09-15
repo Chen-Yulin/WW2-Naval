@@ -771,7 +771,7 @@ namespace WW2NavalAssembly
                     penetration *= 0.7f;
                 }
                 myRigid.velocity = new Vector3(myRigid.velocity.x, myRigid.velocity.y / (1+Mathf.Sqrt(Caliber)/40), myRigid.velocity.z);
-                myRigid.AddForce(myRigid.velocity * 0.8f - Vector3.up * 8);
+                myRigid.AddForce(myRigid.velocity * Constants.BulletUnderWaterForce - Vector3.up * Constants.BulletUnderWaterDrag);
                 penetration *= 0.8f + Mathf.Clamp(Mathf.Sqrt(Caliber) / 200,0,0.15f);
                 if (myRigid.velocity.magnitude <= 5f)
                 {
@@ -1170,7 +1170,7 @@ namespace WW2NavalAssembly
                             {
                                 timer++;
                             }
-                            if (timer > 5f && !exploded)
+                            if (timer > Constants.BulletAPTimer && !exploded)
                             {
                                 PlayExploInAir();
                             }
@@ -1186,7 +1186,7 @@ namespace WW2NavalAssembly
                             {
                                 timer++;
                             }
-                            if (timer > 3f && !exploded)
+                            if (timer > Constants.BulletHETimer && !exploded)
                             {
                                 PlayExploInAir(false);
                             }

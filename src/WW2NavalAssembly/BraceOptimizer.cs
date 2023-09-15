@@ -58,6 +58,10 @@ namespace WW2NavalAssembly
         }
         public void FixedUpdate()
         {
+            if (StatMaster.isClient)
+            {
+                return;
+            }
             if (frameCount <= 4 && BB.isSimulating)
             {
                 frameCount++;

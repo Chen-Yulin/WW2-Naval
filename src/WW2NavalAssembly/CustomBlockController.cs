@@ -115,8 +115,8 @@ namespace WW2NavalAssembly
                     {
                         if (block.gameObject.GetComponent(typeof(DefaultArmour)) == null)
                             block.gameObject.AddComponent(typeof(DefaultArmour));
-                        if (block.gameObject.GetComponent(typeof(BraceOptimizer)) == null)
-                            block.gameObject.AddComponent(typeof(BraceOptimizer));
+                        //if (block.gameObject.GetComponent(typeof(BraceOptimizer)) == null)
+                        //    block.gameObject.AddComponent(typeof(BraceOptimizer));
                         break;
                     }
                 case (int)BlockType.BuildNode:
