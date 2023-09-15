@@ -1381,7 +1381,7 @@ namespace WW2NavalAssembly
                 TRtmp.time = 0.1f;
 
                 GravityModifier gm = CannonPrefab.AddComponent<GravityModifier>();
-                gm.gravityScale = 1.5f;
+                gm.gravityScale = Constants.BulletGravity/Constants.Gravity;
                 CannonPrefab.SetActive(false);
             }
 

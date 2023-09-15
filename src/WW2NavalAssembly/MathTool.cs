@@ -72,7 +72,8 @@ namespace WW2NavalAssembly
         }
         public static float GetInitialVel(float caliber, bool AA)
         {
-            return (130 + 0.08f * (caliber + 50) + ((18000) / (caliber + 100))) * (AA ? 2 : 1);
+            return (700 + 0.2f * (caliber - 100) + ((20000) / (caliber + 30))) * (AA ? 1.5f : 1f) / 2; // for 1:10
+            //return (130 + 0.08f * (caliber + 50) + ((18000) / (caliber + 100))) * (AA ? 2 : 1); // for 1:20
         }
     }
 }

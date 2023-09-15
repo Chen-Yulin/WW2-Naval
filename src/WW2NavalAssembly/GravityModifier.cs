@@ -30,8 +30,11 @@ namespace WW2NavalAssembly
         void FixedUpdate()
         {
             // 修改物体的重力
-            Vector3 newGravity = Physics.gravity * gravityScale;
-            rb.AddForce(newGravity, ForceMode.Acceleration);
+            if (rb)
+            {
+                Vector3 newGravity = Physics.gravity * gravityScale;
+                rb.AddForce(newGravity, ForceMode.Acceleration);
+            }
         }
     }
 
