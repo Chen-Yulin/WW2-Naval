@@ -13,7 +13,6 @@ using UnityEngine.UI;
 using UnityEngine.Networking;
 using System.Linq;
 using System.Text.RegularExpressions;
-using static Modding.EventProperty;
 
 namespace WW2NavalAssembly
 {

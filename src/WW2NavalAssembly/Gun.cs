@@ -1251,6 +1251,9 @@ namespace WW2NavalAssembly
         Texture ReloadAPIn;
         int iconSize = 30;
 
+        //UGUI
+        
+
         public float GetFCPitchPara()
         {
             if (StatMaster.isClient)
