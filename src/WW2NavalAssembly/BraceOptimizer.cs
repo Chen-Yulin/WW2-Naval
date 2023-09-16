@@ -20,7 +20,10 @@ namespace WW2NavalAssembly
 
         public bool isWooden(BlockBehaviour bb)
         {
-            List<BlockBehaviour> duplicatedBlock = new List<BlockBehaviour> ();
+            if (!bb)
+            {
+                return false;
+            }
             int blockID = bb.BlockID;
             switch (blockID)
             {
@@ -36,18 +39,54 @@ namespace WW2NavalAssembly
         }
         public void Optimize()
         {
+            List<BlockBehaviour> duplicatedBlock = new List<BlockBehaviour>();
             optimized = true;
-            int jointCount = 0;
             foreach (var joints in BB.iJointTo)
             {
-                if (isWooden(joints.connectedBody.GetComponent<BlockBehaviour>()))
+                BlockBehaviour jointBB = joints.connectedBody.GetComponent<BlockBehaviour>();
+                if (isWooden(jointBB))
                 {
-                    if (jointCount >= 5)
+                    if (duplicatedBlock.Contains(jointBB))
                     {
                         joints.breakForce = 0;
                         joints.breakTorque = 0;
                     }
-                    jointCount++;
+                    else
+                    {
+                        foreach (var woodJoint in jointBB.iJointTo)
+                        {
+                            try
+                            {
+                                BlockBehaviour woodJointBB = woodJoint.connectedBody.GetComponent<BlockBehaviour>();
+                                if (isWooden(woodJointBB))
+                                {
+                                    duplicatedBlock.Add(woodJointBB);
+                                }
+                            }
+                            catch { 
+                                Debug.Log("ijointTo Error");
+                            }
+                            
+                        }
+                        foreach (var woodJoint in jointBB.jointsToMe)
+                        {
+                            if (woodJoint)
+                            {
+                                try
+                                {
+                                    BlockBehaviour woodJointBB = woodJoint.gameObject.GetComponent<BlockBehaviour>();
+                                    if (isWooden(woodJointBB))
+                                    {
+                                        duplicatedBlock.Add(woodJointBB);
+                                    }
+                                }
+                                catch
+                                {
+                                    Debug.Log("jointToMe Error" + woodJoint.name);
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
