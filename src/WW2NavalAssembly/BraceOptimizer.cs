@@ -20,6 +20,7 @@ namespace WW2NavalAssembly
 
         public bool isWooden(BlockBehaviour bb)
         {
+            List<BlockBehaviour> duplicatedBlock = new List<BlockBehaviour> ();
             int blockID = bb.BlockID;
             switch (blockID)
             {
