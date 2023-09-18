@@ -1427,13 +1427,6 @@ namespace WW2NavalAssembly
                 GUI.Box(new Rect(100, 200, 200, 30), CurrentLeader.Group.Value.ToString() + " " + CurrentLeader.status.ToString());
             }
 
-            
-            //if ((Camera.main.transform.position - transform.position).magnitude < 30 && BlockBehaviour.isSimulating)
-            //{
-            //    Vector3 onScreenPosition = Camera.main.WorldToScreenPoint(transform.position);
-            //    GUI.Box(new Rect(onScreenPosition.x, Camera.main.pixelHeight - onScreenPosition.y, 200, 30), "Deck space: " + FlightDataBase.Instance.Decks[myPlayerID].Occupied_num.ToString() + "/" +
-            //        FlightDataBase.Instance.Decks[myPlayerID].Total_num.ToString());
-            //}
 
 
         }

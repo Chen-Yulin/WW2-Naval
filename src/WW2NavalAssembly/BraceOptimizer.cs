@@ -39,28 +39,33 @@ namespace WW2NavalAssembly
         }
         public void Optimize()
         {
+            int optimizeCnt = 0;
+            List<BlockBehaviour> redundancyBlock = new List<BlockBehaviour>();
             List<BlockBehaviour> duplicatedBlock = new List<BlockBehaviour>();
             optimized = true;
-            foreach (var joints in BB.iJointTo)
+            foreach (var joints in BB.gameObject.GetComponents<ConfigurableJoint>())
             {
-                BlockBehaviour jointBB = joints.connectedBody.GetComponent<BlockBehaviour>();
-                if (isWooden(jointBB))
+                BlockBehaviour connectedBB = joints.connectedBody.GetComponent<BlockBehaviour>();
+                if (isWooden(connectedBB))
                 {
-                    if (duplicatedBlock.Contains(jointBB))
+                    //Debug.Log("joint to " + connectedBB.BuildingBlock.Guid.ToString());
+                    if (redundancyBlock.Contains(connectedBB))
                     {
+                        //Debug.Log("destroy redundancy joint of " + connectedBB.BuildingBlock.Guid.ToString());
                         joints.breakForce = 0;
                         joints.breakTorque = 0;
+                        optimizeCnt++;
                     }
                     else
                     {
-                        foreach (var woodJoint in jointBB.iJointTo)
+                        foreach (var woodJoint in connectedBB.iJointTo)
                         {
                             try
                             {
                                 BlockBehaviour woodJointBB = woodJoint.connectedBody.GetComponent<BlockBehaviour>();
                                 if (isWooden(woodJointBB))
                                 {
-                                    duplicatedBlock.Add(woodJointBB);
+                                    redundancyBlock.Add(woodJointBB);
                                 }
                             }
                             catch { 
@@ -68,7 +73,7 @@ namespace WW2NavalAssembly
                             }
                             
                         }
-                        foreach (var woodJoint in jointBB.jointsToMe)
+                        foreach (var woodJoint in connectedBB.jointsToMe)
                         {
                             if (woodJoint)
                             {
@@ -77,7 +82,7 @@ namespace WW2NavalAssembly
                                     BlockBehaviour woodJointBB = woodJoint.gameObject.GetComponent<BlockBehaviour>();
                                     if (isWooden(woodJointBB))
                                     {
-                                        duplicatedBlock.Add(woodJointBB);
+                                        redundancyBlock.Add(woodJointBB);
                                     }
                                 }
                                 catch
@@ -87,8 +92,21 @@ namespace WW2NavalAssembly
                             }
                         }
                     }
+                    if (duplicatedBlock.Contains(connectedBB))
+                    {
+                        //Debug.Log("destroy duplicated joint of " + connectedBB.BuildingBlock.Guid.ToString());
+                        joints.breakForce = 0;
+                        joints.breakTorque = 0;
+                        optimizeCnt++;
+                    }
+                    else
+                    {
+                        duplicatedBlock.Add(connectedBB);
+                    }
                 }
+
             }
+            //Debug.Log("Optimize " + optimizeCnt.ToString() + " joints");
         }
 
         public void Start()
@@ -102,13 +120,17 @@ namespace WW2NavalAssembly
             {
                 return;
             }
-            if (frameCount <= 4 && BB.isSimulating)
+            if (frameCount <= 1 && BB.isSimulating)
             {
                 frameCount++;
             }
-            if (frameCount > 4 && !optimized)
+            if (frameCount > 1 && !optimized)
             {
-                Optimize();
+                try
+                {
+                    Optimize();
+                }
+                catch { }
             }
         }
     }

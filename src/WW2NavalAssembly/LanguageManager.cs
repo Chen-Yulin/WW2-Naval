@@ -165,7 +165,7 @@ namespace WW2NavalAssembly
                 "Fulmar"
             };
         public List<string> AircraftTorpedoType { get; } = new List<string> { "SB2C", "B7A2", "Barracuda" };
-        public List<string> AircraftRank { get; } = new List<string> { "从机", "长机", "后备" };
+        public List<string> AircraftRank { get; } = new List<string> { "Fighter", "Torpedo", "Bomb" };
         public string Group { get; } = "编组";
 
         // AircraftController
@@ -247,7 +247,7 @@ namespace WW2NavalAssembly
                 "Fulmar"
             };
         public List<string> AircraftTorpedoType { get; } = new List<string> { "SB2C", "B7A2", "Barracuda" };
-        public List<string> AircraftRank { get; } = new List<string> { "Leader", "Slave", "Backup" };
+        public List<string> AircraftRank { get; } = new List<string> { "Slave", "Leader", "Backup" };
         public string Group { get; } = "Group";
 
         // AircraftController
