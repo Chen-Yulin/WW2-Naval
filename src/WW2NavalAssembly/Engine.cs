@@ -103,7 +103,7 @@ namespace WW2NavalAssembly
         public float preVel;
         public float Accel;
         public float forceModifier = 1;
-        public float myforce = 0;
+        public float stableForce = 300000f;
 
         public float ThrustPercentage = 0;
 
@@ -155,9 +155,23 @@ namespace WW2NavalAssembly
             HP = Mathf.Clamp(HP, 0, float.MaxValue);
             HPPercent = HP / InitialHP;
             ArmMat.SetColor("_TintColor", new Color(HPPercent,HPPercent,HPPercent,1));
+            SetStableForce();
             SendEngineData();
         }
+        public void SetStableForce()
+        {
+            if (!StatMaster.isClient)
+            {
+                SoftJointLimitSpring SJLS = new SoftJointLimitSpring();
+                SJLS.spring = Mathf.Clamp(stableForce * HPPercent, 1,stableForce);
 
+                foreach (var joint in StablePivot.GetComponents<ConfigurableJoint>())
+                {
+                    joint.angularXLimitSpring = SJLS;
+                    joint.angularYZLimitSpring = SJLS;
+                }
+            }
+        }
         public void CalculateThrustPercentage()
         {
             if (ThrustPercentage >= TapPosition / 4 + 0.008f)
@@ -335,7 +349,7 @@ namespace WW2NavalAssembly
             
 
             SoftJointLimitSpring SJLS = new SoftJointLimitSpring();
-            SJLS.spring = 1000000f;
+            SJLS.spring = stableForce;
             SoftJointLimit HigherSJL = new SoftJointLimit();
             HigherSJL.limit = 0.01f;
             SoftJointLimit LowerSJL = new SoftJointLimit();
@@ -348,8 +362,8 @@ namespace WW2NavalAssembly
             CJ0.xMotion = ConfigurableJointMotion.Free;
             CJ0.yMotion = ConfigurableJointMotion.Free;
             CJ0.zMotion = ConfigurableJointMotion.Free;
-            CJ0.angularXMotion = ConfigurableJointMotion.Locked;
-            CJ0.angularYMotion = ConfigurableJointMotion.Locked;
+            CJ0.angularXMotion = ConfigurableJointMotion.Limited;
+            CJ0.angularYMotion = ConfigurableJointMotion.Limited;
             CJ0.angularZMotion = ConfigurableJointMotion.Free;
 
             CJ0.highAngularXLimit = HigherSJL;
@@ -366,8 +380,8 @@ namespace WW2NavalAssembly
             CJ1.xMotion = ConfigurableJointMotion.Free;
             CJ1.yMotion = ConfigurableJointMotion.Free;
             CJ1.zMotion = ConfigurableJointMotion.Free;
-            CJ1.angularXMotion = ConfigurableJointMotion.Locked;
-            CJ1.angularYMotion = ConfigurableJointMotion.Locked;
+            CJ1.angularXMotion = ConfigurableJointMotion.Limited;
+            CJ1.angularYMotion = ConfigurableJointMotion.Limited;
             CJ1.angularZMotion = ConfigurableJointMotion.Free;
 
             CJ1.highAngularXLimit = HigherSJL;
@@ -402,13 +416,14 @@ namespace WW2NavalAssembly
         {
             GameObject keel;
             keel = gameObject.GetComponent<ConfigurableJoint>().connectedBody.gameObject;
+            keel.GetComponent<Rigidbody>().angularDrag = 30f;
             StablePivot = new GameObject("Stable Pivot");
             StablePivot.transform.SetParent(transform.parent);
             StablePivot.transform.position = transform.position;
             StablePivot.transform.localScale = new Vector3(transform.localScale.x, transform.localScale.z, transform.localScale.y);
             Rigidbody SPRigid = StablePivot.AddComponent<Rigidbody>();
-            //StablePivot.AddComponent<MeshFilter>().mesh = ModResource.GetMesh("Engine Mesh").Mesh;
-            //StablePivot.AddComponent<MeshRenderer>();
+            StablePivot.AddComponent<MeshFilter>().mesh = ModResource.GetMesh("Engine Mesh").Mesh;
+            StablePivot.AddComponent<MeshRenderer>();
             SPRigid.isKinematic = true;
         }
 
@@ -418,7 +433,6 @@ namespace WW2NavalAssembly
 
             float orien = MathTool.SignedAngle(new Vector2(1,0), new Vector2(transform.right.x,transform.right.z));
             //Debug.Log(orien);
-
             StablePivot.transform.eulerAngles = new Vector3(0, -orien, 0);
         }
         public void SendEngineData()
