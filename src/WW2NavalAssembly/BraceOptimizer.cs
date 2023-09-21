@@ -71,25 +71,6 @@ namespace WW2NavalAssembly
                             catch { 
                                 Debug.Log("ijointTo Error");
                             }
-                            
-                        }
-                        foreach (var woodJoint in connectedBB.jointsToMe)
-                        {
-                            if (woodJoint)
-                            {
-                                try
-                                {
-                                    BlockBehaviour woodJointBB = woodJoint.gameObject.GetComponent<BlockBehaviour>();
-                                    if (isWooden(woodJointBB))
-                                    {
-                                        redundancyBlock.Add(woodJointBB);
-                                    }
-                                }
-                                catch
-                                {
-                                    Debug.Log("jointToMe Error" + woodJoint.name);
-                                }
-                            }
                         }
                     }
                     if (duplicatedBlock.Contains(connectedBB))

@@ -106,6 +106,7 @@ namespace WW2NavalAssembly
                 CannonNum[i] = new Dictionary<int, int>();
             }
         }
+
         public void exploMsgReceiver(Message msg)
         {
             ExploInfo[(int)msg.GetData(0)].Enqueue(new exploInfo((Vector3)msg.GetData(1), (float)msg.GetData(2), (int)msg.GetData(3)));
@@ -1264,6 +1265,13 @@ namespace WW2NavalAssembly
         FollowerUI ReloadHEInUI;
         FollowerUI ReloadAPOutUI;
         FollowerUI ReloadAPInUI;
+
+        public Vector3 GetRandomForce()
+        {
+            Vector3 randomForce = new Vector3(UnityEngine.Random.value - 0.5f, UnityEngine.Random.value - 0.5f, UnityEngine.Random.value - 0.5f) * 6 / Mathf.Sqrt(Caliber.Value);
+            randomForce += new Vector3(0, UnityEngine.Random.value - 0.5f, 0) * 6 / Mathf.Sqrt(Caliber.Value);
+            return randomForce * Mathf.Pow(UnityEngine.Random.value, 2);
+        }
         public void UpdateUI()
         {
             if (StatMaster.hudHidden)
@@ -1582,8 +1590,7 @@ namespace WW2NavalAssembly
                 currentReloadTime = 0;
                 muzzleStage = 0;
                 gameObject.GetComponent<Rigidbody>().AddForce(-Caliber.Value * transform.forward*5);
-                Vector3 randomForce = new Vector3(UnityEngine.Random.value-0.5f, UnityEngine.Random.value-0.5f, UnityEngine.Random.value-0.5f) * 3 / Mathf.Sqrt(Caliber.Value);
-                randomForce += new Vector3(0, UnityEngine.Random.value - 0.5f,0) * 5 / Mathf.Sqrt(Caliber.Value);
+                Vector3 randomForce = GetRandomForce();
 
                 GameObject Cannon = (GameObject)Instantiate(CannonPrefab, transform.position + 3 * transform.forward * transform.localScale.z, transform.rotation);
                 Cannon.name = "NavalCannon" + myPlayerID.ToString();
@@ -1706,8 +1713,7 @@ namespace WW2NavalAssembly
                 currentReloadTime = 0;
                 muzzleStage = 0;
                 gameObject.GetComponent<Rigidbody>().AddForce(-Caliber.Value * transform.forward * 5);
-                Vector3 randomForce = new Vector3(UnityEngine.Random.value - 0.5f, UnityEngine.Random.value - 0.5f, UnityEngine.Random.value - 0.5f) * 3 / 14f;
-                randomForce += new Vector3(0, UnityEngine.Random.value - 0.5f, 0) * 5 / 14f;
+                Vector3 randomForce = GetRandomForce();
 
                 GameObject Cannon = (GameObject)Instantiate(CannonPrefab, transform.position + 3 * transform.forward * transform.localScale.z, transform.rotation);
                 Cannon.name = "NavalCannon" + myPlayerID.ToString();

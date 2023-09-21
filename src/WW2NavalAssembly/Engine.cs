@@ -422,8 +422,8 @@ namespace WW2NavalAssembly
             StablePivot.transform.position = transform.position;
             StablePivot.transform.localScale = new Vector3(transform.localScale.x, transform.localScale.z, transform.localScale.y);
             Rigidbody SPRigid = StablePivot.AddComponent<Rigidbody>();
-            StablePivot.AddComponent<MeshFilter>().mesh = ModResource.GetMesh("Engine Mesh").Mesh;
-            StablePivot.AddComponent<MeshRenderer>();
+            //StablePivot.AddComponent<MeshFilter>().mesh = ModResource.GetMesh("Engine Mesh").Mesh;
+            //StablePivot.AddComponent<MeshRenderer>();
             SPRigid.isKinematic = true;
         }
 
