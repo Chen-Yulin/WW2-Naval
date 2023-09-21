@@ -351,9 +351,9 @@ namespace WW2NavalAssembly
             SoftJointLimitSpring SJLS = new SoftJointLimitSpring();
             SJLS.spring = stableForce;
             SoftJointLimit HigherSJL = new SoftJointLimit();
-            HigherSJL.limit = 0.01f;
+            HigherSJL.limit = 0.1f;
             SoftJointLimit LowerSJL = new SoftJointLimit();
-            LowerSJL.limit = -0.01f;
+            LowerSJL.limit = -0.1f;
 
             ConfigurableJoint CJ0 = StablePivot.AddComponent<ConfigurableJoint>();
             CJ0.connectedBody = keel.GetComponent<Rigidbody>();
@@ -420,10 +420,12 @@ namespace WW2NavalAssembly
             StablePivot = new GameObject("Stable Pivot");
             StablePivot.transform.SetParent(transform.parent);
             StablePivot.transform.position = transform.position;
+            float orien = MathTool.SignedAngle(new Vector2(1, 0), new Vector2(transform.right.x, transform.right.z));
+            StablePivot.transform.eulerAngles = new Vector3(0, -orien, 0);
             StablePivot.transform.localScale = new Vector3(transform.localScale.x, transform.localScale.z, transform.localScale.y);
             Rigidbody SPRigid = StablePivot.AddComponent<Rigidbody>();
-            //StablePivot.AddComponent<MeshFilter>().mesh = ModResource.GetMesh("Engine Mesh").Mesh;
-            //StablePivot.AddComponent<MeshRenderer>();
+            StablePivot.AddComponent<MeshFilter>().mesh = ModResource.GetMesh("Engine Mesh").Mesh;
+            StablePivot.AddComponent<MeshRenderer>();
             SPRigid.isKinematic = true;
         }
 
@@ -557,11 +559,11 @@ namespace WW2NavalAssembly
         public override void SimulateFixedUpdateHost()
         {
             Thrust();
-            if (frameCount < 5)
+            if (frameCount < 25)
             {
                 frameCount++;
             }
-            else if(frameCount == 5)
+            else if(frameCount == 25)
             {
                 InitStable();
                 frameCount++;
