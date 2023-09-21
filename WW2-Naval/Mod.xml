@@ -5,11 +5,11 @@
 	<Name>WW2Naval</Name>
 	<Author>Chen, Yulin</Author> <!-- FIX: Insert your name here. -->
 	<!-- Major.Minor.Build -->
-	<Version>0.8.11</Version>
+	<Version>0.8.12</Version>
 	
 	<Description>
-    Version 0.8.11
-	Better brace efficiency, fix translator bug
+    Version 0.8.12
+	Fix brace bug, better cannon distribution
 	</Description>
 
 	<Icon name="icon"/>
