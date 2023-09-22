@@ -298,7 +298,7 @@ namespace WW2NavalAssembly
         {
             RemoveSelfFromFC();
             ClearTorpedo();
-            DestroyImmediate(TorpedoPrefab);
+            Destroy(TorpedoPrefab);
 
             WeaponMsgReceiver.Instance.Fire[myPlayerID].Remove(myGuid);
             WeaponMsgReceiver.Instance.reloadTime[myPlayerID].Remove(myGuid);

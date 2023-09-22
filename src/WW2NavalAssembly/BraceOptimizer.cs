@@ -68,7 +68,8 @@ namespace WW2NavalAssembly
                                     redundancyBlock.Add(woodJointBB);
                                 }
                             }
-                            catch { 
+                            catch
+                            {
                                 Debug.Log("ijointTo Error");
                             }
                         }
@@ -76,8 +77,8 @@ namespace WW2NavalAssembly
                     if (duplicatedBlock.Contains(connectedBB))
                     {
                         //Debug.Log("destroy duplicated joint of " + connectedBB.BuildingBlock.Guid.ToString());
-                        joints.breakForce = 0;
-                        joints.breakTorque = 0;
+                        //joints.breakForce = 0;
+                        //joints.breakTorque = 0;
                         optimizeCnt++;
                     }
                     else
@@ -101,14 +102,7 @@ namespace WW2NavalAssembly
             {
                 return;
             }
-            if (frameCount > 2 && !optimized)
-            {
-                try
-                {
-                    Optimize();
-                }
-                catch { }
-            }
+            
         }
         public void FixedUpdate()
         {
@@ -120,7 +114,14 @@ namespace WW2NavalAssembly
             {
                 frameCount++;
             }
-            
+            if (frameCount > 2 && !optimized)
+            {
+                try
+                {
+                    Optimize();
+                }
+                catch { }
+            }
         }
     }
 }

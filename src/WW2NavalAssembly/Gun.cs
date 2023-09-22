@@ -1344,7 +1344,7 @@ namespace WW2NavalAssembly
                 BBtmp.Caliber = Caliber.Value;
                 BBtmp.myPlayerID = myPlayerID;
                 Rigidbody RBtmp = CannonPrefab.AddComponent<Rigidbody>();
-                RBtmp.interpolation = RigidbodyInterpolation.Extrapolate;
+                //RBtmp.interpolation = RigidbodyInterpolation.Extrapolate;
                 RBtmp.mass = 0.2f;
                 RBtmp.drag = Caliber.Value > 100 ? 5000f / (Caliber.Value * Caliber.Value) : 1 - Caliber.Value / 200f;
                 RBtmp.useGravity = false;
@@ -1504,7 +1504,7 @@ namespace WW2NavalAssembly
         public override void OnSimulateStop()
         {
             ClearCannon();
-            DestroyImmediate(CannonPrefab);
+            Destroy(CannonPrefab);
             if (!FireControl.isDefaultValue)
             {
                 FireControlManager.Instance.RemoveGun(myPlayerID,myGuid);

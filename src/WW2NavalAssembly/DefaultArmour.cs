@@ -153,5 +153,9 @@ namespace WW2NavalAssembly
             }
 
         }
+        public void OnEnable()
+        {
+            StartCoroutine(ChangeVis());
+        }
     }
 }

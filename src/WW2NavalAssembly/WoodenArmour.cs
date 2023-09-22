@@ -46,16 +46,16 @@ namespace WW2NavalAssembly
             {
                 if (joint.breakForce != 0)
                 {
-                    joint.breakForce = Mathf.Clamp(joint.breakForce, 70000f, float.MaxValue);
-                    joint.breakTorque = Mathf.Clamp(joint.breakTorque, 70000f, float.MaxValue);
+                    joint.breakForce = Mathf.Clamp(joint.breakForce, 25000f, float.MaxValue);
+                    joint.breakTorque = Mathf.Clamp(joint.breakTorque, 25000f, float.MaxValue);
                 }
             }
             foreach (var joint in BB.jointsToMe)
             {
                 if (joint.breakForce != 0)
                 {
-                    joint.breakForce = Mathf.Clamp(joint.breakForce, 70000f, float.MaxValue);
-                    joint.breakTorque = Mathf.Clamp(joint.breakTorque, 70000f, float.MaxValue);
+                    joint.breakForce = Mathf.Clamp(joint.breakForce, 25000f, float.MaxValue);
+                    joint.breakTorque = Mathf.Clamp(joint.breakTorque, 25000f, float.MaxValue);
                 }
             }
         }
@@ -196,14 +196,7 @@ namespace WW2NavalAssembly
             {
                 return;
             }
-            if (frameCount > 4 && !optimized)
-            {
-                try
-                {
-                    Optimize();
-                }
-                catch { }
-            }
+            
         }
         public void FixedUpdate()
         {
@@ -244,7 +237,15 @@ namespace WW2NavalAssembly
                     frameCount++;
                 }
             }
-            
+            if (frameCount > 4 && !optimized)
+            {
+                try
+                {
+                    Optimize();
+                }
+                catch { }
+            }
+
 
 
 
