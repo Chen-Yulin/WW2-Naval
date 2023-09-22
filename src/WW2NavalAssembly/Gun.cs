@@ -1131,16 +1131,6 @@ namespace WW2NavalAssembly
             
             decay = Mathf.Pow(0.5f, 1 / (Mathf.Sqrt(Caliber + 100) * 30f));
             
-            TrailRenderer TR = gameObject.GetComponent<TrailRenderer>();
-            if (CannonType == 0)
-            {
-                TR.material.SetColor("_TintColor", Color.white);
-            }
-            else
-            {
-                TR.material.SetColor("_TintColor", Color.white - 0.8f * Color.blue);
-            }
-            
         }
 
         public void FixedUpdate()
@@ -1354,6 +1344,7 @@ namespace WW2NavalAssembly
                 BBtmp.Caliber = Caliber.Value;
                 BBtmp.myPlayerID = myPlayerID;
                 Rigidbody RBtmp = CannonPrefab.AddComponent<Rigidbody>();
+                RBtmp.interpolation = RigidbodyInterpolation.Extrapolate;
                 RBtmp.mass = 0.2f;
                 RBtmp.drag = Caliber.Value > 100 ? 5000f / (Caliber.Value * Caliber.Value) : 1 - Caliber.Value / 200f;
                 RBtmp.useGravity = false;
@@ -1369,24 +1360,6 @@ namespace WW2NavalAssembly
                     MeshRenderer MRtmp = CannonVis.AddComponent<MeshRenderer>();
                     MRtmp.material.mainTexture = ModResource.GetTexture("Cannon Texture").Texture;
                 }
-
-
-                TrailRenderer TRtmp = CannonPrefab.AddComponent<TrailRenderer>();
-                TRtmp.autodestruct = false;
-
-                TRtmp.receiveShadows = false;
-                TRtmp.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-
-                TRtmp.startWidth = Mathf.Clamp(0.001f * Caliber.Value, 0.05f, 0.5f);
-                TRtmp.endWidth = 0f;
-
-                TRtmp.material = new Material(Shader.Find("Particles/Additive"));
-
-                TRtmp.material.SetColor("_TintColor", Color.white - 0.8f * Color.blue);
-
-
-                TRtmp.enabled = true;
-                TRtmp.time = 0.1f;
 
                 GravityModifier gm = CannonPrefab.AddComponent<GravityModifier>();
                 gm.gravityScale = Constants.BulletGravity/Constants.Gravity;
