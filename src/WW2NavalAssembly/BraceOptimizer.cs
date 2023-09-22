@@ -95,17 +95,13 @@ namespace WW2NavalAssembly
             frameCount = 0;
             BB = GetComponent<BlockBehaviour>();
         }
-        public void FixedUpdate()
+        public void Update()
         {
             if (StatMaster.isClient)
             {
                 return;
             }
-            if (frameCount <= 1 && BB.isSimulating)
-            {
-                frameCount++;
-            }
-            if (frameCount > 1 && !optimized)
+            if (frameCount > 2 && !optimized)
             {
                 try
                 {
@@ -113,6 +109,18 @@ namespace WW2NavalAssembly
                 }
                 catch { }
             }
+        }
+        public void FixedUpdate()
+        {
+            if (StatMaster.isClient)
+            {
+                return;
+            }
+            if (frameCount <= 2 && BB.isSimulating)
+            {
+                frameCount++;
+            }
+            
         }
     }
 }

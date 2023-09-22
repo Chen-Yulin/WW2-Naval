@@ -96,7 +96,25 @@ namespace WW2NavalAssembly
 
         bool initialized = false;
         bool visInitialized = false;
-
+        public bool isWooden(BlockBehaviour bb)
+        {
+            if (!bb)
+            {
+                return false;
+            }
+            int blockID = bb.BlockID;
+            switch (blockID)
+            {
+                case (int)BlockType.SingleWoodenBlock:
+                    return true;
+                case (int)BlockType.DoubleWoodenBlock:
+                    return true;
+                case (int)BlockType.Log:
+                    return true;
+                default:
+                    return false;
+            }
+        }
         public void SetReloadEfficiency(float percent, bool initial = false)
         {
             if (initial)
@@ -146,12 +164,40 @@ namespace WW2NavalAssembly
         }
         public void AmmoExploforce()
         {
-            Collider[] explo = Physics.OverlapSphere(AmmoVis.transform.position, Mathf.Sqrt(myCaliber) * 2);
+            Collider[] explo = Physics.OverlapSphere(AmmoVis.transform.position, Mathf.Sqrt(myCaliber) / 6f);
             foreach (Collider collider in explo)
             {
                 try
                 {
-                    collider.transform.parent.GetComponent<Rigidbody>().AddExplosionForce(Mathf.Sqrt(myCaliber) * 300, AmmoVis.transform.position, Mathf.Sqrt(myCaliber) * 2);
+                    BlockBehaviour BB = collider.attachedRigidbody.GetComponent<BlockBehaviour>();
+                    if (isWooden(BB))
+                    {
+                        foreach (var joint in BB.iJointTo)
+                        {
+                            try
+                            {
+                                joint.breakForce = 500f;
+                                joint.breakTorque = 500f;
+                            }
+                            catch { }
+                            
+                        }
+                        foreach (var joint in BB.jointsToMe)
+                        {
+                            try
+                            {
+                                joint.breakForce = 500f;
+                                joint.breakTorque = 500f;
+                            }
+                            catch { }
+                        }
+                    }
+                    
+                }
+                catch { }
+                try
+                {
+                    collider.transform.parent.GetComponent<Rigidbody>().AddExplosionForce(Mathf.Sqrt(myCaliber) * 200, AmmoVis.transform.position, Mathf.Sqrt(myCaliber) * 2);
                 }
                 catch { }
             }

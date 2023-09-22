@@ -27,6 +27,9 @@ namespace WW2NavalAssembly
         public int myPlayerID;
         public int myGuid;
 
+        public int frameCount = 0;
+        public bool optimized = false;
+
         IEnumerator ChangeVis()
         {
             yield return new WaitForFixedUpdate();
@@ -36,6 +39,25 @@ namespace WW2NavalAssembly
             UpdateVis(ModController.Instance.ShowArmour);
 
             yield break;
+        }
+        public void Optimize()
+        {
+            foreach (var joint in BB.iJointTo)
+            {
+                if (joint.breakForce != 0)
+                {
+                    joint.breakForce = Mathf.Clamp(joint.breakForce, 70000f, float.MaxValue);
+                    joint.breakTorque = Mathf.Clamp(joint.breakTorque, 70000f, float.MaxValue);
+                }
+            }
+            foreach (var joint in BB.jointsToMe)
+            {
+                if (joint.breakForce != 0)
+                {
+                    joint.breakForce = Mathf.Clamp(joint.breakForce, 70000f, float.MaxValue);
+                    joint.breakTorque = Mathf.Clamp(joint.breakTorque, 70000f, float.MaxValue);
+                }
+            }
         }
         public void InitVis()
         {
@@ -157,6 +179,8 @@ namespace WW2NavalAssembly
         }
         public void Start()
         {
+            BB = GetComponent<BlockBehaviour>();
+            frameCount = 0;
             InitVis();
             if (!Vis)
             {
@@ -165,6 +189,21 @@ namespace WW2NavalAssembly
             }
 
             //transform.Find("Shadow").gameObject.layer = 25;
+        }
+        public void Update()
+        {
+            if (StatMaster.isClient)
+            {
+                return;
+            }
+            if (frameCount > 4 && !optimized)
+            {
+                try
+                {
+                    Optimize();
+                }
+                catch { }
+            }
         }
         public void FixedUpdate()
         {
@@ -197,6 +236,15 @@ namespace WW2NavalAssembly
             {
                 StartCoroutine(ChangeVis());
             }
+
+            if (!StatMaster.isClient)
+            {
+                if (frameCount <= 4 && BB.isSimulating)
+                {
+                    frameCount++;
+                }
+            }
+            
 
 
 
