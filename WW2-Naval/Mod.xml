@@ -5,10 +5,10 @@
 	<Name>WW2Naval</Name>
 	<Author>Chen, Yulin</Author> <!-- FIX: Insert your name here. -->
 	<!-- Major.Minor.Build -->
-	<Version>0.8.13</Version>
+	<Version>0.8.14</Version>
 	
 	<Description>
-    Version 0.8.13
+    Version 0.8.14
 	Fix engine bug, fix joint
 	</Description>
 
