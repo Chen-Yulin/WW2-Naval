@@ -49,13 +49,10 @@ namespace WW2NavalAssembly
                     BlockBehaviour connectedBB = joints.connectedBody.GetComponent<BlockBehaviour>();
                     if (isWooden(connectedBB))
                     {
-                        //Debug.Log("joint to " + connectedBB.BuildingBlock.Guid.ToString());
                         if (redundancyBlock.Contains(connectedBB))
                         {
-                            //Debug.Log("destroy redundancy joint of " + connectedBB.BuildingBlock.Guid.ToString());
                             joints.breakForce = 0;
                             joints.breakTorque = 0;
-                            optimizeCnt++;
                         }
                         else
                         {
@@ -86,10 +83,8 @@ namespace WW2NavalAssembly
                 }
                 catch
                 {
-                    //Debug.Log("joint Error");
                 }
             }
-            //Debug.Log("Optimize " + optimizeCnt.ToString() + " joints");
         }
 
         public void Start()
@@ -120,7 +115,7 @@ namespace WW2NavalAssembly
                 try
                 {
                     optimized = true;
-                    Optimize();
+                    //Optimize();// need to be fixed
                 }
                 catch { }
             }

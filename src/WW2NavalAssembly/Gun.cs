@@ -658,8 +658,17 @@ namespace WW2NavalAssembly
                     }
                     timerOn = true;
 
-                    // pericing
+                    // add force
+                    try
+                    {
+                        if (!(hit.collider.transform.parent.name == "Balloon" || hit.collider.transform.parent.name == "SqrBalloon"))
+                        {
+                            hit.collider.attachedRigidbody.AddForce(transform.forward * myRigid.velocity.magnitude * Caliber / 30f, ForceMode.Force);
+                        }
+                    }
+                    catch { }
 
+                    // pericing
                     if (Perice(hit))
                     {
                         // particle and sound effect
@@ -684,7 +693,7 @@ namespace WW2NavalAssembly
                             CannonWell CW = hit.collider.transform.parent.GetComponent<CannonWell>();
                             if (CW.totalCaliber != 0)
                             {
-                                float WellExploProb = Caliber / CW.myCaliber * CW.gunNum * 0.08f;
+                                float WellExploProb = Caliber / CW.myCaliber * CW.gunNum * 0.08f * Mathf.Pow(CW.TurretSize.Value, 2);
                                 float WellPalsyProb = 2 * WellExploProb;
                                 float AmmoExploProb = 3 * WellExploProb;
                                 if (hit.collider.name == "WellArmourVis")
@@ -721,15 +730,7 @@ namespace WW2NavalAssembly
                             hit.collider.transform.parent.parent.GetComponent<Engine>().CannonDamage(Caliber);
                         }
 
-                        // add force
-                        try
-                        {
-                            if (!(hit.collider.transform.parent.name == "Balloon" || hit.collider.transform.parent.name == "SqrBalloon"))
-                            {
-                                hit.collider.attachedRigidbody.AddForce(transform.forward * myRigid.velocity.magnitude * Caliber / 12f, ForceMode.Force);
-                            }
-                        }
-                        catch { }
+                        
                         continue;
                     }
                     if (!exploded)
@@ -864,7 +865,7 @@ namespace WW2NavalAssembly
 
                 try
                 {
-                    hit.collider.attachedRigidbody.AddForce(transform.forward * myRigid.velocity.magnitude * Caliber / 3, ForceMode.Force);
+                    hit.collider.attachedRigidbody.AddForce(transform.forward * myRigid.velocity.magnitude * Caliber / 10, ForceMode.Force);
                 }
                 catch { }
 
@@ -1076,7 +1077,7 @@ namespace WW2NavalAssembly
                         {
                             if (!(hitedCollider.transform.parent.name == "Balloon" || hitedCollider.transform.parent.name == "SqrBalloon"))
                             {
-                                hitedCollider.transform.parent.GetComponent<Rigidbody>().AddExplosionForce((AP ? 5f : 8f) * Caliber, pos, Mathf.Sqrt(Caliber) / (AP ? 8f : 5f));
+                                hitedCollider.transform.parent.GetComponent<Rigidbody>().AddExplosionForce((AP ? 2f : 3f) * Caliber, pos, Mathf.Sqrt(Caliber) / (AP ? 8f : 5f));
                             }
                         }
                     }
