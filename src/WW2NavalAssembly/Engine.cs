@@ -103,7 +103,7 @@ namespace WW2NavalAssembly
         public float preVel;
         public float Accel;
         public float forceModifier = 1;
-        public float stableForce = 300000f;
+        public float stableForce = 500000f;
 
         public float ThrustPercentage = 0;
 

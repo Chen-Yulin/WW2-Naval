@@ -46,16 +46,16 @@ namespace WW2NavalAssembly
             {
                 if (joint.breakForce != 0)
                 {
-                    joint.breakForce = Mathf.Clamp(joint.breakForce, 25000f, float.MaxValue);
-                    joint.breakTorque = Mathf.Clamp(joint.breakTorque, 25000f, float.MaxValue);
+                    joint.breakForce = Mathf.Clamp(joint.breakForce, 35000f, float.MaxValue);
+                    joint.breakTorque = Mathf.Clamp(joint.breakTorque, 35000f, float.MaxValue);
                 }
             }
             foreach (var joint in BB.jointsToMe)
             {
                 if (joint.breakForce != 0)
                 {
-                    joint.breakForce = Mathf.Clamp(joint.breakForce, 25000f, float.MaxValue);
-                    joint.breakTorque = Mathf.Clamp(joint.breakTorque, 25000f, float.MaxValue);
+                    joint.breakForce = Mathf.Clamp(joint.breakForce, 35000f, float.MaxValue);
+                    joint.breakTorque = Mathf.Clamp(joint.breakTorque, 35000f, float.MaxValue);
                 }
             }
         }

@@ -176,8 +176,11 @@ namespace WW2NavalAssembly
                         {
                             try
                             {
-                                joint.breakForce = 500f;
-                                joint.breakTorque = 500f;
+                                if (!joint.connectedBody.GetComponent<Engine>())
+                                {
+                                    joint.breakForce = 500f;
+                                    joint.breakTorque = 500f;
+                                }
                             }
                             catch { }
                             
@@ -186,8 +189,11 @@ namespace WW2NavalAssembly
                         {
                             try
                             {
-                                joint.breakForce = 500f;
-                                joint.breakTorque = 500f;
+                                if (!joint.connectedBody.GetComponent<Engine>())
+                                {
+                                    joint.breakForce = 500f;
+                                    joint.breakTorque = 500f;
+                                }
                             }
                             catch { }
                         }
