@@ -33,7 +33,8 @@ namespace WW2NavalAssembly
         }
         public void AddTorpedoWater(float water)
         {
-            torpedoWaterIn = Mathf.Clamp(torpedoWaterIn + water, 0, 4*size);
+            torpedoWaterIn = Mathf.Clamp(torpedoWaterIn + water, 0, 8*size);
+
         }
         private void RemoveCarbinWater()
         {
@@ -107,7 +108,10 @@ namespace WW2NavalAssembly
                 rigid = transform.parent.GetComponent<Rigidbody>();
                 hittedArmour = transform.parent.GetComponent<WoodenArmour>();
                 DCTimeNeeded = (int)(sqrCaliber * 50f / 20000f);
-
+                if (type==1)
+                {
+                    DCTimeNeeded = (int)(sqrCaliber * 1000f / 20000f);
+                }
                 // add waterCarbin component
                 wc = transform.parent.GetComponent<WaterCarbin>();
                 if (!wc)
@@ -138,7 +142,7 @@ namespace WW2NavalAssembly
                         wc.AddShellWater(sqrCaliber / 400f * (type == 0 ? 1 : 10));
                         if (type == 1)
                         {
-                            wc.AddTorpedoWater(sqrCaliber / 400f * 20);
+                            wc.AddTorpedoWater(sqrCaliber * sqrCaliber / 160000 * 0.01f);
                             wc.AddCarbinWater(sqrCaliber / 400f * 10);
                         }
                     }

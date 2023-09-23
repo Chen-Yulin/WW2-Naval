@@ -9,6 +9,7 @@ using Modding;
 using Modding.Blocks;
 using UnityEngine;
 using UnityEngine.Networking;
+using ConsoleTables;
 
 namespace WW2NavalAssembly
 {
@@ -167,6 +168,7 @@ namespace WW2NavalAssembly
             damager.AddComponent<Rigidbody>().velocity = new Vector3(0, 20, 0);
             Destroy(damager, 0.01f);
         }
+        
         public void TorpedoExploHost(RaycastHit hit)
         {
             Debug.Log("Torpedo hit");
@@ -179,7 +181,7 @@ namespace WW2NavalAssembly
             {
                 if (hitedCollider.transform.parent.GetComponent<Rigidbody>())
                 {
-                    hitedCollider.transform.parent.GetComponent<Rigidbody>().AddExplosionForce(20f * Caliber, transform.position, 10f);
+                    hitedCollider.transform.parent.GetComponent<Rigidbody>().AddExplosionForce(3f * Caliber, transform.position, 10f);
                 }
                 try
                 {
@@ -191,6 +193,7 @@ namespace WW2NavalAssembly
                 }
                 catch { }
             }
+
         }
         public void TorpedoExploClient()
         {
@@ -200,6 +203,29 @@ namespace WW2NavalAssembly
             Destroy(hitEffect, 5);
             AddWaterHitSound(hitEffect.transform);
             AddExploSound(transform);
+        }
+        public Vector3 GetEnginesCenter(List<Engine> engines)
+        {
+            Vector3 center = Vector3.zero;
+            foreach (Engine engine in engines)
+            {
+                center += engine.transform.position;
+
+            }
+            center /= engines.Count;
+            return center;
+        }
+
+        public Vector3 GetEnginesMirrorNormal(List<Engine> engines)
+        {
+            Vector3 center = Vector3.zero;
+            foreach (Engine engine in engines)
+            {
+                center += engine.transform.right;
+
+            }
+            center /= engines.Count;
+            return center;
         }
         public bool DetectCollisionHost()
         {
@@ -239,13 +265,27 @@ namespace WW2NavalAssembly
                     waterinhole.transform.localPosition = Vector3.zero;
                     waterinhole.transform.localRotation = Quaternion.identity;
                     waterinhole.transform.localScale = Vector3.one;
+                    float exploScale = 1f;
+                    try
+                    {
+                        WoodenArmour woodenArmour = hit.collider.transform.parent.GetComponent<WoodenArmour>();
+                        ushort playerid = woodenArmour.BB.BuildingBlock.ParentMachine.PlayerID;
+                        Vector3 centerPos = GetEnginesCenter(FlightDataBase.Instance.engines[playerid]);
+                        Vector3 planeNormal = GetEnginesMirrorNormal(FlightDataBase.Instance.engines[playerid]);
+                        float distance = Mathf.Abs(Vector3.Dot(planeNormal, hit.point - centerPos));
+                        exploScale = Mathf.Clamp(1f / Mathf.Pow(distance,0.5f),0f,1f);
+                    }
+                    catch
+                    {
+
+                    }
+                    Caliber *= exploScale;
 
                     WaterInHole WH = waterinhole.AddComponent<WaterInHole>();
                     WH.hittedCaliber = Caliber;
                     WH.position = hit.collider.transform.parent.InverseTransformPoint(hit.point);
                     WH.type = 1;
-
-
+                    
                     GameObject piercedhole = new GameObject("TorpedoHole");
                     piercedhole.transform.SetParent(hit.collider.transform.parent);
                     piercedhole.transform.localPosition = Vector3.zero;
