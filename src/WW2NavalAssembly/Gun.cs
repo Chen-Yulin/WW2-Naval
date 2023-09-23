@@ -1211,8 +1211,6 @@ namespace WW2NavalAssembly
         public int myGuid;
         public int myseed;
 
-        public bool noShutter = true;
-
         public MKey FireKey;
         public MKey SwitchKey;
         public MSlider Caliber;
@@ -1558,7 +1556,7 @@ namespace WW2NavalAssembly
                 return;
             }
 
-            if ((FireKey.IsPressed || triggeredByGunner) && noShutter)
+            if (FireKey.IsPressed || (triggeredByGunner && !DetectSelfHost()) )
             {
                 currentReloadTime = 0;
                 muzzleStage = 0;
@@ -1662,7 +1660,6 @@ namespace WW2NavalAssembly
         }
         public override void SimulateFixedUpdateHost()
         {
-            noShutter = !DetectSelfHost();
             if (muzzleStage < 7)
             {
                 muzzleStage++;
@@ -1680,7 +1677,7 @@ namespace WW2NavalAssembly
                 return;
             }
 
-            if (FireKey.EmulationPressed() && noShutter)
+            if (FireKey.EmulationPressed())
             {
                 timeFaze = 20;
                 currentReloadTime = 0;

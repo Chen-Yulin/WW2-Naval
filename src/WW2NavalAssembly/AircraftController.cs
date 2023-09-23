@@ -1421,11 +1421,15 @@ namespace WW2NavalAssembly
                     return;
                 }
             }
-            
-            if (CurrentLeader)
+            try
             {
-                GUI.Box(new Rect(100, 200, 200, 30), CurrentLeader.Group.Value.ToString() + " " + CurrentLeader.status.ToString());
+                if (CurrentLeader)
+                {
+                    GUI.Box(new Rect(100, 200, 200, 30), CurrentLeader.Group.Value.ToString() + " " + CurrentLeader.status.ToString());
+                }
             }
+            catch { }
+            
 
 
 

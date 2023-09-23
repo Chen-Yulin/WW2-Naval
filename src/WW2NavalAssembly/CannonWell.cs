@@ -119,7 +119,7 @@ namespace WW2NavalAssembly
         {
             if (initial)
             {
-                TurretSize.Value = Mathf.Clamp(TurretSize.Value, 0.8f, 1.2f);
+                TurretSize.Value = Mathf.Clamp(TurretSize.Value, 0.8f, 1.5f);
             }
             else
             {
@@ -149,7 +149,7 @@ namespace WW2NavalAssembly
                             {
                                 efficiency = Mathf.Clamp(8 / Mathf.Sqrt(gunObject.Value.GetComponent<Gun>().Caliber.Value), 0, 1);
                             }
-                            gunObject.Value.GetComponent<Gun>().reloadefficiency = efficiency * TurretSize.Value;
+                            gunObject.Value.GetComponent<Gun>().reloadefficiency = efficiency * TurretSize.Value * TurretSize.Value;
                         }
                         else
                         {
@@ -176,7 +176,7 @@ namespace WW2NavalAssembly
                         {
                             try
                             {
-                                if (!joint.connectedBody.GetComponent<Engine>())
+                                if (!joint.connectedBody.GetComponent<Engine>() && !joint.connectedBody.GetComponent<CannonWell>())
                                 {
                                     joint.breakForce = 500f;
                                     joint.breakTorque = 500f;
@@ -189,7 +189,7 @@ namespace WW2NavalAssembly
                         {
                             try
                             {
-                                if (!joint.connectedBody.GetComponent<Engine>())
+                                if (!joint.connectedBody.GetComponent<Engine>() && !joint.GetComponent<CannonWell>())
                                 {
                                     joint.breakForce = 500f;
                                     joint.breakTorque = 500f;
@@ -437,7 +437,7 @@ namespace WW2NavalAssembly
         public void AdjustPara()
         {
             WellVis.transform.localPosition = new Vector3(0, 0, (transform.localScale.z - Offset.Value - Depth.Value / 2) / transform.lossyScale.z);
-            TurretSize.Value = Mathf.Clamp(TurretSize.Value, 0.8f, 1.2f);
+            TurretSize.Value = Mathf.Clamp(TurretSize.Value, 0.8f, 1.5f);
             try
             {
                 totalCaliber = 0;
@@ -657,7 +657,7 @@ namespace WW2NavalAssembly
         public virtual void SafeAwake()
         {
             Thickness = BB.AddSlider("WW2-Naval Thickness", "WW2Thickness", 20f, 10f, 650f);
-            TurretSize = BB.AddSlider("Turret Size", "WW2TurretSize", 1f, 0.8f, 1.2f);
+            TurretSize = BB.AddSlider("Turret Size", "WW2TurretSize", 1f, 0.8f, 1.5f);
             Depth = BB.AddSlider("Cannon Well Depth", "WW2Depth", 3, 1, 6);
             Offset = BB.AddSlider("Cannon Well Offset", "WW2DepthOffset", 1f, 0f, 2f);
             AmmoResize = BB.AddSlider("Ammo Resize", "AmmoResize", 0f, -0.5f, 0.5f);

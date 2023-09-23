@@ -40,11 +40,11 @@ namespace WW2NavalAssembly
 
             yield break;
         }
-        public void Optimize()
+        public void BreakForceOptimize()
         {
             foreach (var joint in BB.iJointTo)
             {
-                if (joint.breakForce != 0)
+                if (joint.breakForce != 0 && !joint.connectedBody.GetComponent<CannonWell>())
                 {
                     joint.breakForce = Mathf.Clamp(joint.breakForce, 35000f, float.MaxValue);
                     joint.breakTorque = Mathf.Clamp(joint.breakTorque, 35000f, float.MaxValue);
@@ -52,11 +52,70 @@ namespace WW2NavalAssembly
             }
             foreach (var joint in BB.jointsToMe)
             {
-                if (joint.breakForce != 0)
+                if (joint.breakForce != 0 && !joint.GetComponent<CannonWell>())
                 {
                     joint.breakForce = Mathf.Clamp(joint.breakForce, 35000f, float.MaxValue);
                     joint.breakTorque = Mathf.Clamp(joint.breakTorque, 35000f, float.MaxValue);
                 }
+            }
+        }
+        public void ColliderOptimize()
+        {
+            BoxCollider BC;
+            try
+            {
+                BC = BB.transform.Find("Joint1").GetComponent<BoxCollider>();
+            }
+            catch
+            {
+                return;
+            }
+
+            foreach (var collider in GetComponentsInChildren<BoxCollider>())
+            {
+                collider.enabled = false;
+            }
+            BC.enabled = true;
+
+            switch (BB.BlockID)
+            {
+                case (int)BlockType.SingleWoodenBlock:
+                    {
+                        BC.center = new Vector3(0, 0, 0);
+                        BC.size = new Vector3(0.8f, 0.8f, 1);
+                        break;
+                    }
+                case (int)BlockType.DoubleWoodenBlock:
+                    {
+                        if (!transform.Find("Joint").gameObject.activeSelf)
+                        {
+                            BC.center = new Vector3(0, 0, 0f);
+                            BC.size = new Vector3(0.95f, 0.95f, 1);
+                        }
+                        else
+                        {
+                            BC.center = new Vector3(0, 0, 0.5f);
+                            BC.size = new Vector3(0.95f, 0.95f, 2);
+                        }
+
+                        break;
+                    }
+                case (int)BlockType.Log:
+                    {
+                        if (!transform.Find("Joint").gameObject.activeSelf)
+                        {
+                            BC.center = new Vector3(0, 0, 0.5f);
+                            BC.size = new Vector3(0.95f, 0.95f, 2);
+                        }
+                        else
+                        {
+                            BC.center = new Vector3(0, 0, 1.0f);
+                            BC.size = new Vector3(0.95f, 0.95f, 3);
+                        }
+                        break;
+                    }
+                default:
+                    break;
             }
         }
         public void InitVis()
@@ -182,6 +241,10 @@ namespace WW2NavalAssembly
             BB = GetComponent<BlockBehaviour>();
             frameCount = 0;
             InitVis();
+            if (BB.isSimulating)
+            {
+                ColliderOptimize();
+            }
             if (!Vis)
             {
                 Vis = transform.Find("WoodenArmourVis").gameObject;
@@ -241,7 +304,8 @@ namespace WW2NavalAssembly
             {
                 try
                 {
-                    Optimize();
+                    optimized = true;
+                    //Optimize();
                 }
                 catch { }
             }

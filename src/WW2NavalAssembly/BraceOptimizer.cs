@@ -41,52 +41,53 @@ namespace WW2NavalAssembly
         {
             int optimizeCnt = 0;
             List<BlockBehaviour> redundancyBlock = new List<BlockBehaviour>();
-            List<BlockBehaviour> duplicatedBlock = new List<BlockBehaviour>();
             optimized = true;
             foreach (var joints in BB.gameObject.GetComponents<ConfigurableJoint>())
             {
-                BlockBehaviour connectedBB = joints.connectedBody.GetComponent<BlockBehaviour>();
-                if (isWooden(connectedBB))
+                try
                 {
-                    //Debug.Log("joint to " + connectedBB.BuildingBlock.Guid.ToString());
-                    if (redundancyBlock.Contains(connectedBB))
+                    BlockBehaviour connectedBB = joints.connectedBody.GetComponent<BlockBehaviour>();
+                    if (isWooden(connectedBB))
                     {
-                        //Debug.Log("destroy redundancy joint of " + connectedBB.BuildingBlock.Guid.ToString());
-                        joints.breakForce = 0;
-                        joints.breakTorque = 0;
-                        optimizeCnt++;
-                    }
-                    else
-                    {
-                        foreach (var woodJoint in connectedBB.iJointTo)
+                        //Debug.Log("joint to " + connectedBB.BuildingBlock.Guid.ToString());
+                        if (redundancyBlock.Contains(connectedBB))
                         {
-                            try
+                            //Debug.Log("destroy redundancy joint of " + connectedBB.BuildingBlock.Guid.ToString());
+                            joints.breakForce = 0;
+                            joints.breakTorque = 0;
+                            optimizeCnt++;
+                        }
+                        else
+                        {
+                            foreach (var woodJoint in connectedBB.iJointTo)
                             {
                                 BlockBehaviour woodJointBB = woodJoint.connectedBody.GetComponent<BlockBehaviour>();
-                                if (isWooden(woodJointBB))
+                                if (woodJointBB)
                                 {
-                                    redundancyBlock.Add(woodJointBB);
+                                    if (isWooden(woodJointBB))
+                                    {
+                                        redundancyBlock.Add(woodJointBB);
+                                    }
                                 }
                             }
-                            catch
+                            foreach (var woodJoint in connectedBB.jointsToMe)
                             {
-                                Debug.Log("ijointTo Error");
+                                BlockBehaviour woodJointBB = woodJoint.GetComponent<BlockBehaviour>();
+                                if (woodJointBB)
+                                {
+                                    if (isWooden(woodJointBB))
+                                    {
+                                        redundancyBlock.Add(woodJointBB);
+                                    }
+                                }
                             }
                         }
                     }
-                    if (duplicatedBlock.Contains(connectedBB))
-                    {
-                        //Debug.Log("destroy duplicated joint of " + connectedBB.BuildingBlock.Guid.ToString());
-                        //joints.breakForce = 0;
-                        //joints.breakTorque = 0;
-                        optimizeCnt++;
-                    }
-                    else
-                    {
-                        duplicatedBlock.Add(connectedBB);
-                    }
                 }
-
+                catch
+                {
+                    //Debug.Log("joint Error");
+                }
             }
             //Debug.Log("Optimize " + optimizeCnt.ToString() + " joints");
         }
@@ -118,6 +119,7 @@ namespace WW2NavalAssembly
             {
                 try
                 {
+                    optimized = true;
                     Optimize();
                 }
                 catch { }

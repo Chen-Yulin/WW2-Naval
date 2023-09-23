@@ -585,6 +585,10 @@ namespace WW2NavalAssembly
         }
         public void OnGUI()
         {
+            if (StatMaster.hudHidden)
+            {
+                return;
+            }
             if (StatMaster.isMP)
             {
                 if (PlayerData.localPlayer.networkId != myPlayerID)
