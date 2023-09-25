@@ -95,14 +95,22 @@ namespace WW2NavalAssembly
                     if (gameObject.name == "Brace")
                     {
                         transform.Find("A").gameObject.GetComponent<MeshRenderer>().enabled = true;
-                        if (transform.Find("B"))
+                        if (gameObject.GetComponent<BraceCode>().cylinder.localScale.y<0.001f)
                         {
-                            transform.Find("B").gameObject.GetComponent<MeshRenderer>().enabled = true;
+
                         }
-                        if (transform.Find("Cylinder"))
+                        else
                         {
-                            transform.Find("Cylinder").gameObject.GetComponent<MeshRenderer>().enabled = true;
+                            if (transform.Find("B"))
+                            {
+                                transform.Find("B").gameObject.GetComponent<MeshRenderer>().enabled = true;
+                            }
+                            if (transform.Find("Cylinder"))
+                            {
+                                transform.Find("Cylinder").gameObject.GetComponent<MeshRenderer>().enabled = true;
+                            }
                         }
+                        
                     }
                     else if (gameObject.name == "RopeWinch" || gameObject.name == "Balloon" || gameObject.name == "Spring" || gameObject.name == "SqrBalloon")
                     {
