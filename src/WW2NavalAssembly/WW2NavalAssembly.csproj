@@ -78,6 +78,10 @@
     <Compile Include="Grouper.cs" />
     <Compile Include="Gun.cs" />
     <Compile Include="Gunner.cs" />
+    <Compile Include="H3ClustersTest.cs" />
+    <Compile Include="H3NetCompression.cs" />
+    <Compile Include="H3NetworkBlock.cs" />
+    <Compile Include="H3NetworkManager.cs" />
     <Compile Include="LanguageManager.cs" />
     <Compile Include="MathTool.cs" />
     <Compile Include="MessageController.cs" />

@@ -1,5 +1,6 @@
 using System;
 using Modding;
+using Navalmod;
 using skpCustomModule;
 using UnityEngine;
 
@@ -38,6 +39,7 @@ namespace WW2NavalAssembly
 			myMod.AddComponent<LogMsgReceiver>();
 			myMod.AddComponent<LanguageManager>();
 			myMod.AddComponent<BlockUIManager>();
+			myMod.AddComponent<H3NetworkManager>();
 			Debug.Log("Hello, this is WW2 naval mod!");
 		}
         public void OnEntityPrefabCreation(int entityId, GameObject prefab)

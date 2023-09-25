@@ -9,6 +9,7 @@ using Modding;
 using Modding.Blocks;
 using UnityEngine;
 using UnityEngine.Networking;
+using Navalmod;
 
 namespace WW2NavalAssembly
 {
@@ -40,6 +41,9 @@ namespace WW2NavalAssembly
         }
         private void AddSliders(BlockBehaviour block)
         {
+            if (block.GetComponent<H3NetworkBlock>() == null) {
+                block.gameObject.AddComponent<H3NetworkBlock>().blockBehaviour = block;
+            }
             //if (StatMaster.isMP == StatMaster.IsLevelEditorOnly)
             switch (block.BlockID)
             {
