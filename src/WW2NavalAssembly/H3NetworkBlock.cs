@@ -23,6 +23,8 @@ namespace Navalmod
         public bool islocal = false;
         public bool localchangeenter;
         public bool isClusterBase;
+        public void Start(){
+        }
         public H3NetworkBlock()
         {
             lastpos = Vector3.zero;

@@ -15,7 +15,15 @@ namespace WW2NavalAssembly
     class BalloonLife : MonoBehaviour
     {
         public float life = 1000;
-        
+        public SqrBalloonController sqrBalloonController;
+        public void Awake(){
+            sqrBalloonController = gameObject.GetComponent<SqrBalloonController>();
+        }
+        public void Start()
+        {
+            sqrBalloonController.blockJoint.breakForce *=3f;
+            sqrBalloonController.blockJoint.breakTorque *= 3f;
+        }
         public bool isAlive()
         {
             return life > 0;

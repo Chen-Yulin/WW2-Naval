@@ -139,7 +139,7 @@ namespace WW2NavalAssembly
                     DCTime++;
                     if (holeType == 0)
                     {
-                        wc.AddShellWater(sqrCaliber / 400f * (type == 0 ? 1 : 10));
+                        wc.AddShellWater(sqrCaliber / 500f * (type == 0 ? 1 : 10));
                         if (type == 1)
                         {
                             wc.AddTorpedoWater(sqrCaliber * sqrCaliber / 160000 * 0.01f);
@@ -148,7 +148,7 @@ namespace WW2NavalAssembly
                     }
                     else
                     {
-                        wc.AddCarbinWater(sqrCaliber / 400f);
+                        wc.AddCarbinWater(sqrCaliber / 500f);
                     }
                 }
                 else if (DCTime >= DCTimeNeeded)
