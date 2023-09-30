@@ -337,7 +337,7 @@ namespace WW2NavalAssembly
                             CannonWell CW = hit.collider.transform.parent.GetComponent<CannonWell>();
                             if (CW.totalCaliber != 0)
                             {
-                                float WellExploProb = Weight / CW.myCaliber * CW.gunNum * 0.08f * Mathf.Pow(CW.TurretSize.Value,2);
+                                float WellExploProb = Weight / CW.myCaliber * CW.gunNum * 0.08f / Mathf.Pow(CW.TurretSize.Value,1);
                                 float WellPalsyProb = 2 * WellExploProb;
                                 float AmmoExploProb = 3 * WellExploProb;
                                 if (hit.collider.name == "WellArmourVis")

@@ -149,7 +149,8 @@ namespace WW2NavalAssembly
                             {
                                 efficiency = Mathf.Clamp(8 / Mathf.Sqrt(gunObject.Value.GetComponent<Gun>().Caliber.Value), 0, 1);
                             }
-                            gunObject.Value.GetComponent<Gun>().reloadefficiency = efficiency * TurretSize.Value * TurretSize.Value;
+                            //gunObject.Value.GetComponent<Gun>().reloadefficiency = efficiency * TurretSize.Value * TurretSize.Value;
+                            gunObject.Value.GetComponent<Gun>().reloadefficiency = efficiency;
                         }
                         else
                         {
