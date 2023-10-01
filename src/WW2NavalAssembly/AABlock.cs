@@ -27,6 +27,7 @@ namespace WW2NavalAssembly
 
         public override void SafeAwake()
         {
+            myPlayerID = BlockBehaviour.ParentMachine.PlayerID;
             Type = AddMenu("AAType", 0, new List<string>
             {
                 "1x20mm",
@@ -40,6 +41,7 @@ namespace WW2NavalAssembly
 
         public override void OnSimulateStart()
         {
+            myGuid = BlockBehaviour.BuildingBlock.Guid.GetHashCode();
             switch (Type.Value)
             {
                 case 0:

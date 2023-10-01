@@ -8,7 +8,7 @@ namespace WW2NavalAssembly
 {
     class AircraftAssetManager : SingleInstance<AircraftAssetManager>
     {
-        public override string Name { get; } = "Asset Manager";
+        public override string Name { get; } = "Aircraft Asset Manager";
 
         public bool Loaded = false;
 
