@@ -53,6 +53,8 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AAAssetManager.cs" />
+    <Compile Include="AABlock.cs" />
     <Compile Include="AAController.cs" />
     <Compile Include="Aircraft.cs" />
     <Compile Include="AircraftAssetManager.cs" />

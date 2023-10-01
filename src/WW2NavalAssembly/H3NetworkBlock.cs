@@ -41,7 +41,7 @@ namespace Navalmod
         {
             BlockBehaviour bb = base.GetComponent<H3ClustersTest>().ClusterBaseBlock;
             H3NetCompression.CompressPosition(bb.transform.InverseTransformPoint(base.transform.position), buffer, offset);//12
-            ModConsole.Log(bb.transform.InverseTransformPoint(base.transform.position).ToString()+"localsend");
+            //ModConsole.Log(bb.transform.InverseTransformPoint(base.transform.position).ToString()+"localsend");
             NetworkCompression.CompressRotation(Quaternion.Inverse(bb.transform.rotation) * base.transform.rotation, buffer, offset + 12);//7
             offset += 19;
         }

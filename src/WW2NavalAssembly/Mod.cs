@@ -30,7 +30,8 @@ namespace WW2NavalAssembly
 			myMod.AddComponent<GunnerMsgReceiver>();
 			myMod.AddComponent<GunnerDataBase>();
 			myMod.AddComponent<AircraftAssetManager>();
-			myMod.AddComponent<FlightDataBase>();
+            myMod.AddComponent<AAAssetManager>();
+            myMod.AddComponent<FlightDataBase>();
 			myMod.AddComponent<EngineMsgReceiver>();
 			myMod.AddComponent<MyLogger>();
 			myMod.AddComponent<AircraftControllerMsgReceiver>();
