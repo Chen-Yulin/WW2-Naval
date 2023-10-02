@@ -129,7 +129,15 @@ namespace WW2NavalAssembly
                                 validGun++;
                             }
                         }
-                        catch { }
+                        catch {
+                            try
+                            {
+                                if (gun.Value.GetComponent<AABlock>().myPlayerID == myPlayerID)
+                                {
+                                    validGun++;
+                                }
+                            }catch { }
+                        }
                     }
                     if (validGun == 0)
                     {
@@ -140,6 +148,7 @@ namespace WW2NavalAssembly
                 if (!FCResults.ContainsKey(calibergroup.Key))
                 {
                     FCResults.Add(calibergroup.Key, new FCResult(0));
+                    Debug.Log("Add AA FC:" + calibergroup.Key);
                 }
             }
         }
@@ -233,7 +242,7 @@ namespace WW2NavalAssembly
 
         public override void SafeAwake()
         {
-            gameObject.name = "Captain";
+            gameObject.name = "AA Captain";
             myPlayerID = BlockBehaviour.ParentMachine.PlayerID;
             mySeed = (int)(UnityEngine.Random.value * 16);
 

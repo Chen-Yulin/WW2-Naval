@@ -26,7 +26,7 @@ namespace WW2NavalAssembly
         public float DisplayDist = 30;
         public Vector2 offset = Vector2.zero;
 
-        public void Initialize(Transform t, float size, Texture texture, float dist)
+        public void Initialize(Transform t, float size, Texture texture, float dist, Vector2 offset = default)
         {
             image = gameObject.AddComponent<Image>();
 
@@ -41,6 +41,7 @@ namespace WW2NavalAssembly
             target = t;
             this.size = size;
             this.DisplayDist = dist;
+            this.offset = offset;
         }
 
         public void Update()
@@ -99,12 +100,12 @@ namespace WW2NavalAssembly
 
         public GameObject Canvas;
 
-        public FollowerUI CreateFollowerUI(Transform t, float size, Texture texture, float dist = 30f)
+        public FollowerUI CreateFollowerUI(Transform t, float size, Texture texture, float dist = 30f, Vector2 offset = default)
         {
             GameObject UIObject = new GameObject("Follower");
             UIObject.transform.parent = Canvas.transform;
             FollowerUI follower = UIObject.AddComponent<FollowerUI>();
-            follower.Initialize(t, size, texture, dist);
+            follower.Initialize(t, size, texture, dist, offset);
             return follower;
         }
         

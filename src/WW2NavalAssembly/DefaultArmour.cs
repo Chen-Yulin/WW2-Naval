@@ -72,6 +72,14 @@ namespace WW2NavalAssembly
                     {
                         return;
                     }
+                    else if (gameObject.name == "AA Captain")
+                    {
+                        return;
+                    }
+                    else if (gameObject.name == "AA Block")
+                    {
+                        return;
+                    }
                     else if (gameObject.name == "Engine")
                     {
                         return;
