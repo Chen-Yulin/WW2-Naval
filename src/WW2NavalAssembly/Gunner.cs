@@ -178,8 +178,40 @@ namespace WW2NavalAssembly
         public Texture GunnerAAIcon;
         int iconSize = 30;
 
+        //UGUI
+        FollowerUI GunnerAlertUI;
+        FollowerUI GunnerAAUI;
+
         public override bool EmulatesAnyKeys { get { return true; } }
 
+        public void UpdateUI()
+        {
+            if (StatMaster.hudHidden)
+            {
+                GunnerAlertUI.show = false;
+                GunnerAAUI.show = false;
+            }
+            else
+            {
+                if (GunnerActive)
+                {
+                    GunnerAlertUI.show = true;
+                }
+                else
+                {
+                    GunnerAlertUI.show = false;
+                }
+                if (AA)
+                {
+                    GunnerAAUI.show = true;
+                }
+                else
+                {
+                    GunnerAAUI.show = false;
+                }
+            }
+
+        }
         public void LimitHinge(SteeringWheel sw)
         {
             float num4;
@@ -927,7 +959,11 @@ namespace WW2NavalAssembly
             {
                 GunnerMsgReceiver.Instance.GunnerAA[myPlayerID][myGuid] = AA;
             }
-
+            if (isSelf)
+            {
+                GunnerAAUI = BlockUIManager.Instance.CreateFollowerUI(transform, iconSize, GunnerAAIcon, 30, new Vector2(0, 25));
+                GunnerAlertUI = BlockUIManager.Instance.CreateFollowerUI(transform, iconSize, GunnerAlertIcon);
+            }
         }
         public override void OnSimulateStop()
         {
@@ -943,6 +979,13 @@ namespace WW2NavalAssembly
             }
             else
             {
+            }
+        }
+        public override void SimulateUpdateAlways()
+        {
+            if (isSelf)
+            {
+                UpdateUI();
             }
         }
         public override void SimulateUpdateHost()
@@ -1047,35 +1090,6 @@ namespace WW2NavalAssembly
                 SendTargetToHost();
             }
             
-        }
-        public void OnGUI()
-        {
-            if (StatMaster.hudHidden)
-            {
-                return;
-            }
-            if (StatMaster.isMP)
-            {
-                if (PlayerData.localPlayer.networkId != myPlayerID)
-                {
-                    return;
-                }
-            }
-            if ((Camera.main.transform.position - transform.position).magnitude < 30 && BlockBehaviour.isSimulating)
-            {
-                Vector3 onScreenPosition = Camera.main.WorldToScreenPoint(transform.position + transform.forward * transform.localScale.z);
-                if (onScreenPosition.z >= 0)
-                {
-                    if (GunnerActive)
-                    {
-                        GUI.DrawTexture(new Rect(onScreenPosition.x - iconSize / 2, Camera.main.pixelHeight - onScreenPosition.y - iconSize / 2, iconSize, iconSize), GunnerAlertIcon);
-                    }
-                    if (AA)
-                    {
-                        GUI.DrawTexture(new Rect(onScreenPosition.x - iconSize / 2, Camera.main.pixelHeight - onScreenPosition.y - iconSize / 2 - 20, iconSize, iconSize), GunnerAAIcon);
-                    }
-                }
-            }
         }
     }
 }
