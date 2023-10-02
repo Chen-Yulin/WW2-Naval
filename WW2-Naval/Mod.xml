@@ -137,6 +137,7 @@
 		<AssetBundle name="TorpedoTrail AB" path="torpedotrail.ab"/>
 		<AssetBundle name="Sky AB" path="sky.ab"/>
 		<AssetBundle name="Aircraft AB" path="aircraft.ab"/>
+		<AssetBundle name="AA AB" path="aa.ab"/>
 
 		<!-- AirCraft -->
 		<Texture name="Aircraft Destroyed Texture" path="Aircraft\destroyed.png"/>

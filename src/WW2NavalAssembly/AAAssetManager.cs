@@ -37,6 +37,8 @@ namespace WW2NavalAssembly
         public Vector3[] Base_Offset = new Vector3[6];
         public Vector3[] Gun_Offset = new Vector3[6];
         public Vector3[] GunBase_Offset = new Vector3[6];
+        public float[] GunWidth = new float[6];
+        public float[] GunSpeed = new float[6];
 
         public void LoadAsset()
         {
@@ -66,24 +68,40 @@ namespace WW2NavalAssembly
             else if (part == 1) return Gun_Offset[Type];
             else return GunBase_Offset[Type];
         }
+        public float GetWidth(int Type)
+        {
+            return GunWidth[Type];
+        }
+        public float GetSpeed(int Type)
+        {
+            return GunSpeed[Type];
+        }
 
         public void Start()
         {
             Base_Offset[0] = new Vector3 (0.0f, -0.59f, -0.3f);
             GunBase_Offset[0] = new Vector3(0f, 0.95f, -0.3f);
             Gun_Offset[0] = new Vector3(0f, -1.5f, 0f);
+            GunWidth[0] = 0.1f;
+            GunSpeed[0] = 15f;
 
             Base_Offset[1] = new Vector3(0.0f, -0f, -0f);
             GunBase_Offset[1] = new Vector3(0f, 1.05f, -0.3f);
             Gun_Offset[1] = new Vector3(0f, -1.05f, 0.3f);
+            GunWidth[1] = 2f;
+            GunSpeed[1] = 45f;
 
             Base_Offset[2] = new Vector3(0.0f, -1.3f, 2.55f);
             GunBase_Offset[2] = new Vector3(0f, 1.55f, 0f);
             Gun_Offset[2] = new Vector3(0f, -2.8f, 2.6f);
+            GunWidth[2] = 1.2f;
+            GunSpeed[2] = 26f;
 
             Base_Offset[3] = new Vector3(0.8f, -1.3f, 2.55f);
-            GunBase_Offset[3] = new Vector3(0.8f, 1.55f, 0f);
+            GunBase_Offset[3] = new Vector3(0, 1.55f, 0f);
             Gun_Offset[3] = new Vector3(0f, -2.8f, 2.6f);
+            GunWidth[3] = 3f;
+            GunSpeed[3] = 52f;
         }
 
         public void Update()

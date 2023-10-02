@@ -17,21 +17,34 @@ using System.Text.RegularExpressions;
 
 namespace WW2NavalAssembly
 {
-    class AAVisController : MonoBehaviour
+    public class AABlockMsgReceiver : SingleInstance<GunnerMsgReceiver>
+    {
+        public override string Name { get; } = "AABlockMsgReceiver";
+    }
+    class AATurretController : MonoBehaviour
     {
         public bool AA_active;
         public float TargetPitch;
         public float TargetYaw;
 
+        public float caliber = 20;
+        public float gunWidth = 1;
         public float MinLimit;
         public float MaxLimit;
         public float speed = 1;
+        public int type;
+
+        public ParticleSystem ShootEffect;
 
         public Transform Base;
         public Transform Gun;
 
         private float _pitch;
         private float _yaw;
+
+        private float _real_pitch;
+        private float _real_yaw;
+
         public float Pitch
         {
             get { return _pitch; }
@@ -50,27 +63,69 @@ namespace WW2NavalAssembly
                 Base.transform.localEulerAngles = new Vector3(0, value, 0);
             }
         }
+        public bool Shoot
+        {
+            set
+            {
+                if (ShootEffect.isPlaying != value)
+                {
+                    if (value)
+                    {
+                        ShootEffect.Play();
+                    }
+                    else
+                    {
+                        ShootEffect.Stop();
+                    }
+                }
+            }
+        }
+        public void Start()
+        {
+            if (ShootEffect)
+            {
+                ShootEffect.randomSeed = (uint)UnityEngine.Random.value * 1000;
+                ShootEffect.startSpeed = MathTool.GetInitialVel(caliber, true);
+                ShootEffect.gravityModifier = 1.5f;
+                ShootEffect.startLifetime = 2f;
+                ShootEffect.startSize = Mathf.Pow(caliber, 1.5f) / 2000f;
+                var emission = ShootEffect.emission;
+                emission.rate = AAAssetManager.Instance.GetSpeed(type);
+                ParticleSystem.LimitVelocityOverLifetimeModule Limit = ShootEffect.limitVelocityOverLifetime;
+                Limit.dampen = 0.1f - caliber / 1000f;
+                ShootEffect.transform.GetChild(0).localScale = new Vector3(gunWidth, 0, 1);
+            }
+        }
         public void Update()
         {
-            float equv_speed = speed * 100 * Time.deltaTime;
-            if (Mathf.Abs(Yaw - TargetYaw) < equv_speed * 4)
+            Pitch += (_real_pitch - Pitch) * 0.2f;
+            Yaw += (_real_yaw - Yaw) * 0.2f;
+        }
+        public void FixedUpdate()
+        {
+            float equv_speed = speed;
+            bool ok = AA_active;
+            if (Mathf.Abs(Yaw - TargetYaw) < equv_speed * 8)
             {
-                Yaw += (TargetYaw - Yaw) * 0.8f;
+                _real_yaw += (TargetYaw - _real_yaw) * 0.2f;
             }
             else 
             {
-                Yaw += (Yaw > TargetYaw ? -1 : 1) * equv_speed;
+                _real_yaw += (_real_yaw > TargetYaw ? -1 : 1) * equv_speed;
+                ok = false;
             }
-            if (Mathf.Abs(Pitch - TargetPitch) < equv_speed * 4)
+            if (Mathf.Abs(Pitch - TargetPitch) < equv_speed * 8)
             {
-                Pitch += (TargetPitch - Pitch) * 0.8f;
+                _real_pitch += (TargetPitch - _real_pitch) * 0.2f;
             }
             else
             {
-                Pitch += (Pitch > TargetPitch ? -1 : 1) * equv_speed;
+                _real_pitch += (_real_pitch > TargetPitch ? -1 : 1) * equv_speed;
+                ok = false;
             }
-            Yaw = Mathf.Clamp(Yaw, -MinLimit, MaxLimit);
-            Pitch = Mathf.Clamp(Pitch, -5, 90);
+            _real_yaw = Mathf.Clamp(_real_yaw, -MinLimit, MaxLimit);
+            _real_pitch = Mathf.Clamp(_real_pitch, -5, 90);
+            Shoot = ok;
         }
     }
     class AABlock : BlockScript
@@ -91,11 +146,15 @@ namespace WW2NavalAssembly
 
         public GameObject GunObject;
         public GameObject BaseObject;
-
         public GameObject originVis;
 
+        // for shoot
+        public GameObject Small_AA;
+        
+
         // turret control
-        public AAVisController AAVC;
+        public AATurretController AAVC;
+
 
         // FC data
         public bool hasTarget = false;
@@ -137,7 +196,15 @@ namespace WW2NavalAssembly
                 hasTarget = false;
             }
         }
-
+        public void InitSmallShoot()
+        {
+            Small_AA = (GameObject)Instantiate(AssetManager.Instance.AA.Small_AA, GunObject.transform.parent);
+            Small_AA.transform.localScale = Vector3.one;
+            Small_AA.transform.localRotation = Quaternion.identity;
+            Small_AA.transform.localPosition = new Vector3(0, 0, 7f);
+            Small_AA.SetActive(true);
+            Small_AA.GetComponent<ParticleSystem>().Stop();
+        }
         public void InitBaseGunObjectBuild()
         {
             BaseObject = transform.Find("Vis").gameObject;
@@ -214,11 +281,18 @@ namespace WW2NavalAssembly
             {
                 GunObject = BaseObject.transform.Find("GunBase").gameObject;
             }
-            AAVC = gameObject.AddComponent<AAVisController>();
+            AAVC = gameObject.AddComponent<AATurretController>();
             AAVC.Base = BaseObject.transform.parent;
             AAVC.Gun = GunObject.transform.parent;
             AAVC.MinLimit = YawLimit.Min;
             AAVC.MaxLimit = YawLimit.Max;
+            AAVC.caliber = caliber;
+            AAVC.gunWidth = AAAssetManager.Instance.GetWidth(Type.Value);
+            AAVC.type = Type.Value;
+
+            InitSmallShoot();
+            AAVC.ShootEffect = Small_AA.GetComponent<ParticleSystem>();
+
         }
 
         public void UpdateAppearance(int type, bool simulating)
@@ -292,8 +366,8 @@ namespace WW2NavalAssembly
                 "3x25mm",
                 "2x40mm",
                 "4x40mm",
-                "2x100mm",
-                "2x127mm",
+                //"2x100mm",
+                //"2x127mm",
             });
             YawLimit = AddLimits("Turret Orien Limit", "YawLimit", 90, 90, 180, new FauxTransform(new Vector3(0,-0.5f,-0.5f),Quaternion.Euler(-90,0,0), Vector3.one * 0.0001f));
             InitBaseGunObjectBuild();
@@ -370,7 +444,7 @@ namespace WW2NavalAssembly
                 AAVC.TargetYaw = yaw;
                 AAVC.TargetPitch = targetPitch;
             }
-            
+            AAVC.AA_active = hasTarget;
         }
         public void OnGUI()
         {
