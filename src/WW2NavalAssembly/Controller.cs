@@ -975,6 +975,15 @@ namespace WW2NavalAssembly
             {
                 UpdateRotation();
                 UpdateRandomError();
+            }
+
+        }
+        public override void SimulateUpdateAlways()
+        {
+            UploadForward();
+            UploadRight();
+            if (!StatMaster.isMP || PlayerData.localPlayer.networkId == myPlayerID)
+            {
                 if (StatMaster.isMP)
                 {
                     if (PlayerData.localPlayer.networkId != myPlayerID)
@@ -992,12 +1001,6 @@ namespace WW2NavalAssembly
                     UpdateGunIcon();
                 }
             }
-
-        }
-        public override void SimulateUpdateAlways()
-        {
-            UploadForward();
-            UploadRight();
         }
         public override void SimulateUpdateHost()
         {
