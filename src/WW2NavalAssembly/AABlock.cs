@@ -45,6 +45,11 @@ namespace WW2NavalAssembly
         private float _real_pitch;
         private float _real_yaw;
 
+        // random error
+        public float angle = 0;
+        public float dist = 0;
+        public Vector2 err;
+
         public float Pitch
         {
             get { return _pitch; }
@@ -80,6 +85,14 @@ namespace WW2NavalAssembly
                 }
             }
         }
+        public void UpdateRandomError()
+        {
+            angle += UnityEngine.Random.value - 0.5f;
+            dist += UnityEngine.Random.value - 0.5f;
+            dist = Mathf.Clamp(dist, -10, 10);
+            err.x = Mathf.Sin(angle) * dist/2f;
+            err.y = Mathf.Cos(angle) * dist/2f;
+        }
         public void Start()
         {
             if (ShootEffect)
@@ -98,34 +111,42 @@ namespace WW2NavalAssembly
         }
         public void Update()
         {
-            Pitch += (_real_pitch - Pitch) * 0.2f;
-            Yaw += (_real_yaw - Yaw) * 0.2f;
+            if (AA_active)
+            {
+                Pitch += (_real_pitch + err.y - Pitch) * 0.2f;
+                Yaw += (_real_yaw + err.x - Yaw) * 0.2f;
+            }
         }
         public void FixedUpdate()
         {
-            float equv_speed = speed;
-            bool ok = AA_active;
-            if (Mathf.Abs(Yaw - TargetYaw) < equv_speed * 8)
+            if (AA_active)
             {
-                _real_yaw += (TargetYaw - _real_yaw) * 0.2f;
+                UpdateRandomError();
+                float equv_speed = speed;
+                bool ok = AA_active;
+                if (Mathf.Abs(Yaw - TargetYaw) < equv_speed * 8)
+                {
+                    _real_yaw += (TargetYaw - _real_yaw) * 0.2f;
+                }
+                else
+                {
+                    _real_yaw += (_real_yaw > TargetYaw ? -1 : 1) * equv_speed;
+                    ok = false;
+                }
+                if (Mathf.Abs(Pitch - TargetPitch) < equv_speed * 8)
+                {
+                    _real_pitch += (TargetPitch - _real_pitch) * 0.2f;
+                }
+                else
+                {
+                    _real_pitch += (_real_pitch > TargetPitch ? -1 : 1) * equv_speed;
+                    ok = false;
+                }
+                _real_yaw = Mathf.Clamp(_real_yaw, -MinLimit, MaxLimit);
+                _real_pitch = Mathf.Clamp(_real_pitch, -5, 90);
+                Shoot = ok;
             }
-            else 
-            {
-                _real_yaw += (_real_yaw > TargetYaw ? -1 : 1) * equv_speed;
-                ok = false;
-            }
-            if (Mathf.Abs(Pitch - TargetPitch) < equv_speed * 8)
-            {
-                _real_pitch += (TargetPitch - _real_pitch) * 0.2f;
-            }
-            else
-            {
-                _real_pitch += (_real_pitch > TargetPitch ? -1 : 1) * equv_speed;
-                ok = false;
-            }
-            _real_yaw = Mathf.Clamp(_real_yaw, -MinLimit, MaxLimit);
-            _real_pitch = Mathf.Clamp(_real_pitch, -5, 90);
-            Shoot = ok;
+            
         }
     }
     class AABlock : BlockScript
