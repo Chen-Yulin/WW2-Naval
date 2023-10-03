@@ -119,11 +119,11 @@ namespace WW2NavalAssembly
         }
         public void FixedUpdate()
         {
+            float equv_speed = speed;
+            bool ok = AA_active;
             if (AA_active)
             {
                 UpdateRandomError();
-                float equv_speed = speed;
-                bool ok = AA_active;
                 if (Mathf.Abs(Yaw - TargetYaw) < equv_speed * 8)
                 {
                     _real_yaw += (TargetYaw - _real_yaw) * 0.2f;
@@ -144,9 +144,8 @@ namespace WW2NavalAssembly
                 }
                 _real_yaw = Mathf.Clamp(_real_yaw, -MinLimit, MaxLimit);
                 _real_pitch = Mathf.Clamp(_real_pitch, -5, 90);
-                Shoot = ok;
             }
-            
+            Shoot = ok;
         }
     }
     class AABlock : BlockScript
@@ -183,6 +182,37 @@ namespace WW2NavalAssembly
         public Vector2 targetPos = Vector3.zero;
         public float targetTime = 20;
 
+        public Dictionary<int, Aircraft> FindAircraft(float angle)
+        {
+            Dictionary<int, Aircraft> result = new Dictionary<int, Aircraft>();
+
+            foreach (var leader in Grouper.Instance.AircraftLeaders[ModController.Instance.state % 16])
+            {
+                Aircraft a = leader.Value.Value;
+                float dist = Vector3.Distance(a.transform.position, transform.position);
+                if ( dist < 200 + caliber * 5 && a.isFlying && 
+                    Vector3.Angle(a.transform.position-transform.position, GunObject.transform.forward) < angle)
+                {
+                    if (!result.ContainsKey((int)dist))
+                    {
+                        result.Add((int)dist, a);
+                    }
+                }
+            }
+
+            return result;
+        }
+        public void DestroyAircraft()
+        {
+            var targets = FindAircraft(10f);
+            foreach (var target in targets)
+            {
+                if (UnityEngine.Random.value > 1 - (1 - target.Key / 500f) * gunNum * 0.3f)
+                {
+                    target.Value.ReduceHP((int)(caliber/5f));
+                }
+            }
+        }
         public void GetFCPara()
         {
             if (!ControllerDataManager.Instance.aaController[myPlayerID])
@@ -464,6 +494,7 @@ namespace WW2NavalAssembly
                                                 MathTool.Get2DCoordinate(-transform.up));
                 AAVC.TargetYaw = yaw;
                 AAVC.TargetPitch = targetPitch;
+                DestroyAircraft();
             }
             AAVC.AA_active = hasTarget;
         }
