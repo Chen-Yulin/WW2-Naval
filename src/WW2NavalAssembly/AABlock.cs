@@ -485,18 +485,26 @@ namespace WW2NavalAssembly
         {
             FireControlManager.Instance.RemoveGun(myPlayerID, myGuid);
         }
-        public override void SimulateFixedUpdateHost()
+        public override void SimulateFixedUpdateAlways()
         {
-            GetFCPara();
-            if (hasTarget)
+            try
             {
-                float yaw = MathTool.SignedAngle(targetPos - MathTool.Get2DCoordinate(transform.position),
-                                                MathTool.Get2DCoordinate(-transform.up));
-                AAVC.TargetYaw = yaw;
-                AAVC.TargetPitch = targetPitch;
-                DestroyAircraft();
+                GetFCPara();
+                if (hasTarget)
+                {
+                    float yaw = MathTool.SignedAngle(targetPos - MathTool.Get2DCoordinate(transform.position),
+                                                    MathTool.Get2DCoordinate(-transform.up));
+                    AAVC.TargetYaw = yaw;
+                    AAVC.TargetPitch = targetPitch;
+                    if (!StatMaster.isClient)
+                    {
+                        DestroyAircraft();
+                    }
+                }
+                AAVC.AA_active = hasTarget;
             }
-            AAVC.AA_active = hasTarget;
+            catch { }
+            
         }
         public void OnGUI()
         {
