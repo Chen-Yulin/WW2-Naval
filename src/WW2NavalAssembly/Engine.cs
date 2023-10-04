@@ -103,7 +103,7 @@ namespace WW2NavalAssembly
         public float preVel;
         public float Accel;
         public float forceModifier = 1;
-        public float stableForce = 500000f;
+        public float stableForce = 200000f;
 
         public float ThrustPercentage = 0;
 
@@ -163,10 +163,11 @@ namespace WW2NavalAssembly
             if (!StatMaster.isClient)
             {
                 SoftJointLimitSpring SJLS = new SoftJointLimitSpring();
-                SJLS.spring = Mathf.Clamp(stableForce * HPPercent, 1,stableForce);
+                SJLS.spring = Mathf.Clamp(stableForce * HPPercent, 1, stableForce);
 
                 foreach (var joint in StablePivot.GetComponents<ConfigurableJoint>())
                 {
+                    
                     joint.angularXLimitSpring = SJLS;
                     joint.angularYZLimitSpring = SJLS;
                 }
@@ -351,19 +352,19 @@ namespace WW2NavalAssembly
             SoftJointLimitSpring SJLS = new SoftJointLimitSpring();
             SJLS.spring = stableForce;
             SoftJointLimit HigherSJL = new SoftJointLimit();
-            HigherSJL.limit = 0.1f;
+            HigherSJL.limit = 0.01f;
             SoftJointLimit LowerSJL = new SoftJointLimit();
-            LowerSJL.limit = -0.1f;
+            LowerSJL.limit = -0.01f;
 
             ConfigurableJoint CJ0 = StablePivot.AddComponent<ConfigurableJoint>();
             CJ0.connectedBody = keel.GetComponent<Rigidbody>();
-            CJ0.axis = new Vector3(1, 0, -1);
-            CJ0.secondaryAxis = new Vector3(0, 0, 1);
+            CJ0.axis = new Vector3(0, 0, 1);
+            CJ0.secondaryAxis = new Vector3(1, 0, 1);
             CJ0.xMotion = ConfigurableJointMotion.Free;
             CJ0.yMotion = ConfigurableJointMotion.Free;
             CJ0.zMotion = ConfigurableJointMotion.Free;
             CJ0.angularXMotion = ConfigurableJointMotion.Limited;
-            CJ0.angularYMotion = ConfigurableJointMotion.Limited;
+            CJ0.angularYMotion = ConfigurableJointMotion.Locked;
             CJ0.angularZMotion = ConfigurableJointMotion.Free;
 
             CJ0.highAngularXLimit = HigherSJL;
@@ -372,24 +373,6 @@ namespace WW2NavalAssembly
 
             CJ0.angularXLimitSpring = SJLS;
             CJ0.angularYZLimitSpring = SJLS;
-
-            ConfigurableJoint CJ1 = StablePivot.AddComponent<ConfigurableJoint>();
-            CJ1.connectedBody = keel.GetComponent<Rigidbody>();
-            CJ1.axis = new Vector3(-1, 0, -1);
-            CJ1.secondaryAxis = new Vector3(0, 0, 1);
-            CJ1.xMotion = ConfigurableJointMotion.Free;
-            CJ1.yMotion = ConfigurableJointMotion.Free;
-            CJ1.zMotion = ConfigurableJointMotion.Free;
-            CJ1.angularXMotion = ConfigurableJointMotion.Limited;
-            CJ1.angularYMotion = ConfigurableJointMotion.Limited;
-            CJ1.angularZMotion = ConfigurableJointMotion.Free;
-
-            CJ1.highAngularXLimit = HigherSJL;
-            CJ1.lowAngularXLimit = LowerSJL;
-            CJ1.angularYLimit = HigherSJL;
-
-            CJ1.angularXLimitSpring = SJLS;
-            CJ1.angularYZLimitSpring = SJLS;
 
             try
             {
