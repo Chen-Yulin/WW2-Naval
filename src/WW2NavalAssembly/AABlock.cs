@@ -20,7 +20,32 @@ namespace WW2NavalAssembly
     public class AABlockMsgReceiver : SingleInstance<AABlockMsgReceiver>
     {
         public override string Name { get; } = "AABlockMsgReceiver";
-        public static MessageType aaActiveMsg = ModNetworking.CreateMessageType(DataType.Integer, DataType.Integer, DataType.Boolean, DataType.Boolean);
+        public static MessageType aaActiveMsg = ModNetworking.CreateMessageType(DataType.Integer, DataType.Integer, DataType.Boolean);
+
+
+        public Dictionary<int, bool>[] aaActive = new Dictionary<int, bool>[16];
+
+        public AABlockMsgReceiver()
+        {
+            for (int i = 0; i < 16; i++)
+            {
+                aaActive[i] = new Dictionary<int, bool>();
+            }
+        }
+
+        public void aaActiveReceiver(Message msg)
+        {
+            int playerID = (int)msg.GetData(0);
+            int guid = (int)msg.GetData(1);
+            if (!aaActive[playerID].ContainsKey(guid))
+            {
+                aaActive[playerID].Add(guid, (bool)msg.GetData(2));
+            }
+            else
+            {
+                aaActive[playerID][guid] = (bool)msg.GetData(2);
+            }
+        }
     }
     class AATurretController : MonoBehaviour
     {
@@ -539,6 +564,19 @@ namespace WW2NavalAssembly
             if (SwitchActive.IsPressed)
             {
                 AA_active = !AA_active;
+                if (StatMaster.isMP)
+                {
+                    ModNetworking.SendToAll(AABlockMsgReceiver.aaActiveMsg.CreateMessage(
+                            myPlayerID, myGuid, AA_active));
+                }
+            }
+        }
+        public override void SimulateUpdateClient()
+        {
+            if (AABlockMsgReceiver.Instance.aaActive[myPlayerID].ContainsKey(myGuid))
+            {
+                AA_active = AABlockMsgReceiver.Instance.aaActive[myPlayerID][myGuid];
+                AABlockMsgReceiver.Instance.aaActive[myPlayerID].Remove(myGuid);
             }
         }
         public override void SimulateFixedUpdateAlways()

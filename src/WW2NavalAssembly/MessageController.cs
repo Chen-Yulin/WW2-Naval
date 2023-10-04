@@ -43,6 +43,7 @@ namespace WW2NavalAssembly
             ModNetworking.Callbacks[AircraftMsgReceiver.NeedVelocityMsg] += AircraftMsgReceiver.Instance.ClientNeedVelocityMsgReceiver;
             ModNetworking.Callbacks[LogMsgReceiver.LogMsg] += LogMsgReceiver.Instance.Receive;
             ModNetworking.Callbacks[AAControllerMsgReceiver.targetIndexMsg] += AAControllerMsgReceiver.Instance.targetIndexReceiver;
+            ModNetworking.Callbacks[AABlockMsgReceiver.aaActiveMsg] += AABlockMsgReceiver.Instance.aaActiveReceiver;
 
 
         }
