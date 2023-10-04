@@ -356,10 +356,11 @@ namespace WW2NavalAssembly
                     try
                     {
                         velocity = AircraftMsgReceiver.Instance.Velocity[myPlayerID][myGuid];
+                        //velocity = localVelocity;
                     }
                     catch
                     {
-                        velocity = Vector3.zero;
+                        velocity = localVelocity;
                     }
                     return velocity;
                 }
@@ -595,6 +596,11 @@ namespace WW2NavalAssembly
         // ================= for explo ==================
         public bool inExploCoroutine = false;
 
+        // ================= for local velocity ===============
+        public Vector3 previousLocalPos = Vector3.zero;
+        public Vector3 localVelocity = Vector3.zero;
+
+
         IEnumerator TorpedoCoroutine()
         {
             inAttackRoutine = true;
@@ -779,6 +785,11 @@ namespace WW2NavalAssembly
                 i++;
             }
             yield break;
+        }
+        public void UpdateLocalVel() // use in simulate update
+        {
+            localVelocity = (transform.position - previousLocalPos) / Time.deltaTime;
+            previousLocalPos = transform.position;
         }
         public void InitPropellerUndercart()
         {
@@ -2231,6 +2242,7 @@ namespace WW2NavalAssembly
             RegularMat = transform.Find("Colliders").GetChild(0).GetComponent<CapsuleCollider>().material;
 
             Fuel = 1;
+            previousLocalPos = transform.position;
         }
         public override void OnSimulateStop()
         {
@@ -2366,7 +2378,10 @@ namespace WW2NavalAssembly
                 GroupLine.SetActive(false);
             }
         }
-
+        public override void SimulateUpdateAlways()
+        {
+            UpdateLocalVel();
+        }
         public override void SimulateUpdateHost()
         {
             // send leader velocity if needed
