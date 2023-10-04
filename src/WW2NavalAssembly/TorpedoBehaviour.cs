@@ -103,8 +103,9 @@ namespace WW2NavalAssembly
             {
                 if (PlayerData.localPlayer.networkId != myPlayerID)
                 {
-                    if ((transform.position - ControllerDataManager.Instance.ControllerPos[PlayerData.localPlayer.networkId]).magnitude < 100f &&
+                    if (((transform.position - ControllerDataManager.Instance.ControllerPos[PlayerData.localPlayer.networkId]).magnitude < 100f &&
                         ControllerDataManager.Instance.ControllerPos[PlayerData.localPlayer.networkId] != Vector3.zero)
+                        || StatMaster.PlayMode == BesiegePlayMode.Spectator)
                     {
                         Trail.SetActive(true);
                         transform.localScale = Vector3.one;
