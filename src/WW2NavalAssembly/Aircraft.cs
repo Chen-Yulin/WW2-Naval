@@ -247,7 +247,7 @@ namespace WW2NavalAssembly
 
         public Rigidbody myRigid;
 
-        public int HP = 8000;
+        public int HP = 800;
         
         public bool TriedFindHangar = false;
         public bool ColliderActive
