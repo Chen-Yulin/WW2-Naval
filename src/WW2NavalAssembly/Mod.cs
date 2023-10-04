@@ -42,7 +42,8 @@ namespace WW2NavalAssembly
 			myMod.AddComponent<BlockUIManager>();
 			myMod.AddComponent<H3NetworkManager>();
 			myMod.AddComponent<AABlockMsgReceiver>();
-			Debug.Log("Hello, this is WW2 naval mod!");
+            myMod.AddComponent<AAControllerMsgReceiver>();
+            Debug.Log("Hello, this is WW2 naval mod!");
 		}
         public void OnEntityPrefabCreation(int entityId, GameObject prefab)
         {

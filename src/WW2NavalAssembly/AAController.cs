@@ -10,6 +10,36 @@ using static WW2NavalAssembly.Controller;
 
 namespace WW2NavalAssembly
 {
+    public class AAControllerMsgReceiver : SingleInstance<AAControllerMsgReceiver>
+    {
+        public override string Name { get; } = "AAControllerMsgReceiver";
+        public static MessageType targetIndexMsg = ModNetworking.CreateMessageType(DataType.Integer, DataType.Integer, DataType.Integer);
+
+        public Dictionary<int, int>[] targetIndex = new Dictionary<int, int>[16];
+
+        public AAControllerMsgReceiver()
+        {
+            for (int i = 0; i < 16; i++)
+            {
+                targetIndex[i] = new Dictionary<int, int>();
+            }
+        }
+
+        public void targetIndexReceiver(Message msg)
+        {
+            int playerID = (int)msg.GetData(0);
+            int guid = (int)msg.GetData(1);
+            if (!targetIndex[playerID].ContainsKey(guid))
+            {
+                targetIndex[playerID].Add(guid, (int)msg.GetData(2));
+            }
+            else
+            {
+                targetIndex[playerID][guid] = (int)msg.GetData(2);
+            }
+        }
+        
+    }
     public class AAController : BlockScript
     {
         public int myPlayerID;
@@ -268,7 +298,7 @@ namespace WW2NavalAssembly
         {
             ClearDetectedAircraft();
         }
-        public override void SimulateUpdateAlways()
+        public override void SimulateUpdateHost()
         {
             if (SwitchTarget.IsPressed)
             {
@@ -277,6 +307,19 @@ namespace WW2NavalAssembly
                 {
                     CurrentTarget = 0;
                 }
+                if (StatMaster.isMP)
+                {
+                    ModNetworking.SendToAll(AAControllerMsgReceiver.targetIndexMsg.CreateMessage(
+                            myPlayerID, myGuid, CurrentTarget));
+                }
+            }
+        }
+        public override void SimulateUpdateClient()
+        {
+            if (AAControllerMsgReceiver.Instance.targetIndex[myPlayerID].ContainsKey(myGuid))
+            {
+                CurrentTarget = AAControllerMsgReceiver.Instance.targetIndex[myPlayerID][myGuid];
+                AAControllerMsgReceiver.Instance.targetIndex[myPlayerID].Remove(myGuid);
             }
         }
         public override void SimulateFixedUpdateAlways()

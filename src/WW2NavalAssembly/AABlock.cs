@@ -17,9 +17,10 @@ using System.Text.RegularExpressions;
 
 namespace WW2NavalAssembly
 {
-    public class AABlockMsgReceiver : SingleInstance<GunnerMsgReceiver>
+    public class AABlockMsgReceiver : SingleInstance<AABlockMsgReceiver>
     {
         public override string Name { get; } = "AABlockMsgReceiver";
+        public static MessageType aaActiveMsg = ModNetworking.CreateMessageType(DataType.Integer, DataType.Integer, DataType.Boolean, DataType.Boolean);
     }
     class AATurretController : MonoBehaviour
     {
@@ -29,6 +30,7 @@ namespace WW2NavalAssembly
 
         public float caliber = 20;
         public float gunWidth = 1;
+        public bool hasLimit;
         public float MinLimit;
         public float MaxLimit;
         public float speed = 1;
@@ -87,8 +89,8 @@ namespace WW2NavalAssembly
         }
         public void UpdateRandomError()
         {
-            angle += UnityEngine.Random.value - 0.5f;
-            dist += UnityEngine.Random.value - 0.5f;
+            angle += (UnityEngine.Random.value - 0.5f) * 0.3f;
+            dist += (UnityEngine.Random.value - 0.5f) * 0.5f;
             dist = Mathf.Clamp(dist, -10, 10);
             err.x = Mathf.Sin(angle) * dist/2f;
             err.y = Mathf.Cos(angle) * dist/2f;
@@ -142,8 +144,11 @@ namespace WW2NavalAssembly
                     _real_pitch += (_real_pitch > TargetPitch ? -1 : 1) * equv_speed;
                     ok = false;
                 }
-                _real_yaw = Mathf.Clamp(_real_yaw, -MinLimit, MaxLimit);
-                _real_pitch = Mathf.Clamp(_real_pitch, -5, 90);
+                if (hasLimit)
+                {
+                    _real_yaw = Mathf.Clamp(_real_yaw, -MinLimit, MaxLimit);
+                    _real_pitch = Mathf.Clamp(_real_pitch, -5, 90);
+                }
             }
             Shoot = ok;
         }
@@ -155,6 +160,8 @@ namespace WW2NavalAssembly
         public int myGuid;
 
         public MMenu Type;
+        public MKey SwitchActive;
+        public MToggle DefaultActive;
         public MLimits YawLimit;
         public int gunNum = 1;
         public float caliber = 20;
@@ -170,11 +177,9 @@ namespace WW2NavalAssembly
 
         // for shoot
         public GameObject Small_AA;
-        
 
         // turret control
         public AATurretController AAVC;
-
 
         // FC data
         public bool hasTarget = false;
@@ -182,6 +187,39 @@ namespace WW2NavalAssembly
         public Vector2 targetPos = Vector3.zero;
         public float targetTime = 20;
 
+        // active
+        public bool AA_active = false;
+        public Texture AAIcon;
+        public FollowerUI AAUI;
+        float iconSize = 30;
+
+        public bool isSelf
+        {
+            get
+            {
+                return StatMaster.isMP ? myPlayerID == PlayerData.localPlayer.networkId : true;
+            }
+        }
+
+        public void UpdateUI()
+        {
+            if (StatMaster.hudHidden)
+            {
+                AAUI.show = false;
+            }
+            else
+            {
+                if (AA_active)
+                {
+                    AAUI.show = true;
+                }
+                else
+                {
+                    AAUI.show = false;
+                }
+            }
+
+        }
         public Dictionary<int, Aircraft> FindAircraft(float angle)
         {
             Dictionary<int, Aircraft> result = new Dictionary<int, Aircraft>();
@@ -335,6 +373,7 @@ namespace WW2NavalAssembly
             AAVC = gameObject.AddComponent<AATurretController>();
             AAVC.Base = BaseObject.transform.parent;
             AAVC.Gun = GunObject.transform.parent;
+            AAVC.hasLimit = YawLimit.UseLimitsToggle.isDefaultValue;
             AAVC.MinLimit = YawLimit.Min;
             AAVC.MaxLimit = YawLimit.Max;
             AAVC.caliber = caliber;
@@ -411,6 +450,8 @@ namespace WW2NavalAssembly
         {
             gameObject.name = "AA Block";
             myPlayerID = BlockBehaviour.ParentMachine.PlayerID;
+            SwitchActive = AddKey("Switch Active", "SwitchActive", KeyCode.None);
+            DefaultActive = AddToggle("Default Active", "DefaultActive", true);
             Type = AddMenu("AAType", 0, new List<string>
             {
                 "1x20mm",
@@ -422,14 +463,11 @@ namespace WW2NavalAssembly
             });
             YawLimit = AddLimits("Turret Orien Limit", "YawLimit", 90, 90, 180, new FauxTransform(new Vector3(0,-0.5f,-0.5f),Quaternion.Euler(-90,0,0), Vector3.one * 0.0001f));
             InitBaseGunObjectBuild();
+            AAIcon = ModResource.GetTexture("AA Mode Icon").Texture;
         }
         public override void BuildingUpdate()
         {
             HoldAppearance(false);
-        }
-        public override void SimulateUpdateAlways()
-        {
-            HoldAppearance(true);
         }
         public override void OnSimulateStart()
         {
@@ -472,8 +510,11 @@ namespace WW2NavalAssembly
 
             FireControlManager.Instance.AddGun(myPlayerID, caliber, myGuid, gameObject);
 
-            if (!StatMaster.isClient)
+            AA_active = DefaultActive.isDefaultValue;
+
+            if (isSelf)
             {
+                AAUI = BlockUIManager.Instance.CreateFollowerUI(transform, iconSize, AAIcon, 30, new Vector2(0, 25));
             }
         }
         public override void OnSimulateStop()
@@ -485,23 +526,45 @@ namespace WW2NavalAssembly
         {
             FireControlManager.Instance.RemoveGun(myPlayerID, myGuid);
         }
+        public override void SimulateUpdateAlways()
+        {
+            HoldAppearance(true);
+            if (isSelf)
+            {
+                UpdateUI();
+            }
+        }
+        public override void SimulateUpdateHost()
+        {
+            if (SwitchActive.IsPressed)
+            {
+                AA_active = !AA_active;
+            }
+        }
         public override void SimulateFixedUpdateAlways()
         {
             try
             {
-                GetFCPara();
-                if (hasTarget)
+                if (AA_active)
                 {
-                    float yaw = MathTool.SignedAngle(targetPos - MathTool.Get2DCoordinate(transform.position),
-                                                    MathTool.Get2DCoordinate(-transform.up));
-                    AAVC.TargetYaw = yaw;
-                    AAVC.TargetPitch = targetPitch;
-                    if (!StatMaster.isClient)
+                    GetFCPara();
+                    if (hasTarget)
                     {
-                        DestroyAircraft();
+                        float yaw = MathTool.SignedAngle(targetPos - MathTool.Get2DCoordinate(transform.position),
+                                                        MathTool.Get2DCoordinate(-transform.up));
+                        AAVC.TargetYaw = yaw;
+                        AAVC.TargetPitch = targetPitch;
+                        if (!StatMaster.isClient)
+                        {
+                            DestroyAircraft();
+                        }
                     }
+                    AAVC.AA_active = hasTarget;
                 }
-                AAVC.AA_active = hasTarget;
+                else
+                {
+                    AAVC.AA_active = false;
+                }
             }
             catch { }
             

@@ -1,6 +1,6 @@
 src/.vs/
-src/WW2NavalAssembly/bin
-src/WW2NavalAssembly/obj
+src/WW2NavalAssembly/bin/Debug/*
+src/WW2NavalAssembly/obj/Debug/*
 *.zip
 *.cache
 *.dll
