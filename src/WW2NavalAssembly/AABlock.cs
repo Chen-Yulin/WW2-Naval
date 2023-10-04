@@ -272,7 +272,7 @@ namespace WW2NavalAssembly
             {
                 if (UnityEngine.Random.value > 1 - (1 - target.Key / 500f) * gunNum * 0.3f)
                 {
-                    target.Value.ReduceHP((int)(caliber/5f));
+                    target.Value.ReduceHP((int)(caliber/10f));
                 }
             }
         }
