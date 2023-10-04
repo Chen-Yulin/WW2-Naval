@@ -148,7 +148,7 @@ namespace WW2NavalAssembly
                 if (!FCResults.ContainsKey(calibergroup.Key))
                 {
                     FCResults.Add(calibergroup.Key, new FCResult(0));
-                    Debug.Log("Add AA FC:" + calibergroup.Key);
+                    //Debug.Log("Add AA FC:" + calibergroup.Key);
                 }
             }
         }
@@ -286,14 +286,10 @@ namespace WW2NavalAssembly
                 AAFCInitialized = true;
                 InitAAFireControl();
             }
-
-            if (!StatMaster.isMP ||(StatMaster.isMP && PlayerData.localPlayer.networkId == myPlayerID))
-            {
-                // update detected aircraft
-                UpdateDetectedAircraft();
-                // update AA FC results
-                UpdateAAResult();
-            }
+            // update detected aircraft
+            UpdateDetectedAircraft();
+            // update AA FC results
+            UpdateAAResult();
         }
 
         public void OnGUI()
