@@ -114,9 +114,9 @@ namespace WW2NavalAssembly
         }
         public void UpdateRandomError()
         {
-            angle += (UnityEngine.Random.value - 0.5f) * 0.3f;
-            dist += (UnityEngine.Random.value - 0.5f) * 0.5f;
-            dist = Mathf.Clamp(dist, -10, 10);
+            angle += (UnityEngine.Random.value - 0.5f) * 0.6f;
+            dist += (UnityEngine.Random.value - 0.5f) * 0.3f;
+            dist = Mathf.Clamp(dist, -8, 8);
             err.x = Mathf.Sin(angle) * dist/2f;
             err.y = Mathf.Cos(angle) * dist/2f;
         }
