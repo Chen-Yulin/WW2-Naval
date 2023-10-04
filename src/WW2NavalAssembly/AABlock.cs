@@ -541,6 +541,12 @@ namespace WW2NavalAssembly
             {
                 AAUI = BlockUIManager.Instance.CreateFollowerUI(transform, iconSize, AAIcon, 30, new Vector2(0, 25));
             }
+
+            // deactive collider
+            if (!StatMaster.isClient)
+            {
+                transform.Find("Colliders").GetChild(0).GetComponent<BoxCollider>().isTrigger = true;
+            }
         }
         public override void OnSimulateStop()
         {
