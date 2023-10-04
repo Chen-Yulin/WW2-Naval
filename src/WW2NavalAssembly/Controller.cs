@@ -776,6 +776,13 @@ namespace WW2NavalAssembly
             RandomError =   (BaseRandomError * Mathf.Sqrt(OrienVector2.magnitude)/2 + OrienVector2/15 * FakeRandom + OrienVector2 / 10) * SpotModifier + 
                             RotationError * new Vector2(UnityEngine.Random.value-0.5f, UnityEngine.Random.value - 0.5f) * OrienVector2.magnitude/500;
             RandomError  = (RandomError + (ClosingModifier-1) * new Vector2(UnityEngine.Random.value - 0.5f, UnityEngine.Random.value - 0.5f) * 2) * ClosingModifier;
+            // limit error
+            float error = RandomError.magnitude;
+            if (error > 200)
+            {
+                RandomError /= error;
+                RandomError *= 200;
+            }
         }
         public void UploadForward()
         {
