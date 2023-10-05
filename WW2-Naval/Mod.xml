@@ -244,10 +244,20 @@
 		<Texture name="AA-25-1 Texture" path="AA\25\25 1.png"/>
 		<Texture name="AA-25-2 Texture" path="AA\25\25 2.png"/>
 
+		<Mesh name="AA-76-1 Mesh" path="AA\76\76 1.obj"/>
+		<Mesh name="AA-76-2 Mesh" path="AA\76\76 2.obj"/>
+		<Texture name="AA-76-1 Texture" path="AA\76\76 1.png"/>
+		<Texture name="AA-76-2 Texture" path="AA\76\76 2.png"/>
+
 		<Mesh name="AA-100-1 Mesh" path="AA\100\100 1.obj"/>
 		<Mesh name="AA-100-2 Mesh" path="AA\100\100 2.obj"/>
 		<Texture name="AA-100-1 Texture" path="AA\100\100 1.png"/>
 		<Texture name="AA-100-2 Texture" path="AA\100\100 2.png"/>
+
+		<Mesh name="AA-105-1 Mesh" path="AA\105\105 1.obj"/>
+		<Mesh name="AA-105-2 Mesh" path="AA\105\105 2.obj"/>
+		<Texture name="AA-105-1 Texture" path="AA\105\105 1.png"/>
+		<Texture name="AA-105-2 Texture" path="AA\105\105 2.png"/>
 
 		<Mesh name="AA-127-1 Mesh" path="AA\127\127 1.obj"/>
 		<Mesh name="AA-127-2 Mesh" path="AA\127\127 2.obj"/>
