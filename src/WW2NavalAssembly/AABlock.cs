@@ -589,7 +589,7 @@ namespace WW2NavalAssembly
         {
             try
             {
-                if (AA_active)
+                if (AA_active && transform.position.y > 19.7f)
                 {
                     GetFCPara();
                     if (hasTarget)

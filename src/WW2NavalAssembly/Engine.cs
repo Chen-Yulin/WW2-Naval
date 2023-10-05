@@ -78,6 +78,7 @@ namespace WW2NavalAssembly
         public GameObject Axle;
         public GameObject Propeller;
         public GameObject Trail;
+        public ParticleSystem TrailParticle;
         PropellerBehaviour PropellerPB;
 
         public GameObject StablePivot;
@@ -134,7 +135,8 @@ namespace WW2NavalAssembly
             Trail.name = "Trail";
             Trail.transform.localPosition = Vector3.zero;
             Trail.transform.localScale = new Vector3(3,3,3f);
-            Trail.transform.Find("particle").gameObject.GetComponent<ParticleSystem>().startLifetime = 4;
+            TrailParticle = Trail.transform.Find("particle").gameObject.GetComponent<ParticleSystem>();
+            TrailParticle.startLifetime = 4;
             Trail.SetActive(false);
         }
         public void UpdateTrail()
@@ -142,12 +144,34 @@ namespace WW2NavalAssembly
             if (ModController.Instance.showSea && frameCount >5)
             {
                 Trail.transform.position = new Vector3(Propeller.transform.position.x, 20.05f, Propeller.transform.position.z);
-                Trail.SetActive(true);
+                if (!Trail.activeSelf)
+                {
+                    Trail.SetActive(true);
+                }
             }
             else
             {
-                Trail.SetActive(false);
+                if (Trail.activeSelf)
+                {
+                    Trail.SetActive(false);
+                }
             }
+
+            if (Propeller.transform.position.y > 21 || Propeller.transform.position.y < 15f)
+            {
+                if (TrailParticle.isPlaying)
+                {
+                    TrailParticle.Stop();
+                }
+            }
+            else
+            {
+                if (TrailParticle.isStopped)
+                {
+                    TrailParticle.Play();
+                }
+            }
+
         }
         public void CannonDamage(float caliber)
         {

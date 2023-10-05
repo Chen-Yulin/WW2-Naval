@@ -247,6 +247,7 @@ namespace WW2NavalAssembly
 
         public Rigidbody myRigid;
 
+        int MaxHP = 800;
         public int HP = 800;
         
         public bool TriedFindHangar = false;
@@ -1917,9 +1918,9 @@ namespace WW2NavalAssembly
             {
                 Fuel = Mathf.Clamp(Fuel + 0.0004f, 0, 1);
             }
-            if (HP < 500 && myseed == ModController.Instance.state % 10)
+            if (HP < MaxHP && myseed == ModController.Instance.state % 10)
             {
-                HP = Mathf.Clamp(HP + 1, 0, 500);
+                HP = Mathf.Clamp(HP + 1, 0, MaxHP);
             }
 
             if (Rank.Value == 1 && !hasFindBackup)

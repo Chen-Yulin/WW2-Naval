@@ -47,6 +47,7 @@ namespace WW2NavalAssembly
         public int mySeed;
 
         public MKey SwitchTarget;
+        public MToggle IFF;
 
         public int CurrentTarget = -1;
         public bool hasTarget
@@ -88,12 +89,14 @@ namespace WW2NavalAssembly
             float sy;// gravity direction positive
             float esT = 0;
             float angle = 0;
+            float maxTime = Mathf.Sqrt(caliber) / 6f;
+            
             for (int i = 0; i < 6; i++)
             {
                 vx = initialSpeed * Mathf.Cos(angle);
                 vy = -initialSpeed * Mathf.Sin(angle);
                 esT = -1 / cannonDrag * Mathf.Log(1 - dist * cannonDrag / vx);
-                if (esT > 4f)
+                if (esT > maxTime)
                 {
                     return new Dist2PitchResult();
                 }
@@ -184,12 +187,22 @@ namespace WW2NavalAssembly
         }
         public void UpdateDetectedAircraft()
         {
-            foreach (var leader in Grouper.Instance.AircraftLeaders[ModController.Instance.state % 16])
+            int currentPlayer = ModController.Instance.state % 16;
+            foreach (var leader in Grouper.Instance.AircraftLeaders[currentPlayer])
             {
                 Aircraft a = leader.Value.Value;
                 try
                 {
-                    if (Vector3.Distance(a.transform.position, transform.position) < 500 && a.isFlying)
+                    try
+                    {
+                        if (IFF.isDefaultValue && a.BlockBehaviour.Team.Equals(BlockBehaviour.Team))
+                        {
+                            break;
+                        }
+                    }
+                    catch { }
+                    
+                    if (Vector3.Distance(a.transform.position, transform.position) < Constants.MaxCaptainDetectAircraftRange && a.isFlying)
                     {
                         if (!DetectedAircraft.Contains(a))
                         {
@@ -277,6 +290,7 @@ namespace WW2NavalAssembly
             mySeed = (int)(UnityEngine.Random.value * 16);
 
             SwitchTarget = AddKey(LanguageManager.Instance.CurrentLanguage.SwitchAATarget, "Switch Target", KeyCode.T);
+            IFF = AddToggle("IFF", "IFF", defaultValue: true);
             LockIcon = ModResource.GetTexture("AA Lock Icon").Texture;
         }
         public void Start()
@@ -351,40 +365,43 @@ namespace WW2NavalAssembly
             AircraftController ac = FlightDataBase.Instance.aircraftController[myPlayerID];
 
 
-            foreach (var a in DetectedAircraft)
+            foreach (var leaderGroup in Grouper.Instance.AircraftLeaders)
             {
-                try
+                foreach (var leader in leaderGroup)
                 {
-                    Aircraft target = a;
-                    if (Vector3.Distance(target.transform.position, transform.position) < (target.myGroup.Count * 150) + 400 &&
-                        target.isFlying)
+                    try
                     {
-                        // if is self aircraft and inTacticalView, skip
-                        if (ac)
+                        Aircraft target = leader.Value.Value;
+                        if (Vector3.Distance(target.transform.position, transform.position) < (target.myGroup.Count * 150) + 400 &&
+                            target.isFlying)
                         {
-                            if (ac.inTacticalView && target.myPlayerID == myPlayerID)
+                            // if is self aircraft and inTacticalView, skip
+                            if (ac)
                             {
-                                continue;
+                                if (ac.inTacticalView && target.myPlayerID == myPlayerID)
+                                {
+                                    continue;
+                                }
+                            }
+
+                            // draw target
+                            Vector3 onScreenPosition = Camera.main.WorldToScreenPoint(target.transform.position);
+                            if (target.BlockBehaviour.Team.Equals(BlockBehaviour.Team))
+                            {
+                                GUI.contentColor = Color.yellow;
+                            }
+                            else
+                            {
+                                GUI.contentColor = Color.red;
+                            }
+                            if (onScreenPosition.z >= 0)
+                            {
+                                GUI.Box(new Rect(onScreenPosition.x - 50, Camera.main.pixelHeight - onScreenPosition.y - 40, 100, 25), "*" + target.myGroup.Count.ToString() + "*");
                             }
                         }
-
-                        // draw target
-                        Vector3 onScreenPosition = Camera.main.WorldToScreenPoint(target.transform.position);
-                        if (target.BlockBehaviour.Team.Equals(BlockBehaviour.Team))
-                        {
-                            GUI.contentColor = Color.yellow;
-                        }
-                        else
-                        {
-                            GUI.contentColor = Color.red;
-                        }
-                        if (onScreenPosition.z >= 0)
-                        {
-                            GUI.Box(new Rect(onScreenPosition.x - 50, Camera.main.pixelHeight - onScreenPosition.y - 40, 100, 25), target.Type.Selection.ToString() + " *" + target.myGroup.Count.ToString() + "*");
-                        }
                     }
+                    catch { }
                 }
-                catch { }
             }
 
             try

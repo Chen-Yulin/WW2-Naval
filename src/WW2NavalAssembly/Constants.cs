@@ -24,5 +24,7 @@ namespace WW2NavalAssembly
         public const float BulletUnderWaterDrag = 12f;
         public const int BulletAPTimer = 3;
         public const int BulletHETimer = 2;
+
+        public const float MaxCaptainDetectAircraftRange = 1000f;
     }
 }
