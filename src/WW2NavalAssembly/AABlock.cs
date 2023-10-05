@@ -483,7 +483,9 @@ namespace WW2NavalAssembly
                 "3x25mm",
                 "2x40mm",
                 "4x40mm",
+                "2x76mm",
                 //"2x100mm",
+                //"2x105mm",
                 //"2x127mm",
             });
             YawLimit = AddLimits("Turret Orien Limit", "YawLimit", 90, 90, 180, new FauxTransform(new Vector3(0,-0.5f,-0.5f),Quaternion.Euler(-90,0,0), Vector3.one * 0.0001f));
@@ -518,9 +520,17 @@ namespace WW2NavalAssembly
                     break;
                 case 4:
                     gunNum = 2;
-                    caliber = 100;
+                    caliber = 76;
                     break;
                 case 5:
+                    gunNum = 2;
+                    caliber = 100;
+                    break;
+                case 6:
+                    gunNum = 2;
+                    caliber = 105;
+                    break;
+                case 7:
                     gunNum = 2;
                     caliber = 127;
                     break;

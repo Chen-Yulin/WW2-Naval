@@ -20,6 +20,7 @@ namespace WW2NavalAssembly
         public override string Name { get; } = "AA Asset Manager";
 
         public bool Loaded = false;
+        public const int typeNum = 8;
 
         public string[] AssetName =
         {
@@ -27,22 +28,24 @@ namespace WW2NavalAssembly
             "AA-25",
             "AA-40-x2",
             "AA-40-x4",
+            "AA-76",
             "AA-100",
+            "AA-105",
             "AA-127",
         };
 
-        public Mesh[][] AA_mesh = new Mesh[6][];
-        public Texture[][] AA_texture = new Texture[6][];
+        public Mesh[][] AA_mesh = new Mesh[typeNum][];
+        public Texture[][] AA_texture = new Texture[typeNum][];
 
-        public Vector3[] Base_Offset = new Vector3[6];
-        public Vector3[] Gun_Offset = new Vector3[6];
-        public Vector3[] GunBase_Offset = new Vector3[6];
-        public float[] GunWidth = new float[6];
-        public float[] GunSpeed = new float[6];
+        public Vector3[] Base_Offset = new Vector3[typeNum];
+        public Vector3[] Gun_Offset = new Vector3[typeNum];
+        public Vector3[] GunBase_Offset = new Vector3[typeNum];
+        public float[] GunWidth = new float[typeNum];
+        public float[] GunSpeed = new float[typeNum];
 
         public void LoadAsset()
         {
-            for (int i = 0; i < 6; i++)
+            for (int i = 0; i < typeNum; i++)
             {
                 AA_mesh[i] = new Mesh[2];
                 AA_texture[i] = new Texture[2];
@@ -102,6 +105,12 @@ namespace WW2NavalAssembly
             Gun_Offset[3] = new Vector3(0f, -2.8f, 2.6f);
             GunWidth[3] = 3f;
             GunSpeed[3] = 52f;
+
+            Base_Offset[4] = new Vector3(0f, -1f, 0.75f);
+            GunBase_Offset[4] = new Vector3(0, 1.5f, 0f);
+            Gun_Offset[4] = new Vector3(0f, -2.5f, 0.75f);
+            GunWidth[4] = 3f;
+            GunSpeed[4] = 25f;
         }
 
         public void Update()
