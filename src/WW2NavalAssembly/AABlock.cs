@@ -200,6 +200,19 @@ namespace WW2NavalAssembly
         public GameObject BaseObject;
         public GameObject originVis;
 
+        public List<string> typeList = new List<string>
+        {
+            "1x20mm",
+            "3x25mm",
+            "2x40mm",
+            "4x40mm",
+            "2x76mm",
+            //"2x100mm",
+            //"2x105mm",
+            //"2x127mm",
+        };
+
+
         // for shoot
         public GameObject Small_AA;
 
@@ -477,17 +490,7 @@ namespace WW2NavalAssembly
             myPlayerID = BlockBehaviour.ParentMachine.PlayerID;
             SwitchActive = AddKey("Switch Active", "SwitchActive", KeyCode.None);
             DefaultActive = AddToggle("Default Active", "DefaultActive", true);
-            Type = AddMenu("AAType", 0, new List<string>
-            {
-                "1x20mm",
-                "3x25mm",
-                "2x40mm",
-                "4x40mm",
-                "2x76mm",
-                //"2x100mm",
-                //"2x105mm",
-                //"2x127mm",
-            });
+            Type = AddMenu("AAType", 0, typeList);
             YawLimit = AddLimits("Turret Orien Limit", "YawLimit", 90, 90, 180, new FauxTransform(new Vector3(0,-0.5f,-0.5f),Quaternion.Euler(-90,0,0), Vector3.one * 0.0001f));
             InitBaseGunObjectBuild();
             AAIcon = ModResource.GetTexture("AA Mode Icon").Texture;
