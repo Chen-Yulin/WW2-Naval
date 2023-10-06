@@ -5,11 +5,11 @@
 	<Name>WW2Naval</Name>
 	<Author>Chen, Yulin</Author> <!-- FIX: Insert your name here. -->
 	<!-- Major.Minor.Build -->
-	<Version>0.9.2</Version>
+	<Version>0.9.3</Version>
 
 	<Description>
-    Version 0.9.2
-	Add IFF to AAController, add 76mm AA
+    Version 0.9.3
+	Add large AA
 	</Description>
 
 	<Icon name="icon"/>
