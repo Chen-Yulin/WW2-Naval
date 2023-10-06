@@ -110,7 +110,22 @@ namespace WW2NavalAssembly
             GunBase_Offset[4] = new Vector3(0, 1.5f, 0f);
             Gun_Offset[4] = new Vector3(0f, -2.5f, 0.75f);
             GunWidth[4] = 3f;
-            GunSpeed[4] = 25f;
+            GunSpeed[4] = 9f;
+
+            Base_Offset[5] = new Vector3(0f, -0.4f, 0.7f);
+            GunBase_Offset[5] = new Vector3(0, 1.6f, 0f);
+            Gun_Offset[5] = new Vector3(0f, -2f, 0.75f);
+            GunWidth[5] = 0.07f;
+
+            Base_Offset[6] = new Vector3(0f, -0f, 0.3f);
+            GunBase_Offset[6] = new Vector3(0, 1.6f, -0.7f);
+            Gun_Offset[6] = new Vector3(0f, -1.6f, 1f);
+            GunWidth[6] = 0.08f;
+
+            Base_Offset[7] = new Vector3(0f, -1.1f, -0.2f);
+            GunBase_Offset[7] = new Vector3(0, 1.7f, 0.5f);
+            Gun_Offset[7] = new Vector3(0f, -2.8f, -0.5f);
+            GunWidth[7] = 0.25f;
         }
 
         public void Update()

@@ -1343,7 +1343,7 @@ namespace WW2NavalAssembly
                 BBtmp.Caliber = Caliber.Value;
                 BBtmp.myPlayerID = myPlayerID;
                 Rigidbody RBtmp = CannonPrefab.AddComponent<Rigidbody>();
-                //RBtmp.interpolation = RigidbodyInterpolation.Extrapolate;
+                RBtmp.interpolation = RigidbodyInterpolation.Extrapolate;
                 RBtmp.mass = 0.2f;
                 RBtmp.drag = Caliber.Value > 100 ? 5000f / (Caliber.Value * Caliber.Value) : 1 - Caliber.Value / 200f;
                 RBtmp.useGravity = false;
@@ -1366,27 +1366,6 @@ namespace WW2NavalAssembly
             }
 
             
-        }
-        public void ClearCannon()
-        {
-            List<GameObject> tmps = new List<GameObject>();
-            for (int i = 0; i < 20; i++)
-            {
-                GameObject tmp = GameObject.Find("NavalCannon" + myPlayerID.ToString());
-                if (tmp)
-                {
-                    tmp.name = "NavalCannon-1";
-                    tmps.Add(tmp);
-                }
-                else
-                {
-                    break;
-                }
-            }
-            foreach (var t in tmps)
-            {
-                Destroy(t);
-            }
         }
         public bool DetectSelfHost()
         {
@@ -1502,8 +1481,6 @@ namespace WW2NavalAssembly
         }
         public override void OnSimulateStop()
         {
-            ClearCannon();
-            Destroy(CannonPrefab);
             if (!FireControl.isDefaultValue)
             {
                 FireControlManager.Instance.RemoveGun(myPlayerID,myGuid);

@@ -372,7 +372,7 @@ namespace WW2NavalAssembly
                     try
                     {
                         Aircraft target = leader.Value.Value;
-                        if (Vector3.Distance(target.transform.position, transform.position) < (target.myGroup.Count * 150) + 400 &&
+                        if (Vector3.Distance(target.transform.position, transform.position) < 1000 &&
                             target.isFlying)
                         {
                             // if is self aircraft and inTacticalView, skip

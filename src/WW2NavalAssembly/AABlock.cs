@@ -49,6 +49,8 @@ namespace WW2NavalAssembly
     }
     class AATurretController : MonoBehaviour
     {
+        public AABlock parent;
+
         public bool AA_active;
         public float TargetPitch;
         public float TargetYaw;
@@ -58,7 +60,7 @@ namespace WW2NavalAssembly
         public bool hasLimit;
         public float MinLimit;
         public float MaxLimit;
-        public float speed = 1;
+        public float speed = 1.5f;
         public int type;
 
         public ParticleSystem ShootEffect;
@@ -76,6 +78,9 @@ namespace WW2NavalAssembly
         public float angle = 0;
         public float dist = 0;
         public Vector2 err;
+
+        // for large AA
+        LargeAAGunController LAC;
 
         public float Pitch
         {
@@ -99,16 +104,23 @@ namespace WW2NavalAssembly
         {
             set
             {
-                if (ShootEffect.isPlaying != value)
+                if (caliber < 100)
                 {
-                    if (value)
+                    if (ShootEffect.isPlaying != value)
                     {
-                        ShootEffect.Play();
+                        if (value)
+                        {
+                            ShootEffect.Play();
+                        }
+                        else
+                        {
+                            ShootEffect.Stop();
+                        }
                     }
-                    else
-                    {
-                        ShootEffect.Stop();
-                    }
+                }
+                else
+                {
+                    LAC.Gun_active = value;
                 }
             }
         }
@@ -122,31 +134,64 @@ namespace WW2NavalAssembly
         }
         public void Start()
         {
-            if (ShootEffect)
+            if (caliber < 100)
             {
-                ShootEffect.randomSeed = (uint)UnityEngine.Random.value * 1000;
-                ShootEffect.startSpeed = MathTool.GetInitialVel(caliber, true);
-                ShootEffect.gravityModifier = 1.5f;
-                ShootEffect.startLifetime = 2f;
-                ShootEffect.startSize = Mathf.Pow(caliber, 1.5f) / 2000f;
-                var emission = ShootEffect.emission;
-                emission.rate = AAAssetManager.Instance.GetSpeed(type);
-                ParticleSystem.LimitVelocityOverLifetimeModule Limit = ShootEffect.limitVelocityOverLifetime;
-                Limit.dampen = 0.1f - caliber / 1000f;
-                ShootEffect.transform.GetChild(0).localScale = new Vector3(gunWidth, 0, 1);
+                if (ShootEffect)
+                {
+                    ShootEffect.randomSeed = (uint)UnityEngine.Random.value * 1000;
+                    ShootEffect.startSpeed = MathTool.GetInitialVel(caliber, true);
+                    ShootEffect.gravityModifier = 1.5f;
+                    ShootEffect.startLifetime = 2f;
+                    ShootEffect.startSize = Mathf.Pow(caliber, 1.5f) / 2000f;
+                    var emission = ShootEffect.emission;
+                    emission.rate = AAAssetManager.Instance.GetSpeed(type);
+                    ParticleSystem.LimitVelocityOverLifetimeModule Limit = ShootEffect.limitVelocityOverLifetime;
+                    Limit.dampen = 0.1f - caliber / 1000f;
+                    ShootEffect.transform.GetChild(0).localScale = new Vector3(gunWidth, 0, 1);
+
+                    emission = ShootEffect.transform.GetChild(0).GetComponent<ParticleSystem>().emission;
+                    emission.rate = AAAssetManager.Instance.GetSpeed(type);
+                }
             }
+            else
+            {
+                LAC = gameObject.AddComponent<LargeAAGunController>();
+                LAC.caliber = caliber;
+                LAC.parent = parent;
+                LAC.Gun = Gun;
+            }
+            
         }
         public void Update()
         {
-            if (AA_active)
+            if (caliber < 100)
             {
-                Pitch += (_real_pitch + err.y - Pitch) * 0.2f;
-                Yaw += (_real_yaw + err.x - Yaw) * 0.2f;
+                if (AA_active)
+                {
+                    Pitch += (_real_pitch + err.y - Pitch) * 0.2f;
+                    Yaw += (_real_yaw + err.x - Yaw) * 0.2f;
+                }
+            }
+            else
+            {
+                if (AA_active)
+                {
+                    Pitch += (_real_pitch + err.y * 0.3f - Pitch) * 0.2f;
+                    Yaw += (_real_yaw + err.x * 0.3f - Yaw) * 0.2f;
+                }
             }
         }
         public void FixedUpdate()
         {
-            float equv_speed = speed;
+            float equv_speed;
+            if (caliber < 100)
+            {
+                equv_speed = speed;
+            }
+            else
+            {
+                equv_speed = speed/2f;
+            }
             bool ok = AA_active;
             if (AA_active)
             {
@@ -178,6 +223,156 @@ namespace WW2NavalAssembly
             Shoot = ok;
         }
     }
+    class LargeAAGunController : MonoBehaviour
+    {
+        public AABlock parent;
+
+        public bool Gun_active;
+        public float caliber;
+
+        public float ReloadTime = 0.3f;
+        public float CurrentReloadTime = 0f;
+        public float width = 1f;
+
+        public bool currentGun = false;
+
+        public Transform Gun;
+        GameObject CannonPrefab;
+        void InitCannon()
+        {
+            Transform PrefabParent = parent.BlockBehaviour.ParentMachine.transform.Find("Simulation Machine");
+            string PrefabName = "NavalCannon [" + parent.myPlayerID + "](" + caliber + ")";
+            if (PrefabParent.Find(PrefabName))
+            {
+                CannonPrefab = PrefabParent.Find(PrefabName).gameObject;
+            }
+            else
+            {
+                CannonPrefab = new GameObject(PrefabName);
+                CannonPrefab.transform.SetParent(PrefabParent);
+                BulletBehaviour BBtmp = CannonPrefab.AddComponent<BulletBehaviour>();
+                BBtmp.Caliber = caliber;
+                BBtmp.myPlayerID = parent.myPlayerID;
+                Rigidbody RBtmp = CannonPrefab.AddComponent<Rigidbody>();
+                RBtmp.interpolation = RigidbodyInterpolation.Extrapolate;
+                RBtmp.mass = 0.2f;
+                RBtmp.drag = caliber > 100 ? 5000f / (caliber * caliber) : 1 - caliber / 200f;
+                RBtmp.useGravity = false;
+
+                GameObject CannonVis = new GameObject("CannonVis");
+                CannonVis.transform.SetParent(CannonPrefab.transform);
+                CannonVis.transform.localPosition = Vector3.zero;
+                CannonVis.transform.localRotation = Quaternion.Euler(90f, 0f, 0f);
+                CannonVis.transform.localScale = Vector3.one * caliber / 120;
+                MeshFilter MFtmp = CannonVis.AddComponent<MeshFilter>();
+                MFtmp.sharedMesh = ModResource.GetMesh("Cannon Mesh").Mesh;
+                MeshRenderer MRtmp = CannonVis.AddComponent<MeshRenderer>();
+                MRtmp.material.mainTexture = ModResource.GetTexture("Cannon Texture").Texture;
+
+                GravityModifier gm = CannonPrefab.AddComponent<GravityModifier>();
+                gm.gravityScale = Constants.BulletGravity / Constants.Gravity;
+                CannonPrefab.SetActive(false);
+            }
+
+
+        }
+
+        public Vector3 GetRandomForce()
+        {
+            Vector3 randomForce = new Vector3(UnityEngine.Random.value - 0.5f, UnityEngine.Random.value - 0.5f, UnityEngine.Random.value - 0.5f) * 6 / Mathf.Sqrt(caliber);
+            randomForce += new Vector3(0, UnityEngine.Random.value - 0.5f, 0) * 6 / Mathf.Sqrt(caliber);
+            return randomForce * Mathf.Pow(UnityEngine.Random.value, 2);
+        }
+
+        void ShootHost()
+        {
+            float timeFaze = parent.targetTime;
+            if (timeFaze != 20)
+            {
+                currentGun = !currentGun;
+                CurrentReloadTime = 0;
+                Vector3 randomForce = GetRandomForce();
+
+                GameObject Cannon = (GameObject)Instantiate(CannonPrefab, 
+                                                            Gun.transform.position + 1 * Gun.transform.forward + (currentGun? -1 : 1) * width * Gun.transform.right, 
+                                                            Gun.transform.rotation);
+                Cannon.name = "NavalCannon" + parent.myPlayerID.ToString();
+                Cannon.SetActive(true);
+                Cannon.GetComponent<BulletBehaviour>().fire = true;
+                Cannon.GetComponent<BulletBehaviour>().randomForce = randomForce;
+                Cannon.GetComponent<BulletBehaviour>().CannonType = 1;
+                float randomFaze = timeFaze + 0.05f - 0.1f * UnityEngine.Random.value;
+                randomFaze = Mathf.Clamp(randomFaze, 0.1f, 19f);
+                timeFaze = randomFaze;
+
+                Cannon.GetComponent<BulletBehaviour>().timeFaze = timeFaze;
+                Destroy(Cannon, timeFaze + 2f);
+                if (StatMaster.isMP)
+                {
+                    ModNetworking.SendToAll(WeaponMsgReceiver.FireMsg.CreateMessage(parent.myPlayerID, parent.myGuid, randomForce, Gun.transform.forward, Vector3.zero, timeFaze));
+                }
+            }
+        }
+
+        void ShootClient()
+        {
+            if (WeaponMsgReceiver.Instance.Fire[parent.myPlayerID][parent.myGuid].fire)
+            {
+                currentGun = !currentGun;
+                float timeFaze = WeaponMsgReceiver.Instance.Fire[parent.myPlayerID][parent.myGuid].time;
+                WeaponMsgReceiver.Instance.Fire[parent.myPlayerID][parent.myGuid].fire = false;
+                GameObject Cannon = (GameObject)Instantiate(CannonPrefab, 
+                                                            Gun.transform.position + 1 * Gun.transform.forward + (currentGun ? -1 : 1) * width * Gun.transform.right,
+                                                            Quaternion.LookRotation(WeaponMsgReceiver.Instance.Fire[parent.myPlayerID][parent.myGuid].forward, Vector3.up));
+                Cannon.name = "NavalCannon" + parent.myPlayerID.ToString();
+                Cannon.SetActive(true);
+                Cannon.GetComponent<BulletBehaviour>().fire = true;
+                Cannon.GetComponent<BulletBehaviour>().randomForce = WeaponMsgReceiver.Instance.Fire[parent.myPlayerID][parent.myGuid].fireForce;
+                Cannon.GetComponent<BulletBehaviour>().CannonType = 1;
+                Cannon.GetComponent<BulletBehaviour>().timeFaze = timeFaze;
+                Destroy(Cannon, timeFaze + 1f);
+            }
+        }
+
+        void Start()
+        {
+            ReloadTime = caliber/100f * 0.3f;
+            width = AAAssetManager.Instance.GetWidth(parent.Type.Value);
+            InitCannon();
+            try
+            {
+                if (StatMaster.isClient)
+                {
+                    WeaponMsgReceiver.Instance.Fire[parent.myPlayerID].Add(parent.myGuid, new WeaponMsgReceiver.firePara(false, Vector3.zero, Vector3.zero, Vector3.zero, (float)20));
+                }
+            }
+            catch { }
+        }
+
+        void FixedUpdate()
+        {
+            if (!StatMaster.isClient)
+            {
+                CurrentReloadTime += Time.fixedDeltaTime;
+                if (Gun_active)
+                {
+                    if (CurrentReloadTime >= ReloadTime)
+                    {
+                        ShootHost();
+                    }
+                }
+                CurrentReloadTime = Mathf.Clamp(CurrentReloadTime, 0, ReloadTime);
+            }
+            else
+            {
+                ShootClient();
+            }
+        }
+
+
+
+    }
+
     class AABlock : BlockScript
     {
         public int myPlayerID;
@@ -207,9 +402,9 @@ namespace WW2NavalAssembly
             "2x40mm",
             "4x40mm",
             "2x76mm",
-            //"2x100mm",
-            //"2x105mm",
-            //"2x127mm",
+            "2x100mm",
+            "2x105mm",
+            "2x127mm",
         };
 
 
@@ -409,6 +604,7 @@ namespace WW2NavalAssembly
                 GunObject = BaseObject.transform.Find("GunBase").gameObject;
             }
             AAVC = gameObject.AddComponent<AATurretController>();
+            AAVC.parent = this;
             AAVC.Base = BaseObject.transform.parent;
             AAVC.Gun = GunObject.transform.parent;
             AAVC.hasLimit = YawLimit.UseLimitsToggle.isDefaultValue;
