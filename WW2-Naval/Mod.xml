@@ -5,11 +5,11 @@
 	<Name>WW2Naval</Name>
 	<Author>Chen, Yulin</Author> <!-- FIX: Insert your name here. -->
 	<!-- Major.Minor.Build -->
-	<Version>0.9.3</Version>
+	<Version>0.9.4</Version>
 
 	<Description>
-    Version 0.9.3
-	Add large AA
+    Version 0.9.4
+	modify aa damage
 	</Description>
 
 	<Icon name="icon"/>
