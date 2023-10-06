@@ -778,7 +778,7 @@ namespace WW2NavalAssembly
         public IEnumerator DisturbedCoroutine(int time, float force)
         {
             int i = 0;
-            Vector3 torque = new Vector3(-2 * UnityEngine.Random.value, 0, 3 - 6 * UnityEngine.Random.value) * force;
+            Vector3 torque = new Vector3(-2 * UnityEngine.Random.value, 0, 3 - 6 * UnityEngine.Random.value) * force * 0.3f;
             while (i < time)
             {
                 myRigid.AddRelativeTorque(torque);
@@ -2829,7 +2829,7 @@ namespace WW2NavalAssembly
                             Shoot = canShoot;
                             if (canShoot)
                             {
-                                targetAircraft.ReduceHP(Type.Value == 0? 2 : 1);
+                                targetAircraft.ReduceHP(Type.Value == 0? 5 : 3);
                             }
                         }
                         Vector3 v_angularVel = myRigid.angularVelocity;
