@@ -45,13 +45,19 @@ namespace WW2NavalAssembly
 
         public Transform Base;
 
+        public Camera camera;
 
+        public void Start()
+        {
+            camera = Camera.main;
+        }
         public void Update()
         {
             if (IsActive && Base)
             {
                 float mouseScroll = Input.mouseScrollDelta.y;
                 _orthoSize = Mathf.Clamp(_orthoSize * (mouseScroll > 0 ? 1f / (1f + mouseScroll * 0.2f) : (1f - mouseScroll * 0.2f)), 50, 2000);
+                camera.orthographicSize = _orthoSize;
                 if (ResetView.IsPressed)
                 {
                     transform.position = Base.transform.position;
@@ -66,8 +72,18 @@ namespace WW2NavalAssembly
                     moveDir.y = 0;
                     transform.position += _orthoSize * moveDir * 0.05f * ViewSensitivity;
                 }
+
+                Vector3 pos = transform.position;
+                pos.y = 400f;
+                transform.position = pos;
+
             }
             
+        }
+
+        public void OnDestroy()
+        {
+            ModCameraController.Instance.needCamera = true;
         }
     }
 }

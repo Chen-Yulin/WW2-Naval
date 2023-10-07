@@ -43,8 +43,8 @@ namespace WW2NavalAssembly
 			myMod.AddComponent<H3NetworkManager>();
 			myMod.AddComponent<AABlockMsgReceiver>();
             myMod.AddComponent<AAControllerMsgReceiver>();
-			Camera.main.gameObject.AddComponent<ModCameraController>();
-			Camera.main.gameObject.GetComponent<ModCameraController>().enabled = true;
+			myMod.AddComponent<ModCameraController>();
+			myMod.GetComponent<ModCameraController>().enabled = true;
             Debug.Log("Hello, this is WW2 naval mod!");
 		}
         public void OnEntityPrefabCreation(int entityId, GameObject prefab)

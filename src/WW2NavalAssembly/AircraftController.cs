@@ -353,24 +353,18 @@ namespace WW2NavalAssembly
         {
             get { return _inTacticalView; }
             set {
-                _inTacticalView = value;
-                //SingleInstanceFindOnly<MouseOrbit>.Instance.isActive = !_inTacticalView;
-                if (_inTacticalView)
+                if (_inTacticalView != value)
                 {
-                    /*
-                    MainCamera.orthographic = true;
-                    MainCamera.transform.eulerAngles = new Vector3(90, 0, 0);
-                    MainCamera.orthographicSize = _orthoSize;
+                    _inTacticalView = value;
+                    if (_inTacticalView)
+                    {
+                        ModCameraController.Instance.EnableModCameraTAC(transform, ViewSensitivity.Value, ResetView, ViewMove);
 
-                    Vector3 pos = MainCamera.transform.position;
-                    pos.y = 400;
-                    MainCamera.transform.position = pos;*/
-                    ModCameraController.Instance.EnableModCameraTAC(transform, ViewSensitivity.Value, ResetView, ViewMove);
-
-                }
-                else
-                {
-                    ModCameraController.Instance.DisableModCameraTAC();
+                    }
+                    else
+                    {
+                        ModCameraController.Instance.DisableModCameraTAC();
+                    }
                 }
             }
         }
@@ -561,7 +555,7 @@ namespace WW2NavalAssembly
                     GroupIcon[group].transform.position = pos;
                     float angle = -MathTool.SignedAngle(MathTool.Get2DCoordinate(-a.transform.up), Vector2.right);
                     GroupIcon[group].transform.GetChild(0).localEulerAngles = new Vector3(90, 0, angle);
-                    GroupIcon[group].transform.localScale = _orthoSize / 200f * Vector3.one;
+                    GroupIcon[group].transform.localScale = ModCameraController.Instance.TAC._orthoSize / 200f * Vector3.one;
                 }
                 catch { }
 

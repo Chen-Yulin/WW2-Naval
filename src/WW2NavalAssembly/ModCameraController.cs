@@ -27,6 +27,8 @@ namespace WW2NavalAssembly
         public float pitch;
         public float yaw;
 
+        public bool needCamera;
+
         public enum Mode
         {
             MO,
@@ -37,7 +39,7 @@ namespace WW2NavalAssembly
         public Mode mode
         {
             set { 
-                mode = value; 
+                _mode = value; 
                 if (value == Mode.MO)
                 {
                     MO.isActive = true;
@@ -61,6 +63,8 @@ namespace WW2NavalAssembly
             get { return mode; }
         }
 
+        public Camera camera;
+
         // mouse orbit
         public MouseOrbit MO;
         public BlockBehaviour MO_pre_block = null;
@@ -72,13 +76,25 @@ namespace WW2NavalAssembly
         // TAC
         public TacCamera TAC;
 
-
+        public bool FindCamera()
+        {
+            try
+            {
+                if (!camera)
+                {
+                    camera = Camera.main;
+                    MO = camera.GetComponent<MouseOrbit>();
+                    FPV = camera.gameObject.AddComponent<FPVCamera>();
+                    TAC = camera.gameObject.AddComponent<TacCamera>();
+                    mode = Mode.MO;
+                }
+                return true;
+            }
+            catch { return false; }
+        }
         public void Awake()
         {
-            MO = GetComponent<MouseOrbit>();
-            FPV = gameObject.AddComponent<FPVCamera>();
-            TAC = gameObject.AddComponent<TacCamera>();
-            mode = Mode.MO;
+            FindCamera();
         }
 
         public void EnableModCameraMO(GameObject caller, Transform target)
@@ -141,17 +157,26 @@ namespace WW2NavalAssembly
         {
             if (target)
             {
-                //mode = Mode.TAC;
-                //TAC.Base = target;
-                //TAC.ViewSensitivity = Sensitivity;
-                //TAC.ViewMove = move;
-                //TAC.ResetView = reset;
+                TAC.Base = target;
+                TAC.ViewSensitivity = Sensitivity;
+                TAC.ViewMove = move;
+                TAC.ResetView = reset;
+                mode = Mode.TAC;
             }
         }
 
         public void DisableModCameraTAC()
         {
             mode = Mode.MO;
+        }
+
+        public void Update()
+        {
+            if (needCamera)
+            {
+                needCamera = ! FindCamera();
+                //Debug.Log("Find Camera " + !needCamera);
+            }
         }
 
         private void OnGUI()
