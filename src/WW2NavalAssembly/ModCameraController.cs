@@ -38,26 +38,29 @@ namespace WW2NavalAssembly
         private Mode _mode = Mode.MO;
         public Mode mode
         {
-            set { 
-                _mode = value; 
-                if (value == Mode.MO)
+            set {
+                if (_mode != Mode.TAC)
                 {
-                    MO.isActive = true;
-                    FPV.IsActive = false;
-                    TAC.IsActive = false;
-                    
-                }
-                else if (value == Mode.FPV)
-                {
-                    MO.isActive = false;
-                    FPV.IsActive = true;
-                    TAC.IsActive = false;
-                }
-                else
-                {
-                    MO.isActive = false;
-                    FPV.IsActive = false;
-                    TAC.IsActive = true;
+                    _mode = value;
+                    if (value == Mode.MO)
+                    {
+                        MO.isActive = true;
+                        FPV.IsActive = false;
+                        TAC.IsActive = false;
+
+                    }
+                    else if (value == Mode.FPV)
+                    {
+                        MO.isActive = false;
+                        FPV.IsActive = true;
+                        TAC.IsActive = false;
+                    }
+                    else
+                    {
+                        MO.isActive = false;
+                        FPV.IsActive = false;
+                        TAC.IsActive = true;
+                    }
                 }
             }
             get { return mode; }
@@ -167,6 +170,7 @@ namespace WW2NavalAssembly
 
         public void DisableModCameraTAC()
         {
+            _mode = Mode.MO;
             mode = Mode.MO;
         }
 
