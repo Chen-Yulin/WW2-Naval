@@ -39,28 +39,25 @@ namespace WW2NavalAssembly
         public Mode mode
         {
             set {
-                if (_mode != Mode.TAC)
+                _mode = value;
+                if (value == Mode.MO)
                 {
-                    _mode = value;
-                    if (value == Mode.MO)
-                    {
-                        MO.isActive = true;
-                        FPV.IsActive = false;
-                        TAC.IsActive = false;
+                    MO.isActive = true;
+                    FPV.IsActive = false;
+                    TAC.IsActive = false;
 
-                    }
-                    else if (value == Mode.FPV)
-                    {
-                        MO.isActive = false;
-                        FPV.IsActive = true;
-                        TAC.IsActive = false;
-                    }
-                    else
-                    {
-                        MO.isActive = false;
-                        FPV.IsActive = false;
-                        TAC.IsActive = true;
-                    }
+                }
+                else if (value == Mode.FPV)
+                {
+                    MO.isActive = false;
+                    FPV.IsActive = true;
+                    TAC.IsActive = false;
+                }
+                else
+                {
+                    MO.isActive = false;
+                    FPV.IsActive = false;
+                    TAC.IsActive = true;
                 }
             }
             get { return mode; }
@@ -149,10 +146,10 @@ namespace WW2NavalAssembly
 
             if (target)
             {
-                mode = Mode.FPV;
                 FPV.Base = target;
                 FPV.rotationX = 0;
                 FPV.rotationY = 0;
+                mode = Mode.FPV;
             }
         }
         public void DisableModCamerFPV()
@@ -161,7 +158,7 @@ namespace WW2NavalAssembly
             FPV.Base = null;
         }
 
-        public void EnableModCameraTAC(Transform target, float Sensitivity, MKey reset, MKey move)
+        public void EnableModCameraTAC(Transform target, float Sensitivity, MKey reset, MKey move, AircraftController ac)
         {
             if (target)
             {
@@ -169,6 +166,7 @@ namespace WW2NavalAssembly
                 TAC.ViewSensitivity = Sensitivity;
                 TAC.ViewMove = move;
                 TAC.ResetView = reset;
+                TAC.AC = ac;
                 mode = Mode.TAC;
             }
         }

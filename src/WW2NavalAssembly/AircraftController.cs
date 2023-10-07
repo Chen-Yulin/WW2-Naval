@@ -330,7 +330,7 @@ namespace WW2NavalAssembly
         }
     }
 
-    class AircraftController : BlockScript
+    public class AircraftController : BlockScript
     {
         public int myPlayerID;
         public int myGuid;
@@ -347,7 +347,7 @@ namespace WW2NavalAssembly
         public MKey Attack;
         public MSlider ViewSensitivity;
 
-        bool _inTacticalView = false;
+        public bool _inTacticalView = false;
         float _orthoSize = 400f;
         public bool inTacticalView
         {
@@ -358,7 +358,7 @@ namespace WW2NavalAssembly
                     _inTacticalView = value;
                     if (_inTacticalView)
                     {
-                        ModCameraController.Instance.EnableModCameraTAC(transform, ViewSensitivity.Value, ResetView, ViewMove);
+                        ModCameraController.Instance.EnableModCameraTAC(transform, ViewSensitivity.Value, ResetView, ViewMove, this);
 
                     }
                     else

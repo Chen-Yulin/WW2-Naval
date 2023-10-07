@@ -34,6 +34,10 @@ namespace WW2NavalAssembly
                 else
                 {
                     Camera.main.orthographic = false;
+                    if (AC)
+                    {
+                        AC._inTacticalView = false;
+                    }
                 }
             }
         }
@@ -44,6 +48,8 @@ namespace WW2NavalAssembly
         public MKey ViewMove;
 
         public Transform Base;
+
+        public AircraftController AC;
 
         public Camera camera;
 
