@@ -76,6 +76,7 @@
     <Compile Include="FireControlManager.cs" />
     <Compile Include="FlightDataBase.cs" />
     <Compile Include="FlightDeck.cs" />
+    <Compile Include="FPVCamera.cs" />
     <Compile Include="GravityModifier.cs" />
     <Compile Include="Grouper.cs" />
     <Compile Include="Gun.cs" />
@@ -88,6 +89,7 @@
     <Compile Include="MathTool.cs" />
     <Compile Include="MessageController.cs" />
     <Compile Include="Mod.cs" />
+    <Compile Include="ModCameraController.cs" />
     <Compile Include="ModController.cs" />
     <Compile Include="ModLogger.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -152,6 +154,7 @@
     <Compile Include="skpCustomModule\WingDragBehavour.cs" />
     <Compile Include="skpCustomModule\WingDragBehavour2.cs" />
     <Compile Include="SpiderFucker.cs" />
+    <Compile Include="TacCamera.cs" />
     <Compile Include="TorpedoBehaviour.cs" />
     <Compile Include="TorpedoLauncher.cs" />
     <Compile Include="WaveMaker.cs" />

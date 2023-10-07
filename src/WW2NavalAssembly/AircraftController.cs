@@ -354,21 +354,23 @@ namespace WW2NavalAssembly
             get { return _inTacticalView; }
             set {
                 _inTacticalView = value;
-                SingleInstanceFindOnly<MouseOrbit>.Instance.isActive = !_inTacticalView;
+                //SingleInstanceFindOnly<MouseOrbit>.Instance.isActive = !_inTacticalView;
                 if (_inTacticalView)
                 {
+                    /*
                     MainCamera.orthographic = true;
                     MainCamera.transform.eulerAngles = new Vector3(90, 0, 0);
                     MainCamera.orthographicSize = _orthoSize;
 
                     Vector3 pos = MainCamera.transform.position;
                     pos.y = 400;
-                    MainCamera.transform.position = pos;
+                    MainCamera.transform.position = pos;*/
+                    ModCameraController.Instance.EnableModCameraTAC(transform, ViewSensitivity.Value, ResetView, ViewMove);
 
                 }
                 else
                 {
-                    MainCamera.orthographic = false;
+                    ModCameraController.Instance.DisableModCameraTAC();
                 }
             }
         }
@@ -986,6 +988,7 @@ namespace WW2NavalAssembly
                 if (inTacticalView)
                 {
                     DrawBoard.SetActive(true);
+                    /*
                     float mouseScroll = Input.mouseScrollDelta.y;
                     _orthoSize = Mathf.Clamp(_orthoSize * (mouseScroll > 0 ? 1f / (1f + mouseScroll * 0.2f) : (1f - mouseScroll * 0.2f)), 50, 2000);
 
@@ -1002,7 +1005,7 @@ namespace WW2NavalAssembly
                         Vector3 moveDir = (mouseX * -Vector3.right + mouseY * -Vector3.forward);
                         moveDir.y = 0;
                         MainCamera.transform.position += _orthoSize * moveDir * 0.05f * ViewSensitivity.Value;
-                    }
+                    }*/
 
 
                     if (CurrentLeader)
