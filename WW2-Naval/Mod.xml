@@ -142,6 +142,9 @@
 		<!-- AirCraft -->
 		<Texture name="Aircraft Destroyed Texture" path="Aircraft\destroyed.png"/>
 
+		<Mesh name="Cockpit Mesh" path="Aircraft\cockpit\cockpit.obj"/>
+		<Texture name="Cockpit Texture" path="Aircraft\cockpit\cockpit.png"/>
+
 		<Mesh name="A-Zero-0 Mesh" path="Aircraft\R\ZERO\ZERO 0.obj"/>
 		<Mesh name="A-Zero-0.5 Mesh" path="Aircraft\R\ZERO\ZERO 0.5.obj"/>
 		<Mesh name="A-Zero-1 Mesh" path="Aircraft\R\ZERO\ZERO 1.obj"/>
