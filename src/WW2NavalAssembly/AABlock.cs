@@ -307,66 +307,28 @@ namespace WW2NavalAssembly
 
                 Cannon.GetComponent<BulletBehaviour>().timeFaze = timeFaze;
                 Destroy(Cannon, timeFaze + 2f);
-                if (StatMaster.isMP)
-                {
-                    ModNetworking.SendToAll(WeaponMsgReceiver.FireMsg.CreateMessage(parent.myPlayerID, parent.myGuid, randomForce, Gun.transform.forward, Vector3.zero, timeFaze));
-                }
             }
         }
 
-        void ShootClient()
-        {
-            if (WeaponMsgReceiver.Instance.Fire[parent.myPlayerID][parent.myGuid].fire)
-            {
-                currentGun = !currentGun;
-                float timeFaze = WeaponMsgReceiver.Instance.Fire[parent.myPlayerID][parent.myGuid].time;
-                WeaponMsgReceiver.Instance.Fire[parent.myPlayerID][parent.myGuid].fire = false;
-                GameObject Cannon = (GameObject)Instantiate(CannonPrefab, 
-                                                            Gun.transform.position + 1 * Gun.transform.forward + (currentGun ? -1 : 1) * width * Gun.transform.right,
-                                                            Quaternion.LookRotation(WeaponMsgReceiver.Instance.Fire[parent.myPlayerID][parent.myGuid].forward, Vector3.up));
-                Cannon.name = "NavalCannon" + parent.myPlayerID.ToString();
-                Cannon.SetActive(true);
-                Cannon.GetComponent<BulletBehaviour>().fire = true;
-                Cannon.GetComponent<BulletBehaviour>().randomForce = WeaponMsgReceiver.Instance.Fire[parent.myPlayerID][parent.myGuid].fireForce;
-                Cannon.GetComponent<BulletBehaviour>().CannonType = 1;
-                Cannon.GetComponent<BulletBehaviour>().timeFaze = timeFaze;
-                Destroy(Cannon, timeFaze + 1f);
-            }
-        }
 
         void Start()
         {
             ReloadTime = caliber/100f * 0.3f;
             width = AAAssetManager.Instance.GetWidth(parent.Type.Value);
             InitCannon();
-            try
-            {
-                if (StatMaster.isClient)
-                {
-                    WeaponMsgReceiver.Instance.Fire[parent.myPlayerID].Add(parent.myGuid, new WeaponMsgReceiver.firePara(false, Vector3.zero, Vector3.zero, Vector3.zero, (float)20));
-                }
-            }
-            catch { }
         }
 
         void FixedUpdate()
         {
-            if (!StatMaster.isClient)
+            CurrentReloadTime += Time.fixedDeltaTime;
+            if (Gun_active)
             {
-                CurrentReloadTime += Time.fixedDeltaTime;
-                if (Gun_active)
+                if (CurrentReloadTime >= ReloadTime)
                 {
-                    if (CurrentReloadTime >= ReloadTime)
-                    {
-                        ShootHost();
-                    }
+                    ShootHost();
                 }
-                CurrentReloadTime = Mathf.Clamp(CurrentReloadTime, 0, ReloadTime);
             }
-            else
-            {
-                ShootClient();
-            }
+            CurrentReloadTime = Mathf.Clamp(CurrentReloadTime, 0, ReloadTime);
         }
 
 
