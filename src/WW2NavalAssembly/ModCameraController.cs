@@ -149,6 +149,7 @@ namespace WW2NavalAssembly
                 FPV.Base = target;
                 FPV.rotationX = 0;
                 FPV.rotationY = 0;
+                FPV.PosOffset = AircraftAssetManager.Instance.GetCockpitOffset(target.parent.GetComponent<Aircraft>().preAppearance);
                 mode = Mode.FPV;
             }
         }

@@ -25,8 +25,8 @@ namespace WW2NavalAssembly
                     {
                         pre_FOV = Camera.main.fieldOfView;
                         pre_PlaneDist = Camera.main.nearClipPlane;
-                        Camera.main.fieldOfView = 80f;
-                        Camera.main.nearClipPlane = 0.03f;
+                        Camera.main.fieldOfView = 85f;
+                        Camera.main.nearClipPlane = 0.02f;
                         transform.rotation = Base.transform.rotation;
                     }
                     else
@@ -43,7 +43,7 @@ namespace WW2NavalAssembly
 
         public Transform Base;
 
-        public Vector3 PosOffset = new Vector3(0, 3.9f, 3.2f);
+        public Vector3 PosOffset;
 
         public float rotationX;
         public float rotationY;
@@ -63,7 +63,7 @@ namespace WW2NavalAssembly
                 cockpit.transform.SetParent(transform);
                 cockpit.transform.localPosition = Vector3.zero;
                 cockpit.transform.localRotation = Quaternion.identity;
-                cockpit.transform.localScale = Vector3.one * 0.013f;
+                cockpit.transform.localScale = Vector3.one * 0.012f;
                 
                 MeshFilter mf = cockpit.AddComponent<MeshFilter>();
                 mf.sharedMesh = ModResource.GetMesh("Cockpit Mesh");

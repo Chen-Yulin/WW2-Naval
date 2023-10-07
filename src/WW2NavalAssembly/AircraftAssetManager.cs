@@ -133,6 +133,8 @@ namespace WW2NavalAssembly
         public Vector3 Fulmar_Body_Offset = new Vector3(0, 0.4f, 0.18f);
         public Vector3 Barracuda_Body_Offset = new Vector3(0, 0.18f, -0.12f);
 
+        public Vector3[] Cockpit_Offset = new Vector3[9];
+
 
         public void LoadAsset()
         {
@@ -223,7 +225,15 @@ namespace WW2NavalAssembly
 
         public AircraftAssetManager()
         {
-            
+            Cockpit_Offset[0] = new Vector3(0, 2.6f, 3.2f);
+            Cockpit_Offset[3] = new Vector3(0, 4.6f, 2.2f);
+            Cockpit_Offset[2] = new Vector3(0, 3.9f, 3.2f);
+            Cockpit_Offset[1] = new Vector3(0, 3.9f, 3.2f);
+            Cockpit_Offset[4] = new Vector3(0, 3.9f, 3.2f);
+            Cockpit_Offset[5] = new Vector3(0, 3.9f, 3.2f);
+            Cockpit_Offset[6] = new Vector3(0, 3.9f, 3.2f);
+            Cockpit_Offset[7] = new Vector3(0, 3.9f, 3.2f);
+            Cockpit_Offset[8] = new Vector3(0, 3.9f, 3.2f);
         }
 
         public Mesh GetMesh0(string name)
@@ -484,6 +494,33 @@ namespace WW2NavalAssembly
                     return Barracuda_Body_Offset;
                 default:
                     return Zero_Body_Offset;
+            }
+        }
+
+        public Vector3 GetCockpitOffset(string name)
+        {
+            switch (name)
+            {
+                case "Zero":
+                    return Cockpit_Offset[0];
+                case "F4U":
+                    return Cockpit_Offset[1];
+                case "99":
+                    return Cockpit_Offset[2];
+                case "B7A2":
+                    return Cockpit_Offset[3];
+                case "SBD":
+                    return Cockpit_Offset[4];
+                case "SB2C":
+                    return Cockpit_Offset[5];
+                case "Spitfire":
+                    return Cockpit_Offset[6];
+                case "Fulmar":
+                    return Cockpit_Offset[7];
+                case "Barracuda":
+                    return Cockpit_Offset[8];
+                default:
+                    return Cockpit_Offset[0];
             }
         }
 

@@ -601,7 +601,7 @@ namespace WW2NavalAssembly
                 gunsmoke.transform.localScale = Caliber / 200 * Vector3.one;
                 Destroy(gunsmoke, 3);
             }
-            else if (Caliber >= 100)
+            else if (Caliber >= 76)
             {
                 gunsmoke = (GameObject)Instantiate(AssetManager.Instance.GunSmoke.gunsmoke2, transform.position, transform.rotation);
                 gunsmoke.transform.localScale = Caliber / 200 * Vector3.one;
