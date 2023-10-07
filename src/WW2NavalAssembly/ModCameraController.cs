@@ -67,6 +67,7 @@ namespace WW2NavalAssembly
         }
 
         public Camera camera;
+        
 
         // mouse orbit
         public MouseOrbit MO;
@@ -145,15 +146,19 @@ namespace WW2NavalAssembly
 
         public void EnableModCameraFPV(Transform target)
         {
+
             if (target)
             {
                 mode = Mode.FPV;
                 FPV.Base = target;
+                FPV.rotationX = 0;
+                FPV.rotationY = 0;
             }
         }
         public void DisableModCamerFPV()
         {
             mode = Mode.MO;
+            FPV.Base = null;
         }
 
         public void EnableModCameraTAC(Transform target, float Sensitivity, MKey reset, MKey move)
