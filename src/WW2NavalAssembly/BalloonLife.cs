@@ -17,12 +17,18 @@ namespace WW2NavalAssembly
         public float life = 1000;
         public SqrBalloonController sqrBalloonController;
         public void Awake(){
-            sqrBalloonController = gameObject.GetComponent<SqrBalloonController>();
+            if (!StatMaster.isClient)
+            {
+                sqrBalloonController = gameObject.GetComponent<SqrBalloonController>();
+            }
         }
         public void Start()
         {
-            sqrBalloonController.blockJoint.breakForce *=3f;
-            sqrBalloonController.blockJoint.breakTorque *= 3f;
+            if (!StatMaster.isClient)
+            {
+                sqrBalloonController.blockJoint.breakForce *= 3f;
+                sqrBalloonController.blockJoint.breakTorque *= 3f;
+            }
         }
         public bool isAlive()
         {

@@ -1,4 +1,5 @@
 ﻿using Modding;
+using Modding.Common;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -28,6 +29,7 @@ namespace Navalmod
         }
         private float ratesend = 0.1f;
         private float time;
+        private float sendtoalltime;
         public H3NetworkManager()
         {
             OptionsMaster.maxSendRate = 10000000f;
@@ -56,21 +58,30 @@ namespace Navalmod
             if (StatMaster.isHosting)
             {
                 time += Time.fixedDeltaTime;
+                sendtoalltime += Time.fixedDeltaTime;
                 if (time >= ratesend)
                 {
                     time = 0;
 
                     //ModConsole.Log(PushAllPlayers().Length.ToString());
-                    
-                    ModNetworking.SendToAll(H3NetBlock.CreateMessage(new object[]
-                {
-                    PushAllPlayers()
-                }));
+                    for (int i = 0; i < Playerlist.Players.Count; i++) {
+                        ModNetworking.SendTo(Player.From(Playerlist.Players[i].networkId), H3NetBlock.CreateMessage(new object[]
+                    {
+                    PushOnePlayers((ushort)i)
+                    }));
+                    }
 
 
 
                 }
-                
+                if(sendtoalltime >= ratesend*5f)
+                {
+                    sendtoalltime = 0f;
+                    ModNetworking.SendToAll(H3NetBlock.CreateMessage(new object[]
+{
+                    PushAllPlayers()
+}));
+                }
                 
             }
         }
@@ -243,6 +254,29 @@ namespace Navalmod
                 number+=bytes.Length;
             }
             byte[] ret = new byte[number+4];
+            number = 0;
+            byte[] bytes2 = BitConverter.GetBytes(Playerlist.Players.Count);
+            ret[number] = bytes2[0];
+            ret[number + 1] = bytes2[1];
+            ret[number + 2] = bytes2[2];
+            ret[number + 3] = bytes2[3];
+            number += 4;
+            NetworkCompression.WriteArray(send, ret, number);
+            return ret;
+        }
+        public byte[] PushOnePlayers(ushort playerid)
+        {
+            byte[][] send = new byte[1][];
+            for (int i = 0; i < 1; i++)
+            {
+                send[i] = PushPlayer(playerid);
+            }
+            int number = 0;
+            foreach (byte[] bytes in send)
+            {
+                number += bytes.Length;
+            }
+            byte[] ret = new byte[number + 4];
             number = 0;
             byte[] bytes2 = BitConverter.GetBytes(Playerlist.Players.Count);
             ret[number] = bytes2[0];
