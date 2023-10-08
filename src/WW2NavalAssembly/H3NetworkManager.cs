@@ -1,11 +1,13 @@
 ﻿using Modding;
 using Modding.Common;
+using skpCustomModule;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using UnityEngine;
-
+using System.Runtime.Serialization.Formatters.Binary;
+using System.IO;
 
 namespace Navalmod
 {
@@ -19,10 +21,138 @@ namespace Navalmod
         public BlockBehaviour bb;
         public int offset;
     }
-    
+    public class ClusterSend
+    {
+        public List<H3NetCluster> clusterList;
+    }
+    public class H3NetCluster
+    {
+        public H3NetCluster(H3NetBlock Basebb)
+        {
+            Base = Basebb;
+        }
+        public List<H3NetBlock> blocks;
+        public H3NetBlock Base;
+        public ushort playerid;
+        public static List<H3NetCluster> GetAllNetCluster()
+        {
+            List<H3NetCluster> h3NetClusters = new List<H3NetCluster>();
+            foreach (PlayerData playerData in Playerlist.Players)
+            {
+                h3NetClusters.AddRange(GetPlayerNetCluster(playerData.networkId));
+                
+            }
+            return h3NetClusters;
+        }
+        public static List<H3NetCluster> GetPlayerNetCluster(ushort playerid)
+        {
+            List<H3NetCluster> h3NetClusters = new List<H3NetCluster>();
+            PlayerData playerData = Playerlist.GetPlayer(playerid);
+            foreach (Machine.SimCluster simCluster in playerData.machine.simClusters)
+            {
+                List<H3NetBlock> h3NetBlocks=H3NetBlock.BBstoH3NetBBs(simCluster.Blocks, simCluster.Base);
+                H3NetCluster h3NetCluster = new H3NetCluster(new H3NetBlock(simCluster.Base));
+                h3NetCluster.blocks = h3NetBlocks;
+                h3NetCluster.playerid = playerid;
+                h3NetClusters.Add(h3NetCluster);
+            }
+            return h3NetClusters;
+        }
+        public void ApplyToMachine()
+        {
+            BlockBehaviour baseBB = Base.GetSetRealBB();
+            GameObject gameObject = new GameObject(baseBB.transform.name+"Base");
+            H3NetworkManager.Instance.clusterlist.Add(gameObject);
+            gameObject.transform.position = baseBB.transform.position;
+            gameObject.transform.rotation = baseBB.transform.rotation;
+            baseBB.transform.SetParent(gameObject.transform,false);
+
+            Base.GetSetRealBB();
+            
+            foreach (H3NetBlock h3NetBlock in blocks)
+            {
+                BlockBehaviour bb = h3NetBlock.GetSetRealBB();
+                bb.transform.SetParent(gameObject.transform,false);
+                h3NetBlock.GetSetRealBB();
+            }
+            gameObject.transform.parent = baseBB.ParentMachine.SimulationMachine;
+        }
+    }
+    public class H3NetBlock
+    {
+        public H3NetBlock(BlockBehaviour blockBehaviour)
+        {
+            guid = blockBehaviour.BuildingBlock.Guid;
+            playerid = blockBehaviour.ParentMachine.PlayerID;
+            pos = blockBehaviour.transform.position;
+            rot = blockBehaviour.transform.rotation;
+            scale = blockBehaviour.transform.localScale;
+        }
+        public H3NetBlock()
+        {
+        }
+        public Guid guid;
+        public ushort playerid;
+        public Vector3 pos;
+        public Quaternion rot;
+        public Vector3 scale;
+        public static List<H3NetBlock> BBstoH3NetBBs(BlockBehaviour[] blockBehaviours,BlockBehaviour basebb)
+        {
+            List<H3NetBlock> h3NetBlocks = new List<H3NetBlock>();
+            foreach (BlockBehaviour blockBehaviour in blockBehaviours)
+            {
+                if (blockBehaviour != basebb)
+                {
+                    h3NetBlocks.Add(new H3NetBlock(blockBehaviour));
+                }
+            }
+            return h3NetBlocks;
+        }
+        public BlockBehaviour GetRealBB()
+        {
+            foreach (BlockBehaviour blockBehaviour in ReferenceMaster.GetAllSimulationBlocks())
+            {
+                if (blockBehaviour.BuildingBlock.Guid == guid && blockBehaviour.ParentMachine.PlayerID == playerid)
+                {
+                    return blockBehaviour;
+                }
+            }
+            return null;
+        }
+        public void SetRealBB()
+        {
+            foreach (BlockBehaviour blockBehaviour in ReferenceMaster.GetAllSimulationBlocks())
+            {
+                if (blockBehaviour.BuildingBlock.Guid == guid && blockBehaviour.ParentMachine.PlayerID == playerid)
+                {
+                    blockBehaviour.transform.position = pos;
+                    blockBehaviour.transform.rotation = rot;
+                    blockBehaviour.transform.localScale = scale;
+                }
+            }
+        }
+        public BlockBehaviour GetSetRealBB()
+        {
+            foreach (BlockBehaviour blockBehaviour in ReferenceMaster.GetAllSimulationBlocks())
+            {
+                if (blockBehaviour.BuildingBlock.Guid == guid && blockBehaviour.ParentMachine.PlayerID == playerid)
+                {
+                    blockBehaviour.transform.position = pos;
+                    blockBehaviour.transform.rotation = rot;
+                    blockBehaviour.transform.localScale = scale;
+                    return blockBehaviour;
+                }
+            }
+            return null;
+        }
+
+    }
+
     public class H3NetworkManager : SingleInstance<H3NetworkManager>
     {
         public static MessageType H3NetBlock;
+        public static MessageType H3ClusterNet;
+        public static MessageType ClientRequest;
         public float rateSend { 
             get {return ratesend; } 
             set {ratesend = value; } 
@@ -40,19 +170,55 @@ namespace Navalmod
                 DataType.ByteArray
             });
 
+            H3ClusterNet = ModNetworking.CreateMessageType(new DataType[]
+            {
+                DataType.ByteArray
+            });
+            ClientRequest = ModNetworking.CreateMessageType(new DataType[]
+{
+                DataType.Integer
+});
             ModNetworking.Callbacks[H3NetBlock] += delegate (Message msg)//plyaercount*4+(blockcount 4 + playerid 2 + {block...(blockid+blockpos+blockrot)(35*block*count)})*playercount
             {
                 byte[] recbytes = (byte[])msg.GetData(0);
                 PullAllPlayers(recbytes);
-               
+            };
+            ModNetworking.Callbacks[H3ClusterNet] += delegate (Message msg)//plyaercount*4+(blockcount 4 + playerid 2 + {block...(blockid+blockpos+blockrot)(35*block*count)})*playercount
+            {
+                byte[] recbytes = (byte[])msg.GetData(0);
+                ClusterSend clusterSend = DeserializeClusterSend(recbytes);
+                ApplyAllClusters(clusterSend.clusterList);
 
             };
+            ModNetworking.Callbacks[ClientRequest] += delegate (Message msg)//plyaercount*4+(blockcount 4 + playerid 2 + {block...(blockid+blockpos+blockrot)(35*block*count)})*playercount
+            {
+                int type = (int)msg.GetData(0);
+                if (type == 0)
+                {
+                    PushAllCluster();
+                }
+            };
         }
-        
+        public List<GameObject> clusterlist = new List<GameObject>();
+        public List<GameObject> clusterlistLast = new List<GameObject>();
         public override string Name => "manager";
         public byte[] test;
+        public void ApplyAllClusters(List<H3NetCluster> h3NetClusters)
+        {
+            clusterlist = new List<GameObject>();
+            foreach (H3NetCluster h3net in h3NetClusters)
+            {
+                h3net.ApplyToMachine();
+            }
+            foreach (GameObject gameObject in clusterlistLast)
+            {
+                Destroy(gameObject);
+            }
+            clusterlistLast = clusterlist;
+        }
         public void FixedUpdate()
         {
+            
             
 
             if (StatMaster.isHosting)
@@ -84,6 +250,49 @@ namespace Navalmod
                 }
                 
             }
+        }
+        public byte[] SerializePartCluster(ClusterSend cluster)
+        {
+            using (MemoryStream ms = new MemoryStream())
+            {
+                BinaryFormatter formatter = new BinaryFormatter();
+                formatter.Serialize(ms, cluster);
+                return ms.ToArray();
+            }
+        }
+        public ClusterSend DeserializePartCluster(byte[] data)
+        {
+            using (MemoryStream ms = new MemoryStream(data))
+            {
+                BinaryFormatter formatter = new BinaryFormatter();
+                return (ClusterSend)formatter.Deserialize(ms);
+            }
+        }
+        public void FixedCluster()
+        {
+            if (StatMaster.isHosting)
+            {
+                PushAllCluster();
+            }
+            else
+            {
+                ModNetworking.SendToAll(ClientRequest.CreateMessage(new object[]
+{
+                    0
+}));
+            }
+        }
+        public void PushAllCluster()
+        {
+            
+            List<H3NetCluster> h3NetClusters = H3NetCluster.GetAllNetCluster();
+            ClusterSend clusterSend = new ClusterSend();
+            clusterSend.clusterList = h3NetClusters;
+            byte[] byteArray = SerializeClusterSend(clusterSend);
+            ModNetworking.SendToAll(H3ClusterNet.CreateMessage(new object[]
+{
+                    byteArray
+}));
         }
         public void PullAllPlayers(byte[] bytes)
         {
@@ -169,7 +378,7 @@ namespace Navalmod
 
                                             }
                                         }
-                                        else if (blockBehaviour.transform.parent.GetComponent<H3NetworkBlock>() == null)
+                                        else if (blockBehaviour.transform.parent.GetComponent<H3NetworkBlock>() == null && blockBehaviour.transform.GetComponent<H3NetworkBlock>().isClusterBase == true)
                                         {
                                             try
                                             {
@@ -278,7 +487,7 @@ namespace Navalmod
             }
             byte[] ret = new byte[number + 4];
             number = 0;
-            byte[] bytes2 = BitConverter.GetBytes(Playerlist.Players.Count);
+            byte[] bytes2 = BitConverter.GetBytes(1);
             ret[number] = bytes2[0];
             ret[number + 1] = bytes2[1];
             ret[number + 2] = bytes2[2];
@@ -400,5 +609,187 @@ namespace Navalmod
             BitConverter.GetBytes(value3).CopyTo(bytes, 12);
             return new Guid(bytes);
         }
+
+        public static byte[] SerializeClusterSend(ClusterSend send)
+        {
+            List<byte> result = new List<byte>();
+
+            // Serialize count of clusters
+            result.AddRange(BitConverter.GetBytes(send.clusterList.Count));
+
+            // Serialize each cluster
+            foreach (H3NetCluster cluster in send.clusterList)
+            {
+                // Serialize Base
+                int[] guidInts = Guid2Int(cluster.Base.guid);
+                foreach (int intValue in guidInts)
+                {
+                    result.AddRange(BitConverter.GetBytes(intValue));
+                }
+                result.AddRange(BitConverter.GetBytes(cluster.Base.playerid));
+                result.AddRange(BitConverter.GetBytes(cluster.Base.pos.x));
+                result.AddRange(BitConverter.GetBytes(cluster.Base.pos.y));
+                result.AddRange(BitConverter.GetBytes(cluster.Base.pos.z));
+                result.AddRange(BitConverter.GetBytes(cluster.Base.rot.x));
+                result.AddRange(BitConverter.GetBytes(cluster.Base.rot.y));
+                result.AddRange(BitConverter.GetBytes(cluster.Base.rot.z));
+                result.AddRange(BitConverter.GetBytes(cluster.Base.rot.w));
+                result.AddRange(BitConverter.GetBytes(cluster.Base.scale.x));
+                result.AddRange(BitConverter.GetBytes(cluster.Base.scale.y));
+                result.AddRange(BitConverter.GetBytes(cluster.Base.scale.z));
+
+                // Serialize blocks count
+                result.AddRange(BitConverter.GetBytes(cluster.blocks.Count));
+
+                // Serialize each block
+                foreach (H3NetBlock block in cluster.blocks)
+                {
+                    guidInts = Guid2Int(block.guid);
+                    foreach (int intValue in guidInts)
+                    {
+                        result.AddRange(BitConverter.GetBytes(intValue));
+                    }
+                    result.AddRange(BitConverter.GetBytes(block.playerid));
+                    result.AddRange(BitConverter.GetBytes(block.pos.x));
+                    result.AddRange(BitConverter.GetBytes(block.pos.y));
+                    result.AddRange(BitConverter.GetBytes(block.pos.z));
+                    result.AddRange(BitConverter.GetBytes(block.rot.x));
+                    result.AddRange(BitConverter.GetBytes(block.rot.y));
+                    result.AddRange(BitConverter.GetBytes(block.rot.z));
+                    result.AddRange(BitConverter.GetBytes(block.rot.w));
+                    result.AddRange(BitConverter.GetBytes(block.scale.x));
+                    result.AddRange(BitConverter.GetBytes(block.scale.y));
+                    result.AddRange(BitConverter.GetBytes(block.scale.z));
+                }
+
+                // Serialize playerid of cluster
+                result.AddRange(BitConverter.GetBytes(cluster.playerid));
+            }
+
+            return result.ToArray();
+        }
+
+        public static ClusterSend DeserializeClusterSend(byte[] data)
+        {
+            ClusterSend result = new ClusterSend();
+            result.clusterList = new List<H3NetCluster>();
+            int offset = 0;
+
+            // Deserialize count of clusters
+            int clusterCount = BitConverter.ToInt32(data, offset);
+            offset += 4;
+
+            for (int i = 0; i < clusterCount; i++)
+            {
+                // Deserialize Base
+                int value = BitConverter.ToInt32(data, offset);
+                offset += 4;
+
+                int value1 = BitConverter.ToInt32(data, offset);
+                offset += 4;
+
+                int value2 = BitConverter.ToInt32(data, offset);
+                offset += 4;
+
+                int value3 = BitConverter.ToInt32(data, offset);
+                offset += 4;
+
+                Guid guid = Int2Guid(value, value1, value2, value3);
+
+                ushort playerId = BitConverter.ToUInt16(data, offset);
+                offset += 2;
+
+                Vector3 pos = new Vector3(BitConverter.ToSingle(data, offset),
+                                          BitConverter.ToSingle(data, offset + 4),
+                                          BitConverter.ToSingle(data, offset + 8));
+                offset += 12;
+
+                Quaternion rot = new Quaternion(BitConverter.ToSingle(data, offset),
+                                                BitConverter.ToSingle(data, offset + 4),
+                                                BitConverter.ToSingle(data, offset + 8),
+                                                BitConverter.ToSingle(data, offset + 12));
+                offset += 16;
+
+                Vector3 scale = new Vector3(BitConverter.ToSingle(data, offset),
+                                            BitConverter.ToSingle(data, offset + 4),
+                                            BitConverter.ToSingle(data, offset + 8));
+                offset += 12;
+
+                H3NetBlock baseBlock = new H3NetBlock()
+                {
+                    guid = guid,
+                    playerid = playerId,
+                    pos = pos,
+                    rot = rot,
+                    scale = scale
+                };
+
+                H3NetCluster cluster = new H3NetCluster(baseBlock);
+                cluster.blocks = new List<H3NetBlock>();
+
+                // Deserialize blocks count
+                int blockCount = BitConverter.ToInt32(data, offset);
+                offset += 4;
+
+                for (int j = 0; j < blockCount; j++)
+                {
+                    // Deserialize each block, similar to how Base was deserialized
+                    value = BitConverter.ToInt32(data, offset);
+                    offset += 4;
+
+                    value1 = BitConverter.ToInt32(data, offset);
+                    offset += 4;
+
+                    value2 = BitConverter.ToInt32(data, offset);
+                    offset += 4;
+
+                    value3 = BitConverter.ToInt32(data, offset);
+                    offset += 4;
+
+                    guid = Int2Guid(value, value1, value2, value3);
+
+                    playerId = BitConverter.ToUInt16(data, offset);
+                    offset += 2;
+
+                    pos = new Vector3(BitConverter.ToSingle(data, offset),
+                                      BitConverter.ToSingle(data, offset + 4),
+                                      BitConverter.ToSingle(data, offset + 8));
+                    offset += 12;
+
+                    rot = new Quaternion(BitConverter.ToSingle(data, offset),
+                                         BitConverter.ToSingle(data, offset + 4),
+                                         BitConverter.ToSingle(data, offset + 8),
+                                         BitConverter.ToSingle(data, offset + 12));
+                    offset += 16;
+
+                    scale = new Vector3(BitConverter.ToSingle(data, offset),
+                                        BitConverter.ToSingle(data, offset + 4),
+                                        BitConverter.ToSingle(data, offset + 8));
+                    offset += 12;
+
+                    H3NetBlock block = new H3NetBlock()
+                    {
+                        guid = guid,
+                        playerid = playerId,
+                        pos = pos,
+                        rot = rot,
+                        scale = scale
+                    };
+                    cluster.blocks.Add(block);
+                }
+
+                // Deserialize playerid of cluster
+                cluster.playerid = BitConverter.ToUInt16(data, offset);
+                offset += 2;
+
+                result.clusterList.Add(cluster);
+            }
+
+            return result;
+        }
+
+
+
+
     }
 }

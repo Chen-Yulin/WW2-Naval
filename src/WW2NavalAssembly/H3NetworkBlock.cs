@@ -113,6 +113,7 @@ namespace Navalmod
                     {
                         if (islocal)
                         {
+                            
                             pingtime += Time.deltaTime;
                             base.transform.localPosition = Vector3.Lerp(lastpos, nowpos, (maxtime - Math.Max(time, 0)) / maxtime);
                             base.transform.localRotation = Quaternion.Lerp(lastqua, nowqua, (maxtime - Math.Max(time, 0)) / maxtime);
