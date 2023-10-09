@@ -104,7 +104,7 @@ namespace WW2NavalAssembly
         {
             set
             {
-                if (caliber < 100)
+                if (caliber < 76)
                 {
                     if (ShootEffect.isPlaying != value)
                     {
@@ -134,7 +134,7 @@ namespace WW2NavalAssembly
         }
         public void Start()
         {
-            if (caliber < 100)
+            if (caliber < 76)
             {
                 if (ShootEffect)
                 {
@@ -164,7 +164,7 @@ namespace WW2NavalAssembly
         }
         public void Update()
         {
-            if (caliber < 100)
+            if (caliber < 76)
             {
                 if (AA_active)
                 {
@@ -184,7 +184,7 @@ namespace WW2NavalAssembly
         public void FixedUpdate()
         {
             float equv_speed;
-            if (caliber < 100)
+            if (caliber < 76)
             {
                 equv_speed = speed;
             }
@@ -313,7 +313,7 @@ namespace WW2NavalAssembly
 
         void Start()
         {
-            ReloadTime = caliber/100f * 0.3f;
+            ReloadTime = caliber>=100? caliber/100f * 0.3f : caliber/76f * 0.12f;
             width = AAAssetManager.Instance.GetWidth(parent.Type.Value);
             InitCannon();
         }

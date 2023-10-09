@@ -176,33 +176,6 @@ namespace WW2NavalAssembly
 
         public GunOffsetData offsetData = new GunOffsetData();
 
-        public Camera MainCamera
-        {
-            get
-            {
-                bool flag;
-                if (this._viewCamera == null)
-                {
-                    MouseOrbit instance = SingleInstanceFindOnly<MouseOrbit>.Instance;
-                    flag = (((instance != null) ? instance.cam : null) != null);
-                }
-                else
-                {
-                    flag = false;
-                }
-                bool flag2 = flag;
-                if (flag2)
-                {
-                    this._viewCamera = SingleInstanceFindOnly<MouseOrbit>.Instance.cam;
-                }
-                bool flag3 = this._viewCamera == null;
-                if (flag3)
-                {
-                    this._viewCamera = Camera.main;
-                }
-                return this._viewCamera;
-            }
-        }
 
         // for Gun
         public class Dist2PitchResult
@@ -871,8 +844,8 @@ namespace WW2NavalAssembly
                 }
             }
             catch { }
-            
-            SingleInstanceFindOnly<MouseOrbit>.Instance.isActive = true;
+
+            ModCameraController.Instance.DisableModCameraMO(this.gameObject);
 
             if (StatMaster.isMP)
             {
@@ -918,7 +891,7 @@ namespace WW2NavalAssembly
                 }
             }
             catch { }
-            SingleInstanceFindOnly<MouseOrbit>.Instance.isActive = true;
+            ModCameraController.Instance.DisableModCameraMO(this.gameObject);
             if (StatMaster.isMP)
             {
                 if (PlayerData.localPlayer.networkId != myPlayerID)
@@ -1177,17 +1150,16 @@ namespace WW2NavalAssembly
                     !(TargetCannon.transform.position.y < 20) &&
                     !TargetCannon.GetComponent<BulletBehaviour>().exploded)
                     {
-                        SingleInstanceFindOnly<MouseOrbit>.Instance.isActive = false;
-                        MainCamera.transform.position = Vector3.Lerp(MainCamera.transform.position, TargetCannon.transform.position - 30f * TargetCannon.transform.forward, 0.2f);
-                        MainCamera.transform.rotation = TargetCannon.transform.rotation;
+                        ModCameraController.Instance.EnableModCameraMO(this.gameObject, TargetCannon.transform);
                     }
                 }
-                catch { }
+                catch {
+                }
                 
             }
             else
             {
-                SingleInstanceFindOnly<MouseOrbit>.Instance.isActive = true;
+                ModCameraController.Instance.DisableModCameraMO(this.gameObject);
             }
         }
 
