@@ -135,7 +135,6 @@
 		<AssetBundle name="FireControl AB" path="firecontrol.ab"/>
 		<AssetBundle name="Sea AB" path="sea.ab"/>
 		<AssetBundle name="TorpedoTrail AB" path="torpedotrail.ab"/>
-		<AssetBundle name="Sky AB" path="sky.ab"/>
 		<AssetBundle name="Aircraft AB" path="aircraft.ab"/>
 		<AssetBundle name="AA AB" path="aa.ab"/>
 
