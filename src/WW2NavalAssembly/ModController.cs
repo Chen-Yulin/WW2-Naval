@@ -1,4 +1,5 @@
 ﻿using Modding;
+using Navalmod;
 using System;
 using UnityEngine;
 
@@ -296,7 +297,10 @@ namespace WW2NavalAssembly
                     SingleInstance<SpiderFucker>.Instance.ExpandFloorSwitch = false;
                 }
                 SingleInstance<SpiderFucker>.Instance.ExExpandScale = Convert.ToSingle(GUILayout.TextArea(SingleInstance<SpiderFucker>.Instance.ExExpandScale.ToString(), new GUILayoutOption[0]));
-
+                if (GUILayout.Button("FixClient", new GUILayoutOption[0]))
+                {
+                    SingleInstance<H3NetworkManager>.Instance.FixedCluster();
+                }
                 //GUILayout.Label("AA Efficiency");
                 //s_AAForce = GUILayout.TextField(s_AAForce, 15);
 
