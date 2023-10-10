@@ -146,7 +146,7 @@ namespace WW2NavalAssembly
                     var emission = ShootEffect.emission;
                     emission.rate = AAAssetManager.Instance.GetSpeed(type);
                     ParticleSystem.LimitVelocityOverLifetimeModule Limit = ShootEffect.limitVelocityOverLifetime;
-                    Limit.dampen = 0.1f - caliber / 1000f;
+                    Limit.dampen = 0.08f - caliber / 1250f;
                     ShootEffect.transform.GetChild(0).localScale = new Vector3(gunWidth, 0, 1);
 
                     emission = ShootEffect.transform.GetChild(0).GetComponent<ParticleSystem>().emission;
@@ -443,6 +443,7 @@ namespace WW2NavalAssembly
                 if (UnityEngine.Random.value > 1 - (1 - target.Key / 500f) * gunNum * 0.3f)
                 {
                     target.Value.ReduceHP((int)(caliber/10f));
+                    target.Value.IncreaseAnxiety(caliber/100f);
                 }
             }
         }

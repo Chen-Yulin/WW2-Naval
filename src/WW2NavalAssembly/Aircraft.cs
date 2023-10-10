@@ -521,6 +521,8 @@ namespace WW2NavalAssembly
         public bool hasLoad = false;
         public bool inAttackRoutine = false;
 
+        public float DiveAnxiety = 0;
+
         // ================== for landing ===================
         public bool onboard = false;
 
@@ -626,6 +628,7 @@ namespace WW2NavalAssembly
 
             float AttackHeight = transform.position.y;
             inAttackRoutine = true;
+            DiveAnxiety = 0;
             Thrust = 20f;
             yield return new WaitForSeconds(myTeamIndex * 0.2f + UnityEngine.Random.value * 0.2f - 0.1f);
             float targetPitch = -82 + UnityEngine.Random.value * 8f;
@@ -641,7 +644,7 @@ namespace WW2NavalAssembly
             Thrust = 10f;
 
             targetRoll = -180;
-            while (transform.position.y > Constants.SeaHeight + Constants.BombDropHeight)
+            while (transform.position.y > Constants.SeaHeight + Constants.BombDropHeight + DiveAnxiety)
             {
                 yield return new WaitForFixedUpdate();
                 targetRoll += 4;
@@ -1663,6 +1666,14 @@ namespace WW2NavalAssembly
                 {
                     SwitchToShootDown();
                 }
+            }
+        }
+        public void IncreaseAnxiety(float value)
+        {
+            DiveAnxiety += value/2f;
+            if (preTeammate)
+            {
+                preTeammate.IncreaseAnxiety(value / 2f);
             }
         }
         public void BeginExplo(bool instant)
@@ -2879,6 +2890,7 @@ namespace WW2NavalAssembly
                             if (canShoot)
                             {
                                 targetAircraft.ReduceHP(Type.Value == 0? 5 : 3);
+                                targetAircraft.IncreaseAnxiety(Type.Value == 0 ? 3 : 2);
                             }
                         }
                         Vector3 v_angularVel = myRigid.angularVelocity;
