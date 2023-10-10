@@ -62,6 +62,7 @@ namespace WW2NavalAssembly
         public float MaxLimit;
         public float speed = 1.5f;
         public int type;
+        public int gunNum = 1;
 
         public ParticleSystem ShootEffect;
 
@@ -117,10 +118,48 @@ namespace WW2NavalAssembly
                             ShootEffect.Stop();
                         }
                     }
+
+                    if (!StatMaster.isClient)
+                    {
+                        DestroyAircraft();
+                    }
                 }
                 else
                 {
                     LAC.Gun_active = value;
+                }
+            }
+        }
+
+        public Dictionary<int, Aircraft> FindAircraft(float angle)
+        {
+            Dictionary<int, Aircraft> result = new Dictionary<int, Aircraft>();
+
+            foreach (var leader in Grouper.Instance.AircraftLeaders[ModController.Instance.state % 16])
+            {
+                Aircraft a = leader.Value.Value;
+                float dist = Vector3.Distance(a.transform.position, transform.position);
+                if (dist < 200 + caliber * 5 && a.isFlying &&
+                    Vector3.Angle(a.transform.position - transform.position, Gun.transform.forward) < angle)
+                {
+                    if (!result.ContainsKey((int)dist))
+                    {
+                        result.Add((int)dist, a);
+                    }
+                }
+            }
+
+            return result;
+        }
+        public void DestroyAircraft()
+        {
+            var targets = FindAircraft(10f);
+            foreach (var target in targets)
+            {
+                if (UnityEngine.Random.value > 1 - (1 - target.Key / 500f) * gunNum * 0.3f)
+                {
+                    target.Value.ReduceHP((int)(caliber / 10f));
+                    target.Value.IncreaseAnxiety(caliber / 100f);
                 }
             }
         }
@@ -192,7 +231,7 @@ namespace WW2NavalAssembly
             {
                 equv_speed = speed/2f;
             }
-            bool ok = AA_active;
+            bool ok = false;
             if (AA_active)
             {
                 UpdateRandomError();
@@ -203,7 +242,6 @@ namespace WW2NavalAssembly
                 else
                 {
                     _real_yaw += (_real_yaw > TargetYaw ? -1 : 1) * equv_speed;
-                    ok = false;
                 }
                 if (Mathf.Abs(Pitch - TargetPitch) < equv_speed * 8)
                 {
@@ -212,13 +250,13 @@ namespace WW2NavalAssembly
                 else
                 {
                     _real_pitch += (_real_pitch > TargetPitch ? -1 : 1) * equv_speed;
-                    ok = false;
                 }
                 if (hasLimit)
                 {
                     _real_yaw = Mathf.Clamp(_real_yaw, -MinLimit, MaxLimit);
                     _real_pitch = Mathf.Clamp(_real_pitch, -5, 90);
                 }
+                ok = Mathf.Abs(Yaw - TargetYaw) * Mathf.Cos(Mathf.Clamp(TargetPitch + 5f,0,90)) + Mathf.Abs(Pitch - TargetPitch) < 10f;
             }
             Shoot = ok;
         }
@@ -415,38 +453,7 @@ namespace WW2NavalAssembly
             }
 
         }
-        public Dictionary<int, Aircraft> FindAircraft(float angle)
-        {
-            Dictionary<int, Aircraft> result = new Dictionary<int, Aircraft>();
-
-            foreach (var leader in Grouper.Instance.AircraftLeaders[ModController.Instance.state % 16])
-            {
-                Aircraft a = leader.Value.Value;
-                float dist = Vector3.Distance(a.transform.position, transform.position);
-                if ( dist < 200 + caliber * 5 && a.isFlying && 
-                    Vector3.Angle(a.transform.position-transform.position, GunObject.transform.forward) < angle)
-                {
-                    if (!result.ContainsKey((int)dist))
-                    {
-                        result.Add((int)dist, a);
-                    }
-                }
-            }
-
-            return result;
-        }
-        public void DestroyAircraft()
-        {
-            var targets = FindAircraft(10f);
-            foreach (var target in targets)
-            {
-                if (UnityEngine.Random.value > 1 - (1 - target.Key / 500f) * gunNum * 0.3f)
-                {
-                    target.Value.ReduceHP((int)(caliber/10f));
-                    target.Value.IncreaseAnxiety(caliber/100f);
-                }
-            }
-        }
+        
         public void GetFCPara()
         {
             if (!ControllerDataManager.Instance.aaController[myPlayerID])
@@ -576,6 +583,7 @@ namespace WW2NavalAssembly
             AAVC.caliber = caliber;
             AAVC.gunWidth = AAAssetManager.Instance.GetWidth(Type.Value);
             AAVC.type = Type.Value;
+            AAVC.gunNum = gunNum;
 
             InitSmallShoot();
             AAVC.ShootEffect = Small_AA.GetComponent<ParticleSystem>();
@@ -770,10 +778,6 @@ namespace WW2NavalAssembly
                                                         MathTool.Get2DCoordinate(-transform.up));
                         AAVC.TargetYaw = yaw;
                         AAVC.TargetPitch = targetPitch;
-                        if (!StatMaster.isClient)
-                        {
-                            DestroyAircraft();
-                        }
                     }
                     AAVC.AA_active = hasTarget;
                 }
