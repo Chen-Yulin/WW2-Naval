@@ -776,7 +776,7 @@ namespace WW2NavalAssembly
         public IEnumerator DisturbedCoroutine(int time, float force)
         {
             int i = 0;
-            Vector3 torque = new Vector3(-2 * UnityEngine.Random.value, 0, 3 - 6 * UnityEngine.Random.value) * force * 0.3f;
+            Vector3 torque = new Vector3(-0.5f * UnityEngine.Random.value, 0, 6 - 12 * UnityEngine.Random.value) * force * 0.3f;
             while (i < time)
             {
                 myRigid.AddRelativeTorque(torque);
@@ -1383,21 +1383,38 @@ namespace WW2NavalAssembly
                 Vector2 targetDir = - new Vector2(myLeader.transform.up.x, myLeader.transform.up.z);
                 Vector2 forward = MathTool.Get2DCoordinate(-transform.up);
                 float angle = MathTool.SignedAngle(forward, targetDir);
-                myRigid.AddTorque(-Vector3.up * angle * 0.5f);
+                if (myLeader.status == Status.Cruise)
+                {
+                    myRigid.AddTorque(-Vector3.up * angle * 1f);
+                }
+                else if (myLeader.status == Status.Attacking)
+                {
+                    myRigid.AddTorque(-Vector3.up * angle * 0.2f);
+                }
 
                 if (myLeader.status == Status.Cruise || myLeader.status == Status.Attacking)
                 {
                     Pitch = Pitch + Mathf.Clamp((myLeader.Pitch-Pitch) * 0.2f, -1f, 1f);
                     SetHeight(myRigid.position.y + (target.y - myRigid.position.y) * 0.1f);
                 }
-                else if (myLeader.status != Status.Attacking)
+                else
                 {
                     Pitch *= 0.98f;
                 }
-
+                /*
                 Vector3 rigidTargetPosition = myRigid.position + (target - myRigid.position).normalized * Mathf.Clamp((target - transform.position).magnitude, 0, 10f) * 0.03f;
                 rigidTargetPosition.y = Mathf.Clamp(rigidTargetPosition.y, 21, 1000);
-                myRigid.MovePosition(rigidTargetPosition);
+                myRigid.MovePosition(rigidTargetPosition);*/
+
+                Vector3 rigidTargetPosition = myRigid.position + (target - myRigid.position).normalized * Mathf.Clamp((target - transform.position).magnitude, 0, 50f) * 0.2f;
+                myRigid.AddForce((rigidTargetPosition - myRigid.position) * 100f);
+                if (myRigid.position.y < 21)
+                {
+                    myRigid.velocity = new Vector3(myRigid.velocity.x, 0, myRigid.velocity.z);
+                    Vector3 pos = myRigid.position;
+                    pos.y = 21;
+                    myRigid.position = pos;
+                }
             }
         }
         public void DropLoad(bool client = false, Vector3 rotation = default, Vector3 vel = default, Vector3 randomForce = default)
