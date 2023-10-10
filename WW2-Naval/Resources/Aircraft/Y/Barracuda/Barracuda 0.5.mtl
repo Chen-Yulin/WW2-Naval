@@ -1,4 +1,4 @@
-# Blender MTL File: 'None'
+# Blender MTL File: 'Barracuda.blend'
 # Material Count: 1
 
 newmtl 材质.002
@@ -10,3 +10,4 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.450000
 d 1.000000
 illum 2
+map_Kd B:\\Tencent file\\2819314070\\FileRecv\\T\\Barracuda 0.5.png
