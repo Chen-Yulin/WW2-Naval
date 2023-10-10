@@ -334,16 +334,13 @@ namespace WW2NavalAssembly
 
         bool hasHitWater = false;
 
-        Quaternion rotationLast;
-        Quaternion rotationDelta;
-        public Vector3 angularVelocityClient
+        Vector3 LastFoward;
+        float DeltaTurning;
+        public float TurningRate
         {
             get
             {
-                float angleInDegrees;
-                Vector3 rotationAxis;
-                rotationDelta.ToAngleAxis(out angleInDegrees, out rotationAxis);
-                return rotationAxis * angleInDegrees * Mathf.Deg2Rad / Time.fixedDeltaTime;
+                return DeltaTurning / Time.fixedDeltaTime;
             }
         }
 
@@ -787,6 +784,10 @@ namespace WW2NavalAssembly
                 i++;
             }
             yield break;
+        }
+        public void UpdateRoll(bool host = true)
+        {
+            Roll = Roll + (Mathf.Clamp(TurningRate, -60,60) - Roll) * 0.05f;
         }
         public void UpdateLocalVel() // use in simulate update
         {
@@ -2441,6 +2442,24 @@ namespace WW2NavalAssembly
             }
 
         }
+        public override void SimulateFixedUpdateAlways()
+        {
+            Vector3 nowForward = -transform.up;
+            Vector3 nowUp = transform.forward;
+
+            Vector3 preForward = Vector3.ProjectOnPlane(LastFoward, transform.forward);
+            float angle = Vector3.Angle(preForward, nowForward);
+            if (Vector3.Dot(Vector3.Cross(preForward, nowForward), nowUp) > 0)
+            {
+                DeltaTurning = angle;
+            }
+            else
+            {
+                DeltaTurning = -angle;
+            }
+
+            LastFoward = nowForward;
+        }
         public override void SimulateUpdateClient()
         {
             if (AircraftMsgReceiver.Instance.ChangedStatus[myPlayerID].ContainsKey(myGuid))
@@ -2670,7 +2689,7 @@ namespace WW2NavalAssembly
                             }
                         }
 
-                        Roll = Roll + (myRigid.angularVelocity.y * 45 - Roll) * 0.05f;
+                        UpdateRoll();
                         break;
                     }
                 case Status.Attacking:
@@ -2711,7 +2730,7 @@ namespace WW2NavalAssembly
 
                         if (!inAttackRoutine)
                         {
-                            Roll = Roll + (myRigid.angularVelocity.y * 45 - Roll) * 0.05f;
+                            UpdateRoll();
                         }
 
                         break;
@@ -2746,7 +2765,7 @@ namespace WW2NavalAssembly
                                 }
                             }
                         }
-                        Roll = Roll + (myRigid.angularVelocity.y * 45 - Roll) * 0.05f;
+                        UpdateRoll();
                         break;
                     }
                 case Status.Landing:
@@ -2781,7 +2800,7 @@ namespace WW2NavalAssembly
                                 myRigid.useGravity = false;
                                 Pitch = 3f;
                                 TurnToWayPoint(0.6f, 0.1f, false, true);
-                                Roll = Roll + (myRigid.angularVelocity.y * 45 - Roll) * 0.05f;
+                                UpdateRoll();
                             }
                         }
 
@@ -2920,9 +2939,6 @@ namespace WW2NavalAssembly
         }
         public override void SimulateFixedUpdateClient()
         {
-            rotationDelta = Quaternion.Inverse(rotationLast) * transform.rotation;
-            rotationLast = transform.rotation;
-
             if (frameCount == 0)
             {
                 if (Rank.Value == 1)
@@ -2971,7 +2987,7 @@ namespace WW2NavalAssembly
                 case Status.Cruise:
                     {
                         Thrust = 60f;
-                        Roll = Roll + (-angularVelocityClient.y * 2000 - Roll) * 0.05f;
+                        UpdateRoll(false);
                         PropellerSpeed = 11;
                         FoldWing = false;
                         UndercartObject.SetActive(false);
@@ -3010,14 +3026,14 @@ namespace WW2NavalAssembly
                     PropellerSpeed = 11;
                     FoldWing = false;
                     UndercartObject.SetActive(false);
-                    Roll = Roll + (-angularVelocityClient.y * 2000 - Roll) * 0.05f;
+                    UpdateRoll(false);
                     break;
                 case Status.Attacking:
                     Thrust = 60;
                     PropellerSpeed = 11;
                     FoldWing = false;
                     UndercartObject.SetActive(false);
-                    Roll = Roll + (-angularVelocityClient.y * 2000 - Roll) * 0.05f;
+                    UpdateRoll(false);
                     break;
                 case Status.DogFighting:
                     Thrust = 60;
