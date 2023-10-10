@@ -1111,7 +1111,7 @@ namespace WW2NavalAssembly
                         catch { Debug.Log("AAforce get wrong"); }
                         a.ReduceHP((int)(Caliber * Caliber / (dist * 750f)));
                         a.IncreaseAnxiety((Caliber / (dist *10f)));
-                        a.StartCoroutine(a.DisturbedCoroutine(5, dist / radius));
+                        a.StartCoroutine(a.DisturbedCoroutine(5, radius/dist));
                         a.myRigid.AddExplosionForce(Caliber, pos, radius);
                     }
                 }

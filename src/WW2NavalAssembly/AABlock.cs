@@ -160,6 +160,11 @@ namespace WW2NavalAssembly
                 {
                     target.Value.ReduceHP((int)(caliber / 10f));
                     target.Value.IncreaseAnxiety(caliber / 100f);
+                    
+                    foreach (var member in target.Value.myGroup)
+                    {
+                        member.Value.StartCoroutine(member.Value.DisturbedCoroutine(5, caliber / 4f));
+                    }
                 }
             }
         }
