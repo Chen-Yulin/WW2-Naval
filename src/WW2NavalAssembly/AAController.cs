@@ -123,7 +123,7 @@ namespace WW2NavalAssembly
                 if (pitchRes.hasResult)
                 {
                     myTargetPosition = targetPosition + velocity * pitchRes.time;
-                    targetHeight = targetPosition.y - 20f;
+                    targetHeight = myTargetPosition.y - 20f;
                     dist2D = MathTool.Get2DDistance(myTargetPosition, myPosition);
                     pitchRes = CalculateGunPitchFromDist(dist2D, caliber, targetHeight);
                 }

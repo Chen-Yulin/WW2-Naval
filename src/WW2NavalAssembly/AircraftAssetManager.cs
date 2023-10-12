@@ -232,8 +232,8 @@ namespace WW2NavalAssembly
             Cockpit_Offset[4] = new Vector3(0, 3.2f, 3.5f);//SBD
             Cockpit_Offset[5] = new Vector3(0, 4.6f, 3.2f);//SB2C
             Cockpit_Offset[6] = new Vector3(0, 4.1f, -0.5f);//Spitfire
-            Cockpit_Offset[7] = new Vector3(0, 1.7f, 0f);//Fulmar
-            Cockpit_Offset[8] = new Vector3(0, 3.5f, 0.9f);//Barracuda
+            Cockpit_Offset[7] = new Vector3(0, 2.2f, 2.0f);//Fulmar
+            Cockpit_Offset[8] = new Vector3(0, 3.6f, 0.9f);//Barracuda
         }
 
         public Mesh GetMesh0(string name)
