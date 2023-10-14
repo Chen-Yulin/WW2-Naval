@@ -221,6 +221,7 @@ namespace WW2NavalAssembly
         public MMenu Rank;
         public MText Group;
         public MKey SwitchActive;
+        public MKey FPVKey;
 
         private Status _status = Status.Deprecated;
         public Status status
@@ -2098,7 +2099,7 @@ namespace WW2NavalAssembly
             InitGroupLine();
 
             SwitchActive = AddKey(LanguageManager.Instance.CurrentLanguage.SwitchActive, "SwitchActive", KeyCode.Alpha1);
-            
+            FPVKey = AddKey("FPV", "FPV", KeyCode.None);
             Group = AddText(LanguageManager.Instance.CurrentLanguage.Group, "AircraftGroup", "1");
 
             Type = AddMenu("Aircraft Type",0, LanguageManager.Instance.CurrentLanguage.AircraftType);
@@ -2248,6 +2249,7 @@ namespace WW2NavalAssembly
         public override void OnSimulateStop()
         {
             BlockBehaviour.BuildingBlock.GetComponent<Aircraft>().UpdateAppearance(preAppearance);
+            ModCameraController.Instance.DisableModCamerFPV();
         }
         public void OnDestroy()
         {
@@ -2259,7 +2261,7 @@ namespace WW2NavalAssembly
             {
                 Grouper.Instance.AddAircraft(myPlayerID, "null", BlockBehaviour.Guid.GetHashCode(), this);
             }
-            
+            ModCameraController.Instance.DisableModCamerFPV();
 
         }
         public override void OnSimulateTriggerStay(Collider collision)
@@ -2382,6 +2384,17 @@ namespace WW2NavalAssembly
         public override void SimulateUpdateAlways()
         {
             UpdateLocalVel();
+            if (FPVKey.IsPressed)
+            {
+                if (ModCameraController.Instance.FPV.Base == AircraftVis.transform && ModCameraController.Instance.FPV.IsActive == true)
+                {
+                    ModCameraController.Instance.DisableModCamerFPV();
+                }
+                else
+                {
+                    ModCameraController.Instance.EnableModCameraFPV(AircraftVis.transform);
+                }
+            }
         }
         public override void SimulateUpdateHost()
         {

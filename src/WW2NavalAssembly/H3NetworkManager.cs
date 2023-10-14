@@ -282,7 +282,7 @@ namespace Navalmod
                 return (ClusterSend)formatter.Deserialize(ms);
             }
         }
-        public void FixedCluster()
+        public void FixClientCluster()
         {
             if (StatMaster.isHosting)
             {
@@ -290,7 +290,7 @@ namespace Navalmod
             }
             else
             {
-                ModNetworking.SendToAll(ClientRequest.CreateMessage(new object[]
+                ModNetworking.SendToHost(ClientRequest.CreateMessage(new object[]
 {
                     0
 }));

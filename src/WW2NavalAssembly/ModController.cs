@@ -299,7 +299,7 @@ namespace WW2NavalAssembly
                 SingleInstance<SpiderFucker>.Instance.ExExpandScale = Convert.ToSingle(GUILayout.TextArea(SingleInstance<SpiderFucker>.Instance.ExExpandScale.ToString(), new GUILayoutOption[0]));
                 if (GUILayout.Button("FixClient", new GUILayoutOption[0]))
                 {
-                    SingleInstance<H3NetworkManager>.Instance.FixedCluster();
+                    SingleInstance<H3NetworkManager>.Instance.FixClientCluster();
                 }
                 //GUILayout.Label("AA Efficiency");
                 //s_AAForce = GUILayout.TextField(s_AAForce, 15);
