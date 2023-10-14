@@ -369,6 +369,13 @@ namespace WW2NavalAssembly
                 }
             }
         }
+        public bool isSelf
+        {
+            get
+            {
+                return StatMaster.isMP ? myPlayerID == PlayerData.localPlayer.networkId : true;
+            }
+        }
 
         // ============== for aircraft mass =================
         float _fuel = 1;
@@ -2413,15 +2420,18 @@ namespace WW2NavalAssembly
         public override void SimulateUpdateAlways()
         {
             UpdateLocalVel();
-            if (FPVKey.IsPressed)
+            if (isSelf)
             {
-                if (ModCameraController.Instance.FPV.Base == AircraftVis.transform && ModCameraController.Instance.FPV.IsActive == true)
+                if (FPVKey.IsPressed)
                 {
-                    ModCameraController.Instance.DisableModCamerFPV();
-                }
-                else
-                {
-                    ModCameraController.Instance.EnableModCameraFPV(AircraftVis.transform);
+                    if (ModCameraController.Instance.FPV.Base == AircraftVis.transform && ModCameraController.Instance.FPV.IsActive == true)
+                    {
+                        ModCameraController.Instance.DisableModCamerFPV();
+                    }
+                    else
+                    {
+                        ModCameraController.Instance.EnableModCameraFPV(AircraftVis.transform);
+                    }
                 }
             }
         }
