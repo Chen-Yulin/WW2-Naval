@@ -9,7 +9,7 @@
 
 	<Description>
     Version 0.9.7
-	Fix aircraft model and AA fire control
+	Fix network issue, fix cockpit FPV in MP
 	</Description>
 
 	<Icon name="icon"/>
