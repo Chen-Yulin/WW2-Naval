@@ -75,7 +75,10 @@ namespace Navalmod
                     base.transform.localPosition = lastpos;
                     base.transform.localRotation = lastqua;
                 }
-               
+                if (pingtime >= 1f)
+                {
+                    pingtime = 0f;
+                }
                 haschange = true;
                 if (pingtime == 0)
                 {
@@ -88,6 +91,7 @@ namespace Navalmod
                     if (islocal)
                     {
                         pingtime = GetComponentInParent<H3NetworkBlock>().pingtime;
+
                     }
                     time = pingtime;
                     maxtime = time;
