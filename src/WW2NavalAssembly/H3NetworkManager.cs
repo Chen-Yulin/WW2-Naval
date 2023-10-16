@@ -282,11 +282,23 @@ namespace Navalmod
                 return (ClusterSend)formatter.Deserialize(ms);
             }
         }
+        public void SendAllBB()
+        {
+            foreach (H3ClustersTest h3ClustersTest in Transform.FindObjectsOfType<H3ClustersTest>())
+            {
+                h3ClustersTest.send = true;
+            }
+            ModNetworking.SendToAll(H3NetBlock.CreateMessage(new object[]
+{
+                    PushAllPlayers()
+}));
+        }
         public void FixedCluster()
         {
             if (StatMaster.isHosting)
             {
                 PushAllCluster();
+                SendAllBB();
             }
             else
             {
