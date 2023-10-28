@@ -1130,7 +1130,6 @@ namespace WW2NavalAssembly
                 if (!TrackOn)
                 {
                     TargetCannon = CannonTrackManager.Instance.GetTrackCannon(myPlayerID);
-
                 }
                 TrackOn = true;
             }
