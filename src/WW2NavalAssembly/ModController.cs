@@ -39,6 +39,9 @@ namespace WW2NavalAssembly
         public bool windowHidden = false;
         bool _showArmour = false;
         public bool ShowChanged = false;
+        public float seahigh = 20f;
+        public bool newseaEffect = true;
+        public float seaStrenght;
         public bool ShowArmour
         {
             get
@@ -243,6 +246,9 @@ namespace WW2NavalAssembly
             {
                 ShowArmour = GUILayout.Toggle(ShowArmour, "Show Armour Layout");
                 showSea = GUILayout.Toggle(showSea, "Sea Toggle");
+                newseaEffect = GUILayout.Toggle(newseaEffect, "Advance Sea Toggle");
+                seaStrenght = GUILayout.HorizontalSlider( seaStrenght, 0.0f, 0.5f);
+                GUILayout.Label("Sea State:" + seaStrenght.ToString("0.00"));
                 deleteFog = GUILayout.Toggle(deleteFog, "Delete Fog");
                 ToggleIndent("Use SkyBox", 20, ref useSkyBox, delegate
                 {

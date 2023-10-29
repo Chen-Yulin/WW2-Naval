@@ -1,0 +1,32 @@
+ManifestFileVersion: 0
+CRC: 1146927625
+Hashes:
+  AssetFileHash:
+    serializedVersion: 2
+    Hash: cf69f6d8d82a181155ee7ec3da43ce2c
+  TypeTreeHash:
+    serializedVersion: 2
+    Hash: 0e39a7773c4135bf8214c48c8a5b21a7
+HashAppended: 0
+ClassTypes:
+- Class: 1
+  Script: {instanceID: 0}
+- Class: 4
+  Script: {instanceID: 0}
+- Class: 21
+  Script: {instanceID: 0}
+- Class: 23
+  Script: {instanceID: 0}
+- Class: 28
+  Script: {instanceID: 0}
+- Class: 33
+  Script: {instanceID: 0}
+- Class: 43
+  Script: {instanceID: 0}
+- Class: 48
+  Script: {instanceID: 0}
+- Class: 89
+  Script: {instanceID: 0}
+Assets:
+- Assets/Ocean.prefab
+Dependencies: []

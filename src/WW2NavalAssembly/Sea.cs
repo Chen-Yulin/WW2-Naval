@@ -412,30 +412,215 @@ namespace WW2NavalAssembly
         public override string Name { get; } = "Sea";
         public GameObject SeaPlane;
         public bool preShowSea = false;
+        public GameObject waterplane;
+
         public void Awake()
         {
-            
+            waterplane = ModResource.GetAssetBundle("waternew").LoadAsset<GameObject>("Ocean");
+            UnityEngine.Object.DontDestroyOnLoad(waterplane);
+            seaeffect = new GameObject();
+            //seaeffect.AddComponent<SeaSurfacer>();
+            //DontDestroyOnLoad(seaeffect);
+
+        }
+        public float Getseahigh(Vector3 pos)//可以获取点的海高
+        {
+            try
+            {
+                if (ModController.Instance.newseaEffect)
+                {
+                    Vector2 posOrigin = new Vector2(pos.x, pos.z);
+                    float result = waveCalculateAll(posOrigin / 15).y * 15 + ModController.Instance.seahigh;
+                    return result;
+                }
+                else
+                {
+                    return ModController.Instance.seahigh;
+                }
+            }
+            catch
+            {
+                return 0;
+            }
+        }
+        public float GetOriginseahigh(Vector3 pos)//可以获取点的原始海高偏移(相对20高海平面)
+        {
+            if (ModController.Instance.newseaEffect)
+            {
+                Vector2 posOrigin = new Vector2(pos.x, pos.z);
+                float result = waveCalculateAll(posOrigin / 15).y * 15;
+                return result;
+            }
+            else
+            {
+                return 0;
+            }
+        }
+        // Token: 0x06000143 RID: 323 RVA: 0x000135E0 File Offset: 0x000117E0
+        public void FixedUpdate()
+        {
         }
         public void Update()
         {
-            if (preShowSea && !ModController.Instance.showSea)
+            timeseed += Time.deltaTime * timedelta;
+            if (timeseed >= 60000)
             {
-                preShowSea = false;
+                timeseed = 0;
+            }
+
+
+            if (ModController.Instance.showSea && this.preShowSea && ModController.Instance.newseaEffect)
+            {
+                foreach (MeshRenderer meshRenderer in seachanges)
+                {
+                    meshRenderer.material.SetFloat("_SeedIn", timeseed);
+                }
+                if (seaStrenght != ModController.Instance.seaStrenght)
+                {
+                    seaStrenght = ModController.Instance.seaStrenght;
+
+                    UnityEngine.Object.Destroy(SeaPlaneFather);
+                    SpawnSea(1);
+
+                }
+
+                Vector3 pos = GetCameraPos();
+                if (lastPos != pos)
+                {
+                    SetSeaPos();
+                    lastPos = pos;
+                }
+            }
+            bool flag = this.preShowSea && !ModController.Instance.showSea;
+            if (flag)
+            {
+                this.preShowSea = false;
                 try
                 {
-                    Destroy(SeaPlane);
+                    try
+                    {
+                        UnityEngine.Object.Destroy(SeaPlaneFather);
+                        UnityEngine.Object.Destroy(SeaPlane);
+                    }
+                    catch
+                    {
+
+                    }
                 }
-                catch { }
+                catch
+                {
+                }
             }
-            else if (!preShowSea && ModController.Instance.showSea)
+            else
             {
-                preShowSea = true;
-                SeaPlane = (GameObject)Instantiate(AssetManager.Instance.Sea.Sea);
-                SeaPlane.transform.position = new Vector3(0, 20, 0);
-                SeaPlane.transform.localScale = new Vector3(8000, 1, 8000);
-                SeaPlane.AddComponent<Water>().waterMode = Water.WaterMode.Reflective;
-                SeaPlane.SetActive(true);
+                if (preShowSea && !ModController.Instance.showSea)
+                {
+                    preShowSea = false;
+                    try
+                    {
+                        UnityEngine.Object.Destroy(SeaPlaneFather);
+                        Destroy(SeaPlane);
+                    }
+                    catch { }
+                }
+                else if (!preShowSea && ModController.Instance.showSea)
+                {
+                    preShowSea = true;
+                    if (ModController.Instance.newseaEffect)
+                    {
+                        SpawnSea(1);
+                    }
+                    else
+                    {
+                        SeaPlane = (GameObject)Instantiate(AssetManager.Instance.Sea.Sea);
+                        SeaPlane.transform.position = new Vector3(0, 20, 0);
+                        SeaPlane.transform.localScale = new Vector3(8000, 1, 8000);
+                        SeaPlane.AddComponent<Water>().waterMode = Water.WaterMode.Reflective;
+                        SeaPlane.SetActive(true);
+                    }
+                }
             }
         }
+        public Vector3 GetCameraPos()
+        {
+            float delta = 5000;
+            Vector3 pos = new Vector3(Mathf.Round(Camera.main.transform.position.x / delta), 0, Mathf.Round(Camera.main.transform.position.z / delta)) * delta;
+            return pos;
+        }
+
+        public void SpawnSea(int size)//2=1km
+        {
+            SeaPlaneFather = new GameObject();
+            SeaPlaneFather.transform.position = new Vector3(0, ModController.Instance.seahigh, 0);
+            Vector3 startPos = new Vector3(-size * seedelta, 0, -size * seedelta);
+            seachanges = new MeshRenderer[size * size];
+            for (int n = 0; n < size; n++)
+            {
+                for (int m = 0; m < size; m++)
+                {
+                    GameObject seaPlane = UnityEngine.Object.Instantiate<GameObject>(waterplane);
+                    seaPlane.SetActive(true);
+                    seachanges[n * size + m] = seaPlane.GetComponentInChildren<MeshRenderer>();
+                    try
+                    {
+                        seachanges[n * size + m].material.SetFloat("_WaveStrength", seaStrenght);
+                        seachanges[n * size + m].material.SetFloat("_Scale", 100f);
+                        seachanges[n * size + m].material.SetFloat("_TScount", 100f);
+                        seachanges[n * size + m].material.SetFloat("_WaveScale", 0.2f);
+                    }
+                    catch
+                    {
+
+                    }
+                    seaPlane.transform.parent = SeaPlaneFather.transform;
+                    seaPlane.transform.localScale = new Vector3(1500f, 15f, 1500f);
+
+                    seaPlane.transform.localPosition = new Vector3((n - size / 2) * seedelta, 0, (m - size / 2) * seedelta);
+                }
+            }
+            SetSeaPos();
+        }
+        public void SetSeaPos()
+        {
+            Vector3 pos = GetCameraPos();
+            SeaPlaneFather.transform.position = new Vector3(pos.x, ModController.Instance.seahigh, pos.z);
+        }
+        public Vector3 GerstnerWave(Vector2 position, float amplitude, float frequency, float speed, float phase, float Dir, float seed)
+        {
+            float wavePhase = phase + speed * seed;
+            Vector3 waveDirection = (new Vector2(Mathf.Sin(Dir), Mathf.Cos(Dir))).normalized;
+            float waveFactor = amplitude * frequency * Mathf.Sin(frequency * Vector3.Dot(waveDirection, position) + wavePhase);
+
+            Vector3 displacement;
+            displacement.x = position.x + waveFactor * waveDirection.x;
+            displacement.z = position.y + waveFactor * waveDirection.y;
+            displacement.y = amplitude * Mathf.Cos(frequency * Vector3.Dot(waveDirection, position) + wavePhase);
+            return displacement;
+        }
+        public Vector3 waveCalculateAll(Vector2 pos)
+        {
+            Vector3 wave1 = GerstnerWave(pos, seaStrenght, _WaveSpeeds[0], _WaveLengths[0], _WaveOffsets[0], _WaveDir[0], timeseed);
+            Vector3 wave2 = GerstnerWave(pos, seaStrenght, _WaveSpeeds[1], _WaveLengths[1], _WaveOffsets[1], _WaveDir[1], timeseed);
+            Vector3 wave3 = GerstnerWave(pos, seaStrenght, _WaveSpeeds[2], _WaveLengths[2], _WaveOffsets[2], _WaveDir[2], timeseed);
+            Vector3 wave4 = GerstnerWave(pos, seaStrenght, _WaveSpeeds[3], _WaveLengths[3], _WaveOffsets[3], _WaveDir[3], timeseed);
+            return (wave1 + wave2 + wave3 + wave4) / 20;
+
+        }
+        public float timedelta = 0.7f;
+        float seedelta = 984f;
+        public float[] _WaveSpeeds = new float[4] { 1.42f, -0.89f, -0.4f, 1.68f };
+        public float[] _WaveLengths = new float[4] { 0.33f, 3.78f, 0.4f, 1.24f };
+        public float[] _WaveOffsets = new float[4] { 0.18f, 5.57f, 8.8f, 3.29f };
+        public float[] _WaveDir = new float[4] { 14.32f, 28.2f, -30.68f, -52.4f };
+        public float timeseed;
+        public float realtimeseed;
+        public MeshRenderer[] seachanges;
+        // Token: 0x0400015D RID: 349
+        public GameObject SeaPlaneFather;
+        public GameObject seaeffect;
+        public Vector3 lastPos;
+        // Token: 0x0400015E RID: 350
+        public float seaStrenght = 0.32f;
     }
 }
+
