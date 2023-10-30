@@ -567,6 +567,7 @@ namespace WW2NavalAssembly
                         seachanges[n * size + m].material.SetFloat("_Scale", 100f);
                         seachanges[n * size + m].material.SetFloat("_TScount", 100f);
                         seachanges[n * size + m].material.SetFloat("_WaveScale", 0.2f);
+                        seachanges[n * size + m].material.SetFloat("_FoamDepth", 4f);
                     }
                     catch
                     {
