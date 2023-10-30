@@ -5,11 +5,11 @@
 	<Name>WW2Naval</Name>
 	<Author>Chen, Yulin</Author> <!-- FIX: Insert your name here. -->
 	<!-- Major.Minor.Build -->
-	<Version>0.9.8</Version>
+	<Version>0.9.9</Version>
 
 	<Description>
-    Version 0.9.8
-	Fix network issue, fix cockpit FPV in MP
+    Version 0.9.9
+	Add advanced sea
 	</Description>
 
 	<Icon name="icon"/>
