@@ -1149,7 +1149,7 @@ namespace WW2NavalAssembly
                     !(TargetCannon.transform.position.y < 20) &&
                     !TargetCannon.GetComponent<BulletBehaviour>().exploded)
                     {
-                        ModCameraController.Instance.EnableModCameraMO(this.gameObject, TargetCannon.transform);
+                        ModCameraController.Instance.EnableModCameraMO(this.gameObject, TargetCannon.transform, BlockBehaviour.ParentMachine);
                     }
                 }
                 catch {

@@ -20,7 +20,7 @@ namespace WW2NavalAssembly
         public override string Name { get; } = "AA Asset Manager";
 
         public bool Loaded = false;
-        public const int typeNum = 8;
+        public const int typeNum = 10;
 
         public string[] AssetName =
         {
@@ -32,6 +32,8 @@ namespace WW2NavalAssembly
             "AA-100",
             "AA-105",
             "AA-127",
+            "AA-113",
+            "AA-134",
         };
 
         public Mesh[][] AA_mesh = new Mesh[typeNum][];
@@ -126,6 +128,16 @@ namespace WW2NavalAssembly
             GunBase_Offset[7] = new Vector3(0, 1.7f, 0.5f);
             Gun_Offset[7] = new Vector3(0f, -2.8f, -0.5f);
             GunWidth[7] = 0.25f;
+
+            Base_Offset[8] = new Vector3(0f, -1.1f, -0.2f);
+            GunBase_Offset[8] = new Vector3(0, 1.7f, 0.5f);
+            Gun_Offset[8] = new Vector3(0f, -2.8f, -0.5f);
+            GunWidth[8] = 0.25f;
+
+            Base_Offset[9] = new Vector3(0f, -1.1f, -0.2f);
+            GunBase_Offset[9] = new Vector3(0, 1.7f, 0.5f);
+            Gun_Offset[9] = new Vector3(0f, -2.8f, -0.5f);
+            GunWidth[9] = 0.25f;
         }
 
         public void Update()

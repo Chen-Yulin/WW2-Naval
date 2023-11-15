@@ -40,6 +40,10 @@ namespace WW2NavalAssembly
         {
             set {
                 _mode = value;
+                if (!MO)
+                {
+                    MO = SingleInstanceFindOnly<MouseOrbit>.Instance;
+                }
                 if (value == Mode.MO)
                 {
                     MO.isActive = true;
@@ -83,8 +87,12 @@ namespace WW2NavalAssembly
             {
                 if (!camera)
                 {
-                    camera = Camera.main;
-                    MO = camera.GetComponent<MouseOrbit>();
+                    MO = SingleInstanceFindOnly<MouseOrbit>.Instance;
+                    if (!MO)
+                    {
+                        return false;
+                    }
+                    camera = MO.GetComponent<Camera>();
                     FPV = camera.gameObject.AddComponent<FPVCamera>();
                     TAC = camera.gameObject.AddComponent<TacCamera>();
                     mode = Mode.MO;
@@ -98,13 +106,14 @@ namespace WW2NavalAssembly
             FindCamera();
         }
 
-        public void EnableModCameraMO(GameObject caller, Transform target)
+        public void EnableModCameraMO(GameObject caller, Transform target, Machine parentMachine)
         {
             mode = Mode.MO;
             BlockBehaviour target_bb = target.GetComponent<BlockBehaviour>();
             if (!target_bb)
             {
                 target_bb = target.gameObject.AddComponent<BlockBehaviour>();
+                target_bb.SetParentMachine(parentMachine);
             }
             target_bb.hasOffset = true;
 

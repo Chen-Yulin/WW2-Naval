@@ -1411,19 +1411,19 @@ namespace WW2NavalAssembly
 
         public void OnGUI()
         {
-            if (StatMaster.hudHidden)
+            try
             {
-                return;
-            }
-            if (StatMaster.isMP)
-            {
-                if (PlayerData.localPlayer.networkId != myPlayerID)
+                if (StatMaster.hudHidden)
                 {
                     return;
                 }
-            }
-            try
-            {
+                if (StatMaster.isMP)
+                {
+                    if (PlayerData.localPlayer.networkId != myPlayerID)
+                    {
+                        return;
+                    }
+                }
                 if (CurrentLeader)
                 {
                     GUI.Box(new Rect(100, 200, 200, 30), CurrentLeader.Group.Value.ToString() + " " + CurrentLeader.status.ToString());

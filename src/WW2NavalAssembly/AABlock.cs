@@ -410,6 +410,8 @@ namespace WW2NavalAssembly
             "2x100mm",
             "2x105mm",
             "2x127mm",
+            "2x113mm",
+            "2x134mm",
         };
 
 
