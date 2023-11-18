@@ -669,6 +669,10 @@ namespace WW2NavalAssembly
             InitBaseGunObjectBuild();
             AAIcon = ModResource.GetTexture("AA Mode Icon").Texture;
         }
+        public void Start()
+        {
+            gameObject.name = "AA Block";
+        }
         public override void BuildingUpdate()
         {
             HoldAppearance(false);
@@ -710,6 +714,14 @@ namespace WW2NavalAssembly
                 case 7:
                     gunNum = 2;
                     caliber = 127;
+                    break;
+                case 8:
+                    gunNum = 2;
+                    caliber = 113;
+                    break;
+                case 9:
+                    gunNum = 2;
+                    caliber = 134;
                     break;
                 default:
                     gunNum = 1;
