@@ -137,16 +137,20 @@ namespace WW2NavalAssembly
 
             foreach (var leader in Grouper.Instance.AircraftLeaders[ModController.Instance.state % 16])
             {
-                Aircraft a = leader.Value.Value;
-                float dist = Vector3.Distance(a.transform.position, transform.position);
-                if (dist < 200 + caliber * 5 && a.isFlying &&
-                    Vector3.Angle(a.transform.position - transform.position, Gun.transform.forward) < angle)
+                try
                 {
-                    if (!result.ContainsKey((int)dist))
+                    Aircraft a = leader.Value.Value;
+                    float dist = Vector3.Distance(a.transform.position, transform.position);
+                    if (dist < 200 + caliber * 5 && a.isFlying &&
+                        Vector3.Angle(a.transform.position - transform.position, Gun.transform.forward) < angle)
                     {
-                        result.Add((int)dist, a);
+                        if (!result.ContainsKey((int)dist))
+                        {
+                            result.Add((int)dist, a);
+                        }
                     }
                 }
+                catch { }
             }
 
             return result;
@@ -412,6 +416,9 @@ namespace WW2NavalAssembly
             "2x127mm",
             "2x113mm",
             "2x134mm",
+            "UK 4x40mm",
+            "UK 8x40mm",
+            "IJN 2x127mm",
         };
 
 
@@ -722,6 +729,18 @@ namespace WW2NavalAssembly
                 case 9:
                     gunNum = 2;
                     caliber = 134;
+                    break;
+                case 10:
+                    gunNum = 4;
+                    caliber = 40;
+                    break;
+                case 11:
+                    gunNum = 8;
+                    caliber = 40;
+                    break;
+                case 12:
+                    gunNum = 2;
+                    caliber = 127;
                     break;
                 default:
                     gunNum = 1;

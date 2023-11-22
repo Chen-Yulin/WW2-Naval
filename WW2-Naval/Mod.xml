@@ -242,6 +242,16 @@
 		<Texture name="AA-40-x4-1 Texture" path="AA\40\x4\40 x4 1.png"/>
 		<Texture name="AA-40-x4-2 Texture" path="AA\40\x4\40 x4 2.png"/>
 
+		<Mesh name="AA-UK-40-x4-1 Mesh" path="AA\UK 40\x4\40 x4 1.obj"/>
+		<Mesh name="AA-UK-40-x4-2 Mesh" path="AA\UK 40\x4\40 x4 2.obj"/>
+		<Texture name="AA-UK-40-x4-1 Texture" path="AA\UK 40\x4\40 x4 1.png"/>
+		<Texture name="AA-UK-40-x4-2 Texture" path="AA\UK 40\x4\40 x4 2.png"/>
+
+		<Mesh name="AA-UK-40-x8-1 Mesh" path="AA\UK 40\x8\40 x8 1.obj"/>
+		<Mesh name="AA-UK-40-x8-2 Mesh" path="AA\UK 40\x8\40 x8 2.obj"/>
+		<Texture name="AA-UK-40-x8-1 Texture" path="AA\UK 40\x8\40 x8 1.png"/>
+		<Texture name="AA-UK-40-x8-2 Texture" path="AA\UK 40\x8\40 x8 2.png"/>
+
 		<Mesh name="AA-25-1 Mesh" path="AA\25\25 1.obj"/>
 		<Mesh name="AA-25-2 Mesh" path="AA\25\25 2.obj"/>
 		<Texture name="AA-25-1 Texture" path="AA\25\25 1.png"/>
@@ -271,6 +281,11 @@
 		<Mesh name="AA-127-2 Mesh" path="AA\127\127 2.obj"/>
 		<Texture name="AA-127-1 Texture" path="AA\127\127 1.png"/>
 		<Texture name="AA-127-2 Texture" path="AA\127\127 2.png"/>
+
+		<Mesh name="AA-IJN-127-1 Mesh" path="AA\JP 127\127 1.obj"/>
+		<Mesh name="AA-IJN-127-2 Mesh" path="AA\JP 127\127 2.obj"/>
+		<Texture name="AA-IJN-127-1 Texture" path="AA\JP 127\127 1.png"/>
+		<Texture name="AA-IJN-127-2 Texture" path="AA\JP 127\127 2.png"/>
 
 		<Mesh name="AA-134-1 Mesh" path="AA\134\134 1.obj"/>
 		<Mesh name="AA-134-2 Mesh" path="AA\134\134 2.obj"/>
