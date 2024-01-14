@@ -8,6 +8,10 @@ using System.Text;
 using UnityEngine;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.IO;
+using System.Net.NetworkInformation;
+using System.Collections;
+using System.ComponentModel;
+using System.Diagnostics;
 
 namespace Navalmod
 {
@@ -21,10 +25,16 @@ namespace Navalmod
         public BlockBehaviour bb;
         public int offset;
     }
+
     public class ClusterSend
     {
         public List<H3NetCluster> clusterList;
     }
+    public class DesScale
+    {
+
+    }
+
     public class H3NetCluster
     {
         public H3NetCluster(H3NetBlock Basebb)
@@ -34,6 +44,7 @@ namespace Navalmod
         public List<H3NetBlock> blocks;
         public H3NetBlock Base;
         public ushort playerid;
+
         public static List<H3NetCluster> GetAllNetCluster()
         {
             List<H3NetCluster> h3NetClusters = new List<H3NetCluster>();
@@ -44,17 +55,31 @@ namespace Navalmod
             }
             return h3NetClusters;
         }
+        public static BlockBehaviour searchNewBase(Machine.SimCluster simCluster)
+        {
+            foreach (BlockBehaviour blockBehaviour in simCluster.Blocks)
+            {
+            }
+            return simCluster.Blocks[0];
+        }
         public static List<H3NetCluster> GetPlayerNetCluster(ushort playerid)
         {
             List<H3NetCluster> h3NetClusters = new List<H3NetCluster>();
             PlayerData playerData = Playerlist.GetPlayer(playerid);
             foreach (Machine.SimCluster simCluster in playerData.machine.simClusters)
             {
-                List<H3NetBlock> h3NetBlocks = H3NetBlock.BBstoH3NetBBs(simCluster.Blocks, simCluster.Base);
-                H3NetCluster h3NetCluster = new H3NetCluster(new H3NetBlock(simCluster.Base));
-                h3NetCluster.blocks = h3NetBlocks;
-                h3NetCluster.playerid = playerid;
-                h3NetClusters.Add(h3NetCluster);
+                try
+                {
+                    List<H3NetBlock> h3NetBlocks = H3NetBlock.BBstoH3NetBBs(simCluster.Blocks, simCluster.Base);
+                    H3NetCluster h3NetCluster = new H3NetCluster(new H3NetBlock(simCluster.Base));
+                    h3NetCluster.blocks = h3NetBlocks;
+                    h3NetCluster.playerid = playerid;
+                    h3NetClusters.Add(h3NetCluster);
+                }
+                catch
+                {
+
+                }
             }
             return h3NetClusters;
         }
@@ -106,12 +131,20 @@ namespace Navalmod
         public Vector3 scale;
         public static List<H3NetBlock> BBstoH3NetBBs(BlockBehaviour[] blockBehaviours, BlockBehaviour basebb)
         {
+
             List<H3NetBlock> h3NetBlocks = new List<H3NetBlock>();
             foreach (BlockBehaviour blockBehaviour in blockBehaviours)
             {
-                if (blockBehaviour != basebb)
+                try
                 {
-                    h3NetBlocks.Add(new H3NetBlock(blockBehaviour));
+                    if (blockBehaviour != basebb)
+                    {
+                        h3NetBlocks.Add(new H3NetBlock(blockBehaviour));
+                    }
+                }
+                catch
+                {
+                    ModConsole.Log("憋没事继承blockbehaviour,错误零件名:" + blockBehaviour.name);
                 }
             }
             return h3NetBlocks;
@@ -158,22 +191,26 @@ namespace Navalmod
 
     public class H3NetworkManager : SingleInstance<H3NetworkManager>
     {
+        public float ping = 0f;
         public static MessageType H3NetBlock;
         public static MessageType H3ClusterNet;
         public static MessageType ClientRequest;
+        public static MessageType apperarenceBlock;
+        public static MessageType h3NetBlockSet;
         public float rateSend
         {
             get { return ratesend; }
             set { ratesend = value; }
         }
-        private float ratesend = 0.1f;
+        private float ratesend = 0.05f;
         private float time;
         private float sendtoalltime;
         public H3NetworkManager()
         {
+
             OptionsMaster.maxSendRate = 10000000f;
             OptionsMaster.defaultSendRate = 10000000f;
-
+            OptionsMaster.minSendRate = 10000000f;
             H3NetBlock = ModNetworking.CreateMessageType(new DataType[]
             {
                 DataType.ByteArray
@@ -187,10 +224,24 @@ namespace Navalmod
 {
                 DataType.Integer
 });
+            apperarenceBlock = ModNetworking.CreateMessageType(new DataType[]
+{
+                DataType.String,//baseblock
+                DataType.Integer,//baseplayer
+                DataType.String//targetblock
+                
+});
+            h3NetBlockSet = ModNetworking.CreateMessageType(new DataType[]
+{
+                DataType.ByteArray
+});
             ModNetworking.Callbacks[H3NetBlock] += delegate (Message msg)//plyaercount*4+(blockcount 4 + playerid 2 + {block...(blockid+blockpos+blockrot)(35*block*count)})*playercount
             {
                 byte[] recbytes = (byte[])msg.GetData(0);
+                //ModConsole.Log(recbytes.Length.ToString());
+
                 PullAllPlayers(recbytes);
+                ping = 0f;
             };
             ModNetworking.Callbacks[H3ClusterNet] += delegate (Message msg)//plyaercount*4+(blockcount 4 + playerid 2 + {block...(blockid+blockpos+blockrot)(35*block*count)})*playercount
             {
@@ -198,14 +249,6 @@ namespace Navalmod
                 ClusterSend clusterSend = DeserializeClusterSend(recbytes);
                 ApplyAllClusters(clusterSend.clusterList);
 
-            };
-            ModNetworking.Callbacks[ClientRequest] += delegate (Message msg)//plyaercount*4+(blockcount 4 + playerid 2 + {block...(blockid+blockpos+blockrot)(35*block*count)})*playercount
-            {
-                int type = (int)msg.GetData(0);
-                if (type == 0)
-                {
-                    PushAllCluster();
-                }
             };
         }
         public List<GameObject> clusterlist = new List<GameObject>();
@@ -229,6 +272,8 @@ namespace Navalmod
             }
             clusterlistLast = clusterlist;
         }
+
+        //-----------------------
         public void FixedUpdate()
         {
 
@@ -238,6 +283,7 @@ namespace Navalmod
             {
                 time += Time.fixedDeltaTime;
                 sendtoalltime += Time.fixedDeltaTime;
+
                 if (time >= ratesend)
                 {
                     time = 0;
@@ -263,6 +309,10 @@ namespace Navalmod
 }));
                 }
 
+            }
+            else
+            {
+                ping += Time.fixedDeltaTime;
             }
         }
         public byte[] SerializePartCluster(ClusterSend cluster)
@@ -319,6 +369,18 @@ namespace Navalmod
 {
                     byteArray
 }));
+            /*
+            foreach (blockset blockset in FindObjectsOfType<blockset>()) {
+                if (blockset.appearancePart.IsActive) {
+
+                    ModNetworking.SendToAll(apperarenceBlock.CreateMessage(new object[]
+        {
+                    blockset.blockBehaviour.BuildingBlock.Guid.ToString(),
+                    (int)blockset.blockBehaviour._parentMachine.PlayerID,
+                    blockset.sonTo.GetComponent<BlockBehaviour>().BuildingBlock.Guid.ToString(),
+        })); ; }
+            }*/
+
         }
         public void PullAllPlayers(byte[] bytes)
         {
@@ -425,8 +487,8 @@ namespace Navalmod
 
                                                 blockBehaviours.Remove(blockBehaviour);
                                                 byteandbb.Add(new byteAndBB(blockBehaviour, offset));
+                                                offset += 19;//35
 
-                                                offset += 19;
 
 
                                             }
@@ -522,7 +584,7 @@ namespace Navalmod
             NetworkCompression.WriteArray(send, ret, number);
             return ret;
         }
-        public byte[] PushPlayer(ushort player)//blockcount 4 + playerid 2 + {block...(blockid+blockpos+blockrot)(35*block*count)}   blockcount*35+6
+        public byte[] PushPlayer(ushort player)//blockcount 4 + playerid 2 + {block...(blockid+blockpos+blockrot+blockhealth)(39*block*count)}   blockcount*39+6
         {
             PlayerData playerData = Playerlist.Players[player];
 
@@ -535,19 +597,30 @@ namespace Navalmod
                     {
                         foreach (BlockBehaviour blockBehaviour in block.Blocks)
                         {
-                            if (blockBehaviour.transform.GetComponent<H3ClustersTest>() == null && blockBehaviour != block.Base)
+                            try
                             {
-                                blockBehaviour.transform.gameObject.AddComponent<H3ClustersTest>().ClusterBaseBlock = block.Base;
-
-                            }
-                            H3ClustersTest h3ClustersTest = blockBehaviour.transform.GetComponent<H3ClustersTest>();
-                            if (h3ClustersTest.send == true)
-                            {
-                                h3ClustersTest.send = false;
-                                if (blockBehaviour.GetComponent<H3NetworkBlock>() == true)
+                                if (blockBehaviour.GetComponent<H3NetworkBlock>() != null)
                                 {
-                                    blockBehaviours.Add(blockBehaviour);
+                                    if (blockBehaviour.transform.GetComponent<H3ClustersTest>() == null && blockBehaviour != block.Base)
+                                    {
+                                        blockBehaviour.transform.gameObject.AddComponent<H3ClustersTest>().ClusterBaseBlock = block.Base;
+
+                                    }
+
+                                    H3ClustersTest h3ClustersTest = blockBehaviour.transform.GetComponent<H3ClustersTest>();
+                                    if (h3ClustersTest.send == true)
+                                    {
+                                        h3ClustersTest.send = false;
+                                        if (blockBehaviour.GetComponent<H3NetworkBlock>() == true)
+                                        {
+                                            blockBehaviours.Add(blockBehaviour);
+                                        }
+
+                                    }
                                 }
+                            }
+                            catch
+                            {
 
                             }
                         }
@@ -580,12 +653,12 @@ namespace Navalmod
                     BitConverter.GetBytes(ints[1]).CopyTo(bytes, 4);
                     BitConverter.GetBytes(ints[2]).CopyTo(bytes, 8);
                     BitConverter.GetBytes(ints[3]).CopyTo(bytes, 12);
-                    byte[] buffer = new byte[bytes.Length + 19];
+                    byte[] buffer = new byte[bytes.Length + 19];//19+4
                     int offset = 0;
                     Buffer.BlockCopy(bytes, 0, buffer, 0, bytes.Length);
                     offset += bytes.Length;
-                    h3NetworkBlock.PushObject(ref offset, buffer);//19
-                    send[i] = buffer;//35
+                    h3NetworkBlock.PushObject(ref offset, buffer);//35
+                    send[i] = buffer;//39
                 }
                 catch
                 {
