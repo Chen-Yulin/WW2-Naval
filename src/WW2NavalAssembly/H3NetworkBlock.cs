@@ -23,8 +23,6 @@ namespace Navalmod
         public bool islocal = false;
         public bool localchangeenter;
         public bool isClusterBase;
-        public void Start(){
-        }
         public H3NetworkBlock()
         {
             lastpos = Vector3.zero;
@@ -34,14 +32,14 @@ namespace Navalmod
         public void PushObject(ref int offset, byte[] buffer)// byte[19]
         {
             H3NetCompression.CompressPosition(base.transform.position, buffer, offset);//12
-            NetworkCompression.CompressRotation(base.transform.rotation, buffer,offset + 12);//7
+            NetworkCompression.CompressRotation(base.transform.rotation, buffer, offset + 12);//7
             offset += 19;
         }
         public void PushObjectLocal(ref int offset, byte[] buffer)// byte[19]
         {
             BlockBehaviour bb = base.GetComponent<H3ClustersTest>().ClusterBaseBlock;
             H3NetCompression.CompressPosition(bb.transform.InverseTransformPoint(base.transform.position), buffer, offset);//12
-            //ModConsole.Log(bb.transform.InverseTransformPoint(base.transform.position).ToString()+"localsend");
+            ModConsole.Log(bb.transform.InverseTransformPoint(base.transform.position).ToString() + "localsend");
             NetworkCompression.CompressRotation(Quaternion.Inverse(bb.transform.rotation) * base.transform.rotation, buffer, offset + 12);//7
             offset += 19;
         }
@@ -57,8 +55,8 @@ namespace Navalmod
 
                 lastpos = base.transform.position;
                 lastqua = base.transform.rotation;
-               
-                
+
+
                 if (islocal)
                 {
                     lastpos = base.transform.localPosition;
@@ -75,11 +73,12 @@ namespace Navalmod
                     base.transform.localPosition = lastpos;
                     base.transform.localRotation = lastqua;
                 }
-                if (pingtime >= 1f)
+                if (pingtime >= 10f)
                 {
                     pingtime = 0f;
                 }
                 haschange = true;
+                pingtime = 0.25f;
                 if (pingtime == 0)
                 {
                     SmoothToPoint(SingleInstance<H3NetworkManager>.Instance.rateSend, nowpos, base.transform.position);
@@ -87,12 +86,12 @@ namespace Navalmod
                 }
                 else
                 {
-                    
+
                     if (islocal)
                     {
-                        pingtime = GetComponentInParent<H3NetworkBlock>().pingtime;
-
+                        // pingtime = GetComponentInParent<H3NetworkBlock>().pingtime;
                     }
+
                     time = pingtime;
                     maxtime = time;
                 }
@@ -112,12 +111,12 @@ namespace Navalmod
             {
                 time -= Time.deltaTime;
 
-                if (blockBehaviour.isSimulating) {
+                if (blockBehaviour.isSimulating)
+                {
                     if (haschange)
                     {
                         if (islocal)
                         {
-                            
                             pingtime += Time.deltaTime;
                             base.transform.localPosition = Vector3.Lerp(lastpos, nowpos, (maxtime - Math.Max(time, 0)) / maxtime);
                             base.transform.localRotation = Quaternion.Lerp(lastqua, nowqua, (maxtime - Math.Max(time, 0)) / maxtime);
@@ -138,11 +137,11 @@ namespace Navalmod
             base.transform.position = Vector3.Lerp(lastpos, nowpos, (maxtime - Math.Max(time, 0)) / maxtime);
             base.transform.rotation = Quaternion.Lerp(lastqua, nowqua, (maxtime - Math.Max(time, 0)) / maxtime);
         }
-        public void SmoothToPoint(float time,Vector3 nowpos,Vector3 lastpos)
+        public void SmoothToPoint(float time, Vector3 nowpos, Vector3 lastpos)
         {
             this.time = time;
             maxtime = time;
-            deltavec = (nowpos - lastpos).normalized*time;
+            deltavec = (nowpos - lastpos).normalized * time;
         }
     }
 }
