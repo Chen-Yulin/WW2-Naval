@@ -481,6 +481,16 @@ namespace WW2NavalAssembly
         {
             UpdateArmVis();
         }
+        public void FixedUpdate()
+        {
+            if (BlockBehaviour.isSimulating)
+            {
+                if (StatMaster.isClient)
+                {
+                    MySimulateFixedUpdateClient();
+                }
+            }
+        }
         public override void OnSimulateStart()
         {
             preVel = 0;
@@ -583,7 +593,7 @@ namespace WW2NavalAssembly
 
             
         }
-        public override void SimulateFixedUpdateClient()
+        public void MySimulateFixedUpdateClient()
         {
             frameCount++;
             CalculateThrustPercentage();

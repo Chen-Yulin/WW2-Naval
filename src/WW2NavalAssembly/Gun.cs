@@ -1502,6 +1502,18 @@ namespace WW2NavalAssembly
                 FireControlManager.Instance.RemoveGun(myPlayerID, myGuid);
             }
         }
+
+        public void FixedUpdate()
+        {
+            if (BlockBehaviour.isSimulating)
+            {
+                if (StatMaster.isClient)
+                {
+                    MySimulateFixedUpdateClient();
+                }
+            }
+        }
+
         public override void SimulateUpdateAlways()
         {
             if (isSelf)
@@ -1686,7 +1698,7 @@ namespace WW2NavalAssembly
                 }
             }
         }
-        public override void SimulateFixedUpdateClient()
+        public void MySimulateFixedUpdateClient()
         {
             if (muzzleStage < 7)
             {
