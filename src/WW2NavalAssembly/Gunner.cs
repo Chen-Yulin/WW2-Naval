@@ -907,6 +907,17 @@ namespace WW2NavalAssembly
                 }
             }
         }
+        public void FixedUpdate()
+        {
+            if (BlockBehaviour.isSimulating)
+            {
+                if (StatMaster.isClient)
+                {
+                    MySimulateFixedUpdateClient();
+                }
+            }
+        }
+
         public override void OnSimulateStart()
         {
             AA = !DefaultAA.isDefaultValue;
@@ -1014,11 +1025,23 @@ namespace WW2NavalAssembly
         }
         public override void SimulateFixedUpdateAlways()
         {
+            
+            
+        }
+        public override void SimulateFixedUpdateHost()
+        {
+
+            if (!GunnerActive)
+            {
+                SetWW2Hinge(false);
+                Fire(false);
+                return;
+            }
             if (!initialized)
             {
                 initialized = true;
                 GetMyCaliber();
-                turningSpeed = 1 / Mathf.Clamp(bindedCaliber, 40, 510) * 50 * Mathf.Clamp(TurningSpeed.Value,0.1f,1f);
+                turningSpeed = 1 / Mathf.Clamp(bindedCaliber, 40, 510) * 50 * Mathf.Clamp(TurningSpeed.Value, 0.1f, 1f);
                 FindHinge();
                 FindGun();
                 if (OrienHinge.Count != 0)
@@ -1053,16 +1076,6 @@ namespace WW2NavalAssembly
 
             RejectSpecific();
             GetFCPara();
-            
-        }
-        public override void SimulateFixedUpdateHost()
-        {
-            if (!GunnerActive)
-            {
-                SetWW2Hinge(false);
-                Fire(false);
-                return;
-            }
             if (StatMaster.isMP && initialized)
             {
                 if (myPlayerID == 0)
@@ -1079,12 +1092,51 @@ namespace WW2NavalAssembly
                 EmulateControl();
             }
         }
-        public override void SimulateFixedUpdateClient()
+        public void MySimulateFixedUpdateClient()
         {
             if (!GunnerActive)
             {
                 return;
             }
+            if (!initialized)
+            {
+                initialized = true;
+                GetMyCaliber();
+                turningSpeed = 1 / Mathf.Clamp(bindedCaliber, 40, 510) * 50 * Mathf.Clamp(TurningSpeed.Value, 0.1f, 1f);
+                FindHinge();
+                FindGun();
+                if (OrienHinge.Count != 0)
+                {
+                    if (OrienHinge[0].LimitsSlider.IsActive)
+                    {
+                        OrienLimitValid = true;
+
+                        OrienCenterAngle = (-OrienHinge[0].LimitsSlider.Min + OrienHinge[0].LimitsSlider.Max) / 2;
+                        OrienGunSpan = (OrienHinge[0].LimitsSlider.Min + OrienHinge[0].LimitsSlider.Max) / 2;
+                        OrienLimitValid = GenerateHingeCenter();
+                    }
+                    else
+                    {
+                        Debug.Log("Slider not active");
+                        OrienLimitValid = false;
+                    }
+                }
+                else
+                {
+                    OrienLimitValid = false;
+                }
+                if (PitchHinge.Count != 0)
+                {
+                    if (PitchHinge[0].LimitsSlider.IsActive)
+                    {
+                        PitchCenterAngle = (-PitchHinge[0].LimitsSlider.Min + PitchHinge[0].LimitsSlider.Max) / 2;
+                        PitchGunSpan = (PitchHinge[0].LimitsSlider.Min + PitchHinge[0].LimitsSlider.Max) / 2;
+                    }
+                }
+            }
+
+            RejectSpecific();
+            GetFCPara();
             if (myPlayerID == PlayerData.localPlayer.networkId)
             {
                 SendTargetToHost();

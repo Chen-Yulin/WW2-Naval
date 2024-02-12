@@ -309,6 +309,16 @@ namespace WW2NavalAssembly
         {
             RemoveSelfFromFC();
         }
+        public void FixedUpdate()
+        {
+            if (BlockBehaviour.isSimulating)
+            {
+                if (StatMaster.isClient)
+                {
+                    MySimulateFixedUpdateClient();
+                }
+            }
+        }
         public override void SimulateUpdateAlways()
         {
             if (isSelf)
@@ -490,7 +500,7 @@ namespace WW2NavalAssembly
                 ModNetworking.SendToAll(WeaponMsgReceiver.FireMsg.CreateMessage(myPlayerID, myGuid, Vector3.zero, Cannon.transform.eulerAngles, Rigidbody.velocity, (float)20));
             }
         }
-        public override void SimulateFixedUpdateClient()
+        public void MySimulateFixedUpdateClient()
         {
             UpdateSelfToFC();
         }

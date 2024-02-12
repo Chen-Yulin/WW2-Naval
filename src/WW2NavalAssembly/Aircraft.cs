@@ -1393,7 +1393,7 @@ namespace WW2NavalAssembly
                 Vector2 targetDir = - new Vector2(myLeader.transform.up.x, myLeader.transform.up.z);
                 Vector2 forward = MathTool.Get2DCoordinate(-transform.up);
                 float angle = MathTool.SignedAngle(forward, targetDir);
-                if (myLeader.status == Status.Cruise)
+                if (myLeader.status == Status.Cruise || myLeader.status == Status.Returning)
                 {
                     myRigid.AddTorque(-Vector3.up * angle * 1f);
                 }
@@ -1402,7 +1402,7 @@ namespace WW2NavalAssembly
                     myRigid.AddTorque(-Vector3.up * angle * 0.2f);
                 }
 
-                if (myLeader.status == Status.Cruise || myLeader.status == Status.Attacking)
+                if (myLeader.status == Status.Cruise || myLeader.status == Status.Attacking || myLeader.status == Status.Returning)
                 {
                     Pitch = Pitch + Mathf.Clamp((myLeader.Pitch-Pitch) * 0.2f, -1f, 1f);
                     SetHeight(myRigid.position.y + (target.y - myRigid.position.y) * 0.1f);
@@ -2417,6 +2417,16 @@ namespace WW2NavalAssembly
                 GroupLine.SetActive(false);
             }
         }
+        public void FixedUpdate()
+        {
+            if (BlockBehaviour.isSimulating)
+            {
+                if (StatMaster.isClient)
+                {
+                    MySimulateFixedUpdateClient();
+                }
+            }
+        }
         public override void SimulateUpdateAlways()
         {
             UpdateLocalVel();
@@ -2479,24 +2489,6 @@ namespace WW2NavalAssembly
                     break;
             }
 
-        }
-        public override void SimulateFixedUpdateAlways()
-        {
-            Vector3 nowForward = -transform.up;
-            Vector3 nowUp = transform.forward;
-
-            Vector3 preForward = Vector3.ProjectOnPlane(LastFoward, transform.forward);
-            float angle = Vector3.Angle(preForward, nowForward);
-            if (Vector3.Dot(Vector3.Cross(preForward, nowForward), nowUp) > 0)
-            {
-                DeltaTurning = angle;
-            }
-            else
-            {
-                DeltaTurning = -angle;
-            }
-
-            LastFoward = nowForward;
         }
         public override void SimulateUpdateClient()
         {
@@ -2585,6 +2577,21 @@ namespace WW2NavalAssembly
         }
         public override void SimulateFixedUpdateHost()
         {
+            Vector3 nowForward = -transform.up;
+            Vector3 nowUp = transform.forward;
+
+            Vector3 preForward = Vector3.ProjectOnPlane(LastFoward, transform.forward);
+            float angle = Vector3.Angle(preForward, nowForward);
+            if (Vector3.Dot(Vector3.Cross(preForward, nowForward), nowUp) > 0)
+            {
+                DeltaTurning = angle;
+            }
+            else
+            {
+                DeltaTurning = -angle;
+            }
+
+            LastFoward = nowForward;
             if (frameCount == 0)
             {
                 if (Rank.Value == 1)
@@ -2976,8 +2983,23 @@ namespace WW2NavalAssembly
 
 
         }
-        public override void SimulateFixedUpdateClient()
+        public void MySimulateFixedUpdateClient()
         {
+            Vector3 nowForward = -transform.up;
+            Vector3 nowUp = transform.forward;
+
+            Vector3 preForward = Vector3.ProjectOnPlane(LastFoward, transform.forward);
+            float angle = Vector3.Angle(preForward, nowForward);
+            if (Vector3.Dot(Vector3.Cross(preForward, nowForward), nowUp) > 0)
+            {
+                DeltaTurning = angle;
+            }
+            else
+            {
+                DeltaTurning = -angle;
+            }
+
+            LastFoward = nowForward;
             if (frameCount == 0)
             {
                 if (Rank.Value == 1)
