@@ -1023,11 +1023,7 @@ namespace WW2NavalAssembly
             GunnerActive = GunnerMsgReceiver.Instance.GunnerActive[myPlayerID][myGuid];
             AA = GunnerMsgReceiver.Instance.GunnerAA[myPlayerID][myGuid];
         }
-        public override void SimulateFixedUpdateAlways()
-        {
-            
-            
-        }
+
         public override void SimulateFixedUpdateHost()
         {
 

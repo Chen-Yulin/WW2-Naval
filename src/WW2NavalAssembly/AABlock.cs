@@ -265,7 +265,7 @@ namespace WW2NavalAssembly
                     _real_yaw = Mathf.Clamp(_real_yaw, -MinLimit, MaxLimit);
                     _real_pitch = Mathf.Clamp(_real_pitch, -5, 90);
                 }
-                ok = Mathf.Abs(Yaw - TargetYaw) * Mathf.Cos(Mathf.Clamp(TargetPitch + 5f,0,90)) + Mathf.Abs(Pitch - TargetPitch) < 10f;
+                ok = Mathf.Abs(_real_yaw - TargetYaw) + Mathf.Abs(_real_pitch - TargetPitch) < 10;
             }
             Shoot = ok;
         }
@@ -803,7 +803,14 @@ namespace WW2NavalAssembly
                 AABlockMsgReceiver.Instance.aaActive[myPlayerID].Remove(myGuid);
             }
         }
-        public override void SimulateFixedUpdateAlways()
+        public void FixedUpdate()
+        {
+            if (BlockBehaviour.isSimulating)
+            {
+                MySimulateFixedUpdateAlways();
+            }
+        }
+        public void MySimulateFixedUpdateAlways()
         {
             try
             {
