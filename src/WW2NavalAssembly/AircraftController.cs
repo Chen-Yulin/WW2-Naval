@@ -884,7 +884,15 @@ namespace WW2NavalAssembly
             CurrentLeader = null;
         }
 
-        public override void SimulateFixedUpdateAlways()
+        public void FixedUpdate()
+        {
+            if (BlockBehaviour && BlockBehaviour.isSimulating)
+            {
+                MySimulateFixedUpdateAlways();
+            }
+        }
+
+        public void MySimulateFixedUpdateAlways()
         {
             FlightDataBase.Instance.UpdateDeck(myPlayerID, true);
             FlightDataBase.Instance.UpdateHangar(myPlayerID);

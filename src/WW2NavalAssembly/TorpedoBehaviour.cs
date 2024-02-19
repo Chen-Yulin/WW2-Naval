@@ -17,16 +17,18 @@ namespace WW2NavalAssembly
     {
         public override string Name { get; } = "Torpedo Msg Receiver";
 
-        public static MessageType TorpedoDataMsg = ModNetworking.CreateMessageType(DataType.Integer, DataType.Integer, DataType.Vector3, DataType.Boolean);
+        public static MessageType TorpedoDataMsg = ModNetworking.CreateMessageType(DataType.Integer, DataType.Integer, DataType.Vector3, DataType.Vector3, DataType.Boolean);
         public static MessageType TorpedoGuidMsg = ModNetworking.CreateMessageType(DataType.Integer, DataType.Integer, DataType.Integer);
         public class TorpedoData
         {
             public Vector3 position;
+            public Vector3 euler;
             public bool exploded = false;
             public bool updated = false;
-            public TorpedoData(Vector3 position, bool exploded)
+            public TorpedoData(Vector3 position, Vector3 euler, bool exploded)
             {
                 this.position = position;
+                this.euler = euler;
                 this.exploded = exploded;
                 this.updated = true;
             }
@@ -52,11 +54,11 @@ namespace WW2NavalAssembly
         {
             if (torpedoData[(int)msg.GetData(0)].ContainsKey((int)msg.GetData(1)))
             {
-                torpedoData[(int)msg.GetData(0)][(int)msg.GetData(1)] = new TorpedoData((Vector3)msg.GetData(2), (bool)msg.GetData(3));
+                torpedoData[(int)msg.GetData(0)][(int)msg.GetData(1)] = new TorpedoData((Vector3)msg.GetData(2), (Vector3)msg.GetData(3), (bool)msg.GetData(4));
             }
             else
             {
-                torpedoData[(int)msg.GetData(0)].Add((int)msg.GetData(1), new TorpedoData((Vector3)msg.GetData(2), (bool)msg.GetData(3)));
+                torpedoData[(int)msg.GetData(0)].Add((int)msg.GetData(1), new TorpedoData((Vector3)msg.GetData(2), (Vector3)msg.GetData(3), (bool)msg.GetData(4)));
             }
             
         }
@@ -323,7 +325,7 @@ namespace WW2NavalAssembly
             //myGuid = System.Guid.NewGuid().GetHashCode();
             if (!TorpedoMsgReceiver.Instance.torpedoData[myPlayerID].ContainsKey(parentGuid))
             {
-                TorpedoMsgReceiver.Instance.torpedoData[myPlayerID].Add(parentGuid, new TorpedoMsgReceiver.TorpedoData(transform.position, false));
+                TorpedoMsgReceiver.Instance.torpedoData[myPlayerID].Add(parentGuid, new TorpedoMsgReceiver.TorpedoData(transform.position, transform.eulerAngles, false));
             }
             else
             {
@@ -370,7 +372,7 @@ namespace WW2NavalAssembly
                         myRigid.AddForce(-transform.up * 19f + new Vector3(0, 20 - depth - transform.position.y + 6.5f, 0));
                     }else if (mode == 2)
                     {
-                        myRigid.AddForce(-transform.up * 8f + new Vector3(0, 20 - depth - transform.position.y + 6.5f, 0));
+                        myRigid.AddForce(-transform.up * 10f + new Vector3(0, (20 - depth - transform.position.y) * 0.3f + 6.5f, 0));
                     }
 
                     if (StatMaster.isMP)
@@ -379,12 +381,12 @@ namespace WW2NavalAssembly
                         {
                             if (DetectCollisionHost())
                             {
-                                ModNetworking.SendToAll(TorpedoMsgReceiver.TorpedoDataMsg.CreateMessage(myPlayerID, parentGuid, transform.position, true));
+                                ModNetworking.SendToAll(TorpedoMsgReceiver.TorpedoDataMsg.CreateMessage(myPlayerID, parentGuid, transform.position, transform.eulerAngles, true));
                                 Destroy(gameObject);
                             }
                             else if(mySeed == ModController.Instance.longerState) 
                             {
-                                ModNetworking.SendToAll(TorpedoMsgReceiver.TorpedoDataMsg.CreateMessage(myPlayerID, parentGuid, transform.position, false));
+                                ModNetworking.SendToAll(TorpedoMsgReceiver.TorpedoDataMsg.CreateMessage(myPlayerID, parentGuid, transform.position, transform.eulerAngles, false));
                             }
 
                         }
@@ -404,6 +406,7 @@ namespace WW2NavalAssembly
                         TorpedoMsgReceiver.Instance.torpedoData[myPlayerID][parentGuid].updated = false;
                         //Debug.Log("Client Torpedo justify");
                         transform.position = TorpedoMsgReceiver.Instance.torpedoData[myPlayerID][parentGuid].position;
+                        transform.eulerAngles = TorpedoMsgReceiver.Instance.torpedoData[myPlayerID][parentGuid].euler;
                         //Debug.Log("Update Position " + transform.position.ToString());
                         if (TorpedoMsgReceiver.Instance.torpedoData[myPlayerID][parentGuid].exploded)
                         {

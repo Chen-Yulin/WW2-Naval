@@ -336,7 +336,14 @@ namespace WW2NavalAssembly
                 AAControllerMsgReceiver.Instance.targetIndex[myPlayerID].Remove(myGuid);
             }
         }
-        public override void SimulateFixedUpdateAlways()
+        public void FixedUpdate()
+        {
+            if (BlockBehaviour.isSimulating)
+            {
+                MySimulateFixedUpdateAlways();
+            }
+        }
+        public void MySimulateFixedUpdateAlways()
         {
             if (!AAFCInitialized)
             {

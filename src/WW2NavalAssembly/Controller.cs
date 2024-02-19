@@ -920,7 +920,15 @@ namespace WW2NavalAssembly
         {
             ControllerDataManager.Instance.ControllerPos[myPlayerID] = transform.position;
         }
-        public override void SimulateFixedUpdateAlways()
+        public void FixedUpdate()
+        {
+            if (BlockBehaviour.isSimulating)
+            {
+                MySimulateFixedUpdateAlways();
+            }
+        }
+
+        public void MySimulateFixedUpdateAlways()
         {
             // offset key response
             if (OffsetUp.IsHeld)
