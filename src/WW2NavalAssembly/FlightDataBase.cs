@@ -40,6 +40,22 @@ namespace WW2NavalAssembly
 
         public List<Engine>[] engines = new List<Engine>[16];
 
+        public Queue<Aircraft>[] LandingQueue = new Queue<Aircraft>[16];
+
+        public void CheckLandingQueue(int player)
+        {
+            Queue<Aircraft> newQ = new Queue<Aircraft>();
+            while (LandingQueue[player].Count > 0)
+            {
+                Aircraft a = LandingQueue[player].Dequeue();
+                if (a != null && (a.status == Aircraft.Status.Landing || a.status == Aircraft.Status.Returning))
+                {
+                    newQ.Enqueue(a);
+                }
+            }
+            LandingQueue[player] = newQ;
+        }
+
         float AIRCRAFT_WIDTH = 1.6f;
         float AIRCRAFT_LENGTH_HANGAR = 2f;
         float AIRCRAFT_LENGTH_DECK = 3f;
@@ -65,6 +81,8 @@ namespace WW2NavalAssembly
             public int Total_num;
 
             public int Occupied_num = 0;
+
+            
 
             //public Vector3[] Corner = new Vector3[4];
             public Deck()
@@ -128,6 +146,7 @@ namespace WW2NavalAssembly
                 this.RightMargin = (Width - (Width_num - 1) * AIRCRAFT_WIDTH) / 2f;
                 this.Occupied_num = occupied_num;
             }
+            
         }
         public void GetTakeOffPosition(int playerID)
         {
@@ -811,6 +830,7 @@ namespace WW2NavalAssembly
                 HangarLine[i] = new Dictionary<string, GameObject[]>();
                 Decks[i] = new Deck();
                 engines[i] = new List<Engine>();
+                LandingQueue[i] = new Queue<Aircraft>();
             }
             InitLine();
         }
