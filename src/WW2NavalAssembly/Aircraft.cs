@@ -1395,22 +1395,26 @@ namespace WW2NavalAssembly
             if (GroupTargetSpot && myLeader)
             {
                 Vector3 target = GroupTargetSpot.position;
-                Vector2 targetDir = - new Vector2(myLeader.transform.up.x, myLeader.transform.up.z);
+                Vector3 targetPred = target - myLeader.transform.up * 20f;
+                Vector3 targetDir = target - transform.position;
+                Vector3 targetDirPred = targetPred - transform.position;
+                Vector2 targetDirYaw = MathTool.Get2DCoordinate(targetDirPred);
                 Vector2 forward = MathTool.Get2DCoordinate(-transform.up);
-                float angle = MathTool.SignedAngle(forward, targetDir);
+                float YawAngle = MathTool.SignedAngle(forward, targetDirYaw);
                 if (myLeader.status == Status.Cruise || myLeader.status == Status.Returning)
                 {
-                    myRigid.AddTorque(-Vector3.up * angle * 1f);
+                    //Debug.Log(-Vector3.up * Mathf.Clamp(YawAngle, -6, 6) * 2f);
+                    myRigid.AddTorque(-Vector3.up * Mathf.Clamp(YawAngle, -11, 11) * 2f);
                 }
                 else if (myLeader.status == Status.Attacking)
                 {
-                    myRigid.AddTorque(-Vector3.up * angle * 0.2f);
+                    //myRigid.AddTorque(-Vector3.up * Mathf.Clamp(YawAngle, -11, 11) * 3f / myRigid.mass);
                 }
 
                 if (myLeader.status == Status.Cruise || myLeader.status == Status.Attacking || myLeader.status == Status.Returning)
                 {
-                    Pitch = Pitch + Mathf.Clamp((myLeader.Pitch-Pitch) * 0.2f, -1f, 1f);
-                    SetHeight(myRigid.position.y + (target.y - myRigid.position.y) * 0.1f);
+                    Pitch += (90 - Vector3.Angle(Vector3.up, targetDirPred) - Pitch) * 0.05f;
+                    //SetHeight(myRigid.position.y + (target.y - myRigid.position.y) * 0.1f);
                 }
                 else
                 {
@@ -1421,8 +1425,8 @@ namespace WW2NavalAssembly
                 rigidTargetPosition.y = Mathf.Clamp(rigidTargetPosition.y, 21, 1000);
                 myRigid.MovePosition(rigidTargetPosition);*/
 
-                Vector3 rigidTargetPosition = myRigid.position + (target - myRigid.position).normalized * Mathf.Clamp((target - transform.position).magnitude, 0, 50f) * 0.2f;
-                myRigid.AddForce((rigidTargetPosition - myRigid.position) * 100f);
+                myRigid.AddForce(-transform.up * Mathf.Clamp(Vector3.Dot(-transform.up, targetDir),-20,40) * 2f);
+
                 if (myRigid.position.y < 21)
                 {
                     myRigid.velocity = new Vector3(myRigid.velocity.x, 0, myRigid.velocity.z);
