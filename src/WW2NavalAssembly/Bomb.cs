@@ -480,12 +480,33 @@ namespace WW2NavalAssembly
                 catch { }
 
                 ExploDestroyBalloon(hit.point, AP);
+                ExploDamageAA(transform.position, AP);
             }
             catch { }
 
             Destroy(gameObject);
 
 
+        }
+        private void ExploDamageAA(Vector3 pos, bool AP = true)
+        {
+            
+            //Debug.Log(armourGuid);
+            Collider[] ExploCol = Physics.OverlapCapsule(transform.position, transform.position + Vector3.up * 3f, Mathf.Sqrt(Weight) / (AP ? 20f : 13f));
+            foreach (Collider hitedCollider in ExploCol)
+            {
+                try
+                {
+                    AABlock aa = hitedCollider.attachedRigidbody.GetComponent<AABlock>();
+                    if (aa)
+                    {
+                        float dist = Vector3.Distance(aa.transform.position, pos);
+                        aa.ReduceHealth(100 / (dist + 0.5f));
+                        //Debug.Log("Damage AA");
+                    }
+                }
+                catch { }
+            }
         }
         private void PlayExploInAir(bool AP = true, bool hasSmoke = true)
         {
@@ -517,6 +538,7 @@ namespace WW2NavalAssembly
             }
 
             ExploDestroyBalloon(transform.position, AP);
+            ExploDamageAA(transform.position, AP);
             Destroy(gameObject);
         }
         
