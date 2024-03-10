@@ -14,6 +14,7 @@ using UnityEngine.Assertions.Must;
 using static ProjectileScript;
 using UnityEngine.UI;
 using Modding.Common;
+using System.Runtime.InteropServices;
 
 namespace WW2NavalAssembly
 {
@@ -530,8 +531,12 @@ namespace WW2NavalAssembly
 
         public float DiveAnxiety = 0;
 
+        // ================== for returning ==================
+        public bool waitQueueing = true;
+
         // ================== for landing ===================
         public bool onboard = false;
+        public int landingTime = 0;
 
         // ================== for dogfight ==================
         public Vector3 fightPosition;
@@ -760,7 +765,7 @@ namespace WW2NavalAssembly
         {
             MyLogger.Instance.Log("[" + Group.Value + "](" + myTeamIndex + ") land on deck successfully, transfer to hangar ...", myPlayerID);
             onboard = true;
-            yield return new WaitForSeconds(2f);
+            yield return new WaitForSeconds(1f);
             MyLogger.Instance.Log("\tFinish transfer", myPlayerID);
             SwitchToInHangar();
             onboard = false;
@@ -1485,7 +1490,7 @@ namespace WW2NavalAssembly
                 GameObject Bomb = (GameObject)Instantiate(BombPrefab, LoadObject.transform.position, Quaternion.identity,
                                                                 BlockBehaviour.ParentMachine.transform.Find("Simulation Machine"));
                 Bomb.transform.rotation = Quaternion.LookRotation(LoadObject.transform.forward, LoadObject.transform.up);
-                Bomb.transform.localScale = Vector3.one * 4;
+                Bomb.transform.localScale = Vector3.one * 2;
 
                 Bomb.GetComponent<Bomb>().parent = gameObject;
                 Bomb.name = "Bomb" + myPlayerID.ToString();
@@ -1611,11 +1616,18 @@ namespace WW2NavalAssembly
             if (Rank.Value == 1)
             {
                 FlightDataBase.Deck deck = FlightDataBase.Instance.Decks[myPlayerID];
+                FlightDataBase.Instance.CheckLandingQueue(myPlayerID);
+                int queueIndex = MathTool.GetQueueIndex(FlightDataBase.Instance.LandingQueue[myPlayerID], this);
+                if (queueIndex == -1)
+                {
+                    queueIndex = FlightDataBase.Instance.LandingQueue[myPlayerID].Count;
+                }
+                waitQueueing = (queueIndex != 0);
                 Vector2 targetPoint = deck.Center + deck.Forward * (-deck.Length * 0.25f - 230f);
                 WayDirection = Vector2.zero;
                 WayPoint = targetPoint;
                 WayPointType = 0;
-                WayHeight = deck.height + Constants.LandHeight;
+                WayHeight = deck.height + Constants.LandHeight + queueIndex * 15;
             }
         }
         public void GetLandingWayPoint()
@@ -1812,6 +1824,7 @@ namespace WW2NavalAssembly
                 WayHeight = deck.height + 0.3f;
                 Thrust = 23f;
                 UndercartObject.SetActive(true);
+                landingTime = 0;
             }
         }
         public void SwitchToReturn()
@@ -1819,6 +1832,7 @@ namespace WW2NavalAssembly
             if (status == Status.Cruise)
             {
                 status = Status.Returning;
+
                 foreach (var a in myGroup)
                 {
                     if (a.Value.status == Status.Cruise)
@@ -2794,18 +2808,28 @@ namespace WW2NavalAssembly
                             TurnToWayPoint();
 
                             float distFromWayPoint = (MathTool.Get2DCoordinate(transform.position) - WayPoint).magnitude;
-                            if (distFromWayPoint < 75f)
+                            if (distFromWayPoint < 200f) // queue range
                             {
-                                foreach (var a in myGroup.Reverse())
+                                Queue<Aircraft> queue = FlightDataBase.Instance.LandingQueue[myPlayerID];
+                                if (!queue.Contains(this))
                                 {
-                                    if (a.Value.status == Status.InHangar || a.Value.status == Status.Exploded)
+                                    queue.Enqueue(this);
+                                }
+
+                                if (distFromWayPoint < 75f && !waitQueueing) // 
+                                {
+
+                                    foreach (var a in myGroup.Reverse())
                                     {
-                                        continue;
-                                    }
-                                    else
-                                    {
-                                        a.Value.SwitchToLanding();
-                                        break;
+                                        if (a.Value.status == Status.InHangar || a.Value.status == Status.Exploded || (a.Value.status == Status.Landing && a.Value.landingTime > 800f))
+                                        {
+                                            continue;
+                                        }
+                                        else
+                                        {
+                                            a.Value.SwitchToLanding();
+                                            break;
+                                        }
                                     }
                                 }
                             }
@@ -2815,6 +2839,7 @@ namespace WW2NavalAssembly
                     }
                 case Status.Landing:
                     {
+                        landingTime++;
                         DeckSliding = false;
                         GetLandingWayPoint();
                         Vector2 VectFromWayPoint = WayPoint - MathTool.Get2DCoordinate(transform.position);

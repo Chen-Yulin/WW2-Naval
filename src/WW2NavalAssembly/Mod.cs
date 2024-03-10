@@ -35,7 +35,6 @@ namespace WW2NavalAssembly
 			myMod.AddComponent<EngineMsgReceiver>();
 			myMod.AddComponent<MyLogger>();
 			myMod.AddComponent<AircraftControllerMsgReceiver>();
-			myMod.AddComponent<AircraftController>();
 			myMod.AddComponent<AircraftMsgReceiver>();
 			myMod.AddComponent<LogMsgReceiver>();
 			myMod.AddComponent<LanguageManager>();

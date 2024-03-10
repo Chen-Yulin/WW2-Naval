@@ -51,6 +51,7 @@ namespace WW2NavalAssembly
     {
         public AABlock parent;
 
+        public float affected = 0;
         public bool AA_active;
         public float TargetPitch;
         public float TargetYaw;
@@ -231,6 +232,10 @@ namespace WW2NavalAssembly
         }
         public void FixedUpdate()
         {
+            if (affected > 0)
+            {
+                affected -= 0.01f;
+            }
             float equv_speed;
             if (caliber < 76)
             {
@@ -241,7 +246,7 @@ namespace WW2NavalAssembly
                 equv_speed = speed/2f;
             }
             bool ok = false;
-            if (AA_active)
+            if (AA_active && affected <= 0)
             {
                 UpdateRandomError();
                 if (Mathf.Abs(Yaw - TargetYaw) < equv_speed * 8)
@@ -440,11 +445,35 @@ namespace WW2NavalAssembly
         public FollowerUI AAUI;
         float iconSize = 30;
 
+        // health
+        public float totalHealth;
+        public float health;
+
         public bool isSelf
         {
             get
             {
                 return StatMaster.isMP ? myPlayerID == PlayerData.localPlayer.networkId : true;
+            }
+        }
+
+        public void ReduceHealth(float damage)
+        {
+            AAVC.affected += damage;
+            health -= damage;
+            if (health <= 0)
+            {
+                AAVC.Shoot = false;
+                AAVC.enabled = false;
+                health = 0;
+                try
+                {
+                    foreach (var mr in GetComponentsInChildren<MeshRenderer>())
+                    {
+                        mr.material.mainTexture = AircraftAssetManager.Instance.Destroyed_Tex;
+                    }
+                }
+                catch{ }
             }
         }
 
@@ -747,6 +776,8 @@ namespace WW2NavalAssembly
                     caliber = 20;
                     break;
             }
+            health = caliber;
+            totalHealth = health;
             originVis = transform.Find("Vis").gameObject;
             InitBaseGunObjectSimulate();
             UpdateAppearance(Type.Value, true);
