@@ -1490,7 +1490,7 @@ namespace WW2NavalAssembly
                 GameObject Bomb = (GameObject)Instantiate(BombPrefab, LoadObject.transform.position, Quaternion.identity,
                                                                 BlockBehaviour.ParentMachine.transform.Find("Simulation Machine"));
                 Bomb.transform.rotation = Quaternion.LookRotation(LoadObject.transform.forward, LoadObject.transform.up);
-                Bomb.transform.localScale = Vector3.one * 4;
+                Bomb.transform.localScale = Vector3.one * 2;
 
                 Bomb.GetComponent<Bomb>().parent = gameObject;
                 Bomb.name = "Bomb" + myPlayerID.ToString();
