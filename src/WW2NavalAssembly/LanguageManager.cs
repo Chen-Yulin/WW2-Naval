@@ -153,7 +153,7 @@ namespace WW2NavalAssembly
         public string TurretHeight { get; } = "炮塔高度(用于修正)";
 
         //Aircraft
-        public List<string> AircraftType { get; } = new List<string> { "战斗机", "鱼雷机", "俯冲轰炸机"};
+        public List<string> AircraftType { get; } = new List<string> { "战斗机", "鱼雷机", "高爆俯冲轰炸机", "穿甲俯冲轰炸机"};
         public List<string> FighterType { get; } = new List<string> {
                 "Zero",
                 "F4U",
@@ -235,7 +235,7 @@ namespace WW2NavalAssembly
         public string TurretHeight { get; } = "Turret Height";
 
         //Aircraft
-        public List<string> AircraftType { get; } = new List<string> { "Fighter", "Torpedo", "Bomb" };
+        public List<string> AircraftType { get; } = new List<string> { "Fighter", "Torpedo", "HE Bomb", "AP Bomb" };
         public List<string> FighterType { get; } = new List<string> {
                 "Zero",
                 "F4U",
@@ -278,7 +278,7 @@ namespace WW2NavalAssembly
         public string PropellerSize { get; } = "Propeller Size";
 
         // AA Controller
-        public string SwitchAATarget { get; } = "Swith AA Target";
+        public string SwitchAATarget { get; } = "Switch AA Target";
 
         // Gunner
         public string SwitchActive { get; } = "Switch Active";
