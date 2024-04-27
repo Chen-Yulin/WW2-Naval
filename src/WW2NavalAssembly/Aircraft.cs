@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Text;
 using System.Xml.Serialization;
 using System.Collections;
@@ -14,7 +13,6 @@ using UnityEngine.Assertions.Must;
 using static ProjectileScript;
 using UnityEngine.UI;
 using Modding.Common;
-using System.Runtime.InteropServices;
 
 namespace WW2NavalAssembly
 {
@@ -1706,6 +1704,7 @@ namespace WW2NavalAssembly
                 StartCoroutine(ExploCoroutine(instant));
             }
         }
+
         public void SwitchToShootDown()
         {
             if (status != Status.ShootDown)
@@ -1905,12 +1904,24 @@ namespace WW2NavalAssembly
         {
             if (status == Status.OnBoard)
             {
+                switch (Type.Value) {
+                
+                    case 0:
+                        Thrust = Constants.FighterInitialThrust;
+                        break;
+                    case 1:
+                        Thrust = Constants.TorpedoInitialThrust;
+                        break;
+                    case 2:
+                        Thrust = Constants.BombInitialThrust;
+                        break;
+
+                }
                 status = Status.TakingOff;
                 MyDeck = null;
                 deckHeight = 0;
                 TakeOffDirection = new Vector2(-transform.up.x, -transform.up.z);
                 PropellerSpeed = 11f;
-                Thrust = 40f;
                 WayPoint = MathTool.Get2DCoordinate(transform.position - transform.up * 300f);
                 WayHeight = CruiseHeight;
                 WayPointType = 0;
@@ -2654,7 +2665,20 @@ namespace WW2NavalAssembly
                 case Status.TakingOff:
                     {
                         TakeOffLift = AddAeroForce();
-                        Thrust += 0.2f;
+                        switch (Type.Value)
+                        {
+
+                            case 0:
+                                Thrust += Constants.FighterAccel;
+                                break;
+                            case 1:
+                                Thrust += Constants.TorpedoAccel;
+                                break;
+                            case 2:
+                                Thrust += Constants.BombAccel;
+                                break;
+
+                        }
                         myRigid.angularVelocity = Vector3.zero;
                         DeckSliding = true;
 

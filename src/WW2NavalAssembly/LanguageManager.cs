@@ -278,7 +278,7 @@ namespace WW2NavalAssembly
         public string PropellerSize { get; } = "Propeller Size";
 
         // AA Controller
-        public string SwitchAATarget { get; } = "Swith AA Target";
+        public string SwitchAATarget { get; } = "Switch AA Target";
 
         // Gunner
         public string SwitchActive { get; } = "Switch Active";
