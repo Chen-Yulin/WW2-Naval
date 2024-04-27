@@ -898,10 +898,10 @@ namespace WW2NavalAssembly
                 TorpedoPrefab.SetActive(false);
             }
         }
-        void InitBomb()
+        void InitBomb(bool AP = false)
         {
             Transform PrefabParent = BlockBehaviour.ParentMachine.transform.Find("Simulation Machine");
-            string PrefabName = "NavalAircraftBomb [" + myPlayerID + "](" + 1000 + ")";
+            string PrefabName = "NavalAircraftBomb [" + myPlayerID + "](" + (AP?"AP":"HE") + ")";
             if (PrefabParent.Find(PrefabName))
             {
                 BombPrefab = PrefabParent.Find(PrefabName).gameObject;
@@ -912,12 +912,17 @@ namespace WW2NavalAssembly
                 BombPrefab.transform.parent = PrefabParent;
                 Bomb BBtmp = BombPrefab.AddComponent<Bomb>();
                 BBtmp.myPlayerID = myPlayerID;
+                BBtmp.BombType = AP ? 1 : 0;
                 Rigidbody RBtmp = BombPrefab.AddComponent<Rigidbody>();
                 RBtmp.mass = 0.2f;
                 RBtmp.drag = 0.02f;
                 RBtmp.useGravity = true;
 
                 GameObject CannonVis = new GameObject("BombVis");
+                if (AP)
+                {
+                    CannonVis.transform.localScale = new Vector3(2f, 1, 1f);
+                }
                 CannonVis.transform.SetParent(BombPrefab.transform);
                 CannonVis.transform.localPosition = Vector3.zero;
                 CannonVis.transform.localRotation = Quaternion.Euler(0f, 0f, 0f);
@@ -1088,6 +1093,12 @@ namespace WW2NavalAssembly
                             TeammateSpot[i].transform.localPosition = new Vector3(0, 0, - (i+1) * 5f);
                         }
                         break;
+                    case 3:
+                        for (int i = 0; i < TeammateSpot.Count; i++)
+                        {
+                            TeammateSpot[i].transform.localPosition = new Vector3(0, 0, -(i + 1) * 5f);
+                        }
+                        break;
                     default: break;
                 }
             }
@@ -1114,6 +1125,27 @@ namespace WW2NavalAssembly
             MeshRenderer mr = LoadObject.AddComponent<MeshRenderer>();
             switch (Type.Value)
             {
+                case 3:
+                    hasLoad = true;
+                    LoadMass = 0.7f;
+                    LoadObject.transform.localScale = new Vector3(2f, 1f, 1f);
+                    mf.sharedMesh = ModResource.GetMesh("Bomb Mesh");
+                    mr.material.mainTexture = ModResource.GetTexture("Engine Texture").Texture;
+                    switch (BombType.Selection)
+                    {
+                        case "99":
+                            LoadObject.transform.localPosition = new Vector3(0, 0.1f, 0.25f);
+                            break;
+                        case "SBD":
+                            LoadObject.transform.localPosition = new Vector3(0, -0.05f, 0.2f);
+                            break;
+                        case "Fulmar":
+                            LoadObject.transform.localPosition = new Vector3(0, 0.1f, 0.25f);
+                            break;
+                        default:
+                            break;
+                    }
+                    break;
                 case 2:
                     hasLoad = true;
                     LoadMass = 0.5f;
@@ -1162,9 +1194,14 @@ namespace WW2NavalAssembly
             if (Type.Value == 1)
             {
                 InitTorpedo();
-            }else if (Type.Value == 2)
+            }
+            else if (Type.Value == 2)
             {
                 InitBomb();
+            }
+            else if (Type.Value == 3)
+            {
+                InitBomb(true);
             }
         }
         public void FindHangar()
@@ -1291,7 +1328,7 @@ namespace WW2NavalAssembly
         }
         public float AddAeroForce(bool flap = false)
         {
-            myRigid.angularDrag = Mathf.Clamp(myRigid.velocity.magnitude * 0.5f, 0.2f,150f) * (flap && Type.Value ==2 ? 2.5f : 1);
+            myRigid.angularDrag = Mathf.Clamp(myRigid.velocity.magnitude * 0.5f, 0.2f,150f) * (flap && Type.Value >=2 ? 2.5f : 1);
             myRigid.drag = Mathf.Clamp(myRigid.velocity.magnitude * myRigid.mass * 0.01f, 0.2f, 10f) * (flap ? 2 : 1);
 
             // horizon
@@ -1478,7 +1515,7 @@ namespace WW2NavalAssembly
                 LoadObject.SetActive(false);
                 Destroy(Torpedo, Constants.FastTorpedoTime);
             }
-            else if (Type.Value == 2)
+            else if (Type.Value == 2 || Type.Value ==3)
             {
                 if (!client)
                 {
@@ -1518,7 +1555,7 @@ namespace WW2NavalAssembly
         }
         public void RecoverLoad()
         {
-            if (Type.Value == 1 || Type.Value == 2)
+            if (Type.Value == 1 || Type.Value == 2 || Type.Value == 3)
             {
                 if (StatMaster.isMP)
                 {
@@ -1528,6 +1565,9 @@ namespace WW2NavalAssembly
                 LoadObject.SetActive(true);
                 switch (Type.Value)
                 {
+                    case 3:
+                        LoadMass = 0.7f;
+                        break;
                     case 2:
                         LoadMass = 0.5f;
                         break;
@@ -1880,7 +1920,7 @@ namespace WW2NavalAssembly
                         a.Value.UndercartObject.SetActive(false);
                         a.Value.Thrust = 60f;
                     }
-                }else if (Type.Value == 2)
+                }else if (Type.Value == 2 || Type.Value == 3)
                 {
                     GenerateFormation();
                     status = Status.Cruise;
@@ -1915,7 +1955,9 @@ namespace WW2NavalAssembly
                     case 2:
                         Thrust = Constants.BombInitialThrust;
                         break;
-
+                    case 3:
+                        Thrust = Constants.BombInitialThrust;
+                        break;
                 }
                 status = Status.TakingOff;
                 MyDeck = null;
@@ -2219,6 +2261,11 @@ namespace WW2NavalAssembly
                         BombType.DisplayInMapper = true;
                         FighterType.DisplayInMapper = false;
                         break;
+                    case 3:
+                        TorpedoType.DisplayInMapper = false;
+                        BombType.DisplayInMapper = true;
+                        FighterType.DisplayInMapper = false;
+                        break;
                     case 0:
                         TorpedoType.DisplayInMapper = false;
                         BombType.DisplayInMapper = false;
@@ -2237,6 +2284,9 @@ namespace WW2NavalAssembly
                     nowAppearance = TorpedoType.Selection;
                     break;
                 case 2:
+                    nowAppearance = BombType.Selection;
+                    break;
+                case 3:
                     nowAppearance = BombType.Selection;
                     break;
                 case 0:
@@ -2393,6 +2443,9 @@ namespace WW2NavalAssembly
                         preAppearance = TorpedoType.Selection;
                         break;
                     case 2:
+                        preAppearance = BombType.Selection;
+                        break;
+                    case 3:
                         preAppearance = BombType.Selection;
                         break;
                     case 0:
@@ -2677,6 +2730,9 @@ namespace WW2NavalAssembly
                             case 2:
                                 Thrust += Constants.BombAccel;
                                 break;
+                            case 3:
+                                Thrust += Constants.BombAccel;
+                                break;
 
                         }
                         myRigid.angularVelocity = Vector3.zero;
@@ -2780,7 +2836,7 @@ namespace WW2NavalAssembly
                         AddAeroForce(true);
                         DeckSliding = false;
 
-                        if (Type.Value == 1 || (Type.Value == 2 && !inAttackRoutine))
+                        if (Type.Value == 1 || ((Type.Value == 2|| Type.Value == 3) && !inAttackRoutine))
                         {
                             if (Rank.Value == 0)
                             {
@@ -2799,7 +2855,7 @@ namespace WW2NavalAssembly
                                 StartCoroutine(TorpedoCoroutine());
                             }
                         }
-                        else if (Type.Value == 2)
+                        else if (Type.Value == 2 || Type.Value == 3)
                         {
                             float distFromWayPoint = (MathTool.Get2DCoordinate(transform.position) - WayPoint).magnitude;
                             if (!inAttackRoutine && distFromWayPoint < 50f && Rank.Value == 1)

@@ -437,7 +437,7 @@ namespace WW2NavalAssembly
             }
             WeaponMsgReceiver.Instance.ExploInfo[myPlayerID].Clear();
         }
-        public void CannonDetectWaterHost()
+        public void CannonDetectWaterHost(bool AP = false)
         {
             if (transform.position.y < 20f && myRigid.velocity.y < 0 && !hasHitWater && pericedBlock.Count == 0)
             {
@@ -447,10 +447,10 @@ namespace WW2NavalAssembly
                 waterhit.transform.localScale = Weight / 2f / 381f * Vector3.one;
                 Destroy(waterhit, 3);
 
-                PlayExploInAir(false, false);
+                PlayExploInAir(AP, false);
 
                 AddWaterHitSound(waterhit.transform);
-                ModNetworking.SendToAll(WeaponMsgReceiver.WaterHitMsg.CreateMessage(myPlayerID, new Vector3(transform.position.x, 20, transform.position.z), Weight/2f));
+                ModNetworking.SendToAll(WeaponMsgReceiver.WaterHitMsg.CreateMessage(myPlayerID, new Vector3(transform.position.x, 20, transform.position.z), Weight/ 2f * (AP ? 1 : 2)));
                 Destroy(gameObject);
             }
         }
@@ -471,7 +471,7 @@ namespace WW2NavalAssembly
                 exploded = true;
 
                 //send to client
-                ModNetworking.SendToAll(WeaponMsgReceiver.ExploMsg.CreateMessage(myPlayerID, hit.point, Weight, 3));
+                ModNetworking.SendToAll(WeaponMsgReceiver.ExploMsg.CreateMessage(myPlayerID, hit.point, Weight * (AP ? 1 : 2), 3));
 
                 try
                 {
@@ -530,11 +530,11 @@ namespace WW2NavalAssembly
             //send to client
             if (hasSmoke)
             {
-                ModNetworking.SendToAll(WeaponMsgReceiver.ExploMsg.CreateMessage(myPlayerID, transform.position, Weight, 3));
+                ModNetworking.SendToAll(WeaponMsgReceiver.ExploMsg.CreateMessage(myPlayerID, transform.position, Weight * (AP ? 1 : 2), 3));
             }
             else
             {
-                ModNetworking.SendToAll(WeaponMsgReceiver.ExploMsg.CreateMessage(myPlayerID, transform.position, Weight, 0));
+                ModNetworking.SendToAll(WeaponMsgReceiver.ExploMsg.CreateMessage(myPlayerID, transform.position, Weight * (AP ? 1 : 2), 0));
             }
 
             ExploDestroyBalloon(transform.position, AP);
@@ -644,6 +644,10 @@ namespace WW2NavalAssembly
             {
                 penetration = Weight * 0.12f;
             }
+            else
+            {
+                penetration = Weight * 0.24f;
+            }
         }
         public void FixedUpdate()
         {
@@ -651,9 +655,9 @@ namespace WW2NavalAssembly
             
             if (!StatMaster.isClient)
             {
-                if (BombType == 0 && !hasHitWater) // for AP
+                if (!hasHitWater)
                 {
-                    CannonDetectCollisionHost(false);
+                    CannonDetectCollisionHost(BombType == 1);
                     if (ModController.Instance.showSea)
                     {
                         CannonDetectWaterHost();
@@ -664,7 +668,7 @@ namespace WW2NavalAssembly
                     }
                     if (timer > 10f && !exploded)
                     {
-                        PlayExploInAir(false);
+                        PlayExploInAir(BombType == 1);
                     }
                 }
 
