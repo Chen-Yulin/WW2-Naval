@@ -5,11 +5,11 @@
 	<Name>WW2Naval</Name>
 	<Author>Chen, Yulin</Author> <!-- FIX: Insert your name here. -->
 	<!-- Major.Minor.Build -->
-	<Version>0.9.17</Version>
+	<Version>0.9.18</Version>
 
 	<Description>
-    Version 0.9.17
-	Fix 113 offset, longer take off length, add AP bomber
+    Version 0.9.18
+	Fix AP Bomber's attack icon
 	</Description>
 
 	<Icon name="icon"/>
