@@ -641,6 +641,11 @@ namespace WW2NavalAssembly
                                                         DrawBoard.transform);
                         Icon.transform.rotation = Quaternion.LookRotation(Vector3.up, new Vector3(direction.x, 0, direction.y));
                         break;
+                    case 3:
+                        Icon = (GameObject)Instantiate(AssetManager.Instance.Aircraft.BombAim, new Vector3(position.x, 20.5f, position.y), Quaternion.identity,
+                                                        DrawBoard.transform);
+                        Icon.transform.rotation = Quaternion.LookRotation(Vector3.up, new Vector3(direction.x, 0, direction.y));
+                        break;
                     default:
                         break;
                 }
@@ -715,6 +720,11 @@ namespace WW2NavalAssembly
                         Icon.transform.rotation = Quaternion.LookRotation(Vector3.up, new Vector3(direction.x, 0, direction.y));
                         break;
                     case 2:
+                        Icon = (GameObject)Instantiate(AssetManager.Instance.Aircraft.BombAim, new Vector3(position.x, 20.5f, position.y), Quaternion.identity,
+                                                        DrawBoard.transform);
+                        Icon.transform.rotation = Quaternion.LookRotation(Vector3.up, new Vector3(direction.x, 0, direction.y));
+                        break;
+                    case 3:
                         Icon = (GameObject)Instantiate(AssetManager.Instance.Aircraft.BombAim, new Vector3(position.x, 20.5f, position.y), Quaternion.identity,
                                                         DrawBoard.transform);
                         Icon.transform.rotation = Quaternion.LookRotation(Vector3.up, new Vector3(direction.x, 0, direction.y));
