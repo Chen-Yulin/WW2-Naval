@@ -26,5 +26,13 @@ namespace WW2NavalAssembly
         public const int BulletHETimer = 2;
 
         public const float MaxCaptainDetectAircraftRange = 1000f;
+
+        // Aircraft speed
+        public const float TorpedoInitialThrust = 20f;
+        public const float BombInitialThrust = 20f;
+        public const float FighterInitialThrust = 40f;
+        public const float TorpedoAccel = 0.08f;
+        public const float BombAccel = 0.12f;
+        public const float FighterAccel = 0.2f;
     }
 }

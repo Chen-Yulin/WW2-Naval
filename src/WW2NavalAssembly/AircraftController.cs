@@ -641,6 +641,11 @@ namespace WW2NavalAssembly
                                                         DrawBoard.transform);
                         Icon.transform.rotation = Quaternion.LookRotation(Vector3.up, new Vector3(direction.x, 0, direction.y));
                         break;
+                    case 3:
+                        Icon = (GameObject)Instantiate(AssetManager.Instance.Aircraft.BombAim, new Vector3(position.x, 20.5f, position.y), Quaternion.identity,
+                                                        DrawBoard.transform);
+                        Icon.transform.rotation = Quaternion.LookRotation(Vector3.up, new Vector3(direction.x, 0, direction.y));
+                        break;
                     default:
                         break;
                 }
@@ -656,6 +661,9 @@ namespace WW2NavalAssembly
                     height = Constants.TorpedoAttackHeight + Constants.SeaHeight;
                     break;
                 case 2:
+                    height = Constants.BombAttackHeight + Constants.SeaHeight;
+                    break;
+                case 3:
                     height = Constants.BombAttackHeight + Constants.SeaHeight;
                     break;
                 default:
@@ -691,6 +699,9 @@ namespace WW2NavalAssembly
                     case 2:
                         height = Constants.BombAttackHeight + Constants.SeaHeight;
                         break;
+                    case 3:
+                        height = Constants.BombAttackHeight + Constants.SeaHeight;
+                        break;
                     default:
                         height = Constants.CruiseHeight + Constants.SeaHeight;
                         break;
@@ -709,6 +720,11 @@ namespace WW2NavalAssembly
                         Icon.transform.rotation = Quaternion.LookRotation(Vector3.up, new Vector3(direction.x, 0, direction.y));
                         break;
                     case 2:
+                        Icon = (GameObject)Instantiate(AssetManager.Instance.Aircraft.BombAim, new Vector3(position.x, 20.5f, position.y), Quaternion.identity,
+                                                        DrawBoard.transform);
+                        Icon.transform.rotation = Quaternion.LookRotation(Vector3.up, new Vector3(direction.x, 0, direction.y));
+                        break;
+                    case 3:
                         Icon = (GameObject)Instantiate(AssetManager.Instance.Aircraft.BombAim, new Vector3(position.x, 20.5f, position.y), Quaternion.identity,
                                                         DrawBoard.transform);
                         Icon.transform.rotation = Quaternion.LookRotation(Vector3.up, new Vector3(direction.x, 0, direction.y));
@@ -1072,6 +1088,9 @@ namespace WW2NavalAssembly
                                         case 2:
                                             AircraftVel = 67f;
                                             break;
+                                        case 3:
+                                            AircraftVel = 67f;
+                                            break;
                                         default:
                                             break;
                                     }
@@ -1130,6 +1149,9 @@ namespace WW2NavalAssembly
                                             AircraftVel = 59f;
                                             break;
                                         case 2:
+                                            AircraftVel = 67f;
+                                            break;
+                                        case 3:
                                             AircraftVel = 67f;
                                             break;
                                         default:
