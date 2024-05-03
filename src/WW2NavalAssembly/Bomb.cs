@@ -646,7 +646,7 @@ namespace WW2NavalAssembly
             }
             else
             {
-                penetration = Weight * 0.24f;
+                penetration = Weight * 0.3f;
             }
         }
         public void FixedUpdate()

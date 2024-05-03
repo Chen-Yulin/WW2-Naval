@@ -730,11 +730,6 @@ namespace WW2NavalAssembly
                     Vector3 RollTorque = Vector3.Cross(transform.right, -v_angularVel.normalized) * 7;//5=>7
                     myRigid.AddTorque(RollTorque);
                 }
-                
-                
-
-                
-
             }
             
             MyLogger.Instance.Log("["+ Group.Value + "](" + myTeamIndex + ") Drop Bomb", myPlayerID);
