@@ -229,7 +229,7 @@ namespace WW2NavalAssembly
                         {
                             GameObject explo = (GameObject)Instantiate(AssetManager.Instance.CannonHit.exploWithSmoke, exploPosition, Quaternion.identity);
                             explo.SetActive(true);
-                            explo.transform.localScale = exploInfo.Caliber / 400f * Vector3.one;
+                            explo.transform.localScale = exploInfo.Caliber / 800f * Vector3.one;
                             Destroy(explo, 3);
                             AddExploSound(explo.transform, exploInfo.Caliber);
                             break;
