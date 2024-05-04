@@ -617,14 +617,128 @@ namespace WW2NavalAssembly
             inAttackRoutine = true;
             Roll = 0f;
             Thrust = 53f;
-            while(Vector2.Distance(MathTool.Get2DCoordinate(transform.position), WayPoint) > 10f)
+
+            // find target for torpedo
+            int target_PlayerID = -1;
+            List<Engine> target_engines = new List<Engine>();
+            float MaxDist = 200f;
+            float MaxWidth = 150f;
+            foreach (var ship in FlightDataBase.Instance.engines)
             {
-                yield return new WaitForFixedUpdate();
+                foreach (var engine in ship)
+                {
+                    Vector2 enginePos = MathTool.Get2DCoordinate(engine.transform.position);
+                    Vector2 dir = enginePos - WayPoint;
+                    float dist = Vector2.Dot(dir, WayDirection.normalized);
+                    float width = Mathf.Sqrt(dir.magnitude* dir.magnitude - dist*dist);
+                    float minDist = MaxDist;
+                    if (dist < minDist && dist > 0 && width < MaxWidth)
+                    {
+                        minDist = dist;
+                        target_PlayerID = engine.myPlayerID;
+                        target_engines.Clear();
+                        target_engines.Add(engine);
+                    }
+                }
             }
-            MyLogger.Instance.Log("["+ Group.Value + "](" + myTeamIndex + ") Drop Torpedo", myPlayerID);
-            foreach (var a in myGroup)
+            if (target_PlayerID != -1) // target found
             {
-                a.Value.DropLoad();
+                MyLogger.Instance.Log("[" + Group.Value + "](" + myTeamIndex + ") Find target", myPlayerID);
+                Vector3 target_vel = Vector3.zero;
+                Vector3 target_pos = Vector3.zero;
+                float drop_dist = 80f;
+                Vector3 predict_pos = target_pos;
+                Vector3 pre_predict_pos = predict_pos;
+                while (MathTool.Get2DDistance(transform.position, predict_pos) > drop_dist || predict_pos == Vector3.zero)
+                {
+                    
+                    foreach (var engine in target_engines)
+                    {
+                        target_pos = engine.transform.position;
+                        target_vel = engine.Rigidbody.velocity;
+                    }
+                    target_pos.y = Constants.SeaHeight + 1f;
+                    target_vel.y = 0;
+
+                    MyLogger.Instance.Log(target_pos.ToString(), myPlayerID);
+
+                    float tor_time = drop_dist/10f;// drop at a dist of 100m, vel of torpedo 8.3m/s
+
+                    Vector3 preDirection = target_pos - transform.position;
+                    Vector2 dir2D = MathTool.Get2DCoordinate(preDirection);
+                    Vector2 vel2D = MathTool.Get2DCoordinate(myRigid.velocity);
+
+                
+                    if (Mathf.Abs(Vector2.Angle(vel2D, dir2D)) >= 90) // the angle is not ideal at all
+                    {
+                        hasAttacked = false;
+                        SwitchToCruise();
+                        inAttackRoutine = false;
+                        yield break;
+                    }
+                    else
+                    {
+                        float ProjVel = 0f;
+                        float EstimatedTime = 0;
+                        Vector2 pred_dir2D;
+                        pre_predict_pos = predict_pos;
+                        for (int i = 0; i < 6; i++)
+                        {
+                            pred_dir2D = MathTool.Get2DCoordinate(predict_pos - transform.position);
+                            ProjVel = vel2D.magnitude;
+                            predict_pos = target_pos + EstimatedTime * target_vel;
+                            EstimatedTime = (pred_dir2D.magnitude - drop_dist)/ProjVel + tor_time;
+                            //EstimatedTime = 0;
+                        }
+                        predict_pos = Vector3.Lerp(predict_pos, pre_predict_pos, 0.95f);
+
+                        // turn to target
+                        preDirection = predict_pos - transform.position;
+                        float AngleDiff = Vector3.Angle(myRigid.velocity, preDirection);
+                        Vector3 torque = Vector3.Cross(myRigid.velocity, preDirection).normalized * Mathf.Clamp(Mathf.Pow(AngleDiff, 1.5f)*0.2f, -15, 15);
+                        torque.x = 0;
+                        torque.z = 0;
+                        myRigid.AddTorque(torque);
+
+                        SetHeight(myRigid.position.y + Mathf.Clamp((WayHeight - myRigid.position.y) * 0.1f, -0.5f, 0.5f), false, 1);
+
+                        Vector3 rigidPos = myRigid.position;
+                        rigidPos.y = Mathf.Clamp(rigidPos.y, 21, 1000);
+                        myRigid.MovePosition(rigidPos);
+
+                        float targetPitch = 0;
+                        if (preDirection.magnitude > 25f)
+                        {
+                            targetPitch = 90 - (Vector3.Angle(Vector3.up, preDirection));
+                        }
+
+
+                        Pitch = Pitch + Mathf.Clamp((targetPitch - Pitch) * 0.02f, -2f, 2f);
+                    }
+
+                    yield return new WaitForFixedUpdate();
+                }
+
+                MyLogger.Instance.Log("[" + Group.Value + "](" + myTeamIndex + ") Drop Torpedo", myPlayerID);
+                foreach (var a in myGroup)
+                {
+                    a.Value.DropLoad();
+                }
+
+            }
+            else // no target found
+            {
+                MyLogger.Instance.Log("[" + Group.Value + "](" + myTeamIndex + ") Find no target", myPlayerID);
+                while (Vector2.Distance(MathTool.Get2DCoordinate(transform.position), WayPoint) > 10f)
+                {
+                    TurnToWayPoint();
+                    yield return new WaitForFixedUpdate();
+                }
+                MyLogger.Instance.Log("[" + Group.Value + "](" + myTeamIndex + ") Drop Torpedo", myPlayerID);
+                foreach (var a in myGroup)
+                {
+                    a.Value.DropLoad();
+                }
             }
             SwitchToCruise();
             inAttackRoutine = false;
@@ -634,7 +748,7 @@ namespace WW2NavalAssembly
         {
             int target_PlayerID = -1;
             List<Engine> target_engines = new List<Engine>();
-            float err = 0.2f + UnityEngine.Random.value;
+            float err = UnityEngine.Random.value;
 
             float AttackHeight = transform.position.y;
             inAttackRoutine = true;
@@ -690,51 +804,48 @@ namespace WW2NavalAssembly
                         target_pos += engine.transform.position;
                         target_vel += engine.Rigidbody.velocity;
                     }
-
-                    target_pos /= (float)target_engines.Count;
-                    target_vel /= (float)target_engines.Count;
-                    target_pos.y = 20f;
+                    target_pos.y = Constants.SeaHeight;
                     target_vel.y = 0;
+                    //target_vel *= (0.5f + err);
 
                     Vector3 targetDirection = target_pos - transform.position;
-                    Vector2 dir2D = MathTool.Get2DCoordinate(targetDirection) * err;
+                    Vector2 dir2D = MathTool.Get2DCoordinate(targetDirection);
                     Vector2 vel2D = MathTool.Get2DCoordinate(myRigid.velocity);
 
                     float ProjVel = Vector2.Dot(vel2D, dir2D.normalized);
                     float EstimatedTime = dir2D.magnitude / ProjVel;
-                    Vector3 predict_pos = target_pos;
-                    for (int i = 0; i < 3; i++)
+                    if (Mathf.Abs(Vector2.Angle(vel2D, dir2D)) >= 90)
                     {
-                        predict_pos = target_pos + EstimatedTime * target_vel;
-                        targetDirection = predict_pos - transform.position;
-                        dir2D = MathTool.Get2DCoordinate(targetDirection) * err;
-                        vel2D = MathTool.Get2DCoordinate(myRigid.velocity);
-                        ProjVel = Vector2.Dot(vel2D, dir2D.normalized);
-                        EstimatedTime = dir2D.magnitude / ProjVel;
+                        EstimatedTime = 0f;
                     }
+                    else
+                    {
+                        float diffVel = ProjVel - Vector2.Dot(target_vel, dir2D.normalized);
+                        if (diffVel > 0)
+                        {
+                            EstimatedTime = dir2D.magnitude / diffVel;
+                        }
+                        else
+                        {
+                            EstimatedTime = 99f;
+                        }
+                    }
+                    Vector3 predict_pos = target_pos + EstimatedTime * target_vel * (0.5f+err);
                     target_pos = predict_pos;
 
-                    if (EstimatedTime > 0)
-                    {
-                        float targetHeight = -myRigid.velocity.y * 0.7f * EstimatedTime + 0.5f * Constants.Gravity * Mathf.Pow(EstimatedTime, 2);
-                        target_pos.y += targetHeight;
-                        target_pos.y = Mathf.Clamp(target_pos.y, -20, transform.position.y);
-                    }
+                    float targetHeight = -myRigid.velocity.y * EstimatedTime + 0.5f * Constants.Gravity * Mathf.Pow(EstimatedTime, 2);
+                    target_pos.y += targetHeight;
+                    target_pos.y = Mathf.Clamp(target_pos.y, -20, transform.position.y);
 
                     // turn to target
                     targetDirection = target_pos - transform.position;
                     float AngleDiff = Vector3.Angle(myRigid.velocity, targetDirection);
-                    Vector3 torque = Vector3.Cross(myRigid.velocity, targetDirection).normalized * Mathf.Clamp(AngleDiff * 3f, -20, 20);
+                    Vector3 torque = Vector3.Cross(myRigid.velocity, targetDirection).normalized * Mathf.Clamp(AngleDiff * 1.5f, -20, 20);
                     myRigid.AddTorque(torque);
-                    Vector3 v_angularVel = myRigid.angularVelocity;
-                    Vector3 RollTorque = Vector3.Cross(transform.right, -v_angularVel.normalized) * 7;//5=>7
-                    myRigid.AddTorque(RollTorque);
+                    //Vector3 v_angularVel = myRigid.angularVelocity;
+                    //Vector3 RollTorque = Vector3.Cross(transform.right, -v_angularVel.normalized) * 7;//5=>7
+                    //myRigid.AddTorque(RollTorque);
                 }
-                
-                
-
-                
-
             }
             
             MyLogger.Instance.Log("["+ Group.Value + "](" + myTeamIndex + ") Drop Bomb", myPlayerID);
@@ -789,7 +900,7 @@ namespace WW2NavalAssembly
         public IEnumerator DisturbedCoroutine(int time, float force)
         {
             int i = 0;
-            Vector3 torque = new Vector3(-0.5f * UnityEngine.Random.value, 0, 6 - 12 * UnityEngine.Random.value) * force * 0.3f;
+            Vector3 torque = new Vector3(-0.1f * UnityEngine.Random.value, 0, 2 - 4 * UnityEngine.Random.value) * force * 0.3f;
             while (i < time)
             {
                 myRigid.AddRelativeTorque(torque);
@@ -2844,7 +2955,7 @@ namespace WW2NavalAssembly
                             }
                             else if (Rank.Value == 1)
                             {
-                                TurnToWayPoint();
+                                //TurnToWayPoint();
                             }
                         }
 
