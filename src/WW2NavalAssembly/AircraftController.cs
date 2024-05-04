@@ -635,6 +635,7 @@ namespace WW2NavalAssembly
                         Icon = (GameObject)Instantiate( AssetManager.Instance.Aircraft.TorpedoAim, new Vector3(position.x, 20.5f, position.y), Quaternion.identity,
                                                         DrawBoard.transform);
                         Icon.transform.rotation = Quaternion.LookRotation(Vector3.up, new Vector3(direction.x, 0, direction.y));
+                        Icon.transform.localScale = new Vector3(3f, 1, 1);
                         break;
                     case 2:
                         Icon = (GameObject)Instantiate(AssetManager.Instance.Aircraft.BombAim, new Vector3(position.x, 20.5f, position.y), Quaternion.identity,
@@ -718,6 +719,7 @@ namespace WW2NavalAssembly
                         Icon = (GameObject)Instantiate(AssetManager.Instance.Aircraft.TorpedoAim, new Vector3(position.x, 20.5f, position.y), Quaternion.identity,
                                                         DrawBoard.transform);
                         Icon.transform.rotation = Quaternion.LookRotation(Vector3.up, new Vector3(direction.x, 0, direction.y));
+                        Icon.transform.localScale = new Vector3(3f, 1, 1);
                         break;
                     case 2:
                         Icon = (GameObject)Instantiate(AssetManager.Instance.Aircraft.BombAim, new Vector3(position.x, 20.5f, position.y), Quaternion.identity,

@@ -396,47 +396,6 @@ namespace WW2NavalAssembly
                 }
             }
         }
-        public void CannonDetectCollisionClient()
-        {
-            foreach (WeaponMsgReceiver.exploInfo exploInfo in WeaponMsgReceiver.Instance.ExploInfo[myPlayerID])
-            {
-                Vector3 exploPosition = exploInfo.position;
-                switch (exploInfo.type)
-                {
-                    case 0:
-                        {
-                            GameObject explo = (GameObject)Instantiate(AssetManager.Instance.CannonHit.explo, exploPosition, Quaternion.identity);
-                            explo.SetActive(true);
-                            explo.transform.localScale = exploInfo.Caliber / 800 * Vector3.one;
-                            Destroy(explo, 3);
-                            AddExploSound(explo.transform);
-                            break;
-                        }
-                    case 1:
-                        {
-                            GameObject pierceEffect = (GameObject)Instantiate(AssetManager.Instance.Pierce.Pierce, exploPosition, Quaternion.identity);
-                            pierceEffect.transform.localScale = Weight / 400f * Vector3.one;
-                            Destroy(pierceEffect, 1);
-                            AddPierceSound(pierceEffect.transform);
-                            break;
-                        }
-                    case 2:
-                        {
-                            GameObject explo = (GameObject)Instantiate(AssetManager.Instance.CannonHit.explo, exploPosition, Quaternion.identity);
-                            explo.SetActive(true);
-                            explo.transform.localScale = exploInfo.Caliber / 400 * Vector3.one;
-                            Destroy(explo, 3);
-                            AddExploSound(explo.transform);
-                            break;
-                        }
-                    default:
-                        break;
-                }
-
-
-            }
-            WeaponMsgReceiver.Instance.ExploInfo[myPlayerID].Clear();
-        }
         public void CannonDetectWaterHost(bool AP = false)
         {
             if (transform.position.y < 20f && myRigid.velocity.y < 0 && !hasHitWater && pericedBlock.Count == 0)
@@ -675,7 +634,6 @@ namespace WW2NavalAssembly
             }
             else
             {
-                CannonDetectCollisionClient();
                 CannonDetectWaterClient();
 
             }
