@@ -24,7 +24,7 @@ namespace Navalmod
                 time = SingleInstance<H3NetworkManager>.Instance.rateSend;
                 float i = (ClusterBaseBlock.transform.position - base.transform.position).magnitude;
                 Quaternion n = GetLocalRotation();
-                if (Quaternion.Angle(n, rotLast) > 1f || Mathf.Abs(disLast-i)>0.3f)
+                if (Quaternion.Angle(n, rotLast) > 0.3f || Mathf.Abs(disLast-i)>0.2f)
                 {
 
                     send = true;
