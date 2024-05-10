@@ -2094,6 +2094,7 @@ namespace WW2NavalAssembly
                 {
                     FindDeck();
                 }
+                deckHeight = 0;
                 status = Status.OnBoard;
                 SettleSpot(MyDeck, true);
                 PropellerSpeed = 3f;
@@ -2502,14 +2503,28 @@ namespace WW2NavalAssembly
                 RaycastHit hit2;
                 if (Physics.Raycast(UnderRay1, out hit1, 0.55f))
                 {
-                    deckHeight = Mathf.Max(deckHeight, hit1.point.y);
+                    if (deckHeight == 0)
+                    {
+                        deckHeight = hit1.point.y;
+                    }
+                    else
+                    {
+                        deckHeight = Mathf.Lerp(deckHeight, hit1.point.y, 0.1f);
+                    }
                     deckBelow = true;
                 }
                 else
                 {
-                    if (Physics.Raycast(UnderRay2, out hit2, 1f))
+                    if (Physics.Raycast(UnderRay2, out hit2, 0.55f))
                     {
-                        deckHeight = Mathf.Max(deckHeight, hit2.point.y);
+                        if (deckHeight == 0)
+                        {
+                            deckHeight = hit2.point.y;
+                        }
+                        else
+                        {
+                            deckHeight = Mathf.Lerp(deckHeight, hit2.point.y, 0.1f);
+                        }
                         deckBelow = true;
                     }
                     else
