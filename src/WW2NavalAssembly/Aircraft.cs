@@ -768,6 +768,7 @@ namespace WW2NavalAssembly
             Thrust = 10f;
 
             targetRoll = -180;
+            Vector3 LastTurn_pos = Vector3.zero;
             while (transform.position.y > Constants.SeaHeight + Constants.BombDropHeight + DiveAnxiety)
             {
                 yield return new WaitForFixedUpdate();
@@ -808,39 +809,44 @@ namespace WW2NavalAssembly
                     target_vel.y = 0;
                     //target_vel *= (0.5f + err);
 
+                    target_pos += (0.5f - err) * target_vel * 3f;
+
                     Vector3 targetDirection = target_pos - transform.position;
                     Vector2 dir2D = MathTool.Get2DCoordinate(targetDirection);
                     Vector2 vel2D = MathTool.Get2DCoordinate(myRigid.velocity);
+                    Vector2 target_vel2D = MathTool.Get2DCoordinate(target_vel);
 
-                    float ProjVel = Vector2.Dot(vel2D, dir2D.normalized);
-                    float EstimatedTime = dir2D.magnitude / ProjVel;
-                    if (Mathf.Abs(Vector2.Angle(vel2D, dir2D)) >= 90)
+
+                    Vector3 turn_pos = Vector3.zero;
+                    // velocity modifier
+                    if (target_vel2D.magnitude < vel2D.magnitude)
                     {
-                        EstimatedTime = 0f;
+                        turn_pos.y = transform.position.y - Mathf.Sqrt(myRigid.velocity.sqrMagnitude - target_vel2D.sqrMagnitude);
                     }
                     else
                     {
-                        float diffVel = ProjVel - Vector2.Dot(target_vel, dir2D.normalized);
-                        if (diffVel > 0)
-                        {
-                            EstimatedTime = dir2D.magnitude / diffVel;
-                        }
-                        else
-                        {
-                            EstimatedTime = 99f;
-                        }
+                        turn_pos.y = transform.position.y - 5f;
                     }
-                    Vector3 predict_pos = target_pos + EstimatedTime * target_vel * (0.5f+err);
-                    target_pos = predict_pos;
+                    turn_pos.x = transform.position.x + target_vel2D.x;
+                    turn_pos.z = transform.position.z + target_vel2D.y;
 
-                    float targetHeight = -myRigid.velocity.y * EstimatedTime + 0.5f * Constants.Gravity * Mathf.Pow(EstimatedTime, 2);
-                    target_pos.y += targetHeight;
-                    target_pos.y = Mathf.Clamp(target_pos.y, -20, transform.position.y);
+
+                    // pos modifier
+                    turn_pos.x += targetDirection.x * 2f;
+                    turn_pos.z += targetDirection.z * 2f;
+
+                    if (LastTurn_pos == Vector3.zero)
+                    {
+                        LastTurn_pos = turn_pos;
+                    }
+
+                    turn_pos = Vector3.Lerp(turn_pos, LastTurn_pos, 0.8f);
+                    LastTurn_pos = turn_pos;
 
                     // turn to target
-                    targetDirection = target_pos - transform.position;
+                    targetDirection = turn_pos - transform.position;
                     float AngleDiff = Vector3.Angle(myRigid.velocity, targetDirection);
-                    Vector3 torque = Vector3.Cross(myRigid.velocity, targetDirection).normalized * Mathf.Clamp(AngleDiff * 1.5f, -20, 20);
+                    Vector3 torque = Vector3.Cross(myRigid.velocity, targetDirection).normalized * Mathf.Clamp(AngleDiff * 1f, -15, 15);
                     myRigid.AddTorque(torque);
                     //Vector3 v_angularVel = myRigid.angularVelocity;
                     //Vector3 RollTorque = Vector3.Cross(transform.right, -v_angularVel.normalized) * 7;//5=>7
@@ -2947,7 +2953,7 @@ namespace WW2NavalAssembly
                         AddAeroForce(true);
                         DeckSliding = false;
 
-                        if (Type.Value == 1 || ((Type.Value == 2|| Type.Value == 3) && !inAttackRoutine))
+                        if (Type.Value == 1)
                         {
                             if (Rank.Value == 0)
                             {
@@ -2956,6 +2962,17 @@ namespace WW2NavalAssembly
                             else if (Rank.Value == 1)
                             {
                                 //TurnToWayPoint();
+                            }
+                        }
+                        if ((Type.Value == 2 || Type.Value == 3) && !inAttackRoutine)
+                        {
+                            if (Rank.Value == 0)
+                            {
+                                SlaveFollowLeader();
+                            }
+                            else if (Rank.Value == 1)
+                            {
+                                TurnToWayPoint();
                             }
                         }
 
