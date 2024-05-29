@@ -986,7 +986,12 @@ namespace WW2NavalAssembly
                 }
                 else
                 {
-                    UpdateGunIcon();
+                    try
+                    {
+                        UpdateGunIcon();
+                    }
+                    catch { }
+                    
                 }
             }
         }

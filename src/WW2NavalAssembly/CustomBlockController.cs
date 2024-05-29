@@ -44,6 +44,10 @@ namespace WW2NavalAssembly
             if (block.GetComponent<H3NetworkBlock>() == null) {
                 block.gameObject.AddComponent<H3NetworkBlock>().blockBehaviour = block;
             }
+            if (block.GetComponent<Horizon>() == null)
+            {
+                block.gameObject.AddComponent<Horizon>().bb = block;
+            }
             //if (StatMaster.isMP == StatMaster.IsLevelEditorOnly)
             switch (block.BlockID)
             {
