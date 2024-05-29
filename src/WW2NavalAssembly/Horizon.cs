@@ -101,7 +101,12 @@ namespace WW2NavalAssembly
 
         public float GetHorizon()
         {
-            return Mathf.Clamp((controller.transform.position.y - Constants.SeaHeight), 0, 100) * 10f;
+            float radius = 6710000f;
+            float height = Mathf.Clamp((controller.transform.position.y - Constants.SeaHeight), 0, 100) * 5;
+            float horizonDist = Mathf.Sqrt(Mathf.Pow(height + radius,2)- Mathf.Pow(radius, 2))/10f;
+            horizonDist = Mathf.Clamp(horizonDist, 100f, 100000f);
+            //Debug.Log(horizonDist);
+            return horizonDist;
         }
 
         public float GetDist()
