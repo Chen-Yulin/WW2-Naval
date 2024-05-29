@@ -154,9 +154,26 @@ namespace WW2NavalAssembly
             }
             else
             {
-                if (Enabled)
+                if (Enabled && controller)
                 {
                     Show = GetHorizon() > GetDist();
+                }
+                if (!controller)
+                {
+                    try
+                    {
+                        if (StatMaster.isMP)
+                        {
+                            controller = ControllerDataManager.Instance.ControllerObject[PlayerData.localPlayer.networkId];
+                        }
+                        else
+                        {
+                            controller = ControllerDataManager.Instance.ControllerObject[0];
+                        }
+                    }
+                    catch
+                    {
+                    }
                 }
             }
             
