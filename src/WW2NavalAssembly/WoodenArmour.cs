@@ -18,8 +18,8 @@ namespace WW2NavalAssembly
         public BlockBehaviour BB { get; internal set; }
         public MSlider Thickness;
         public float thickness;
-        GameObject Vis;
-        MeshRenderer VisRender;
+        public GameObject Vis;
+        public MeshRenderer VisRender;
 
         public GameObject VisRef { get { return Vis; } }
 
@@ -211,16 +211,20 @@ namespace WW2NavalAssembly
 
         public void UpdateVis(bool show)
         {
-            if (show)
+            if (GetComponent<Horizon>().Show)
             {
-                transform.Find("Vis").gameObject.SetActive(false);
-                VisRender.material = AssetManager.Instance.ArmorMat[Mathf.Clamp((int)(thickness / 10f), 0, 65)];
+                if (show)
+                {
+                    transform.Find("Vis").gameObject.SetActive(false);
+                    VisRender.material = AssetManager.Instance.ArmorMat[Mathf.Clamp((int)(thickness / 10f), 0, 65)];
+                }
+                else
+                {
+                    transform.Find("Vis").gameObject.SetActive(true);
+                    VisRender.material = AssetManager.Instance.TransparentMat;
+                }
             }
-            else
-            {
-                transform.Find("Vis").gameObject.SetActive(true);
-                VisRender.material = AssetManager.Instance.TransparentMat;
-            }
+                
         }
         public virtual void SafeAwake()
         {

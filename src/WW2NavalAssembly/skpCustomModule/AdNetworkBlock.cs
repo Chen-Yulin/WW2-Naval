@@ -1697,7 +1697,6 @@ namespace skpCustomModule
 					bool flag12 = component2 != null;
 					if (flag12)
 					{
-						component2.PlaySound();
 					}
 					break;
 				}

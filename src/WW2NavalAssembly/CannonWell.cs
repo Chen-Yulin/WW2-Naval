@@ -96,6 +96,9 @@ namespace WW2NavalAssembly
 
         bool initialized = false;
         bool visInitialized = false;
+
+        public Horizon horizon;
+
         public bool isWooden(BlockBehaviour bb)
         {
             if (!bb)
@@ -732,7 +735,11 @@ namespace WW2NavalAssembly
         }
         public void Update()
         {
-            if (ModController.Instance.ShowArmour)
+            if (!horizon)
+            {
+                horizon = GetComponent<Horizon>();
+            }
+            if (ModController.Instance.ShowArmour && horizon.Show)
             {
                 ShowGroupLine();
             }

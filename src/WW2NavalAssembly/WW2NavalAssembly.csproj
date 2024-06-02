@@ -85,6 +85,7 @@
     <Compile Include="H3NetCompression.cs" />
     <Compile Include="H3NetworkBlock.cs" />
     <Compile Include="H3NetworkManager.cs" />
+    <Compile Include="Horizon.cs" />
     <Compile Include="LanguageManager.cs" />
     <Compile Include="MathTool.cs" />
     <Compile Include="MessageController.cs" />
