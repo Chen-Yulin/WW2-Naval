@@ -20,6 +20,8 @@ namespace WW2NavalAssembly
         bool _show = true;
         public bool Findinactive = false;
 
+        float AircraftDist = 1000f;
+
         int i = 0;
 
 
@@ -113,6 +115,28 @@ namespace WW2NavalAssembly
         {
             return MathTool.Get2DDistance(controller.transform.position, transform.position);
         }
+
+        public float GetAircraftDist()
+        {
+            float dist = float.MaxValue;
+
+            int playerID = 0;
+            if (StatMaster.isMP)
+            {
+                playerID = PlayerData.localPlayer.networkId;
+            }
+
+            foreach (var a in Grouper.Instance.GetLeaders(playerID))
+            {
+                Aircraft aircraft = a.Value.Value;
+                float d = MathTool.Get2DDistance(transform.position, aircraft.transform.position);
+                if (d<dist)
+                {
+                    dist = d;
+                }
+            }
+            return dist;
+        }
         void Start()
         {
             
@@ -157,6 +181,10 @@ namespace WW2NavalAssembly
                 if (Enabled && controller)
                 {
                     Show = GetHorizon() > GetDist();
+                    if (!Show)
+                    {
+                        Show = AircraftDist > GetAircraftDist();
+                    }
                 }
                 if (!controller)
                 {

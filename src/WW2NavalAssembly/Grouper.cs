@@ -155,5 +155,10 @@ namespace WW2NavalAssembly
                 return null;
             }
         }
+
+        public Dictionary<string, KeyValuePair<int, Aircraft>> GetLeaders(int playerID)
+        {
+            return AircraftLeaders[playerID];
+        }
     }
 }
