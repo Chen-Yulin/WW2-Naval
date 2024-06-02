@@ -110,6 +110,8 @@ namespace WW2NavalAssembly
 
         public Stack<Chimney> Chimneys = new Stack<Chimney>();
 
+        public Horizon horizon;
+
         public void FindChimneys()
         {
             foreach(var chimney in transform.parent.GetComponentsInChildren<Chimney>())
@@ -141,7 +143,11 @@ namespace WW2NavalAssembly
         }
         public void UpdateTrail()
         {
-            if (ModController.Instance.showSea && frameCount >5)
+            if (!horizon)
+            {
+                horizon = GetComponent<Horizon>();
+            }
+            if (ModController.Instance.showSea && frameCount >5 && horizon.Show)
             {
                 Trail.transform.position = new Vector3(Propeller.transform.position.x, 20.05f, Propeller.transform.position.z);
                 if (!Trail.activeSelf)

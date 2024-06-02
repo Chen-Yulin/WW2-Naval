@@ -28,6 +28,7 @@ namespace WW2NavalAssembly
         public float SizeCoeff = 1;
         public float SpeedCoeff = 1;
 
+        public Horizon horizon;
 
         public void SetSmokeState(int state)
         {
@@ -66,7 +67,18 @@ namespace WW2NavalAssembly
 
         public void SimulateUpdate()
         {
-            
+            if (!horizon)
+            {
+                horizon = GetComponent<Horizon>();
+            }
+            if (horizon.Show)
+            {
+                SmokePS.Play();
+            }
+            else
+            {
+                SmokePS.Stop();
+            }
         }
 
 

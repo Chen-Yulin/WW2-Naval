@@ -182,6 +182,8 @@ namespace WW2NavalAssembly
         FollowerUI GunnerAlertUI;
         FollowerUI GunnerAAUI;
 
+        public Horizon horizon;
+
         public override bool EmulatesAnyKeys { get { return true; } }
 
         public void UpdateUI()
@@ -895,7 +897,11 @@ namespace WW2NavalAssembly
         }
         public void Update()
         {
-            if (ModController.Instance.ShowArmour)
+            if (!horizon)
+            {
+                horizon = GetComponent<Horizon>();
+            }
+            if (ModController.Instance.ShowArmour && horizon.Show)
             {
                 ShowGroupLine();
             }
