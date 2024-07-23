@@ -20,34 +20,12 @@ namespace skpCustomModule
 			}
 		}
 
-		// Token: 0x06000137 RID: 311 RVA: 0x00016D1C File Offset: 0x00014F1C
-		public bool OnExplode(float power, float upPower, float torquePower, Vector3 explosionPos, float radius, int mask)
-		{
-			bool flag = !StatMaster.levelSimulating;
-			bool result;
-			if (flag)
-			{
-				result = false;
-			}
-			else
-			{
-				this.projectileScript = base.gameObject.GetComponent<AdProjectileScript>();
-				bool flag2 = (mask & 64) != 0;
-				if (flag2)
-				{
-					this.projectileScript.TrailPurge();
-					this.projectileScript.Explode(base.transform.position, base.transform.rotation);
-					result = true;
-				}
-				else
-				{
-					result = false;
-				}
-			}
-			return result;
-		}
+        public bool OnExplode(float power, float upPower, float torquePower, Vector3 explosionPos, float radius, int mask, bool inWater)
+        {
+            throw new NotImplementedException();
+        }
 
-		// Token: 0x04000290 RID: 656
-		public AdProjectileScript projectileScript;
+        // Token: 0x04000290 RID: 656
+        public AdProjectileScript projectileScript;
 	}
 }

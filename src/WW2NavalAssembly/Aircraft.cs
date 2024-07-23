@@ -660,7 +660,7 @@ namespace WW2NavalAssembly
                     target_pos.y = Constants.SeaHeight + 1f;
                     target_vel.y = 0;
 
-                    MyLogger.Instance.Log(target_pos.ToString(), myPlayerID);
+                    //MyLogger.Instance.Log(target_pos.ToString(), myPlayerID);
 
                     float tor_time = drop_dist/10f;// drop at a dist of 100m, vel of torpedo 8.3m/s
 
