@@ -1732,7 +1732,6 @@ namespace skpCustomModule
 					bool flag15 = this.isBlock && this.blockBehaviour.Prefab.hasBVC;
 					if (flag15)
 					{
-						this.blockBehaviour.VisualController.SetBloodyLevel(1f);
 					}
 					break;
 				}

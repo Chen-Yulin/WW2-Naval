@@ -17,7 +17,7 @@ namespace WW2NavalAssembly
         public bool halfVis = false;
         public BlockBehaviour bb;
         bool Enabled = false;
-        bool _show = true;
+        public bool _show = true;
         public bool Findinactive = false;
 
         float AircraftDist = 1000f;

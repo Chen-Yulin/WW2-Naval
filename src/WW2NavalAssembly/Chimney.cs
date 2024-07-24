@@ -73,11 +73,18 @@ namespace WW2NavalAssembly
             }
             if (horizon.Show)
             {
-                SmokePS.Play();
+                if (!SmokePS.isPlaying)
+                {
+                    SmokePS.Play();
+                }
+                
             }
             else
             {
-                SmokePS.Stop();
+                if (SmokePS.isPlaying)
+                {
+                    SmokePS.Pause();
+                }
             }
         }
 
@@ -111,6 +118,7 @@ namespace WW2NavalAssembly
                 SmokePS.startSpeed = SmokeSpeed.Value;
                 SmokePS.gravityModifier = SmokeGravity.Value;
                 SmokePS.startColor = new Color(1, 1, 1, 0.05f);
+                horizon = GetComponent<Horizon>();
             }
         }
         public void Update()
@@ -118,6 +126,7 @@ namespace WW2NavalAssembly
             if (BB.isSimulating)
             {
                 SimulateUpdate();
+                Debug.Log(SmokePS.isPlaying);
             }
             else
             {

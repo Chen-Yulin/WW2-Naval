@@ -47,7 +47,6 @@ namespace skpCustomModule
 							IExplosionEffect[] array3 = interfaces;
 							foreach (IExplosionEffect explosionEffect in array3)
 							{
-								explosionEffect.OnExplode(this.power, this.upPower, 0f, this.explosionPos, this.radius, num);
 							}
 						}
 					}
