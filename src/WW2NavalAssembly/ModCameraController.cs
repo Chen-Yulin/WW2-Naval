@@ -44,24 +44,27 @@ namespace WW2NavalAssembly
                 {
                     MO = SingleInstanceFindOnly<MouseOrbit>.Instance;
                 }
-                if (value == Mode.MO)
+                if (MO)
                 {
-                    MO.isActive = true;
-                    FPV.IsActive = false;
-                    TAC.IsActive = false;
+                    if (value == Mode.MO)
+                    {
+                        MO.isActive = true;
+                        FPV.IsActive = false;
+                        TAC.IsActive = false;
 
-                }
-                else if (value == Mode.FPV)
-                {
-                    MO.isActive = false;
-                    FPV.IsActive = true;
-                    TAC.IsActive = false;
-                }
-                else
-                {
-                    MO.isActive = false;
-                    FPV.IsActive = false;
-                    TAC.IsActive = true;
+                    }
+                    else if (value == Mode.FPV)
+                    {
+                        MO.isActive = false;
+                        FPV.IsActive = true;
+                        TAC.IsActive = false;
+                    }
+                    else
+                    {
+                        MO.isActive = false;
+                        FPV.IsActive = false;
+                        TAC.IsActive = true;
+                    }
                 }
             }
             get { return mode; }
