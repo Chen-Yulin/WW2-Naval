@@ -1,7 +1,7 @@
 src/.vs/
-src/ModernAssembly/bin/Debug/*
-src/ModernAssembly/obj/Debug/*
-src/ModernAssembly/*.csproj.user
+src/WW2NavalAssembly/bin/Debug/*
+src/WW2NavalAssembly/obj/Debug/*
+src/WW2NavalAssembly/*.csproj.user
 .vs
 *.zip
 *.cache

@@ -135,6 +135,14 @@ namespace WW2NavalAssembly
                     {
                         break;
                     }
+                case (int)BlockType.ScalingBlock:
+                    {
+                        if (block.gameObject.GetComponent(typeof(AircraftLifter)) == null)
+                        {
+                            block.gameObject.AddComponent(typeof(AircraftLifter));
+                        }
+                        break;
+                    }
                 default:
                     {
                         if (block.gameObject.GetComponent(typeof(DefaultArmour)) == null)

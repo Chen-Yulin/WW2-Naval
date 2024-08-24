@@ -521,7 +521,7 @@ namespace WW2NavalAssembly
                 else
                 {
                     float eqThick = Thickness / Mathf.Cos(angle * Mathf.PI / 180);
-                    myRigid.velocity *= 1 - eqThick * 0.8f / penetration;
+                    myRigid.velocity *= 1 - eqThick * 0.5f / penetration;
                     penetration -= eqThick;
                     pericedBlock.Push(hit.collider.attachedRigidbody.GetComponent<BlockBehaviour>().BuildingBlock.Guid.GetHashCode());
 
@@ -839,11 +839,11 @@ namespace WW2NavalAssembly
                 GameObject explo;
                 if (Caliber < 100)
                 {
-                    explo = (GameObject)Instantiate(AssetManager.Instance.CannonHit.exploSmall, transform.position, Quaternion.identity);
+                    explo = (GameObject)Instantiate(AssetManager.Instance.CannonHit.exploSmall, hit.point, Quaternion.identity);
                 }
                 else
                 {
-                    explo = (GameObject)Instantiate(AssetManager.Instance.CannonHit.explo, transform.position, Quaternion.identity);
+                    explo = (GameObject)Instantiate(AssetManager.Instance.CannonHit.explo, hit.point, Quaternion.identity);
                 }
                 explo.name = "Explo Hit";
                 explo.SetActive(true);
@@ -856,11 +856,11 @@ namespace WW2NavalAssembly
                 //send to client
                 if (Caliber < 100)
                 {
-                    ModNetworking.SendToAll(WeaponMsgReceiver.ExploMsg.CreateMessage(myPlayerID, transform.position, Caliber, 4));
+                    ModNetworking.SendToAll(WeaponMsgReceiver.ExploMsg.CreateMessage(myPlayerID, hit.point, Caliber, 4));
                 }
                 else
                 {
-                    ModNetworking.SendToAll(WeaponMsgReceiver.ExploMsg.CreateMessage(myPlayerID, transform.position, Caliber, AP ? 0 : 2));
+                    ModNetworking.SendToAll(WeaponMsgReceiver.ExploMsg.CreateMessage(myPlayerID, hit.point, Caliber, AP ? 0 : 2));
                 }
 
                 try
