@@ -999,7 +999,7 @@ namespace WW2NavalAssembly
             try
             {
                 //Debug.Log(armourGuid);
-                Collider[] ExploCol = Physics.OverlapSphere(transform.position, Mathf.Sqrt(Caliber) / (AP?8f:5f));
+                Collider[] ExploCol = Physics.OverlapSphere(pos, Mathf.Sqrt(Caliber) / (AP?8f:5f));
                 foreach (Collider hitedCollider in ExploCol)
                 {
                     try
