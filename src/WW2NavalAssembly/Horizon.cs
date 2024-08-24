@@ -149,7 +149,6 @@ namespace WW2NavalAssembly
             }
             else if (i == 10)
             {
-                Findinactive = bb.BlockID == (int)BlockType.SpinningBlock;
                 Enabled = bb.isSimulating;
                 if (Enabled)
                 {
@@ -201,6 +200,10 @@ namespace WW2NavalAssembly
                     }
                     catch
                     {
+                    }
+                    if (!controller)
+                    {
+                        Show = true;
                     }
                 }
             }

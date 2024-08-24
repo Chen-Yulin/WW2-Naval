@@ -439,7 +439,7 @@ namespace WW2NavalAssembly
                 catch { }
 
                 ExploDestroyBalloon(hit.point, AP);
-                ExploDamageAA(transform.position, AP);
+                ExploDamageAA(hit.point, AP);
             }
             catch { }
 
@@ -451,7 +451,7 @@ namespace WW2NavalAssembly
         {
             
             //Debug.Log(armourGuid);
-            Collider[] ExploCol = Physics.OverlapCapsule(transform.position, transform.position + Vector3.up * 3f, Mathf.Sqrt(Weight) / (AP ? 20f : 13f));
+            Collider[] ExploCol = Physics.OverlapCapsule(pos, pos + Vector3.up * 3f, Mathf.Sqrt(Weight) / (AP ? 20f : 13f));
             foreach (Collider hitedCollider in ExploCol)
             {
                 try
@@ -507,7 +507,7 @@ namespace WW2NavalAssembly
             try
             {
                 //Debug.Log(armourGuid);
-                Collider[] ExploCol = Physics.OverlapSphere(transform.position, Mathf.Sqrt(Weight) / (AP ? 8f : 5f));
+                Collider[] ExploCol = Physics.OverlapSphere(pos, Mathf.Sqrt(Weight) / (AP ? 8f : 5f));
                 foreach (Collider hitedCollider in ExploCol)
                 {
                     try

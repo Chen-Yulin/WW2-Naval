@@ -210,7 +210,6 @@ namespace WW2NavalAssembly
                 yield return new WaitForSeconds(delayTime);
                 MyLogger.Instance.Log("\tFinished", myPlayerID);
                 a.SwitchToOnBoard();
-                //MyLogger.Instance.Log("Finish");
             }
             upOperating = false;
             yield break;
@@ -1416,7 +1415,7 @@ namespace WW2NavalAssembly
 
         public override void OnSimulateStop()
         {
-            FlightDataBase.Instance.ClearDeckHangar(myPlayerID);
+            FlightDataBase.Instance.ClearDeckHangarLifter(myPlayerID);
             try
             {
                 inTacticalView = false;
@@ -1429,7 +1428,7 @@ namespace WW2NavalAssembly
         }
         public void OnDestroy()
         {
-            FlightDataBase.Instance.ClearDeckHangar(myPlayerID);
+            FlightDataBase.Instance.ClearDeckHangarLifter(myPlayerID);
             try
             {
                 inTacticalView = false;

@@ -111,8 +111,6 @@ namespace WW2NavalAssembly
             Vector3 pos = (Vector3)msg.GetData(0);
             GameObject explo = (GameObject)Instantiate(AssetManager.Instance.Aircraft.AircraftExplo, pos, Quaternion.identity);
             Destroy(explo, 5);
-            GameObject smoke = (GameObject)Instantiate(AssetManager.Instance.Aircraft.AircraftShootDown, pos, Quaternion.identity, transform);
-            Destroy(smoke, 10);
         }
         public void ShootDownMsgReceiver(Message msg)
         {

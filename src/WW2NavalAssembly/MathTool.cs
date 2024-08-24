@@ -88,5 +88,13 @@ namespace WW2NavalAssembly
             }
             return -1; // Element not found
         }
+
+        public static bool pointInBox(Vector2 point, Vector2 boxPos, Vector2 boxRight, Vector2 boxSize)
+        {
+            Vector2 b2p = point - boxPos;
+            float rightProjMag = Vector2.Dot(b2p, boxRight);
+            Vector2 upProj = b2p - rightProjMag * boxRight;
+            return Mathf.Abs(rightProjMag) < (boxSize.x/2f+1f) && upProj.magnitude < (boxSize.y/2f+1f);
+        }
     }
 }
