@@ -42,6 +42,8 @@ namespace WW2NavalAssembly
 
         public Queue<Aircraft>[] LandingQueue = new Queue<Aircraft>[16];
 
+        public Dictionary<int, AircraftLifter>[] Lifters = new Dictionary<int, AircraftLifter>[16];
+
         public void CheckLandingQueue(int player)
         {
             Queue<Aircraft> newQ = new Queue<Aircraft>();
@@ -155,10 +157,10 @@ namespace WW2NavalAssembly
             {
                 if (spot.GetComponent<ParkingSpot>().occupied)
                 {
-                    res = Mathf.Max(res, spot.GetSiblingIndex()+1);
+                    res = Mathf.Max(res, spot.transform.localPosition.z);
                 }
             }
-            res = ((Mathf.Ceil(res / (float)Decks[playerID].Width_num)) * AIRCRAFT_LENGTH_DECK + 3f);
+            res += AIRCRAFT_LENGTH_DECK;
             TakeOffPosition[playerID] = res;
         }
 
@@ -214,13 +216,9 @@ namespace WW2NavalAssembly
             Vis.transform.localPosition = Vector3.zero;
             Vis.transform.localEulerAngles = Vector3.zero;
 
+            int skipNum = 0;
             for (int i = 0; i < Decks[playerID].Total_num; i++)
             {
-                GameObject parkingSpot = Instantiate(AssetManager.Instance.Aircraft.ParkingSpot);
-                parkingSpot.name = "ParkingSpot-" + i.ToString();
-                parkingSpot.transform.parent = Vis.transform;
-                parkingSpot.AddComponent<ParkingSpot>();
-
                 Vector3 anchor = new Vector3(0,0,0);
                 Vector3 right = Vector3.right;
                 Vector3 forward = Vector3.forward;
@@ -230,10 +228,33 @@ namespace WW2NavalAssembly
                                     + i / Decks[playerID].Width_num * AIRCRAFT_LENGTH_DECK * forward
                                     + (ForwardABit ? AIRCRAFT_LENGTH_DECK/2f : 0) * forward;
 
+                bool CollideWithLifter = false;
+                foreach (var lifter in Lifters[playerID])
+                {
+                    //Debug.Log("Point" + Vis.transform.TransformPoint(spotPos));
+                    //Debug.Log("Get Lifter"+ lifter.Value.Pos2D+ lifter.Value.Right2D+ lifter.Value.Size2D);
+                    if (MathTool.pointInBox(MathTool.Get2DCoordinate(Vis.transform.TransformPoint(spotPos)), lifter.Value.Pos2D, lifter.Value.Right2D, lifter.Value.Size2D))
+                    {
+                        CollideWithLifter = true;
+                    }
+                }
+
+                if (CollideWithLifter)
+                {
+                    skipNum++;
+                    continue;
+                }
+
+                GameObject parkingSpot = Instantiate(AssetManager.Instance.Aircraft.ParkingSpot);
+                parkingSpot.name = "ParkingSpot-" + (i-skipNum).ToString();
+                parkingSpot.transform.parent = Vis.transform;
+                parkingSpot.AddComponent<ParkingSpot>();
+
                 parkingSpot.transform.localPosition = spotPos;
 
                 parkingSpot.transform.localEulerAngles = Vector3.zero;
             }
+            Decks[playerID].Total_num -= skipNum;
 
             // for take off spot
             GameObject TakeOff = new GameObject("TakeOff");
@@ -354,6 +375,25 @@ namespace WW2NavalAssembly
             }
         }
 
+        public void AddLifter(int playerID, int guid, AircraftLifter lifter)
+        {
+            if (Lifters[playerID].ContainsKey(guid))
+            {
+                Lifters[playerID][guid] = lifter;
+            }
+            else
+            {
+                Lifters[playerID].Add(guid , lifter);
+            }
+        }
+
+        public void RemoveLifter(int playerID, int guid)
+        {
+            if (Lifters[playerID].ContainsKey(guid))
+            {
+                Lifters[playerID].Remove(guid);
+            }
+        }
         public void ShowDeckHangarVis(int playerID)
         {
             if (ModController.Instance.ShowArmour)
@@ -634,10 +674,11 @@ namespace WW2NavalAssembly
         {
             CalculateHangar(playerID);
         }
-        public void ClearDeckHangar(int playerID)
+        public void ClearDeckHangarLifter(int playerID)
         {
             Decks[playerID] = new Deck();
             Hangars[playerID] = new Dictionary<string, Deck>();
+            Lifters[playerID] = new Dictionary<int, AircraftLifter>();
         }
         public void CalculateHangar(int playerID)
         {
@@ -831,6 +872,7 @@ namespace WW2NavalAssembly
                 Decks[i] = new Deck();
                 engines[i] = new List<Engine>();
                 LandingQueue[i] = new Queue<Aircraft>();
+                Lifters[i] = new Dictionary<int, AircraftLifter>();
             }
             InitLine();
         }
