@@ -103,15 +103,14 @@ namespace WW2NavalAssembly
             Debug.Log("Receive return msg: " + group);
         }
     }
-    public class AircraftElevator : MonoBehaviour
+    public class AircraftLiftManager : MonoBehaviour
     {
         public float delayTime = 0.2f;
 
         public Queue<Aircraft> UpQueue = new Queue<Aircraft>();
         public Queue<Aircraft> DownQueue = new Queue<Aircraft>();
 
-        public bool upOperating = false;
-        public bool downOperating = false;
+
         public int myPlayerID = 0;
 
         public void AddUpQueue(Aircraft aircraft) // return whether duplication exists
@@ -199,36 +198,57 @@ namespace WW2NavalAssembly
             }
         }
 
-        IEnumerator LiftCoroutine()
+        IEnumerator LiftCoroutine(AircraftLifter lifter)
         {
-            upOperating = true;
+            lifter.operating = true;
             Aircraft a = UpQueue.Count > 0 ? UpQueue.Dequeue() : null;
             if (a && a.status == Aircraft.Status.InHangar)
             {
+                while (!lifter.GoToHangarStep(a))
+                {
+                    yield return new WaitForFixedUpdate();
+                }
                 a.FindDeck();
+                a.SwitchToOnLifter(lifter);
                 MyLogger.Instance.Log("Elevator lift aircraft: [" + a.Group.Value + "](" + a.myTeamIndex + ")...", myPlayerID);
+                
                 yield return new WaitForSeconds(delayTime);
-                MyLogger.Instance.Log("\tFinished", myPlayerID);
+                
+                while (!lifter.GoToDeckStep())
+                {
+                    yield return new WaitForFixedUpdate();
+                }
+                yield return new WaitForSeconds(delayTime);
                 a.SwitchToOnBoard();
+                MyLogger.Instance.Log("\tFinished", myPlayerID);
             }
-            upOperating = false;
+            lifter.operating = false;
             yield break;
         }
 
-        IEnumerator DropCoroutine()
+        IEnumerator DropCoroutine(AircraftLifter lifter)
         {
-            downOperating = true;
             Aircraft a = DownQueue.Count > 0 ? DownQueue.Dequeue() : null;
             if (a && a.status == Aircraft.Status.OnBoard)
             {
+                while (!lifter.GoToDeckStep())
+                {
+                    yield return new WaitForFixedUpdate();
+                }
                 MyLogger.Instance.Log("Elevator drop aircraft: [" + a.Group.Value + "](" + a.myTeamIndex + ")...", myPlayerID);
+                a.SwitchToOnLifter(lifter);
                 yield return new WaitForSeconds(delayTime);
-                MyLogger.Instance.Log("\tFinished", myPlayerID);
+                while (!lifter.GoToHangarStep(a))
+                {
+                    yield return new WaitForFixedUpdate();
+                }
+                yield return new WaitForSeconds(delayTime);
                 a.SwitchToInHangar();
+                MyLogger.Instance.Log("\tFinished", myPlayerID);
                 FlightDataBase.Instance.Decks[myPlayerID].Occupied_num--;
                 //MyLogger.Instance.Log("Finish");
             }
-            downOperating = false;
+            lifter.operating = false;
             yield break;
         }
 
@@ -238,13 +258,37 @@ namespace WW2NavalAssembly
 
         void Update()
         {
-            if (UpQueue.Count > 0 && !upOperating)
+            if (UpQueue.Count > 0)
             {
-                StartCoroutine(LiftCoroutine());
+                foreach (var lifter in FlightDataBase.Instance.Lifters[myPlayerID])
+                {
+                    if (lifter.Value)
+                    {
+                        if (!lifter.Value.operating)
+                        {
+                            lifter.Value.operating = true;
+                            StartCoroutine(LiftCoroutine(lifter.Value));
+                            break;
+                        }
+                    }
+                }
+                
             }
-            if (DownQueue.Count > 0 && !downOperating)
+            if (DownQueue.Count > 0)
             {
-                StartCoroutine(DropCoroutine());
+                foreach (var lifter in FlightDataBase.Instance.Lifters[myPlayerID])
+                {
+                    if (lifter.Value)
+                    {
+                        if (!lifter.Value.operating)
+                        {
+                            lifter.Value.operating = true;
+                            StartCoroutine(DropCoroutine(lifter.Value));
+                            break;
+                        }
+                    }
+                }
+
             }
         }
 
@@ -460,7 +504,7 @@ namespace WW2NavalAssembly
                 }
             }
         }
-        public AircraftElevator Elevator;
+        public AircraftLiftManager Elevator;
         public AircraftRunway Runway;
 
         public Vector3 dragOrigin;
@@ -836,7 +880,7 @@ namespace WW2NavalAssembly
         public override void OnSimulateStart()
         {
             myGuid = BlockBehaviour.BuildingBlock.Guid.GetHashCode();
-            Elevator = gameObject.AddComponent<AircraftElevator>();
+            Elevator = gameObject.AddComponent<AircraftLiftManager>();
             Elevator.myPlayerID = myPlayerID;
             Runway = gameObject.AddComponent<AircraftRunway>();
             Runway.myPlayerID = myPlayerID;
