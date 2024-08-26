@@ -2189,6 +2189,12 @@ namespace WW2NavalAssembly
                 PropellerSpeed = 0;
                 Thrust = 0;
                 FoldWing = true;
+                hasAttacked = false;
+                hasFindBackup = false;
+                if (!hasLoad)
+                {
+                    StartCoroutine(ReloadCorouting());
+                }
             }
         }
         public void InHangarBehaviourFU()
