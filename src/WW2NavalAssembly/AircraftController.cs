@@ -229,7 +229,7 @@ namespace WW2NavalAssembly
         IEnumerator DropCoroutine(AircraftLifter lifter)
         {
             Aircraft a = DownQueue.Count > 0 ? DownQueue.Dequeue() : null;
-            if (a && a.status == Aircraft.Status.OnBoard)
+            if (a && (a.status == Aircraft.Status.OnBoard || (a.status == Aircraft.Status.Landing && a.onboard)))
             {
                 while (!lifter.GoToDeckStep())
                 {
@@ -246,6 +246,10 @@ namespace WW2NavalAssembly
                 a.SwitchToInHangar();
                 MyLogger.Instance.Log("\tFinished", myPlayerID);
                 FlightDataBase.Instance.Decks[myPlayerID].Occupied_num--;
+                while (!lifter.GoToDeckStep())
+                {
+                    yield return new WaitForFixedUpdate();
+                }
                 //MyLogger.Instance.Log("Finish");
             }
             lifter.operating = false;

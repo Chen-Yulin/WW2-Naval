@@ -883,9 +883,7 @@ namespace WW2NavalAssembly
             MyLogger.Instance.Log("[" + Group.Value + "](" + myTeamIndex + ") land on deck successfully, transfer to hangar ...", myPlayerID);
             onboard = true;
             yield return new WaitForSeconds(1f);
-            MyLogger.Instance.Log("\tFinish transfer", myPlayerID);
-            SwitchToInHangar();
-            onboard = false;
+            FlightDataBase.Instance.aircraftController[myPlayerID].Elevator.AddDownQueue(this);
             yield break;
         }
         IEnumerator ReloadCorouting()
@@ -2013,6 +2011,7 @@ namespace WW2NavalAssembly
                 Thrust = 23f;
                 UndercartObject.SetActive(true);
                 landingTime = 0;
+                onboard = false;
             }
         }
         public void SwitchToReturn()
@@ -2181,6 +2180,14 @@ namespace WW2NavalAssembly
                 deckHeight = 0;
                 status = Status.OnLifter;
                 SettleLifter(MyLifter, true);
+            }
+            else if (status == Status.Landing)
+            {
+                status = Status.OnLifter;
+                SettleLifter(MyLifter, true);
+                PropellerSpeed = 0;
+                Thrust = 0;
+                FoldWing = true;
             }
         }
         public void InHangarBehaviourFU()
