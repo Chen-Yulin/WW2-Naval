@@ -337,34 +337,17 @@ namespace WW2NavalAssembly
                             CannonWell CW = hit.collider.transform.parent.GetComponent<CannonWell>();
                             if (CW.totalCaliber != 0)
                             {
-                                float WellExploProb = Weight / CW.myCaliber * CW.gunNum * 0.08f / Mathf.Pow(CW.TurretSize.Value,1);
-                                float WellPalsyProb = 2 * WellExploProb;
-                                float AmmoExploProb = 3 * WellExploProb;
                                 if (hit.collider.name == "WellArmourVis")
                                 {
-                                    //Debug.Log(WellPalsyProb);
-                                    if (UnityEngine.Random.value < WellPalsyProb)
-                                    {
-                                        CW.Wellpalsy = true;
-                                    }
-                                    if (UnityEngine.Random.value < WellExploProb * CW.myCaliber / 500)
-                                    {
-                                        CW.WellExplo = true;
-                                    }
+                                    CW.WellExplo = true;
                                 }
                                 if (hit.collider.name == "AmmoVis")
                                 {
-                                    if (UnityEngine.Random.value < AmmoExploProb)
-                                    {
-                                        CW.AmmoExplo = true;
-                                    }
+                                    CW.AmmoExplo = true;
                                 }
                                 if (hit.collider.name == "TurrentVis")
                                 {
-                                    if (UnityEngine.Random.value < AmmoExploProb * 2)
-                                    {
-                                        CW.TurrentPalsy = true;
-                                    }
+                                    CW.TurrentPalsy = true;
                                 }
                             }
                         }
@@ -373,6 +356,13 @@ namespace WW2NavalAssembly
                         {
                             hit.collider.transform.parent.parent.GetComponent<Engine>().CannonDamage(Weight);
                         }
+
+                        // lifter
+                        try
+                        {
+                            hit.collider.attachedRigidbody.GetComponent<AircraftLifter>().ReduceHealth(Weight);
+                        }
+                        catch { }
 
                         // add force
                         try
@@ -439,7 +429,7 @@ namespace WW2NavalAssembly
                 catch { }
 
                 ExploDestroyBalloon(hit.point, AP);
-                ExploDamageAA(transform.position, AP);
+                ExploDamageAA(hit.point, AP);
             }
             catch { }
 
@@ -451,7 +441,7 @@ namespace WW2NavalAssembly
         {
             
             //Debug.Log(armourGuid);
-            Collider[] ExploCol = Physics.OverlapCapsule(transform.position, transform.position + Vector3.up * 3f, Mathf.Sqrt(Weight) / (AP ? 20f : 13f));
+            Collider[] ExploCol = Physics.OverlapCapsule(pos, pos + Vector3.up * 3f, Mathf.Sqrt(Weight) / (AP ? 20f : 13f));
             foreach (Collider hitedCollider in ExploCol)
             {
                 try
@@ -507,7 +497,7 @@ namespace WW2NavalAssembly
             try
             {
                 //Debug.Log(armourGuid);
-                Collider[] ExploCol = Physics.OverlapSphere(transform.position, Mathf.Sqrt(Weight) / (AP ? 8f : 5f));
+                Collider[] ExploCol = Physics.OverlapSphere(pos, Mathf.Sqrt(Weight) / (AP ? 8f : 5f));
                 foreach (Collider hitedCollider in ExploCol)
                 {
                     try

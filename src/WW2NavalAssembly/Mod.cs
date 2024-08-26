@@ -44,6 +44,7 @@ namespace WW2NavalAssembly
             myMod.AddComponent<AAControllerMsgReceiver>();
 			myMod.AddComponent<ModCameraController>();
 			myMod.GetComponent<ModCameraController>().enabled = true;
+			myMod.AddComponent<AircraftLifterMsgReceiver>();
             Debug.Log("Hello, this is WW2 naval mod!");
 		}
         public void OnEntityPrefabCreation(int entityId, GameObject prefab)

@@ -505,9 +505,10 @@ namespace WW2NavalAssembly
                     {
                         Thickness = hit.collider.transform.parent.GetComponent<CannonWell>().thickness;
                     }
-
-
-
+                }
+                else if (hit.collider.attachedRigidbody.GetComponent<AircraftLifter>())
+                {
+                    Thickness = 50;
                 }
                 else
                 {
@@ -521,7 +522,7 @@ namespace WW2NavalAssembly
                 else
                 {
                     float eqThick = Thickness / Mathf.Cos(angle * Mathf.PI / 180);
-                    myRigid.velocity *= 1 - eqThick * 0.8f / penetration;
+                    myRigid.velocity *= 1 - eqThick * 0.5f / penetration;
                     penetration -= eqThick;
                     pericedBlock.Push(hit.collider.attachedRigidbody.GetComponent<BlockBehaviour>().BuildingBlock.Guid.GetHashCode());
 
@@ -730,7 +731,14 @@ namespace WW2NavalAssembly
                             hit.collider.transform.parent.parent.GetComponent<Engine>().CannonDamage(Caliber);
                         }
 
-                        
+                        // lifter
+                        try
+                        {
+                            hit.collider.attachedRigidbody.GetComponent<AircraftLifter>().ReduceHealth(Caliber);
+                        }
+                        catch { }
+
+
                         continue;
                     }
                     if (!exploded)
@@ -839,11 +847,11 @@ namespace WW2NavalAssembly
                 GameObject explo;
                 if (Caliber < 100)
                 {
-                    explo = (GameObject)Instantiate(AssetManager.Instance.CannonHit.exploSmall, transform.position, Quaternion.identity);
+                    explo = (GameObject)Instantiate(AssetManager.Instance.CannonHit.exploSmall, hit.point, Quaternion.identity);
                 }
                 else
                 {
-                    explo = (GameObject)Instantiate(AssetManager.Instance.CannonHit.explo, transform.position, Quaternion.identity);
+                    explo = (GameObject)Instantiate(AssetManager.Instance.CannonHit.explo, hit.point, Quaternion.identity);
                 }
                 explo.name = "Explo Hit";
                 explo.SetActive(true);
@@ -856,11 +864,11 @@ namespace WW2NavalAssembly
                 //send to client
                 if (Caliber < 100)
                 {
-                    ModNetworking.SendToAll(WeaponMsgReceiver.ExploMsg.CreateMessage(myPlayerID, transform.position, Caliber, 4));
+                    ModNetworking.SendToAll(WeaponMsgReceiver.ExploMsg.CreateMessage(myPlayerID, hit.point, Caliber, 4));
                 }
                 else
                 {
-                    ModNetworking.SendToAll(WeaponMsgReceiver.ExploMsg.CreateMessage(myPlayerID, transform.position, Caliber, AP ? 0 : 2));
+                    ModNetworking.SendToAll(WeaponMsgReceiver.ExploMsg.CreateMessage(myPlayerID, hit.point, Caliber, AP ? 0 : 2));
                 }
 
                 try
@@ -999,7 +1007,7 @@ namespace WW2NavalAssembly
             try
             {
                 //Debug.Log(armourGuid);
-                Collider[] ExploCol = Physics.OverlapSphere(transform.position, Mathf.Sqrt(Caliber) / (AP?8f:5f));
+                Collider[] ExploCol = Physics.OverlapSphere(pos, Mathf.Sqrt(Caliber) / (AP?8f:5f));
                 foreach (Collider hitedCollider in ExploCol)
                 {
                     try

@@ -111,8 +111,6 @@ namespace WW2NavalAssembly
             Vector3 pos = (Vector3)msg.GetData(0);
             GameObject explo = (GameObject)Instantiate(AssetManager.Instance.Aircraft.AircraftExplo, pos, Quaternion.identity);
             Destroy(explo, 5);
-            GameObject smoke = (GameObject)Instantiate(AssetManager.Instance.Aircraft.AircraftShootDown, pos, Quaternion.identity, transform);
-            Destroy(smoke, 10);
         }
         public void ShootDownMsgReceiver(Message msg)
         {
@@ -202,6 +200,7 @@ namespace WW2NavalAssembly
         {
             Deprecated,
             InHangar,
+            OnLifter,
             OnBoard,
             TakingOff,
             Cruise,
@@ -559,7 +558,10 @@ namespace WW2NavalAssembly
                 }
             }
         }
-        
+
+        // ================== for lifter ==================
+        public Transform MyLifter;
+
         // ================= for appearance ==================
         bool foldWing = true;
         public bool FoldWing
@@ -881,9 +883,7 @@ namespace WW2NavalAssembly
             MyLogger.Instance.Log("[" + Group.Value + "](" + myTeamIndex + ") land on deck successfully, transfer to hangar ...", myPlayerID);
             onboard = true;
             yield return new WaitForSeconds(1f);
-            MyLogger.Instance.Log("\tFinish transfer", myPlayerID);
-            SwitchToInHangar();
-            onboard = false;
+            FlightDataBase.Instance.aircraftController[myPlayerID].Elevator.AddDownQueue(this);
             yield break;
         }
         IEnumerator ReloadCorouting()
@@ -1380,7 +1380,8 @@ namespace WW2NavalAssembly
                 }
                 else
                 {
-                    transform.position = MyHangar.position;
+                    transform.position = spot.position + Vector3.up * 0.05f;
+                    transform.rotation = spot.GetChild(0).rotation;
                 }
                 // modify rotation
 
@@ -1389,6 +1390,35 @@ namespace WW2NavalAssembly
 
             }
 
+        }
+        public void SettleLifter(Transform lifter, bool direct = false)
+        {
+            if (lifter)
+            {
+                if (!direct)
+                {
+                    if ((transform.position - lifter.position).magnitude > 1f || Vector3.Angle(transform.forward, Vector3.up) > 30f)
+                    {
+                        transform.position = lifter.position + Vector3.up * 0.05f - FlightDataBase.Instance.aircraftController[myPlayerID].transform.up * 0.5f;
+                        myRigid.drag = 100f;
+                        myRigid.angularDrag = 1000;
+                    }
+                    else
+                    {
+                        Vector3 targetPosition = Vector3.Lerp(transform.position, lifter.position - FlightDataBase.Instance.aircraftController[myPlayerID].transform.up * 0.5f, 0.1f);
+                        targetPosition.y = transform.position.y;
+                        transform.position = targetPosition;
+                        myRigid.drag = 0.2f;
+                        myRigid.angularDrag = 0.2f;
+                    }
+
+                }
+                else
+                {
+                    transform.position = lifter.position + Vector3.up * 0.05f - FlightDataBase.Instance.aircraftController[myPlayerID].transform.up * 0.5f;
+                }
+
+            }
         }
         public void ChangeDeckSpot(Transform spot, bool takeoffSpot)
         {
@@ -1981,6 +2011,7 @@ namespace WW2NavalAssembly
                 Thrust = 23f;
                 UndercartObject.SetActive(true);
                 landingTime = 0;
+                onboard = false;
             }
         }
         public void SwitchToReturn()
@@ -2090,11 +2121,8 @@ namespace WW2NavalAssembly
         {
             if (status == Status.InHangar)
             {
-                if (!MyDeck)
-                {
-                    FindDeck();
-                }
-                deckHeight = 0;
+            }else if (status == Status.OnLifter)
+            {
                 status = Status.OnBoard;
                 SettleSpot(MyDeck, true);
                 PropellerSpeed = 3f;
@@ -2105,14 +2133,6 @@ namespace WW2NavalAssembly
         {
             if (status == Status.OnBoard)
             {
-                MyDeck.gameObject.GetComponent<ParkingSpot>().occupied = false;
-                FlightDataBase.Instance.GetTakeOffPosition(myPlayerID);
-                MyDeck = null;
-                status = Status.InHangar;
-                SettleSpot(MyHangar, true);
-                PropellerSpeed = 0;
-                Thrust = 0;
-                FoldWing = true;
             }
             else if (status == Status.InHangar)
             {
@@ -2131,6 +2151,43 @@ namespace WW2NavalAssembly
                 {
                     StartCoroutine(ReloadCorouting());
                 }
+            }else if (status == Status.OnLifter)
+            {
+                SettleSpot(MyHangar, true);
+                status = Status.InHangar;
+            }
+        }
+
+        public void SwitchToOnLifter(AircraftLifter lifter)
+        {
+            MyLifter = lifter.transform.Find("Vis");
+            if (status == Status.OnBoard)
+            {
+                MyDeck.gameObject.GetComponent<ParkingSpot>().occupied = false;
+                FlightDataBase.Instance.GetTakeOffPosition(myPlayerID);
+                MyDeck = null;
+                status = Status.OnLifter;
+                SettleLifter(MyLifter, true);
+                PropellerSpeed = 0;
+                Thrust = 0;
+                FoldWing = true;
+            }else if (status == Status.InHangar)
+            {
+                if (!MyDeck)
+                {
+                    FindDeck();
+                }
+                deckHeight = 0;
+                status = Status.OnLifter;
+                SettleLifter(MyLifter, true);
+            }
+            else if (status == Status.Landing)
+            {
+                status = Status.OnLifter;
+                SettleLifter(MyLifter, true);
+                PropellerSpeed = 0;
+                Thrust = 0;
+                FoldWing = true;
             }
         }
         public void InHangarBehaviourFU()
@@ -2191,6 +2248,11 @@ namespace WW2NavalAssembly
                 }
             }
             
+        }
+
+        public void OnLifterBehaviourFU()
+        {
+            SettleLifter(MyLifter, false);
         }
         public void OnBoardBehaviourFU()
         {
@@ -2838,6 +2900,12 @@ namespace WW2NavalAssembly
                 case Status.InHangar:
                     {
                         InHangarBehaviourFU();
+                        DeckSliding = false;
+                        break;
+                    }
+                case Status.OnLifter:
+                    {
+                        OnLifterBehaviourFU();
                         DeckSliding = false;
                         break;
                     }

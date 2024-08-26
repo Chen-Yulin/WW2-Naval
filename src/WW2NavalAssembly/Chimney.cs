@@ -83,7 +83,7 @@ namespace WW2NavalAssembly
             {
                 if (SmokePS.isPlaying)
                 {
-                    SmokePS.Pause();
+                    SmokePS.Stop();
                 }
             }
         }
@@ -126,7 +126,6 @@ namespace WW2NavalAssembly
             if (BB.isSimulating)
             {
                 SimulateUpdate();
-                Debug.Log(SmokePS.isPlaying);
             }
             else
             {

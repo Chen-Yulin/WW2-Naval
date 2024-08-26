@@ -1,6 +1,8 @@
 src/.vs/
 src/WW2NavalAssembly/bin/Debug/*
 src/WW2NavalAssembly/obj/Debug/*
+src/WW2NavalAssembly/*.csproj.user
+.vs
 *.zip
 *.cache
 *.dll
