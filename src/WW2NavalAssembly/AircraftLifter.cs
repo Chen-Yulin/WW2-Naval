@@ -275,10 +275,8 @@ namespace WW2NavalAssembly
                 }
                 if (AircraftLifterMsgReceiver.Instance.Position[myPlayerID].ContainsKey(myGuid))
                 {
-                    Debug.Log("Get pos");
                     ClientTargetPosition = new Vector3(0,0,AircraftLifterMsgReceiver.Instance.Position[myPlayerID][myGuid]);
                     AircraftLifterMsgReceiver.Instance.Position[myPlayerID].Remove(myGuid);
-                    //Debug.Log("Sync Fuel to" + Fuel);
                 }
 
                 
