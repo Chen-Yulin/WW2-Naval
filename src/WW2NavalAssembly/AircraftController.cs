@@ -264,31 +264,72 @@ namespace WW2NavalAssembly
         {
             if (UpQueue.Count > 0)
             {
+                bool solvable = false;
                 foreach (var lifter in FlightDataBase.Instance.Lifters[myPlayerID])
                 {
                     if (lifter.Value)
                     {
-                        if (!lifter.Value.operating)
+                        if (lifter.Value.RaiseEnabled && !lifter.Value.destroyed)
                         {
-                            lifter.Value.operating = true;
-                            StartCoroutine(LiftCoroutine(lifter.Value));
-                            break;
+                            solvable = true;
+                            if (!lifter.Value.operating)
+                            {
+                                lifter.Value.operating = true;
+                                StartCoroutine(LiftCoroutine(lifter.Value));
+                                break;
+                            }
                         }
                     }
                 }
-                
+                if (!solvable)
+                {
+                    foreach (var lifter in FlightDataBase.Instance.Lifters[myPlayerID])
+                    {
+                        if (lifter.Value)
+                        {
+                            if (!lifter.Value.operating && !lifter.Value.destroyed)
+                            {
+                                lifter.Value.operating = true;
+                                StartCoroutine(LiftCoroutine(lifter.Value));
+                                break;
+                            }
+                        }
+                    }
+                }
+
             }
             if (DownQueue.Count > 0)
             {
+                bool solvable = false;
                 foreach (var lifter in FlightDataBase.Instance.Lifters[myPlayerID])
                 {
                     if (lifter.Value)
                     {
-                        if (!lifter.Value.operating)
+                        if (lifter.Value.DropEnabled && !lifter.Value.destroyed)
                         {
-                            lifter.Value.operating = true;
-                            StartCoroutine(DropCoroutine(lifter.Value));
-                            break;
+                            solvable = true;
+                            if (!lifter.Value.operating)
+                            {
+                                lifter.Value.operating = true;
+                                StartCoroutine(DropCoroutine(lifter.Value));
+                                break;
+                            }
+                        }
+                        
+                    }
+                }
+                if (!solvable)
+                {
+                    foreach (var lifter in FlightDataBase.Instance.Lifters[myPlayerID])
+                    {
+                        if (lifter.Value)
+                        {
+                            if (!lifter.Value.operating && !lifter.Value.destroyed)
+                            {
+                                lifter.Value.operating = true;
+                                StartCoroutine(DropCoroutine(lifter.Value));
+                                break;
+                            }
                         }
                     }
                 }

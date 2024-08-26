@@ -44,8 +44,8 @@ namespace WW2NavalAssembly
             ModNetworking.Callbacks[LogMsgReceiver.LogMsg] += LogMsgReceiver.Instance.Receive;
             ModNetworking.Callbacks[AAControllerMsgReceiver.targetIndexMsg] += AAControllerMsgReceiver.Instance.targetIndexReceiver;
             ModNetworking.Callbacks[AABlockMsgReceiver.aaActiveMsg] += AABlockMsgReceiver.Instance.aaActiveReceiver;
-
-
+            ModNetworking.Callbacks[AircraftLifterMsgReceiver.PositionMsg] += AircraftLifterMsgReceiver.Instance.PositionMsgReceiver;
+            ModNetworking.Callbacks[AircraftLifterMsgReceiver.DestroyMsg] += AircraftLifterMsgReceiver.Instance.DestroyMsgReceiver;
         }
     }
 }

@@ -233,7 +233,7 @@ namespace WW2NavalAssembly
                 {
                     //Debug.Log("Point" + Vis.transform.TransformPoint(spotPos));
                     //Debug.Log("Get Lifter"+ lifter.Value.Pos2D+ lifter.Value.Right2D+ lifter.Value.Size2D);
-                    if (MathTool.pointInBox(MathTool.Get2DCoordinate(Vis.transform.TransformPoint(spotPos)), lifter.Value.Pos2D, lifter.Value.Right2D, lifter.Value.Size2D))
+                    if (MathTool.pointInBox(MathTool.Get2DCoordinate(Vis.transform.TransformPoint(spotPos)), lifter.Value.Pos2D, lifter.Value.Right2D, lifter.Value.Size2D + new Vector2(0.5f, 2f)))
                     {
                         CollideWithLifter = true;
                     }

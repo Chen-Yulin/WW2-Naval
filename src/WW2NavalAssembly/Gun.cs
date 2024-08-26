@@ -730,7 +730,14 @@ namespace WW2NavalAssembly
                             hit.collider.transform.parent.parent.GetComponent<Engine>().CannonDamage(Caliber);
                         }
 
-                        
+                        // lifter
+                        try
+                        {
+                            hit.collider.attachedRigidbody.GetComponent<AircraftLifter>().ReduceHealth(Caliber);
+                        }
+                        catch { }
+
+
                         continue;
                     }
                     if (!exploded)
