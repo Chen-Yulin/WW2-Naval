@@ -2955,6 +2955,10 @@ namespace WW2NavalAssembly
                         {
                             Pitch = Pitch + (30 - Pitch) * 0.05f;
                         }
+                        else
+                        {
+                            Pitch = Mathf.Clamp(Pitch, 8f,25f);
+                        }
 
                         if (transform.position.y >= CruiseHeight)
                         {
@@ -3273,7 +3277,7 @@ namespace WW2NavalAssembly
             }
 
             // water hit
-            if (!hasHitWater && ModController.Instance.showSea && status != Status.OnBoard && status != Status.InHangar)
+            if (!hasHitWater && ModController.Instance.showSea && status != Status.OnBoard && status != Status.InHangar && status != Status.OnLifter)
             {
                 if (transform.position.y<20f && transform.position.y > 18f && myRigid.velocity.y < 2f)
                 {
