@@ -505,9 +505,10 @@ namespace WW2NavalAssembly
                     {
                         Thickness = hit.collider.transform.parent.GetComponent<CannonWell>().thickness;
                     }
-
-
-
+                }
+                else if (hit.collider.attachedRigidbody.GetComponent<AircraftLifter>())
+                {
+                    Thickness = 50;
                 }
                 else
                 {
@@ -730,7 +731,14 @@ namespace WW2NavalAssembly
                             hit.collider.transform.parent.parent.GetComponent<Engine>().CannonDamage(Caliber);
                         }
 
-                        
+                        // lifter
+                        try
+                        {
+                            hit.collider.attachedRigidbody.GetComponent<AircraftLifter>().ReduceHealth(Caliber);
+                        }
+                        catch { }
+
+
                         continue;
                     }
                     if (!exploded)
