@@ -1395,17 +1395,18 @@ namespace WW2NavalAssembly
         {
             if (lifter)
             {
+                Vector3 target = lifter.position + lifter.parent.localScale.z * Vector3.up - FlightDataBase.Instance.aircraftController[myPlayerID].transform.up * 0.5f;
                 if (!direct)
                 {
-                    if ((transform.position - lifter.position).magnitude > 1f || Vector3.Angle(transform.forward, Vector3.up) > 30f)
+                    if ((transform.position - target).magnitude > 1f || Vector3.Angle(transform.forward, Vector3.up) > 30f)
                     {
-                        transform.position = lifter.position + Vector3.up * 0.05f - FlightDataBase.Instance.aircraftController[myPlayerID].transform.up * 0.5f;
+                        transform.position = target;
                         myRigid.drag = 100f;
                         myRigid.angularDrag = 1000;
                     }
                     else
                     {
-                        Vector3 targetPosition = Vector3.Lerp(transform.position, lifter.position - FlightDataBase.Instance.aircraftController[myPlayerID].transform.up * 0.5f, 0.1f);
+                        Vector3 targetPosition = Vector3.Lerp(transform.position, target, 0.1f);
                         targetPosition.y = transform.position.y;
                         transform.position = targetPosition;
                         myRigid.drag = 0.2f;
@@ -1415,7 +1416,7 @@ namespace WW2NavalAssembly
                 }
                 else
                 {
-                    transform.position = lifter.position + Vector3.up * 0.05f - FlightDataBase.Instance.aircraftController[myPlayerID].transform.up * 0.5f;
+                    transform.position = target;
                 }
 
             }
@@ -2954,6 +2955,10 @@ namespace WW2NavalAssembly
                         {
                             Pitch = Pitch + (30 - Pitch) * 0.05f;
                         }
+                        else
+                        {
+                            Pitch = Mathf.Clamp(Pitch, 8f,25f);
+                        }
 
                         if (transform.position.y >= CruiseHeight)
                         {
@@ -3272,7 +3277,7 @@ namespace WW2NavalAssembly
             }
 
             // water hit
-            if (!hasHitWater && ModController.Instance.showSea && status != Status.OnBoard && status != Status.InHangar)
+            if (!hasHitWater && ModController.Instance.showSea && status != Status.OnBoard && status != Status.InHangar && status != Status.OnLifter)
             {
                 if (transform.position.y<20f && transform.position.y > 18f && myRigid.velocity.y < 2f)
                 {
