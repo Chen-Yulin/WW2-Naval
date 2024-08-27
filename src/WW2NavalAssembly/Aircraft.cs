@@ -700,7 +700,7 @@ namespace WW2NavalAssembly
                         Vector3 torque = Vector3.Cross(myRigid.velocity, preDirection).normalized * Mathf.Clamp(Mathf.Pow(AngleDiff, 1.5f)*0.2f, -15, 15);
                         torque.x = 0;
                         torque.z = 0;
-                        myRigid.AddTorque(torque);
+                        myRigid.AddTorque(torque * 3f);
 
                         SetHeight(myRigid.position.y + Mathf.Clamp((WayHeight - myRigid.position.y) * 0.1f, -0.5f, 0.5f), false, 1);
 
@@ -778,7 +778,7 @@ namespace WW2NavalAssembly
                 targetRoll = Mathf.Clamp(targetRoll, -180, 0);
                 Roll = targetRoll;
 
-
+                Debug.Log(target_PlayerID);
                 // find target
                 if (target_PlayerID == -1)
                 {
