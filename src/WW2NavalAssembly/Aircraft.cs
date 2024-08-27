@@ -1396,29 +1396,10 @@ namespace WW2NavalAssembly
             if (lifter)
             {
                 Vector3 target = lifter.position + lifter.parent.localScale.z * Vector3.up - FlightDataBase.Instance.aircraftController[myPlayerID].transform.up * 0.5f;
-                if (!direct)
-                {
-                    if ((transform.position - target).magnitude > 1f || Vector3.Angle(transform.forward, Vector3.up) > 30f)
-                    {
-                        transform.position = target;
-                        myRigid.drag = 100f;
-                        myRigid.angularDrag = 1000;
-                    }
-                    else
-                    {
-                        Vector3 targetPosition = Vector3.Lerp(transform.position, target, 0.1f);
-                        targetPosition.y = transform.position.y;
-                        transform.position = targetPosition;
-                        myRigid.drag = 0.2f;
-                        myRigid.angularDrag = 0.2f;
-                    }
-
-                }
-                else
-                {
-                    transform.position = target;
-                }
-
+                transform.position = target;
+                Pitch = 12f;
+                myRigid.drag = 100f;
+                myRigid.angularDrag = 1000;
             }
         }
         public void ChangeDeckSpot(Transform spot, bool takeoffSpot)
@@ -2140,6 +2121,7 @@ namespace WW2NavalAssembly
             }
             else if (status == Status.Landing)
             {
+                myRigid.drag = 0.2f;
                 hasAttacked = false;
                 hasFindBackup = false;
                 MyDeck = null;
