@@ -61,6 +61,7 @@ namespace WW2NavalAssembly
         public MText group;
 
         public bool preAsLifter;
+        public bool preSlave;
 
         public bool RaiseEnabled
         {
@@ -131,6 +132,11 @@ namespace WW2NavalAssembly
                     EnableDrop.DisplayInMapper = true;
                     Slave.DisplayInMapper = true;
                     group.DisplayInMapper = true;
+                    if (Slave.isDefaultValue)
+                    {
+                        FlightDataBase.Instance.AddLifter(myPlayerID, myGuid, this);
+                        Grouper.Instance.AddLifterMaster(myPlayerID, group.Value, this);
+                    }
                 }
                 else
                 {
@@ -138,6 +144,11 @@ namespace WW2NavalAssembly
                     EnableDrop.DisplayInMapper = false;
                     Slave.DisplayInMapper = false;
                     group.DisplayInMapper = false;
+                    if (Slave.isDefaultValue)
+                    {
+                        FlightDataBase.Instance.RemoveLifter(myPlayerID, myGuid);
+                        Grouper.Instance.RemoveLifterMaster(myPlayerID, group.Value);
+                    }
                 }
             }
         }
@@ -275,10 +286,22 @@ namespace WW2NavalAssembly
             Vis = transform.Find("Vis");
             BoxCollider = transform.Find("Joint");
             preAsLifter = AsLifter.isDefaultValue;
+            preSlave = Slave.isDefaultValue;
         }
         public void BuildUpdate()
         {
             ControlMapper();
+            if (preSlave != !Slave.isDefaultValue)
+            {
+                preSlave = !Slave.isDefaultValue;
+                if (preSlave)
+                {
+                    FlightDataBase.Instance.RemoveLifter(myPlayerID, myGuid);
+                }
+                else
+                {
+                }
+            }
         }
 
         public void SimulateUpdate()
@@ -324,40 +347,49 @@ namespace WW2NavalAssembly
         }
         public void FixedUpdate()
         {
-            if (BB.isSimulating)
+            if (!AsLifter.isDefaultValue)
             {
-                if (!Slave.isDefaultValue &&!masterFound)
+                if (BB.isSimulating)
                 {
-                    if (Grouper.Instance.AircraftLifterMasters[myPlayerID].ContainsKey(group.Value))
+                    if (!Slave.isDefaultValue && !masterFound)
                     {
-                        masterFound = true;
-                        try
+                        if (Grouper.Instance.AircraftLifterMasters[myPlayerID].ContainsKey(group.Value))
                         {
-                            Vis.parent = Grouper.Instance.AircraftLifterMasters[myPlayerID][group.Value].Vis;
-                            BoxCollider.parent = Grouper.Instance.AircraftLifterMasters[myPlayerID][group.Value].BoxCollider;
+                            masterFound = true;
+                            try
+                            {
+                                Vis.parent = Grouper.Instance.AircraftLifterMasters[myPlayerID][group.Value].Vis;
+                                BoxCollider.parent = Grouper.Instance.AircraftLifterMasters[myPlayerID][group.Value].BoxCollider;
+                            }
+                            catch { }
                         }
-                        catch { }
-                        
+                    }
+                    if (Slave.isDefaultValue)
+                    {
+                        SimulateFixedUpdate();
                     }
                 }
-                if (Slave.isDefaultValue)
+                else
                 {
-                    SimulateFixedUpdate();
                 }
-            }
-            else
-            {
             }
         }
 
         // add back the reference to the parent block when the simulation is stopped
         public void OnDestroy()
         {
-            FlightDataBase.Instance.RemoveLifter(myPlayerID, myGuid);
-            if (Slave.isDefaultValue)
+            if (BB.isSimulating)
             {
-                Grouper.Instance.RemoveLifterMaster(myPlayerID, group.Value);
+                if (!AsLifter.isDefaultValue && Slave.isDefaultValue)
+                {
+                    FlightDataBase.Instance.AddLifter(myPlayerID, myGuid, BB.BuildingBlock.gameObject.GetComponent<AircraftLifter>());
+                }
+                else
+                {
+                    FlightDataBase.Instance.RemoveLifter(myPlayerID, myGuid);
+                }
             }
+            
         }
     }
 }

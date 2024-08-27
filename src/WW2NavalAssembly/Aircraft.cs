@@ -778,7 +778,7 @@ namespace WW2NavalAssembly
                 targetRoll = Mathf.Clamp(targetRoll, -180, 0);
                 Roll = targetRoll;
 
-                Debug.Log(target_PlayerID);
+                //Debug.Log(target_PlayerID);
                 // find target
                 if (target_PlayerID == -1)
                 {
@@ -1457,7 +1457,7 @@ namespace WW2NavalAssembly
         }
         public float AddAeroForce(bool flap = false)
         {
-            myRigid.angularDrag = Mathf.Clamp(myRigid.velocity.magnitude * 0.5f, 40f,150f) * (flap && Type.Value >=2 ? 2.5f : 1);
+            myRigid.angularDrag = Mathf.Clamp(myRigid.velocity.magnitude * 0.5f, 40f,150f);
             myRigid.drag = Mathf.Clamp(myRigid.velocity.magnitude * myRigid.mass * 0.01f, 0.2f, 10f) * (flap ? 2 : 1);
 
             // horizon
