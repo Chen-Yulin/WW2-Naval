@@ -330,9 +330,14 @@ namespace WW2NavalAssembly
                 {
                     if (Grouper.Instance.AircraftLifterMasters[myPlayerID].ContainsKey(group.Value))
                     {
-                        Vis.parent = Grouper.Instance.AircraftLifterMasters[myPlayerID][group.Value].Vis;
-                        BoxCollider.parent = Grouper.Instance.AircraftLifterMasters[myPlayerID][group.Value].BoxCollider;
                         masterFound = true;
+                        try
+                        {
+                            Vis.parent = Grouper.Instance.AircraftLifterMasters[myPlayerID][group.Value].Vis;
+                            BoxCollider.parent = Grouper.Instance.AircraftLifterMasters[myPlayerID][group.Value].BoxCollider;
+                        }
+                        catch { }
+                        
                     }
                 }
                 if (Slave.isDefaultValue)
