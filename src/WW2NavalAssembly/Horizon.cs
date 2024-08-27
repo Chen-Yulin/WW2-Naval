@@ -128,12 +128,16 @@ namespace WW2NavalAssembly
 
             foreach (var a in Grouper.Instance.GetLeaders(playerID))
             {
-                Aircraft aircraft = a.Value.Value;
-                float d = MathTool.Get2DDistance(transform.position, aircraft.transform.position);
-                if (d<dist)
+                try
                 {
-                    dist = d;
+                    Aircraft aircraft = a.Value.Value;
+                    float d = MathTool.Get2DDistance(transform.position, aircraft.transform.position);
+                    if (d < dist)
+                    {
+                        dist = d;
+                    }
                 }
+                catch { }
             }
             return dist;
         }
