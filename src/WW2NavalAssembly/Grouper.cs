@@ -20,7 +20,7 @@ namespace WW2NavalAssembly
         public Dictionary<string, Dictionary<int,GameObject>>[] GunGroups = new Dictionary<string, Dictionary<int,GameObject>>[16];
         public Dictionary<string, Dictionary<int, Aircraft>>[] AircraftGroups = new Dictionary<string, Dictionary<int, Aircraft>>[16];
         public Dictionary<string, KeyValuePair<int, Aircraft>>[] AircraftLeaders = new Dictionary<string, KeyValuePair<int, Aircraft>>[16];
-
+        public Dictionary<string, AircraftLifter>[] AircraftLifterMasters = new Dictionary<string, AircraftLifter>[16];
         public Grouper()
         {
             for (int i = 0; i < 16; i++)
@@ -28,6 +28,27 @@ namespace WW2NavalAssembly
                 GunGroups[i] = new Dictionary<string, Dictionary<int,GameObject>>();
                 AircraftGroups[i] = new Dictionary<string, Dictionary<int, Aircraft>>();
                 AircraftLeaders[i] = new Dictionary<string, KeyValuePair<int, Aircraft>>();
+                AircraftLifterMasters[i] = new Dictionary<string, AircraftLifter>();
+            }
+        }
+
+        public void AddLifterMaster(int playerID, string key, AircraftLifter ac)
+        {
+            if (AircraftLifterMasters[playerID].ContainsKey(key))
+            {
+                AircraftLifterMasters[playerID][key] = ac;
+            }
+            else
+            {
+                AircraftLifterMasters[playerID].Add(key, ac);
+            }
+        }
+
+        public void RemoveLifterMaster(int playerID, string key)
+        {
+            if (AircraftLifterMasters[playerID].ContainsKey(key))
+            {
+                AircraftLifterMasters[playerID].Remove(key);
             }
         }
 
