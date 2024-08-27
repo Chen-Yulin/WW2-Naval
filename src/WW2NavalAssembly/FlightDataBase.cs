@@ -58,8 +58,10 @@ namespace WW2NavalAssembly
             LandingQueue[player] = newQ;
         }
 
-        float AIRCRAFT_WIDTH = 1.6f;
-        float AIRCRAFT_LENGTH_HANGAR = 2f;
+        
+        float AIRCRAFT_HANGAR_WIDTH = 1.0f;
+        float AIRCRAFT_LENGTH_HANGAR = 1.6f;
+        float AIRCRAFT_DECK_WIDTH = 1.6f;
         float AIRCRAFT_LENGTH_DECK = 3f;
 
         public class Deck
@@ -97,11 +99,13 @@ namespace WW2NavalAssembly
             {
                 if (isHangar)
                 {
-                    AIRCRAFT_LENGTH = 2f;
+                    AIRCRAFT_LENGTH = 1.6f;
+                    AIRCRAFT_WIDTH = 1.0f;
                 }
                 else
                 {
                     AIRCRAFT_LENGTH = 3f;
+                    AIRCRAFT_WIDTH = 1.6f;
                 }
 
                 valid = true;
@@ -224,7 +228,7 @@ namespace WW2NavalAssembly
                 Vector3 forward = Vector3.forward;
                 bool ForwardABit = (i % Decks[playerID].Width_num) % 2 == 1;
                 Vector3 spotPos = anchor - right * Decks[playerID].RightMargin + forward * 2f
-                                    - i % Decks[playerID].Width_num * AIRCRAFT_WIDTH * right
+                                    - i % Decks[playerID].Width_num * AIRCRAFT_DECK_WIDTH * right
                                     + i / Decks[playerID].Width_num * AIRCRAFT_LENGTH_DECK * forward
                                     + (ForwardABit ? AIRCRAFT_LENGTH_DECK/2f : 0) * forward;
 
@@ -333,13 +337,14 @@ namespace WW2NavalAssembly
                     Vector3 anchor = new Vector3(0, 0f, 0);
                     Vector3 right = Vector3.right;
                     Vector3 forward = Vector3.forward;
-                    Vector3 spotPos = anchor - right * hangar.Value.RightMargin + forward * 2f
-                                        - i % hangar.Value.Width_num * AIRCRAFT_WIDTH * right
+                    bool ForwardABit = (i % hangar.Value.Width_num) % 2 == 1;
+                    Vector3 spotPos = anchor - right * (hangar.Value.RightMargin - 0.2f) + forward * 2f
+                                        - i % hangar.Value.Width_num * AIRCRAFT_HANGAR_WIDTH * right
                                         + i / hangar.Value.Width_num * AIRCRAFT_LENGTH_HANGAR * forward;
 
                     parkingSpot.transform.localPosition = spotPos;
 
-                    parkingSpot.transform.localEulerAngles = new Vector3(0, 30, 0);
+                    parkingSpot.transform.localEulerAngles = new Vector3(0, 37, 0);
                 }
 
 
