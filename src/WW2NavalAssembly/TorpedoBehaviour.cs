@@ -354,7 +354,7 @@ namespace WW2NavalAssembly
                 if (transform.position.y < 20)
                 {
                     UpdateVis();
-                    if (transform.position.y > 20 - depth - 0.2f)
+                    if (transform.position.y > 20 - depth - 0.7f)
                     {
                         Trail.SetActive(true);
                         Trail.transform.position = new Vector3(Trail.transform.position.x, 20f, Trail.transform.position.z);
@@ -372,7 +372,7 @@ namespace WW2NavalAssembly
                         myRigid.AddForce(-transform.up * 19f + new Vector3(0, 20 - depth - transform.position.y + 6.5f, 0));
                     }else if (mode == 2)
                     {
-                        myRigid.AddForce(-transform.up * 10f + new Vector3(0, (20 - depth - transform.position.y) * 0.3f + 6.5f, 0));
+                        myRigid.AddForce(-transform.up * 10f + new Vector3(0, (20 - depth - transform.position.y) * 0.5f + 6.5f, 0));
                     }
 
                     if (StatMaster.isMP)

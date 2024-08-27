@@ -1476,7 +1476,7 @@ namespace WW2NavalAssembly
         }
         public float AddAeroForce(bool flap = false)
         {
-            myRigid.angularDrag = Mathf.Clamp(myRigid.velocity.magnitude * 0.5f, 0.2f,150f) * (flap && Type.Value >=2 ? 2.5f : 1);
+            myRigid.angularDrag = Mathf.Clamp(myRigid.velocity.magnitude * 0.5f, 40f,150f) * (flap && Type.Value >=2 ? 2.5f : 1);
             myRigid.drag = Mathf.Clamp(myRigid.velocity.magnitude * myRigid.mass * 0.01f, 0.2f, 10f) * (flap ? 2 : 1);
 
             // horizon
@@ -2009,7 +2009,7 @@ namespace WW2NavalAssembly
                 WayPoint = targetPoint;
                 WayPointType = 0;
                 WayHeight = deck.height + 0.3f;
-                Thrust = 23f;
+                Thrust = 45f;
                 UndercartObject.SetActive(true);
                 landingTime = 0;
                 onboard = false;
@@ -2963,7 +2963,7 @@ namespace WW2NavalAssembly
                         }
                         else
                         {
-                            Pitch = Mathf.Clamp(Pitch, 8f,25f);
+                            Pitch = Mathf.Clamp(Pitch, 8f,30f);
                         }
 
                         if (transform.position.y >= CruiseHeight)
@@ -3123,7 +3123,8 @@ namespace WW2NavalAssembly
 
                                     foreach (var a in myGroup.Reverse())
                                     {
-                                        if (a.Value.status == Status.InHangar || a.Value.status == Status.Exploded || (a.Value.status == Status.Landing && a.Value.landingTime > 800f))
+                                        Vector2 VectFromWayPoint = a.Value.WayPoint - MathTool.Get2DCoordinate(a.Value.transform.position);
+                                        if (a.Value.status == Status.InHangar || a.Value.status == Status.Exploded || (a.Value.status == Status.Landing && Vector2.Dot(a.Value.WayDirection, VectFromWayPoint) < 100f && a.Value.landingTime > 150f))
                                         {
                                             continue;
                                         }

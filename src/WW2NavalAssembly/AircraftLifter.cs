@@ -11,6 +11,7 @@ using UnityEngine;
 using UnityEngine.Networking;
 using static iTween;
 using static TutorialStepPrerequisite;
+using System.IO;
 
 namespace WW2NavalAssembly
 {
@@ -56,6 +57,8 @@ namespace WW2NavalAssembly
         public MToggle AsLifter;
         public MToggle EnableRaise;
         public MToggle EnableDrop;
+        public MToggle Slave;
+        public MText group;
 
         public bool preAsLifter;
 
