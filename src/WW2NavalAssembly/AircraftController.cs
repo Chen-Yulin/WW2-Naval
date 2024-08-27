@@ -1547,6 +1547,7 @@ namespace WW2NavalAssembly
                 if (CurrentLeader)
                 {
                     GUI.Box(new Rect(100, 200, 200, 30), CurrentLeader.Group.Value.ToString() + " " + CurrentLeader.status.ToString());
+                    //GUI.Box(new Rect(100, 300, 200, 30), FlightDataBase.Instance.Decks[myPlayerID].Occupied_num.ToString() + "/" + FlightDataBase.Instance.Decks[myPlayerID].Total_num.ToString());
                 }
             }
             catch { }

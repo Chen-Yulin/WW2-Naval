@@ -700,7 +700,7 @@ namespace WW2NavalAssembly
                         Vector3 torque = Vector3.Cross(myRigid.velocity, preDirection).normalized * Mathf.Clamp(Mathf.Pow(AngleDiff, 1.5f)*0.2f, -15, 15);
                         torque.x = 0;
                         torque.z = 0;
-                        myRigid.AddTorque(torque);
+                        myRigid.AddTorque(torque * 3f);
 
                         SetHeight(myRigid.position.y + Mathf.Clamp((WayHeight - myRigid.position.y) * 0.1f, -0.5f, 0.5f), false, 1);
 
@@ -778,7 +778,7 @@ namespace WW2NavalAssembly
                 targetRoll = Mathf.Clamp(targetRoll, -180, 0);
                 Roll = targetRoll;
 
-
+                //Debug.Log(target_PlayerID);
                 // find target
                 if (target_PlayerID == -1)
                 {
@@ -1396,29 +1396,10 @@ namespace WW2NavalAssembly
             if (lifter)
             {
                 Vector3 target = lifter.position + lifter.parent.localScale.z * Vector3.up - FlightDataBase.Instance.aircraftController[myPlayerID].transform.up * 0.5f;
-                if (!direct)
-                {
-                    if ((transform.position - target).magnitude > 1f || Vector3.Angle(transform.forward, Vector3.up) > 30f)
-                    {
-                        transform.position = target;
-                        myRigid.drag = 100f;
-                        myRigid.angularDrag = 1000;
-                    }
-                    else
-                    {
-                        Vector3 targetPosition = Vector3.Lerp(transform.position, target, 0.1f);
-                        targetPosition.y = transform.position.y;
-                        transform.position = targetPosition;
-                        myRigid.drag = 0.2f;
-                        myRigid.angularDrag = 0.2f;
-                    }
-
-                }
-                else
-                {
-                    transform.position = target;
-                }
-
+                transform.position = target;
+                Pitch = 12f;
+                myRigid.drag = 100f;
+                myRigid.angularDrag = 1000;
             }
         }
         public void ChangeDeckSpot(Transform spot, bool takeoffSpot)
@@ -1476,7 +1457,7 @@ namespace WW2NavalAssembly
         }
         public float AddAeroForce(bool flap = false)
         {
-            myRigid.angularDrag = Mathf.Clamp(myRigid.velocity.magnitude * 0.5f, 0.2f,150f) * (flap && Type.Value >=2 ? 2.5f : 1);
+            myRigid.angularDrag = Mathf.Clamp(myRigid.velocity.magnitude * 0.5f, 40f,150f);
             myRigid.drag = Mathf.Clamp(myRigid.velocity.magnitude * myRigid.mass * 0.01f, 0.2f, 10f) * (flap ? 2 : 1);
 
             // horizon
@@ -2009,7 +1990,7 @@ namespace WW2NavalAssembly
                 WayPoint = targetPoint;
                 WayPointType = 0;
                 WayHeight = deck.height + 0.3f;
-                Thrust = 23f;
+                Thrust = 45f;
                 UndercartObject.SetActive(true);
                 landingTime = 0;
                 onboard = false;
@@ -2140,6 +2121,7 @@ namespace WW2NavalAssembly
             }
             else if (status == Status.Landing)
             {
+                myRigid.drag = 0.2f;
                 hasAttacked = false;
                 hasFindBackup = false;
                 MyDeck = null;
@@ -2963,7 +2945,7 @@ namespace WW2NavalAssembly
                         }
                         else
                         {
-                            Pitch = Mathf.Clamp(Pitch, 8f,25f);
+                            Pitch = Mathf.Clamp(Pitch, 8f,30f);
                         }
 
                         if (transform.position.y >= CruiseHeight)
@@ -3123,7 +3105,8 @@ namespace WW2NavalAssembly
 
                                     foreach (var a in myGroup.Reverse())
                                     {
-                                        if (a.Value.status == Status.InHangar || a.Value.status == Status.Exploded || (a.Value.status == Status.Landing && a.Value.landingTime > 800f))
+                                        Vector2 VectFromWayPoint = a.Value.WayPoint - MathTool.Get2DCoordinate(a.Value.transform.position);
+                                        if (a.Value.status == Status.InHangar || a.Value.status == Status.Exploded || (a.Value.status == Status.Landing && Vector2.Dot(a.Value.WayDirection, VectFromWayPoint) < 100f && a.Value.landingTime > 150f))
                                         {
                                             continue;
                                         }

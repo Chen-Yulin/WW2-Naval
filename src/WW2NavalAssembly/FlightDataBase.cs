@@ -58,8 +58,10 @@ namespace WW2NavalAssembly
             LandingQueue[player] = newQ;
         }
 
-        float AIRCRAFT_WIDTH = 1.6f;
-        float AIRCRAFT_LENGTH_HANGAR = 2f;
+        
+        float AIRCRAFT_HANGAR_WIDTH = 1.0f;
+        float AIRCRAFT_LENGTH_HANGAR = 1.6f;
+        float AIRCRAFT_DECK_WIDTH = 1.6f;
         float AIRCRAFT_LENGTH_DECK = 3f;
 
         public class Deck
@@ -84,6 +86,8 @@ namespace WW2NavalAssembly
 
             public int Occupied_num = 0;
 
+            public int Skip_num = 0;
+
             
 
             //public Vector3[] Corner = new Vector3[4];
@@ -93,15 +97,17 @@ namespace WW2NavalAssembly
             }
             //brand new
             
-            public Deck(Vector2 center, float width, float length, Vector2 forward, Vector2 right, float height, bool isHangar = false, int occupied_num = 0)
+            public Deck(Vector2 center, float width, float length, Vector2 forward, Vector2 right, float height, bool isHangar = false, int occupied_num = 0, int skip_num = 0)
             {
                 if (isHangar)
                 {
-                    AIRCRAFT_LENGTH = 2f;
+                    AIRCRAFT_LENGTH = 1.6f;
+                    AIRCRAFT_WIDTH = 1.0f;
                 }
                 else
                 {
                     AIRCRAFT_LENGTH = 3f;
+                    AIRCRAFT_WIDTH = 1.6f;
                 }
 
                 valid = true;
@@ -115,21 +121,24 @@ namespace WW2NavalAssembly
 
                 this.Width_num = (int)((Width- 2*RightMargin) / AIRCRAFT_WIDTH) + ((Width - 2 * RightMargin>0)?1:0);
                 this.Length_num = (int)((Length-(isHangar?3:10)) / AIRCRAFT_LENGTH) + 1;
-                this.Total_num = Width_num * Length_num;
+                this.Skip_num = skip_num;
+                this.Total_num = Width_num * Length_num - skip_num;
 
                 this.RightMargin = (Width - (Width_num - 1) * AIRCRAFT_WIDTH) / 2f;
                 this.Occupied_num = occupied_num;
             }
             //inherit
-            public Deck(Vector2 center, float width, float length, Vector2 forward, Vector2 right, float height, int width_num, int length_num, bool isHangar = false,  int occupied_num = 0)
+            public Deck(Vector2 center, float width, float length, Vector2 forward, Vector2 right, float height, int width_num, int length_num, bool isHangar = false,  int occupied_num = 0, int skip_num = 0)
             {
                 if (isHangar)
                 {
-                    AIRCRAFT_LENGTH = 2f;
+                    AIRCRAFT_LENGTH = 1.6f;
+                    AIRCRAFT_WIDTH = 1.0f;
                 }
                 else
                 {
                     AIRCRAFT_LENGTH = 3f;
+                    AIRCRAFT_WIDTH = 1.6f;
                 }
 
                 valid = true;
@@ -143,7 +152,8 @@ namespace WW2NavalAssembly
 
                 this.Width_num = width_num;
                 this.Length_num = length_num;
-                this.Total_num = Width_num * Length_num;
+                this.Skip_num = skip_num;
+                this.Total_num = Width_num * Length_num - skip_num;
 
                 this.RightMargin = (Width - (Width_num - 1) * AIRCRAFT_WIDTH) / 2f;
                 this.Occupied_num = occupied_num;
@@ -224,7 +234,7 @@ namespace WW2NavalAssembly
                 Vector3 forward = Vector3.forward;
                 bool ForwardABit = (i % Decks[playerID].Width_num) % 2 == 1;
                 Vector3 spotPos = anchor - right * Decks[playerID].RightMargin + forward * 2f
-                                    - i % Decks[playerID].Width_num * AIRCRAFT_WIDTH * right
+                                    - i % Decks[playerID].Width_num * AIRCRAFT_DECK_WIDTH * right
                                     + i / Decks[playerID].Width_num * AIRCRAFT_LENGTH_DECK * forward
                                     + (ForwardABit ? AIRCRAFT_LENGTH_DECK/2f : 0) * forward;
 
@@ -254,7 +264,7 @@ namespace WW2NavalAssembly
 
                 parkingSpot.transform.localEulerAngles = Vector3.zero;
             }
-            Decks[playerID].Total_num -= skipNum;
+            Decks[playerID].Skip_num = skipNum;
 
             // for take off spot
             GameObject TakeOff = new GameObject("TakeOff");
@@ -333,13 +343,14 @@ namespace WW2NavalAssembly
                     Vector3 anchor = new Vector3(0, 0f, 0);
                     Vector3 right = Vector3.right;
                     Vector3 forward = Vector3.forward;
-                    Vector3 spotPos = anchor - right * hangar.Value.RightMargin + forward * 2f
-                                        - i % hangar.Value.Width_num * AIRCRAFT_WIDTH * right
+                    bool ForwardABit = (i % hangar.Value.Width_num) % 2 == 1;
+                    Vector3 spotPos = anchor - right * (hangar.Value.RightMargin - 0.2f) + forward * 2f
+                                        - i % hangar.Value.Width_num * AIRCRAFT_HANGAR_WIDTH * right
                                         + i / hangar.Value.Width_num * AIRCRAFT_LENGTH_HANGAR * forward;
 
                     parkingSpot.transform.localPosition = spotPos;
 
-                    parkingSpot.transform.localEulerAngles = new Vector3(0, 30, 0);
+                    parkingSpot.transform.localEulerAngles = new Vector3(0, 37, 0);
                 }
 
 
@@ -657,7 +668,8 @@ namespace WW2NavalAssembly
                 {
                     int width_num = Decks[playerID].Width_num;
                     int length_num = Decks[playerID].Length_num;
-                    return new Deck(MathTool.PointRotate(Vector2.zero, center, -orien), width, length, DeckForward[playerID], DeckRight[playerID], height, width_num, length_num, false, occupied_num);
+                    int skipNum = Decks[playerID].Skip_num;
+                    return new Deck(MathTool.PointRotate(Vector2.zero, center, -orien), width, length, DeckForward[playerID], DeckRight[playerID], height, width_num, length_num, false, occupied_num, skipNum);
                 }
                 else
                 {

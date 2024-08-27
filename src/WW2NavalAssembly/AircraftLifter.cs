@@ -11,6 +11,7 @@ using UnityEngine;
 using UnityEngine.Networking;
 using static iTween;
 using static TutorialStepPrerequisite;
+using System.IO;
 
 namespace WW2NavalAssembly
 {
@@ -56,8 +57,11 @@ namespace WW2NavalAssembly
         public MToggle AsLifter;
         public MToggle EnableRaise;
         public MToggle EnableDrop;
+        public MToggle Slave;
+        public MText group;
 
         public bool preAsLifter;
+        public bool preSlave;
 
         public bool RaiseEnabled
         {
@@ -116,6 +120,7 @@ namespace WW2NavalAssembly
             }
         }
 
+        public bool masterFound = false;
         public void ControlMapper()
         {
             if (preAsLifter != !AsLifter.isDefaultValue)
@@ -125,11 +130,25 @@ namespace WW2NavalAssembly
                 {
                     EnableRaise.DisplayInMapper = true;
                     EnableDrop.DisplayInMapper = true;
+                    Slave.DisplayInMapper = true;
+                    group.DisplayInMapper = true;
+                    if (Slave.isDefaultValue)
+                    {
+                        FlightDataBase.Instance.AddLifter(myPlayerID, myGuid, this);
+                        Grouper.Instance.AddLifterMaster(myPlayerID, group.Value, this);
+                    }
                 }
                 else
                 {
                     EnableRaise.DisplayInMapper = false;
                     EnableDrop.DisplayInMapper = false;
+                    Slave.DisplayInMapper = false;
+                    group.DisplayInMapper = false;
+                    if (Slave.isDefaultValue)
+                    {
+                        FlightDataBase.Instance.RemoveLifter(myPlayerID, myGuid);
+                        Grouper.Instance.RemoveLifterMaster(myPlayerID, group.Value);
+                    }
                 }
             }
         }
@@ -226,6 +245,8 @@ namespace WW2NavalAssembly
             AsLifter = BB.AddToggle("Aircraft Elevator", "Elevator", false);
             EnableRaise = BB.AddToggle("Enable Raise", "EnableRaise", true);
             EnableDrop = BB.AddToggle("Enable Drop", "EnableDrop", true);
+            Slave = BB.AddToggle("Slave Lifter", "Slave", false);
+            group = BB.AddText("Elevator group", "slave group", "0");
         }
         public void Awake()
         {
@@ -244,22 +265,43 @@ namespace WW2NavalAssembly
         }
         public void Start()
         {
-            if (!AsLifter.isDefaultValue)
+            if (BB.isSimulating)
             {
-                FlightDataBase.Instance.AddLifter(myPlayerID, myGuid, this);
+                if (!AsLifter.isDefaultValue)
+                {
+                    if (Slave.isDefaultValue)
+                    {
+                        FlightDataBase.Instance.AddLifter(myPlayerID, myGuid, this);
+                        if (BB.isSimulating)
+                        {
+                            Grouper.Instance.AddLifterMaster(myPlayerID, group.Value, this);
+                        }
+                    }
+                }
+                else
+                {
+                    FlightDataBase.Instance.RemoveLifter(myPlayerID, myGuid);
+                }
             }
-            else
-            {
-                FlightDataBase.Instance.RemoveLifter(myPlayerID, myGuid);
-            }
-            
             Vis = transform.Find("Vis");
             BoxCollider = transform.Find("Joint");
             preAsLifter = AsLifter.isDefaultValue;
+            preSlave = Slave.isDefaultValue;
         }
         public void BuildUpdate()
         {
             ControlMapper();
+            if (preSlave != !Slave.isDefaultValue)
+            {
+                preSlave = !Slave.isDefaultValue;
+                if (preSlave)
+                {
+                    FlightDataBase.Instance.RemoveLifter(myPlayerID, myGuid);
+                }
+                else
+                {
+                }
+            }
         }
 
         public void SimulateUpdate()
@@ -305,12 +347,31 @@ namespace WW2NavalAssembly
         }
         public void FixedUpdate()
         {
-            if (BB.isSimulating)
+            if (!AsLifter.isDefaultValue)
             {
-                SimulateFixedUpdate();
-            }
-            else
-            {
+                if (BB.isSimulating)
+                {
+                    if (!Slave.isDefaultValue && !masterFound)
+                    {
+                        if (Grouper.Instance.AircraftLifterMasters[myPlayerID].ContainsKey(group.Value))
+                        {
+                            masterFound = true;
+                            try
+                            {
+                                Vis.parent = Grouper.Instance.AircraftLifterMasters[myPlayerID][group.Value].Vis;
+                                BoxCollider.parent = Grouper.Instance.AircraftLifterMasters[myPlayerID][group.Value].BoxCollider;
+                            }
+                            catch { }
+                        }
+                    }
+                    if (Slave.isDefaultValue)
+                    {
+                        SimulateFixedUpdate();
+                    }
+                }
+                else
+                {
+                }
             }
         }
 
@@ -319,7 +380,7 @@ namespace WW2NavalAssembly
         {
             if (BB.isSimulating)
             {
-                if (!AsLifter.isDefaultValue)
+                if (!AsLifter.isDefaultValue && Slave.isDefaultValue)
                 {
                     FlightDataBase.Instance.AddLifter(myPlayerID, myGuid, BB.BuildingBlock.gameObject.GetComponent<AircraftLifter>());
                 }
@@ -328,10 +389,7 @@ namespace WW2NavalAssembly
                     FlightDataBase.Instance.RemoveLifter(myPlayerID, myGuid);
                 }
             }
-            else
-            {
-                FlightDataBase.Instance.RemoveLifter(myPlayerID, myGuid);
-            }
+            
         }
     }
 }
