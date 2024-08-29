@@ -55,9 +55,12 @@ namespace WW2NavalAssembly
     public class Asset_Sea
     {
         public GameObject Sea;
+        public GameObject UnderWater;
         public Asset_Sea(ModAssetBundle modAssetBundle)
         {
             Sea = modAssetBundle.LoadAsset<GameObject>("Sea");
+            UnderWater = modAssetBundle.LoadAsset<GameObject>("underwater");
+            
         }
     }
     public class Asset_FireControl

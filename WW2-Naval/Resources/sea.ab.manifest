@@ -1,9 +1,9 @@
 ManifestFileVersion: 0
-CRC: 838094195
+CRC: 2674044564
 Hashes:
   AssetFileHash:
     serializedVersion: 2
-    Hash: 444035fc1e56b83fe4c9445454f628c2
+    Hash: 6cc915bb0985e50fe030fb9468193933
   TypeTreeHash:
     serializedVersion: 2
     Hash: f85583828cf5957a797b619fc07eacaa
@@ -30,6 +30,7 @@ ClassTypes:
 - Class: 115
   Script: {instanceID: 0}
 Assets:
+- Assets/sea/underwater.prefab
 - Assets/sea/Sea_bkp.prefab
 - Assets/sea/Sea.prefab
 Dependencies: []

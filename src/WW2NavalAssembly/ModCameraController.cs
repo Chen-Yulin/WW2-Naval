@@ -43,6 +43,9 @@ namespace WW2NavalAssembly
                 if (!MO)
                 {
                     MO = SingleInstanceFindOnly<MouseOrbit>.Instance;
+                    camera = MO.GetComponent<Camera>();
+                    FPV = camera.gameObject.AddComponent<FPVCamera>();
+                    TAC = camera.gameObject.AddComponent<TacCamera>();
                 }
                 if (MO)
                 {
@@ -158,6 +161,13 @@ namespace WW2NavalAssembly
 
             if (target)
             {
+                if (!FPV)
+                {
+                    MO = SingleInstanceFindOnly<MouseOrbit>.Instance;
+                    camera = MO.GetComponent<Camera>();
+                    FPV = camera.gameObject.AddComponent<FPVCamera>();
+                    TAC = camera.gameObject.AddComponent<TacCamera>();
+                }
                 FPV.Base = target;
                 FPV.rotationX = 0;
                 FPV.rotationY = 0;
@@ -175,6 +185,13 @@ namespace WW2NavalAssembly
         {
             if (target)
             {
+                if (!TAC)
+                {
+                    MO = SingleInstanceFindOnly<MouseOrbit>.Instance;
+                    camera = MO.GetComponent<Camera>();
+                    FPV = camera.gameObject.AddComponent<FPVCamera>();
+                    TAC = camera.gameObject.AddComponent<TacCamera>();
+                }
                 TAC.Base = target;
                 TAC.ViewSensitivity = Sensitivity;
                 TAC.ViewMove = move;
