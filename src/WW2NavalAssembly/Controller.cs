@@ -92,7 +92,7 @@ namespace WW2NavalAssembly
                 cameraData[i] = new CameraData();
                 ControllerFCResult[i] = new Dictionary<float, Controller.FCResult>();
                 AAControllerFCResult[i] = new Dictionary<float, Controller.FCResult>();
-                ControllerObject[i] = new GameObject();
+                ControllerObject[i] = null;
                 synchronized[i] = false;
                 aaController[i] = null;
             }
@@ -790,10 +790,11 @@ namespace WW2NavalAssembly
         public void Start()
         {
             gameObject.name = "Captain";
+            HorizonManager.Instance.CanSeeAll(myPlayerID);
         }
         public override void OnSimulateStart()
         {
-            
+            HorizonManager.Instance.CanSeeAll(myPlayerID);
             myGuid = BlockBehaviour.BuildingBlock.Guid.GetHashCode();
             LockIconOnScreen = ModResource.GetTexture("LockIconScreen Texture").Texture;
             LockIconOnScreen2 = ModResource.GetTexture("LockIconScreen2 Texture").Texture;
@@ -821,6 +822,9 @@ namespace WW2NavalAssembly
         }
         public override void OnSimulateStop()
         {
+            HorizonManager.Instance.CanSeeAll(myPlayerID);
+            HorizonManager.Instance.SetVisibleToAll(myPlayerID);
+            HorizonManager.Instance.ClearAircraftVisible(myPlayerID);
             try
             {
                 if (!StatMaster.isMP || PlayerData.localPlayer.networkId == myPlayerID)
@@ -865,6 +869,7 @@ namespace WW2NavalAssembly
                 Locking = false;
                 ControllerDataManager.Instance.lockData[myPlayerID].valid = false;
             }
+            
         }
         public void OnDestroy()
         {
@@ -992,6 +997,27 @@ namespace WW2NavalAssembly
                     }
                     catch { }
                     
+                }
+                // for horizon
+                for (int i = 0; i < 16; i++)
+                {
+                    if (i == myPlayerID)
+                    {
+                        HorizonManager.Instance.VisibleToController[myPlayerID][i] = true;
+                    }
+                    else
+                    {
+                        GameObject controller = ControllerDataManager.Instance.ControllerObject[i];
+                        if (controller)
+                        {
+                            HorizonManager.Instance.VisibleToController[myPlayerID][i] = MathTool.DistFromWatcher(myPlayerID, controller.transform) < MathTool.GetHorizon(transform);
+                            HorizonManager.Instance.VisibleToAircraft[myPlayerID][i] = MathTool.DistFromWatcherAircraft(myPlayerID, controller.transform) < 1000f;
+                        }
+                        else
+                        {
+                            HorizonManager.Instance.VisibleToController[myPlayerID][i] = true;
+                        }
+                    }
                 }
             }
         }
