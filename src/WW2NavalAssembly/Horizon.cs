@@ -157,7 +157,18 @@ namespace WW2NavalAssembly
         
         void Awake()
         {
-            myPlayerID = transform.gameObject.GetComponent<BlockBehaviour>().ParentMachine.PlayerID;
+            
+
+        }
+        void Start()
+        {
+            
+            bb = GetComponent<BlockBehaviour>();
+            if (bb.BlockID == (int)BlockType.Grabber)
+            {
+                Destroy(transform.Find("Joint").GetComponent<MeshRenderer>());
+            }
+            myPlayerID = bb.ParentMachine.PlayerID;
             if (StatMaster.isMP)
             {
                 watcherID = PlayerData.localPlayer.networkId;
@@ -167,11 +178,6 @@ namespace WW2NavalAssembly
                 watcherID = 0;
             }
             myseed = (int)(UnityEngine.Random.value * 39);
-
-        }
-        void Start()
-        {
-            bb = GetComponent<BlockBehaviour>();
             _show = true;
             isAircraft = GetComponent<Aircraft>() != null;
             aircraft = GetComponent<Aircraft>();

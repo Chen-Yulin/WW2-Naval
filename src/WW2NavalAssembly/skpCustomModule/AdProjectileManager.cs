@@ -902,24 +902,7 @@ namespace skpCustomModule
 		// Token: 0x06000230 RID: 560 RVA: 0x0002251C File Offset: 0x0002071C
 		public void UnpackData(uint frame, uint frameNum, byte[] data01)
 		{
-			uint num = frameNum;
-			bool flag = num > 1U;
-			if (flag)
-			{
-				num = 1U;
-			}
-			int num2 = 0;
-			bool flag2 = data01[num2] == 1;
-			num2++;
-			int num3 = this.ReadSpawnData(frame, data01, num2);
-			num2 += num3;
-			int num4 = this.ReadBufferData(frame, data01, num2);
-			num2 += num4;
-			bool flag3 = num == 0U;
-			if (flag3)
-			{
-				this.NewFrame(frame);
-			}
+			
 		}
 
 		// Token: 0x06000231 RID: 561 RVA: 0x0002257C File Offset: 0x0002077C
