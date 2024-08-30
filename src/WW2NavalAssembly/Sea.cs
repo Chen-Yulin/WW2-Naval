@@ -414,11 +414,18 @@ namespace WW2NavalAssembly
         public bool preShowSea = false;
         public GameObject waterplane;
 
+        public GameObject Underwater;
+
         public void Awake()
         {
             waterplane = ModResource.GetAssetBundle("waternew").LoadAsset<GameObject>("Ocean");
             UnityEngine.Object.DontDestroyOnLoad(waterplane);
             seaeffect = new GameObject();
+            Underwater = Instantiate(AssetManager.Instance.Sea.UnderWater);
+            Underwater.transform.parent = Camera.main.transform;
+            Underwater.SetActive(false);
+            Underwater.transform.localPosition = Vector3.zero;
+            Underwater.transform.localScale = Vector3.one * 10f;
             //seaeffect.AddComponent<SeaSurfacer>();
             //DontDestroyOnLoad(seaeffect);
 
@@ -468,6 +475,8 @@ namespace WW2NavalAssembly
                 timeseed = 0;
             }
 
+            
+
 
             if (ModController.Instance.showSea && this.preShowSea && ModController.Instance.newseaEffect)
             {
@@ -491,8 +500,7 @@ namespace WW2NavalAssembly
                     lastPos = pos;
                 }
             }
-            bool flag = this.preShowSea && !ModController.Instance.showSea;
-            if (flag)
+            if (this.preShowSea && !ModController.Instance.showSea) // switch off
             {
                 this.preShowSea = false;
                 try
@@ -511,35 +519,65 @@ namespace WW2NavalAssembly
                 {
                 }
             }
-            else
+            else if (!preShowSea && ModController.Instance.showSea) // switch on
             {
-                if (preShowSea && !ModController.Instance.showSea)
+                preShowSea = true;
+                if (ModController.Instance.newseaEffect)
                 {
-                    preShowSea = false;
-                    try
-                    {
-                        UnityEngine.Object.Destroy(SeaPlaneFather);
-                        Destroy(SeaPlane);
-                    }
-                    catch { }
+                    SpawnSea(1);
                 }
-                else if (!preShowSea && ModController.Instance.showSea)
+                else
                 {
-                    preShowSea = true;
-                    if (ModController.Instance.newseaEffect)
-                    {
-                        SpawnSea(1);
-                    }
-                    else
-                    {
-                        SeaPlane = (GameObject)Instantiate(AssetManager.Instance.Sea.Sea);
-                        SeaPlane.transform.position = new Vector3(0, 20, 0);
-                        SeaPlane.transform.localScale = new Vector3(8000, 1, 8000);
-                        SeaPlane.AddComponent<Water>().waterMode = Water.WaterMode.Reflective;
-                        SeaPlane.SetActive(true);
-                    }
+                    SeaPlane = (GameObject)Instantiate(AssetManager.Instance.Sea.Sea);
+                    SeaPlane.transform.position = new Vector3(0, 20, 0);
+                    SeaPlane.transform.localScale = new Vector3(8000, 1, 8000);
+                    SeaPlane.AddComponent<Water>().waterMode = Water.WaterMode.Refractive;
+                    SeaPlane.SetActive(true);
                 }
             }
+
+            if (preShowSea)
+            {
+                if (Camera.main.transform.position.y < 20)
+                {
+                    if (SeaPlane)
+                    {
+                        SeaPlane.transform.localScale = new Vector3(SeaPlane.transform.localScale.x, -1, SeaPlane.transform.localScale.z);
+                    }
+                    try
+                    {
+                        Underwater.SetActive(true);
+                    }
+                    catch {
+                        Underwater = Instantiate(AssetManager.Instance.Sea.UnderWater);
+                        Underwater.transform.parent = Camera.main.transform;
+                        Underwater.transform.localPosition = Vector3.zero;
+                        Underwater.transform.localScale = Vector3.one * 10f;
+                    }
+                }
+                else
+                {
+                    if (SeaPlane)
+                    {
+                        SeaPlane.transform.localScale = new Vector3(SeaPlane.transform.localScale.x, 1, SeaPlane.transform.localScale.z);
+                    }
+                    try
+                    {
+                        Underwater.SetActive(false);
+                    }
+                    catch { }
+                    
+                }
+            }
+            else
+            {
+                if (Underwater)
+                {
+                    Underwater.SetActive(false);
+                }
+            }
+            
+
         }
         public Vector3 GetCameraPos()
         {

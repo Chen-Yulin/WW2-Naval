@@ -8,9 +8,55 @@ using Modding;
 using Modding.Blocks;
 using UnityEngine;
 using UnityEngine.Networking;
+using System.Collections;
 
 namespace WW2NavalAssembly
 {
+    public class HorizonManager : SingleInstance<HorizonManager>
+    {
+        public override string Name { get; } = "HorizonManager";
+        public bool[][] VisibleToController = new bool[16][];
+        public bool[][] VisibleToAircraft = new bool[16][];
+
+        public HorizonManager()
+        {
+            for (int i = 0; i < 16; i++)
+            {
+                VisibleToController[i] = new bool[16];
+                VisibleToAircraft[i] = new bool[16];
+            }
+        }
+
+        public bool isVisble(int watcher, int target)
+        {
+            return VisibleToController[watcher][target] || VisibleToAircraft[watcher][target] || ControllerDataManager.Instance.ControllerObject[watcher] == null;
+        }
+
+        public void SetVisibleToAll(int player)
+        {
+            for (int i = 0; i < 16; i++)
+            {
+                VisibleToController[i][player] = true;
+            }
+        }
+        public void CanSeeAll(int player)
+        {
+            for (int i = 0; i < 16; i++)
+            {
+                VisibleToController[player][i] = true;
+            }
+        }
+
+        public void ClearAircraftVisible(int player)
+        {
+            for (int i = 0; i < 16; i++)
+            {
+                VisibleToAircraft[player][i] = false;
+            }
+        }
+
+
+    }
     public class Horizon : MonoBehaviour
     {
         public bool wood = false;
@@ -20,9 +66,16 @@ namespace WW2NavalAssembly
         public bool _show = true;
         public bool Findinactive = false;
 
+        public int myPlayerID;
+        public int watcherID;
+        public int myseed;
+
         float AircraftDist = 1000f;
 
-        int i = 0;
+        int frame = 0;
+
+        public bool isAircraft;
+        public Aircraft aircraft;
 
 
         public bool Show
@@ -101,113 +154,63 @@ namespace WW2NavalAssembly
 
         public GameObject controller;
 
-        public float GetHorizon()
+        
+        void Awake()
         {
-            float radius = 6710000f;
-            float height = Mathf.Clamp((controller.transform.position.y - Constants.SeaHeight), 0, 100) * 5;
-            float horizonDist = Mathf.Sqrt(Mathf.Pow(height + radius,2)- Mathf.Pow(radius, 2))/10f;
-            horizonDist = Mathf.Clamp(horizonDist, 100f, 100000f);
-            //Debug.Log(horizonDist);
-            return horizonDist;
-        }
+            
 
-        public float GetDist()
-        {
-            return MathTool.Get2DDistance(controller.transform.position, transform.position);
-        }
-
-        public float GetAircraftDist()
-        {
-            float dist = float.MaxValue;
-
-            int playerID = 0;
-            if (StatMaster.isMP)
-            {
-                playerID = PlayerData.localPlayer.networkId;
-            }
-
-            foreach (var a in Grouper.Instance.GetLeaders(playerID))
-            {
-                Aircraft aircraft = a.Value.Value;
-                float d = MathTool.Get2DDistance(transform.position, aircraft.transform.position);
-                if (d<dist)
-                {
-                    dist = d;
-                }
-            }
-            return dist;
         }
         void Start()
         {
             
-        }
-        void Update()
-        {
-            if (i<10)
+            bb = GetComponent<BlockBehaviour>();
+            if (bb.BlockID == (int)BlockType.Grabber)
             {
-                i++;
+                Destroy(transform.Find("Joint").GetComponent<MeshRenderer>());
             }
-            else if (i == 10)
+            myPlayerID = bb.ParentMachine.PlayerID;
+            if (StatMaster.isMP)
             {
-                Enabled = bb.isSimulating;
-                if (Enabled)
-                {
-                    try
-                    {
-                        if (StatMaster.isMP)
-                        {
-                            controller = ControllerDataManager.Instance.ControllerObject[PlayerData.localPlayer.networkId];
-                        }
-                        else
-                        {
-                            controller = ControllerDataManager.Instance.ControllerObject[0];
-                        }
-                    }
-                    catch
-                    {
-                        Enabled = false;
-                    }
-                    if (bb.BlockID == (int)BlockType.Log || bb.BlockID == (int)BlockType.DoubleWoodenBlock)
-                    {
-                        wood = true;
-                        halfVis = !transform.Find("Vis").GetComponent<MeshRenderer>().enabled;
-                    }
-                }
-                i++;
+                watcherID = PlayerData.localPlayer.networkId;
             }
             else
             {
-                if (Enabled && controller)
+                watcherID = 0;
+            }
+            myseed = (int)(UnityEngine.Random.value * 39);
+            _show = true;
+            isAircraft = GetComponent<Aircraft>() != null;
+            aircraft = GetComponent<Aircraft>();
+            Enabled = bb.isSimulating && myPlayerID != watcherID;
+            if (Enabled)
+            {
+                if (bb.BlockID == (int)BlockType.Log || bb.BlockID == (int)BlockType.DoubleWoodenBlock)
                 {
-                    Show = GetHorizon() > GetDist();
-                    if (!Show)
-                    {
-                        Show = AircraftDist > GetAircraftDist();
-                    }
+                    wood = true;
+                    halfVis = !transform.Find("Vis").GetComponent<MeshRenderer>().enabled;
                 }
-                if (!controller)
+            }
+        }
+        void OnDestroy()
+        {
+        }
+        void FixedUpdate()
+        {
+            if (Enabled)
+            {
+                if (myseed == ModController.Instance.state)
                 {
-                    try
+                    if (isAircraft && aircraft.isFlying)
                     {
-                        if (StatMaster.isMP)
-                        {
-                            controller = ControllerDataManager.Instance.ControllerObject[PlayerData.localPlayer.networkId];
-                        }
-                        else
-                        {
-                            controller = ControllerDataManager.Instance.ControllerObject[0];
-                        }
+                        Show = MathTool.DistFromWatcherAircraft(watcherID, transform) < AircraftDist || MathTool.DistFromWatcher(watcherID, transform) < AircraftDist;
                     }
-                    catch
+                    else
                     {
-                    }
-                    if (!controller)
-                    {
-                        Show = true;
+                        Show = HorizonManager.Instance.isVisble(watcherID, myPlayerID);
                     }
                 }
             }
-            
         }
+
     }
 }

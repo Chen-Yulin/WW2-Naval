@@ -96,5 +96,41 @@ namespace WW2NavalAssembly
             Vector2 upProj = b2p - rightProjMag * boxRight;
             return Mathf.Abs(rightProjMag) < (boxSize.x/2f) && upProj.magnitude < (boxSize.y/2f);
         }
+
+        public static float DistFromWatcherAircraft(int watcherID, Transform me)
+        {
+            float dist = float.MaxValue;
+
+            int playerID = watcherID;
+
+            foreach (var a in Grouper.Instance.GetLeaders(playerID))
+            {
+                try
+                {
+                    Aircraft aircraft = a.Value.Value;
+                    float d = MathTool.Get2DDistance(me.position, aircraft.transform.position);
+                    if (d < dist)
+                    {
+                        dist = d;
+                    }
+                }
+                catch { }
+            }
+            return dist;
+        }
+        public static float DistFromWatcher(int watcherID, Transform me)
+        {
+            return MathTool.Get2DDistance(ControllerDataManager.Instance.ControllerObject[watcherID].transform.position, me.position);
+        }
+
+        public static float GetHorizon(Transform controller)
+        {
+            float radius = 6710000f;
+            float height = Mathf.Clamp((controller.position.y - Constants.SeaHeight), 0, 100) * 5;
+            float horizonDist = Mathf.Sqrt(Mathf.Pow(height + radius, 2) - Mathf.Pow(radius, 2)) / 10f;
+            horizonDist = Mathf.Clamp(horizonDist, 100f, 100000f);
+            //Debug.Log(horizonDist);
+            return horizonDist;
+        }
     }
 }
