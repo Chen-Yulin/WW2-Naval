@@ -9,6 +9,7 @@ using Modding;
 using Modding.Blocks;
 using UnityEngine;
 using UnityEngine.Networking;
+using UnityEngine.UI;
 
 namespace WW2NavalAssembly
 {
@@ -154,6 +155,7 @@ namespace WW2NavalAssembly
         public Dictionary<int, GameObject> TorpedoAimIcon = new Dictionary<int, GameObject>();
         public Dictionary<float, FCResult> FCResults = new Dictionary<float, FCResult>();
         public GameObject OffsetIcon;
+        public Text InfoPanel;
 
         public ModLogger logger;
 
@@ -320,6 +322,7 @@ namespace WW2NavalAssembly
             FCOrien = FireControlPanel.transform.Find("OrienController").gameObject;
             FCOffset = FireControlPanel.transform.Find("Offset").gameObject;
             OffsetIcon = FCOffset.transform.Find("AimPrefab").Find("GunIcon").gameObject;
+            InfoPanel = FCCanvas.transform.Find("Info").gameObject.GetComponent<Text>();
         }
         public void InitModLoggerPanel()// after init FC panel
         {
@@ -587,7 +590,7 @@ namespace WW2NavalAssembly
                         TorpedoLauncher tmpTor = FireControlManager.Instance.GetTorpedo(myPlayerID, TorIcon.Key).GetComponent<TorpedoLauncher>();
                         float angle;
                         angle = MathTool.SignedAngle(GetForward(), tmpTor.GetFCOrienPara());
-                        TorIcon.Value.transform.eulerAngles = new Vector3(0, 0, angle);
+                        TorIcon.Value.transform.localEulerAngles = new Vector3(0, 0, angle);
                         TorIcon.Value.transform.localScale = new Vector3(1, (tmpTor.TorpedoType == 0 ? 1 : 0.6f), 1);
                     }
                     catch { }
@@ -630,7 +633,7 @@ namespace WW2NavalAssembly
                                                                         new Vector2(ControllerDataManager.Instance.lockData[myPlayerID].velocity.x, ControllerDataManager.Instance.lockData[myPlayerID].velocity.z),
                                                                         typeGroup.Key);
                         float angle = MathTool.SignedAngle(GetForward(), preDirection);
-                        TorpedoPreIcon[typeGroup.Key].transform.eulerAngles = new Vector3(0, 0, angle);
+                        TorpedoPreIcon[typeGroup.Key].transform.localEulerAngles = new Vector3(0, 0, angle);
                     }
                 }
                 else
@@ -767,6 +770,14 @@ namespace WW2NavalAssembly
         {
             Vector3 right = transform.right;
             FlightDataBase.Instance.DeckRight[myPlayerID] = new Vector2(right.x, right.z).normalized;
+        }
+
+        public void UpdateInfoPanel()
+        {
+            InfoPanel.text = "Position: " + MathTool.Get2DCoordinate(transform.position) * 10f / 1852f + " nmi\n" +
+                             "Velocity: " + (myVelocity.magnitude / 0.5144f * 2).ToString("F1") + "Kts\n" +
+                             "Target:   " + (ControllerDataManager.Instance.lockData[myPlayerID].valid ? (MathTool.Get2DDistance(transform.position, ControllerDataManager.Instance.lockData[myPlayerID].position) * 10f / 1852f).ToString("F1") + " nmi" : "None");
+            FCOrien.transform.localEulerAngles = - new Vector3(0, 0, MathTool.SignedAngle(MathTool.Get2DCoordinate(-transform.up), new Vector2(0, 1)));
         }
 
 
@@ -996,7 +1007,11 @@ namespace WW2NavalAssembly
                         UpdateGunIcon();
                     }
                     catch { }
-                    
+                    try
+                    {
+                       UpdateInfoPanel();
+                    }
+                    catch { }
                 }
                 // for horizon
                 for (int i = 0; i < 16; i++)
