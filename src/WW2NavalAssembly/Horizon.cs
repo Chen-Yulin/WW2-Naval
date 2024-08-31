@@ -210,6 +210,18 @@ namespace WW2NavalAssembly
                     }
                 }
             }
+            else
+            {
+                Enabled = bb.isSimulating && myPlayerID != watcherID;
+                if (Enabled)
+                {
+                    if (bb.BlockID == (int)BlockType.Log || bb.BlockID == (int)BlockType.DoubleWoodenBlock)
+                    {
+                        wood = true;
+                        halfVis = !transform.Find("Vis").GetComponent<MeshRenderer>().enabled;
+                    }
+                }
+            }
         }
 
     }
