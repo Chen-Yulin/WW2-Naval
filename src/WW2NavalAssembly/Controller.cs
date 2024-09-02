@@ -1025,8 +1025,8 @@ namespace WW2NavalAssembly
                         GameObject controller = ControllerDataManager.Instance.ControllerObject[i];
                         if (controller)
                         {
-                            HorizonManager.Instance.VisibleToController[myPlayerID][i] = MathTool.DistFromWatcher(myPlayerID, controller.transform) < MathTool.GetHorizon(transform);
-                            HorizonManager.Instance.VisibleToAircraft[myPlayerID][i] = MathTool.DistFromWatcherAircraft(myPlayerID, controller.transform) < 1000f;
+                            HorizonManager.Instance.VisibleToController[myPlayerID][i] = MathTool.DistFromWatcher(myPlayerID, controller.transform) < MathTool.GetHorizon(transform)+MathTool.GetHorizon(controller.transform);
+                            HorizonManager.Instance.VisibleToAircraft[myPlayerID][i] = MathTool.DistFromWatcherAircraft(myPlayerID, controller.transform) < 1500f;
                         }
                         else
                         {

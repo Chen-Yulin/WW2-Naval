@@ -42,7 +42,8 @@ namespace WW2NavalAssembly
 
         public Queue<Aircraft>[] LandingQueue = new Queue<Aircraft>[16];
 
-        public Dictionary<int, AircraftLifter>[] Lifters = new Dictionary<int, AircraftLifter>[16];
+        public Dictionary<int, AircraftLifter>[] MasterLifters = new Dictionary<int, AircraftLifter>[16];
+        public Dictionary<int, AircraftLifter>[] SlaveLifters = new Dictionary<int, AircraftLifter>[16];
 
         public void CheckLandingQueue(int player)
         {
@@ -239,11 +240,36 @@ namespace WW2NavalAssembly
                                     + (ForwardABit ? AIRCRAFT_LENGTH_DECK/2f : 0) * forward;
 
                 bool CollideWithLifter = false;
-                foreach (var lifter in Lifters[playerID])
+                foreach (var lifter in MasterLifters[playerID])
                 {
+                    if (!lifter.Value)
+                    {
+                        continue;
+                    }
                     //Debug.Log("Point" + Vis.transform.TransformPoint(spotPos));
                     //Debug.Log("Get Lifter"+ lifter.Value.Pos2D+ lifter.Value.Right2D+ lifter.Value.Size2D);
-                    if (MathTool.pointInBox(MathTool.Get2DCoordinate(Vis.transform.TransformPoint(spotPos)), lifter.Value.Pos2D, lifter.Value.Right2D, lifter.Value.Size2D + new Vector2(0.5f, 2f)))
+                    if (MathTool.pointInBox(MathTool.Get2DCoordinate(Vis.transform.TransformPoint(spotPos)), lifter.Value.Pos2D, lifter.Value.Right2D, lifter.Value.Size2D + new Vector2(0.5f, 0.5f)))
+                    {
+                        CollideWithLifter = true;
+                    }
+                    if (MathTool.pointInBox(MathTool.Get2DCoordinate(Vis.transform.TransformPoint(spotPos) - DeckObjects[playerID].transform.forward), lifter.Value.Pos2D, lifter.Value.Right2D, lifter.Value.Size2D + new Vector2(0.5f, 0.5f)))
+                    {
+                        CollideWithLifter = true;
+                    }
+                }
+                foreach (var lifter in SlaveLifters[playerID])
+                {
+                    if (!lifter.Value)
+                    {
+                        continue;
+                    }
+                    //Debug.Log("Point" + Vis.transform.TransformPoint(spotPos));
+                    //Debug.Log("Get Lifter"+ lifter.Value.Pos2D+ lifter.Value.Right2D+ lifter.Value.Size2D);
+                    if (MathTool.pointInBox(MathTool.Get2DCoordinate(Vis.transform.TransformPoint(spotPos)), lifter.Value.Pos2D, lifter.Value.Right2D, lifter.Value.Size2D + new Vector2(0.5f, 0.5f)))
+                    {
+                        CollideWithLifter = true;
+                    }
+                    if (MathTool.pointInBox(MathTool.Get2DCoordinate(Vis.transform.TransformPoint(spotPos) - DeckObjects[playerID].transform.forward), lifter.Value.Pos2D, lifter.Value.Right2D, lifter.Value.Size2D + new Vector2(0.5f, 0.5f)))
                     {
                         CollideWithLifter = true;
                     }
@@ -388,21 +414,39 @@ namespace WW2NavalAssembly
 
         public void AddLifter(int playerID, int guid, AircraftLifter lifter)
         {
-            if (Lifters[playerID].ContainsKey(guid))
+            if (MasterLifters[playerID].ContainsKey(guid))
             {
-                Lifters[playerID][guid] = lifter;
+                MasterLifters[playerID][guid] = lifter;
             }
             else
             {
-                Lifters[playerID].Add(guid , lifter);
+                MasterLifters[playerID].Add(guid , lifter);
             }
         }
 
+        public void AddSlaveLifter(int playerID, int guid, AircraftLifter lifter)
+        {
+            if (SlaveLifters[playerID].ContainsKey(guid))
+            {
+                SlaveLifters[playerID][guid] = lifter;
+            }
+            else
+            {
+                SlaveLifters[playerID].Add(guid, lifter);
+            }
+        }
         public void RemoveLifter(int playerID, int guid)
         {
-            if (Lifters[playerID].ContainsKey(guid))
+            if (MasterLifters[playerID].ContainsKey(guid))
             {
-                Lifters[playerID].Remove(guid);
+                MasterLifters[playerID].Remove(guid);
+            }
+        }
+        public void RemoveSlaveLifter(int playerID, int guid)
+        {
+            if (SlaveLifters[playerID].ContainsKey(guid))
+            {
+                SlaveLifters[playerID].Remove(guid);
             }
         }
         public void ShowDeckHangarVis(int playerID)
@@ -690,7 +734,7 @@ namespace WW2NavalAssembly
         {
             Decks[playerID] = new Deck();
             Hangars[playerID] = new Dictionary<string, Deck>();
-            Lifters[playerID] = new Dictionary<int, AircraftLifter>();
+            MasterLifters[playerID] = new Dictionary<int, AircraftLifter>();
         }
         public void CalculateHangar(int playerID)
         {
@@ -884,7 +928,8 @@ namespace WW2NavalAssembly
                 Decks[i] = new Deck();
                 engines[i] = new List<Engine>();
                 LandingQueue[i] = new Queue<Aircraft>();
-                Lifters[i] = new Dictionary<int, AircraftLifter>();
+                MasterLifters[i] = new Dictionary<int, AircraftLifter>();
+                SlaveLifters[i] = new Dictionary<int, AircraftLifter>();
             }
             InitLine();
         }
