@@ -265,7 +265,7 @@ namespace WW2NavalAssembly
             if (UpQueue.Count > 0)
             {
                 bool solvable = false;
-                foreach (var lifter in FlightDataBase.Instance.Lifters[myPlayerID])
+                foreach (var lifter in FlightDataBase.Instance.MasterLifters[myPlayerID])
                 {
                     if (lifter.Value)
                     {
@@ -283,7 +283,7 @@ namespace WW2NavalAssembly
                 }
                 if (!solvable)
                 {
-                    foreach (var lifter in FlightDataBase.Instance.Lifters[myPlayerID])
+                    foreach (var lifter in FlightDataBase.Instance.MasterLifters[myPlayerID])
                     {
                         if (lifter.Value)
                         {
@@ -301,7 +301,7 @@ namespace WW2NavalAssembly
             if (DownQueue.Count > 0)
             {
                 bool solvable = false;
-                foreach (var lifter in FlightDataBase.Instance.Lifters[myPlayerID])
+                foreach (var lifter in FlightDataBase.Instance.MasterLifters[myPlayerID])
                 {
                     if (lifter.Value)
                     {
@@ -320,7 +320,7 @@ namespace WW2NavalAssembly
                 }
                 if (!solvable)
                 {
-                    foreach (var lifter in FlightDataBase.Instance.Lifters[myPlayerID])
+                    foreach (var lifter in FlightDataBase.Instance.MasterLifters[myPlayerID])
                     {
                         if (lifter.Value)
                         {

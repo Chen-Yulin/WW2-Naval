@@ -277,10 +277,15 @@ namespace WW2NavalAssembly
                             Grouper.Instance.AddLifterMaster(myPlayerID, group.Value, this);
                         }
                     }
+                    else
+                    {
+                        FlightDataBase.Instance.AddSlaveLifter(myPlayerID, myGuid, this);
+                    }
                 }
                 else
                 {
                     FlightDataBase.Instance.RemoveLifter(myPlayerID, myGuid);
+                    FlightDataBase.Instance.RemoveSlaveLifter(myPlayerID, myGuid);
                 }
             }
             Vis = transform.Find("Vis");
@@ -301,6 +306,26 @@ namespace WW2NavalAssembly
                 else
                 {
                 }
+            }
+            if (!AsLifter.isDefaultValue)
+            {
+                if (Slave.isDefaultValue)
+                {
+                    FlightDataBase.Instance.AddLifter(myPlayerID, myGuid, this);
+                    if (BB.isSimulating)
+                    {
+                        Grouper.Instance.AddLifterMaster(myPlayerID, group.Value, this);
+                    }
+                }
+                else
+                {
+                    FlightDataBase.Instance.AddSlaveLifter(myPlayerID, myGuid, this);
+                }
+            }
+            else
+            {
+                FlightDataBase.Instance.RemoveLifter(myPlayerID, myGuid);
+                FlightDataBase.Instance.RemoveSlaveLifter(myPlayerID, myGuid);
             }
         }
 
@@ -358,8 +383,12 @@ namespace WW2NavalAssembly
                             masterFound = true;
                             try
                             {
-                                Vis.parent = Grouper.Instance.AircraftLifterMasters[myPlayerID][group.Value].Vis;
-                                BoxCollider.parent = Grouper.Instance.AircraftLifterMasters[myPlayerID][group.Value].BoxCollider;
+                                GameObject VisP = new GameObject("SlaveVis");
+                                VisP.transform.rotation = Grouper.Instance.AircraftLifterMasters[myPlayerID][group.Value].Vis.rotation;
+                                VisP.transform.parent = Grouper.Instance.AircraftLifterMasters[myPlayerID][group.Value].Vis;
+                                VisP.transform.localPosition = Vector3.zero;
+                                Vis.parent = VisP.transform;
+                                BoxCollider.parent = VisP.transform;
                             }
                             catch { }
                         }
@@ -380,13 +409,21 @@ namespace WW2NavalAssembly
         {
             if (BB.isSimulating)
             {
-                if (!AsLifter.isDefaultValue && Slave.isDefaultValue)
+                if (!AsLifter.isDefaultValue)
                 {
-                    FlightDataBase.Instance.AddLifter(myPlayerID, myGuid, BB.BuildingBlock.gameObject.GetComponent<AircraftLifter>());
+                    if (Slave.isDefaultValue)
+                    {
+                        FlightDataBase.Instance.AddLifter(myPlayerID, myGuid, BB.BuildingBlock.gameObject.GetComponent<AircraftLifter>());
+                    }
+                    else
+                    {
+                        FlightDataBase.Instance.AddSlaveLifter(myPlayerID, myGuid, BB.BuildingBlock.gameObject.GetComponent<AircraftLifter>());
+                    }
                 }
                 else
                 {
                     FlightDataBase.Instance.RemoveLifter(myPlayerID, myGuid);
+                    FlightDataBase.Instance.RemoveSlaveLifter(myPlayerID, myGuid);
                 }
             }
             
