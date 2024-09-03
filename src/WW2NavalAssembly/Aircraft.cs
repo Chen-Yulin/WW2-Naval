@@ -216,6 +216,7 @@ namespace WW2NavalAssembly
         public MMenu TorpedoType;
         public MMenu BombType;
         public MMenu FighterType;
+        public MMenu SeaplaneType;
         public MMenu Rank;
         public MText Group;
         public MKey SwitchActive;
@@ -374,6 +375,15 @@ namespace WW2NavalAssembly
                 return StatMaster.isMP ? myPlayerID == PlayerData.localPlayer.networkId : true;
             }
         }
+
+        public bool isSeaplane
+        {
+            get
+            {
+                return Type.Value == 4;
+            }
+        }
+
 
         // ============== for aircraft mass =================
         float _fuel = 1;
@@ -612,6 +622,8 @@ namespace WW2NavalAssembly
         // ================= for local velocity ===============
         public Vector3 previousLocalPos = Vector3.zero;
         public Vector3 localVelocity = Vector3.zero;
+
+        
 
 
         IEnumerator TorpedoCoroutine()
@@ -2393,6 +2405,10 @@ namespace WW2NavalAssembly
                 "F4U",
                 "Spitfire"
             });
+            SeaplaneType = AddMenu("SeaplaneType", 0, new List<string>
+            {
+                "SC-1",
+            });
             Rank = AddMenu("Rank", 0, LanguageManager.Instance.CurrentLanguage.AircraftRank);
             for (int i = 0; i < 16; i++)
             {
@@ -2424,21 +2440,36 @@ namespace WW2NavalAssembly
                         TorpedoType.DisplayInMapper = true;
                         BombType.DisplayInMapper = false;
                         FighterType.DisplayInMapper = false;
+                        SeaplaneType.DisplayInMapper = false;
+                        Group.DisplayInMapper = true;
                         break;
                     case 2:
                         TorpedoType.DisplayInMapper = false;
                         BombType.DisplayInMapper = true;
                         FighterType.DisplayInMapper = false;
+                        SeaplaneType.DisplayInMapper = false;
+                        Group.DisplayInMapper = true;
                         break;
                     case 3:
                         TorpedoType.DisplayInMapper = false;
                         BombType.DisplayInMapper = true;
                         FighterType.DisplayInMapper = false;
+                        SeaplaneType.DisplayInMapper = false;
+                        Group.DisplayInMapper = true;
                         break;
                     case 0:
                         TorpedoType.DisplayInMapper = false;
                         BombType.DisplayInMapper = false;
                         FighterType.DisplayInMapper = true;
+                        SeaplaneType.DisplayInMapper = false;
+                        Group.DisplayInMapper = true;
+                        break;
+                    case 4:
+                        TorpedoType.DisplayInMapper = false;
+                        BombType.DisplayInMapper = false;
+                        FighterType.DisplayInMapper = false;
+                        SeaplaneType.DisplayInMapper = true;
+                        Group.DisplayInMapper = false;
                         break;
                     default:
                         break;
@@ -2460,6 +2491,9 @@ namespace WW2NavalAssembly
                     break;
                 case 0:
                     nowAppearance = FighterType.Selection;
+                    break;
+                case 4:
+                    nowAppearance = SeaplaneType.Selection;
                     break;
                 default:
                     break;
