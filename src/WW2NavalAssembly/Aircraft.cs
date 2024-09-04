@@ -219,6 +219,7 @@ namespace WW2NavalAssembly
         public MMenu SeaplaneType;
         public MMenu Rank;
         public MText Group;
+        public MText SeaplaneName;
         public MKey SwitchActive;
         public MKey FPVKey;
 
@@ -417,6 +418,22 @@ namespace WW2NavalAssembly
                 return _loadmass;
             }
         }
+
+        public string GroupName
+        {
+            get
+            {
+                if (isSeaplane)
+                {
+                    return SeaplaneName.Value;
+                }
+                else
+                {
+                    return Group.Value;
+                }
+            }
+        }
+
 
         // ============== for aero dynamics =================
         public float AirDensity = 0.0015f;
@@ -712,7 +729,7 @@ namespace WW2NavalAssembly
                         Vector3 torque = Vector3.Cross(myRigid.velocity, preDirection).normalized * Mathf.Clamp(Mathf.Pow(AngleDiff, 1.5f)*0.2f, -15, 15);
                         torque.x = 0;
                         torque.z = 0;
-                        myRigid.AddTorque(torque * 3f);
+                        myRigid.AddTorque(torque * 1.8f);
 
                         SetHeight(myRigid.position.y + Mathf.Clamp((WayHeight - myRigid.position.y) * 0.1f, -0.5f, 0.5f), false, 1);
 
@@ -1074,6 +1091,7 @@ namespace WW2NavalAssembly
         }
         public void UpdateAppearance(string craftName)
         {
+            Debug.Log(craftName);
             FoldWing = FoldWing;// refresh
             transform.Find("Vis").localPosition = AircraftAssetManager.Instance.GetBodyOffset(craftName);
 
@@ -2385,6 +2403,7 @@ namespace WW2NavalAssembly
             SwitchActive = AddKey(LanguageManager.Instance.CurrentLanguage.SwitchActive, "SwitchActive", KeyCode.Alpha1);
             FPVKey = AddKey("FPV", "FPV", KeyCode.None);
             Group = AddText(LanguageManager.Instance.CurrentLanguage.Group, "AircraftGroup", "1");
+            SeaplaneName = AddText("Name", "SeaplaneName", "Seaplane-1");
 
             Type = AddMenu("Aircraft Type",0, LanguageManager.Instance.CurrentLanguage.AircraftType);
             TorpedoType = AddMenu("TorpedoType", 0, new List<string>
@@ -2418,13 +2437,22 @@ namespace WW2NavalAssembly
         public void Start()
         {
             name = "Aircraft";
+            if (!BlockBehaviour.isSimulating)
+            {
+                myGuid = BlockBehaviour.Guid.GetHashCode();
+            }
         }
         public override void BuildingUpdate()
         {
 
             if (ModController.Instance.state % 10 == myseed)
             {
-                Grouper.Instance.AddAircraft(myPlayerID, Rank.Value == 2? "backup" : Group.Value, BlockBehaviour.Guid.GetHashCode(), this);
+                if (isSeaplane)
+                {
+                    Group.Value = SeaplaneName.Value;
+                    Rank.Value = 1;
+                }
+                Grouper.Instance.AddAircraft(myPlayerID, Rank.Value == 2 ? "backup" : GroupName, myGuid, this);
             }
             bool appearChanged = false;
             if (preType != Type.Value)
@@ -2441,35 +2469,46 @@ namespace WW2NavalAssembly
                         BombType.DisplayInMapper = false;
                         FighterType.DisplayInMapper = false;
                         SeaplaneType.DisplayInMapper = false;
+                        Rank.DisplayInMapper = true;
                         Group.DisplayInMapper = true;
+                        SeaplaneName.DisplayInMapper = false;
                         break;
                     case 2:
                         TorpedoType.DisplayInMapper = false;
                         BombType.DisplayInMapper = true;
                         FighterType.DisplayInMapper = false;
                         SeaplaneType.DisplayInMapper = false;
+                        Rank.DisplayInMapper = true;
                         Group.DisplayInMapper = true;
+                        SeaplaneName.DisplayInMapper = false;
                         break;
                     case 3:
                         TorpedoType.DisplayInMapper = false;
                         BombType.DisplayInMapper = true;
                         FighterType.DisplayInMapper = false;
                         SeaplaneType.DisplayInMapper = false;
+                        Rank.DisplayInMapper = true;
                         Group.DisplayInMapper = true;
+                        SeaplaneName.DisplayInMapper = false;
                         break;
                     case 0:
                         TorpedoType.DisplayInMapper = false;
                         BombType.DisplayInMapper = false;
                         FighterType.DisplayInMapper = true;
                         SeaplaneType.DisplayInMapper = false;
+                        Rank.DisplayInMapper = true;
                         Group.DisplayInMapper = true;
+                        SeaplaneName.DisplayInMapper = false;
                         break;
                     case 4:
                         TorpedoType.DisplayInMapper = false;
                         BombType.DisplayInMapper = false;
                         FighterType.DisplayInMapper = false;
                         SeaplaneType.DisplayInMapper = true;
+                        Rank.DisplayInMapper = false;
                         Group.DisplayInMapper = false;
+                        SeaplaneName.DisplayInMapper = true;
+                        Rank.Value = 1;
                         break;
                     default:
                         break;
@@ -2516,11 +2555,26 @@ namespace WW2NavalAssembly
                 switch (preRank)
                 {
                     case 0:
-                        Group.DisplayInMapper = true;
+                        if (isSeaplane)
+                        {
+                            Group.DisplayInMapper = false;
+                        }
+                        else
+                        {
+                            Group.DisplayInMapper = true;
+                        }
                         SwitchActive.DisplayInMapper = false;
                         break;
                     case 1:
-                        Group.DisplayInMapper = true;
+                        if (isSeaplane)
+                        {
+                            Group.DisplayInMapper = false;
+                        }
+                        else
+                        {
+                            Group.DisplayInMapper = true;
+                        }
+                        
                         SwitchActive.DisplayInMapper = true;
                         break;
                     case 2:
@@ -2533,17 +2587,35 @@ namespace WW2NavalAssembly
         public override void OnSimulateStart()
         {
             myGuid = BlockBehaviour.BuildingBlock.Guid.GetHashCode();
-            Grouper.Instance.AddAircraft(myPlayerID, Rank.Value == 2 ? "backup" : Group.Value, myGuid, this);
-            if (Rank.Value == 1)
+            Debug.Log(myGuid);
+            if (isSeaplane)
             {
-                myGroup = Grouper.Instance.GetAircraft(myPlayerID, Group.Value);
                 myLeader = null;
+                Rank.Value = 1;
+                Group.Value = SeaplaneName.Value;
+                Grouper.Instance.AddAircraft(myPlayerID, GroupName, myGuid, this);
+                myGroup = Grouper.Instance.GetAircraft(myPlayerID, GroupName);
+                foreach (var mate in myGroup)
+                {
+                    Debug.Log(mate.Value.Rank + " " + mate.Value.status + " "+ mate.Value.myGuid);
+                }
             }
             else
             {
-                myGroup = new Dictionary<int, Aircraft>();
-                myLeader = Grouper.Instance.GetLeader(myPlayerID, Rank.Value == 2 ? "backup" : Group.Value);
+                Grouper.Instance.AddAircraft(myPlayerID, Rank.Value == 2 ? "backup" : Group.Value, myGuid, this);
+                if (Rank.Value == 1)
+                {
+                    myGroup = Grouper.Instance.GetAircraft(myPlayerID, Group.Value);
+                    myLeader = null;
+                }
+                else
+                {
+                    myGroup = new Dictionary<int, Aircraft>();
+                    myLeader = Grouper.Instance.GetLeader(myPlayerID, Rank.Value == 2 ? "backup" : Group.Value);
+                }
             }
+            
+            
             MyHangar = null;
             myRigid = BlockBehaviour.Rigidbody;
             ColliderActive = false;
@@ -2667,6 +2739,9 @@ namespace WW2NavalAssembly
                         break;
                     case 0:
                         preAppearance = FighterType.Selection;
+                        break;
+                    case 4:
+                        preAppearance = SeaplaneType.Selection;
                         break;
                     default:
                         break;

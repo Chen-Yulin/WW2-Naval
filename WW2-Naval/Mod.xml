@@ -202,14 +202,14 @@
 		<Texture name="A-SBD-1 Texture" path="Aircraft\M\SBD\SBD 1.png"/>
 		<Texture name="A-SBD-2 Texture" path="Aircraft\M\SBD\SBD 2.png"/>
 
-		<Mesh name="A-SC-1-0 Mesh" path="Aircraft\M\SC-1\SC-1 0.obj"/>
-		<Mesh name="A-SC-1-0.5 Mesh" path="Aircraft\M\SC-1\SC-1 0.5.obj"/>
-		<Mesh name="A-SC-1-1 Mesh" path="Aircraft\M\SC-1\SC-1 1.obj"/>
-		<Mesh name="A-SC-1-2 Mesh" path="Aircraft\M\SC-1\SC-1 2.obj"/>
-		<Texture name="A-SC-1-0 Texture" path="Aircraft\M\SC-1\SC-1 0.png"/>
-		<Texture name="A-SC-1-0.5 Texture" path="Aircraft\M\SC-1\SC-1 0.5.png"/>
-		<Texture name="A-SC-1-1 Texture" path="Aircraft\M\SC-1\SC-1 1.png"/>
-		<Texture name="A-SC-1-2 Texture" path="Aircraft\M\SC-1\SC-1 2.png"/>
+		<Mesh name="A-SC1-0 Mesh" path="Aircraft\M\SC-1\SC-1 0.obj"/>
+		<Mesh name="A-SC1-0.5 Mesh" path="Aircraft\M\SC-1\SC-1 0.5.obj"/>
+		<Mesh name="A-SC1-1 Mesh" path="Aircraft\M\SC-1\SC-1 1.obj"/>
+		<Mesh name="A-SC1-2 Mesh" path="Aircraft\M\SC-1\SC-1 2.obj"/>
+		<Texture name="A-SC1-0 Texture" path="Aircraft\M\SC-1\SC-1 0.png"/>
+		<Texture name="A-SC1-0.5 Texture" path="Aircraft\M\SC-1\SC-1 0.5.png"/>
+		<Texture name="A-SC1-1 Texture" path="Aircraft\M\SC-1\SC-1 1.png"/>
+		<Texture name="A-SC1-2 Texture" path="Aircraft\M\SC-1\SC-1 2.png"/>
 
 		<Mesh name="A-Spitfire-0 Mesh" path="Aircraft\Y\Spitfire\Spitfire 0.obj"/>
 		<Mesh name="A-Spitfire-0.5 Mesh" path="Aircraft\Y\Spitfire\Spitfire 0.5.obj"/>
