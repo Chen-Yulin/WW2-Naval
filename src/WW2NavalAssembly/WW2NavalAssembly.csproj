@@ -68,6 +68,7 @@
     <Compile Include="BulletHole.cs" />
     <Compile Include="CannonTrackManager.cs" />
     <Compile Include="CannonWell.cs" />
+    <Compile Include="Catapult.cs" />
     <Compile Include="Chimney.cs" />
     <Compile Include="Constants.cs" />
     <Compile Include="Controller.cs" />

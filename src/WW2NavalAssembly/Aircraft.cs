@@ -1091,7 +1091,6 @@ namespace WW2NavalAssembly
         }
         public void UpdateAppearance(string craftName)
         {
-            Debug.Log(craftName);
             FoldWing = FoldWing;// refresh
             transform.Find("Vis").localPosition = AircraftAssetManager.Instance.GetBodyOffset(craftName);
 
@@ -1488,7 +1487,7 @@ namespace WW2NavalAssembly
         public float AddAeroForce(bool flap = false)
         {
             myRigid.angularDrag = Mathf.Clamp(myRigid.velocity.magnitude * 0.5f, 40f,150f);
-            myRigid.drag = Mathf.Clamp(myRigid.velocity.magnitude * myRigid.mass * 0.01f, 0.2f, 10f) * (flap ? 2 : 1);
+            myRigid.drag = Mathf.Clamp(myRigid.velocity.magnitude * myRigid.mass * 0.01f, 0.2f, 10f) * (flap ? 2 : 1) * (isSeaplane?1.5f:1f);
 
             // horizon
             float liftForce = AddMainWingForce(flap);
@@ -2118,6 +2117,12 @@ namespace WW2NavalAssembly
                     case 3:
                         Thrust = Constants.BombInitialThrust;
                         break;
+                    case 4:
+                        Thrust = Constants.FighterInitialThrust;
+                        break;
+                    default:
+                        Thrust = Constants.FighterInitialThrust;
+                        break;
                 }
                 status = Status.TakingOff;
                 MyDeck = null;
@@ -2587,7 +2592,6 @@ namespace WW2NavalAssembly
         public override void OnSimulateStart()
         {
             myGuid = BlockBehaviour.BuildingBlock.Guid.GetHashCode();
-            Debug.Log(myGuid);
             if (isSeaplane)
             {
                 myLeader = null;
@@ -2595,10 +2599,6 @@ namespace WW2NavalAssembly
                 Group.Value = SeaplaneName.Value;
                 Grouper.Instance.AddAircraft(myPlayerID, GroupName, myGuid, this);
                 myGroup = Grouper.Instance.GetAircraft(myPlayerID, GroupName);
-                foreach (var mate in myGroup)
-                {
-                    Debug.Log(mate.Value.Rank + " " + mate.Value.status + " "+ mate.Value.myGuid);
-                }
             }
             else
             {
@@ -3031,6 +3031,12 @@ namespace WW2NavalAssembly
                             case 3:
                                 Thrust += Constants.BombAccel;
                                 break;
+                            case 4:
+                                Thrust += Constants.FighterAccel;
+                                break;
+                            default:
+                                Thrust += Constants.FighterAccel;
+                                break;
 
                         }
                         myRigid.angularVelocity = Vector3.zero;
@@ -3054,7 +3060,15 @@ namespace WW2NavalAssembly
                         }
                         else
                         {
-                            Pitch = Mathf.Clamp(Pitch, 8f,30f);
+                            if (isSeaplane)
+                            {
+                                //Pitch = Mathf.Clamp(Pitch, 8f, 30f);
+                            }
+                            else
+                            {
+                                Pitch = Mathf.Clamp(Pitch, 8f, 30f);
+                            }
+                            
                         }
 
                         if (transform.position.y >= CruiseHeight)

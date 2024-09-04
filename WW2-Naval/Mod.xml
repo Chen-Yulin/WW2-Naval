@@ -78,6 +78,8 @@
 		<Mesh name="AircraftController Mesh" path="AircraftController\AircraftController.obj"/>
 		<Texture name="AircraftController Texture" path="AircraftController\AircraftController.png"/>
 		<Mesh name="Catapult Mesh" path="Catapult/catapult.obj"/>
+		<Mesh name="Catapult JY Mesh" path="Catapult/catapult_JY.obj"/>
+		<Mesh name="Catapult M Mesh" path="Catapult/catapult_M.obj"/>
 		<Texture name="Catapult Texture" path="Catapult\catapult.png"/>
 		<Texture name="ReloadHEOut Texture" path="Gun\loadCircleOut.png"/>
 		<Texture name="ReloadHEIn Texture" path="Gun\loadCircleIn.png"/>

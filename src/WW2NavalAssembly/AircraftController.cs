@@ -13,6 +13,7 @@ using UnityEngine.UI;
 using UnityEngine.Networking;
 using System.Linq;
 using System.Text.RegularExpressions;
+using static WW2NavalAssembly.FlightDataBase;
 
 namespace WW2NavalAssembly
 {
@@ -400,6 +401,87 @@ namespace WW2NavalAssembly
 
         }
     }
+
+    public class AircraftCatapults : MonoBehaviour
+    {
+        public int myPlayerID;
+        public List<Catapult> catapults = new List<Catapult>();
+        public Queue<Aircraft> takeOffQueue = new Queue<Aircraft>();
+        public float delayTime = 0.5f;
+        public void AddAircraft(Aircraft aircraft)
+        {
+            if (!takeOffQueue.Contains(aircraft) && aircraft.status == Aircraft.Status.OnBoard)
+            {
+                takeOffQueue.Enqueue(aircraft);
+            }
+        }
+        public void AddCatapult(Catapult c)
+        {
+            catapults.Add(c);
+        }
+        IEnumerator TakeOffCoroutine(Catapult device)
+        {
+            device.operating = true;
+            Aircraft a = takeOffQueue.Count > 0 ? takeOffQueue.Dequeue() : null;
+            if (a && a.status == Aircraft.Status.OnBoard)
+            {
+                device.SwitchHook(a);
+                MyLogger.Instance.Log("Move seaplane: [" + a.Group.Value + "](" + a.myTeamIndex + ") to take off spot...", myPlayerID);
+                a.MyDeck.gameObject.GetComponent<ParkingSpot>().occupied = false;
+                FlightDataBase.Instance.Decks[a.myPlayerID].Occupied_num--;
+                a.FoldWing = false;
+                yield return new WaitForSeconds(delayTime);
+                MyLogger.Instance.Log("\tTaking off ...", myPlayerID);
+                a.transform.position = device.HookPos.position;
+                a.transform.rotation = device.transform.rotation;
+                a.SwitchToTakingOff();
+                float speed = -15f;
+                while (device.energy > 0)
+                {
+                    yield return new WaitForFixedUpdate();
+                    device.energy -= Mathf.Clamp(speed, 0f, 15f);
+                    speed += 1f;
+                    a.transform.position = device.HookPos.position;
+                    a.transform.rotation = device.transform.rotation;
+                }
+                a.Rigidbody.velocity = -device.transform.up * 45f * device.transform.localScale.y;
+                MyLogger.Instance.Log("\tFinish taking off", myPlayerID);
+                device.energy = 0;
+            }
+            device.operating = false;
+            yield break;
+        }
+
+        public void Update()
+        {
+            if (!StatMaster.isClient)
+            {
+                foreach (var catapult in catapults)
+                {
+                    if (!catapult.Ready && !catapult.operating)
+                    {
+                        catapult.energy += Time.deltaTime * 2;
+                    }
+                }
+            }
+            Catapult available = null;
+            foreach (var c in catapults)
+            {
+                if (c.Ready)
+                {
+                    available = c;
+                    break;
+                }
+
+            }
+            if (takeOffQueue.Count > 0 && available)
+            {
+                StartCoroutine(TakeOffCoroutine(available));
+            }
+        }
+
+
+    }
     public class CruisePoint : MonoBehaviour
     {
         public Vector3 Position;
@@ -551,6 +633,7 @@ namespace WW2NavalAssembly
         }
         public AircraftLiftManager Elevator;
         public AircraftRunway Runway;
+        public AircraftCatapults Catapults;
 
         public Vector3 dragOrigin;
 
@@ -929,6 +1012,8 @@ namespace WW2NavalAssembly
             Elevator.myPlayerID = myPlayerID;
             Runway = gameObject.AddComponent<AircraftRunway>();
             Runway.myPlayerID = myPlayerID;
+            Catapults = gameObject.AddComponent<AircraftCatapults>();
+            Catapults.myPlayerID = myPlayerID;
 
             // use database to generate deck and hangar
             if (StatMaster.isMP)
@@ -1474,10 +1559,28 @@ namespace WW2NavalAssembly
                     }
                     else
                     {
-                        foreach (var member in CurrentLeader.myGroup)
+                        if (CurrentLeader.isSeaplane)
                         {
-                            Runway.AddAircraft(member.Value);
+                            if (Catapults.catapults.Count == 0)
+                            {
+                                MyLogger.Instance.Log("No available catapult, please install at least one!!");
+                            }
+                            else
+                            {
+                                foreach (var member in CurrentLeader.myGroup)
+                                {
+                                    Catapults.AddAircraft(member.Value);
+                                }
+                            }
                         }
+                        else
+                        {
+                            foreach (var member in CurrentLeader.myGroup)
+                            {
+                                Runway.AddAircraft(member.Value);
+                            }
+                        }
+                        
                     }
                 }
             }

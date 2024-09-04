@@ -128,7 +128,7 @@ namespace WW2NavalAssembly
         public float B7A2_Prop_Offset = 3.55f;
         public float R99_Prop_Offset = 2.95f;
         public float F4U_Prop_Offset = 3f;
-        public float SC1_Prop_Offset = 3f;
+        public float SC1_Prop_Offset = 3.4f;
         public float SBD_Prop_Offset = 2.1f;
         public float SB2C_Prop_Offset = 3.45f;
         public float Spitfire_Prop_Offset = 3.5f;
@@ -257,7 +257,7 @@ namespace WW2NavalAssembly
             Cockpit_Offset[6] = new Vector3(0, 4.1f, -0.5f);//Spitfire
             Cockpit_Offset[7] = new Vector3(0, 2.2f, 2.0f);//Fulmar
             Cockpit_Offset[8] = new Vector3(0, 3.6f, 0.9f);//Barracuda
-            Cockpit_Offset[9] = new Vector3(0, 3.9f, 0.5f);//SC-1
+            Cockpit_Offset[9] = new Vector3(0, 4.2f, 0.5f);//SC-1
         }
 
         public Mesh GetMesh0(string name)
