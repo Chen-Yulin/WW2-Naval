@@ -2432,6 +2432,8 @@ namespace WW2NavalAssembly
             SeaplaneType = AddMenu("SeaplaneType", 0, new List<string>
             {
                 "SC-1",
+                "E13A",
+                "Spitfire_s"
             });
             Rank = AddMenu("Rank", 0, LanguageManager.Instance.CurrentLanguage.AircraftRank);
             for (int i = 0; i < 16; i++)

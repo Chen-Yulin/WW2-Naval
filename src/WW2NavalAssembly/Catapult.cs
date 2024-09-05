@@ -24,6 +24,8 @@ namespace WW2NavalAssembly
         public GameObject HookM;
         public Transform HookPos;
 
+        public ParticleSystem Smoke;
+
         public bool Ready
         {
             get
@@ -45,7 +47,27 @@ namespace WW2NavalAssembly
                 HookJY.SetActive(true);
             }
         }
-
+        public void InitSmoke()
+        {
+            if (!transform.Find("Smoke"))
+            {
+                Smoke = Instantiate(AssetManager.Instance.Catapult.Smoke).GetComponent<ParticleSystem>();
+                Smoke.name = "Smoke";
+                Smoke.Stop();
+                Smoke.transform.parent = transform;
+                Smoke.transform.localPosition = new Vector3(0, 1.1f, 0.4f);
+                Smoke.transform.transform.localEulerAngles = new Vector3(90, 0, 0);
+                Smoke.transform.localScale = Vector3.one;
+            }
+        }
+        public void EmitSmoke()
+        {
+            if (Smoke)
+            {
+                Smoke.Stop();
+                Smoke.Play();
+            }
+        }
         public void InitHook()
         {
             if (!transform.Find("Hook"))
@@ -93,6 +115,7 @@ namespace WW2NavalAssembly
             if (BlockBehaviour.isSimulating)
             {
                 InitHook();
+                InitSmoke();
             }
         }
 

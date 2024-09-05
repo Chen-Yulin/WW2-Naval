@@ -6,6 +6,15 @@ using Modding;
 
 namespace WW2NavalAssembly
 {
+    public class Asset_Catapult
+    {
+        public GameObject Smoke;
+        public Asset_Catapult(ModAssetBundle modAssetBundle)
+        {
+            Smoke = modAssetBundle.LoadAsset<GameObject>("CatapultSmoke");
+        }
+
+    }
     public class Asset_AA
     {
         public GameObject Small_AA;
@@ -124,11 +133,13 @@ namespace WW2NavalAssembly
         public GameObject gunsmoke1;
         public GameObject gunsmoke2;
         public GameObject gunsmoke3;
+        public GameObject cannonlight;
         public Asset_GunSmoke(ModAssetBundle modAssetBundle)
         {
             gunsmoke1 = modAssetBundle.LoadAsset<GameObject>("GunSmoke1");
             gunsmoke2 = modAssetBundle.LoadAsset<GameObject>("GunSmoke2");
             gunsmoke3 = modAssetBundle.LoadAsset<GameObject>("GunSmoke3");
+            cannonlight = modAssetBundle.LoadAsset<GameObject>("CannonLight");
         }
     }
     public class Asset_CannonHit
@@ -181,6 +192,7 @@ namespace WW2NavalAssembly
         public Asset_Aircraft Aircraft { get; protected set; }
         public Asset_AA AA { get; protected set; }
 
+        public Asset_Catapult Catapult { get; protected set; }
         protected void Awake()
         {
             WaterHit = new Asset_WaterHit(ModResource.GetAssetBundle("WaterHit AB"));
@@ -196,6 +208,7 @@ namespace WW2NavalAssembly
             TorpedoTrail = new Asset_TorpedoTrail(ModResource.GetAssetBundle("TorpedoTrail AB"));
             Aircraft = new Asset_Aircraft(ModResource.GetAssetBundle("Aircraft AB"));
             AA = new Asset_AA(ModResource.GetAssetBundle("AA AB"));
+            Catapult = new Asset_Catapult(ModResource.GetAssetBundle("Catapult AB"));
 
             float colorValue = 1;
             for (int i = 0; i < 8; i++)

@@ -449,6 +449,7 @@ namespace WW2NavalAssembly
                 device.energy = 0;
             }
             device.operating = false;
+            device.EmitSmoke();
             yield break;
         }
 
