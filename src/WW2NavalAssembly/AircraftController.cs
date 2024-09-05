@@ -435,7 +435,7 @@ namespace WW2NavalAssembly
                 a.transform.position = device.HookPos.position;
                 a.transform.rotation = device.transform.rotation;
                 a.SwitchToTakingOff();
-                float speed = -15f;
+                float speed = -35f;
                 while (device.energy > 0)
                 {
                     yield return new WaitForFixedUpdate();

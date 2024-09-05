@@ -208,6 +208,7 @@ namespace WW2NavalAssembly
             DogFighting,
             Returning,
             Landing,
+            Floating,
             ShootDown,
             Exploded,
         }
@@ -1499,6 +1500,22 @@ namespace WW2NavalAssembly
             myRigid.velocity = transform.TransformDirection(velocity);
             return liftForce;
         }
+        public void AddFloatingForce()
+        {
+            float inwater = Mathf.Clamp(Constants.SeaHeight - transform.position.y, 0, 1f);
+            myRigid.angularDrag = Mathf.Clamp(myRigid.velocity.magnitude * 20f * inwater, 20f, 50f);
+            myRigid.drag = Mathf.Clamp(myRigid.velocity.magnitude * myRigid.mass * (inwater), 0.2f, 150f);
+
+            myRigid.AddForce(inwater * Vector3.up * myRigid.mass * 32.4f * 5f);
+
+            // vertical
+            Vector3 velocity = myRigid.velocity;
+            velocity = transform.InverseTransformDirection(velocity);
+            velocity.x *= 0.9f;
+            velocity.z *= 0.95f;
+            myRigid.velocity = transform.TransformDirection(velocity);
+
+        }
         public void SetPitch(float p)
         {
             if (p == 0) p = 0.1f;
@@ -1564,11 +1581,18 @@ namespace WW2NavalAssembly
             {
                 SetHeight(myRigid.position.y + Mathf.Clamp((WayHeight - myRigid.position.y) * 0.1f, -HeightDeltaMax, HeightDeltaMax), false, 1);
             }
-            
 
-            Vector3 rigidPos = myRigid.position;
-            rigidPos.y = Mathf.Clamp(rigidPos.y, 21, 1000);
-            myRigid.MovePosition(rigidPos);
+            if (isSeaplane && status == Status.Landing)
+            {
+
+            }
+            else
+            {
+                Vector3 rigidPos = myRigid.position;
+                rigidPos.y = Mathf.Clamp(rigidPos.y, 21, 1000);
+                myRigid.MovePosition(rigidPos);
+            }
+            
 
             if (usePitch)
             {
@@ -1583,6 +1607,19 @@ namespace WW2NavalAssembly
             }
 
         }
+        public void FloatingTurnToWayPoint()
+        {
+            Vector2 myPos = MathTool.Get2DCoordinate(transform.position);
+            float dist = Vector2.Distance(myPos, WayPoint);
+            Vector2 target = WayPoint - (dist > 75 ? 0.5f * WayDirection * dist : Vector2.zero);
+            Vector2 targetDir = target - MathTool.Get2DCoordinate(transform.position);
+            Vector2 forward = MathTool.Get2DCoordinate(-transform.up);
+            float angle = MathTool.SignedAngle(forward, targetDir);
+            angle = Mathf.Sign(angle) * Mathf.Sqrt(Mathf.Abs(angle));
+            myRigid.AddTorque(-Vector3.up * Mathf.Clamp(angle, -11, 11) * 2f / myRigid.mass);
+
+        }
+
         public void SlaveFollowLeader()
         {
             if (GroupTargetSpot && myLeader)
@@ -1828,12 +1865,35 @@ namespace WW2NavalAssembly
         }
         public void GetLandingWayPoint()
         {
+            if (isSeaplane)
+            {
+                FlightDataBase.Deck deck = FlightDataBase.Instance.Decks[myPlayerID];
+                Vector2 targetPoint = deck.Center + deck.Forward * (-deck.Length * 0.25f) + deck.Right * 30f;
+                WayDirection = deck.Forward;
+                WayPoint = targetPoint;
+                WayPointType = 0;
+                WayHeight = Constants.SeaHeight;
+            }
+            else
+            {
+                FlightDataBase.Deck deck = FlightDataBase.Instance.Decks[myPlayerID];
+                Vector2 targetPoint = deck.Center + deck.Forward * (-deck.Length * 0.25f);
+                WayDirection = deck.Forward;
+                WayPoint = targetPoint;
+                WayPointType = 0;
+                WayHeight = deck.height + 0.2f;
+            }
+
+        }
+        public void GetFloatingWayPoint()
+        {
             FlightDataBase.Deck deck = FlightDataBase.Instance.Decks[myPlayerID];
             Vector2 targetPoint = deck.Center + deck.Forward * (-deck.Length * 0.25f);
-            WayDirection = deck.Forward;
+            WayDirection = -deck.Right;
             WayPoint = targetPoint;
             WayPointType = 0;
-            WayHeight = deck.height + 0.2f;
+            WayHeight = Constants.SeaHeight;
+
         }
         public Aircraft AlertOnCruise(bool iff = true)
         {
@@ -1902,7 +1962,22 @@ namespace WW2NavalAssembly
                 StartCoroutine(ExploCoroutine(instant));
             }
         }
-
+        public void SwitchToDeprecated()
+        {
+            status = Status.Deprecated;
+            myRigid.drag = 0.2f;
+            myRigid.angularDrag = 0.2f;
+            myRigid.constraints = RigidbodyConstraints.None;
+            myRigid.useGravity = true;
+            Thrust = 0f;
+            PropellerSpeed = 0f;
+            DeckSliding = false;
+            try
+            {
+                RemoveFromGroup();
+            }
+            catch { }
+        }
         public void SwitchToShootDown()
         {
             if (status != Status.ShootDown)
@@ -2013,12 +2088,6 @@ namespace WW2NavalAssembly
             if (status == Status.Returning)
             {
                 status = Status.Landing;
-                FlightDataBase.Deck deck = FlightDataBase.Instance.Decks[myPlayerID];
-                Vector2 targetPoint = deck.Center + deck.Forward * (-deck.Length * 0.25f);
-                WayDirection = deck.Forward;
-                WayPoint = targetPoint;
-                WayPointType = 0;
-                WayHeight = deck.height + 0.3f;
                 Thrust = 45f;
                 UndercartObject.SetActive(true);
                 landingTime = 0;
@@ -2156,6 +2225,13 @@ namespace WW2NavalAssembly
             }
             else if (status == Status.Landing)
             {
+                
+            }else if (status == Status.OnLifter)
+            {
+                SettleSpot(MyHangar, true);
+                status = Status.InHangar;
+            }else if(status == Status.Floating)
+            {
                 myRigid.drag = 0.2f;
                 hasAttacked = false;
                 hasFindBackup = false;
@@ -2169,10 +2245,6 @@ namespace WW2NavalAssembly
                 {
                     StartCoroutine(ReloadCorouting());
                 }
-            }else if (status == Status.OnLifter)
-            {
-                SettleSpot(MyHangar, true);
-                status = Status.InHangar;
             }
         }
 
@@ -2213,6 +2285,11 @@ namespace WW2NavalAssembly
                     StartCoroutine(ReloadCorouting());
                 }
             }
+        }
+        public void SwitchToFloating()
+        {
+            status = Status.Floating;
+            myRigid.useGravity = true;
         }
         public void InHangarBehaviourFU()
         {
@@ -3258,13 +3335,21 @@ namespace WW2NavalAssembly
 
                         if (!onboard)
                         {
-                            if (dist < 2f && dist > -5f && Vector2.Dot(forward, WayDirection) > 0)
+                            if ((dist < 2f && dist > -5f && Vector2.Dot(forward, WayDirection) > 0) || (transform.position.y < Constants.SeaHeight && isSeaplane))
                             {
-                                AddAeroForce(false);
-                                myRigid.useGravity = true;
-                                Thrust = 0f;
-                                Roll = 0;
-                                StartCoroutine(LandOnBoardCoroutine());
+                                if (isSeaplane)
+                                {
+                                    SwitchToFloating();
+                                }
+                                else
+                                {
+                                    AddAeroForce(false);
+                                    myRigid.useGravity = true;
+                                    Thrust = 0f;
+                                    Roll = 0;
+                                    StartCoroutine(LandOnBoardCoroutine());
+                                }
+                                
                             }
                             else
                             {
@@ -3286,6 +3371,25 @@ namespace WW2NavalAssembly
 
                         Pitch = Mathf.Clamp(Pitch, -10, 30);
 
+                        break;
+                    }
+                case Status.Floating:
+                    {
+                        Thrust = 13f;
+                        Pitch = 3f;
+                        GetFloatingWayPoint();
+
+                        if ((MathTool.Get2DCoordinate(transform.position) - WayPoint).magnitude < 7f)
+                        {
+                            MyLogger.Instance.Log("[" + Group.Value + "](" + myTeamIndex + ") recycle successfully, transfer to hangar ...", myPlayerID);
+                            onboard = true;
+                            SwitchToInHangar();
+                        }
+                        else
+                        {
+                            AddFloatingForce();
+                            FloatingTurnToWayPoint();
+                        }
                         break;
                     }
                 case Status.DogFighting:
@@ -3376,6 +3480,10 @@ namespace WW2NavalAssembly
                 myRigid.AddForce(Thrust * (-transform.up));
                 Fuel -= Thrust / 3000000f;
             }
+            else
+            {
+                SwitchToDeprecated();
+            }
 
             if (Thrust > 0)
             {
@@ -3393,27 +3501,35 @@ namespace WW2NavalAssembly
             // water hit
             if (!hasHitWater && ModController.Instance.showSea && status != Status.OnBoard && status != Status.InHangar && status != Status.OnLifter)
             {
-                if (transform.position.y<20f && transform.position.y > 18f && myRigid.velocity.y < 2f)
+                if (Type.Selection == "Seaplane" && (status == Status.Landing || status == Status.Floating) )
                 {
-                    hasHitWater = true;
-                    try
-                    {
-                        RemoveFromGroup();
-                    }
-                    catch { }
-                    
-                    status = Status.Deprecated;
-                    MyLogger.Instance.Log("["+ Group.Value + "](" + myTeamIndex + ") drop sea!", myPlayerID);
 
-                    GameObject waterhit;
-                    waterhit = (GameObject)Instantiate(AssetManager.Instance.WaterHit.waterhit2, new Vector3(transform.position.x, 20, transform.position.z), Quaternion.identity);
-                    waterhit.transform.localScale = 250f/381f * Vector3.one;
-                    Destroy(waterhit, 3);
-                    if (StatMaster.isMP && !StatMaster.isClient)
+                }
+                else
+                {
+                    if (transform.position.y < 20f && transform.position.y > 18f && myRigid.velocity.y < -2f)
                     {
-                        ModNetworking.SendToAll(WeaponMsgReceiver.WaterHitMsg.CreateMessage(myPlayerID, new Vector3(transform.position.x, 20, transform.position.z), 250f));
+                        hasHitWater = true;
+                        try
+                        {
+                            RemoveFromGroup();
+                        }
+                        catch { }
+
+                        status = Status.Deprecated;
+                        MyLogger.Instance.Log("[" + Group.Value + "](" + myTeamIndex + ") drop sea!", myPlayerID);
+
+                        GameObject waterhit;
+                        waterhit = (GameObject)Instantiate(AssetManager.Instance.WaterHit.waterhit2, new Vector3(transform.position.x, 20, transform.position.z), Quaternion.identity);
+                        waterhit.transform.localScale = 250f / 381f * Vector3.one;
+                        Destroy(waterhit, 3);
+                        if (StatMaster.isMP && !StatMaster.isClient)
+                        {
+                            ModNetworking.SendToAll(WeaponMsgReceiver.WaterHitMsg.CreateMessage(myPlayerID, new Vector3(transform.position.x, 20, transform.position.z), 250f));
+                        }
                     }
                 }
+                
             }
 
 
