@@ -282,6 +282,7 @@ namespace WW2NavalAssembly
                         }
                     }
                 }
+                bool stillnotsolvable = true;
                 if (!solvable)
                 {
                     foreach (var lifter in FlightDataBase.Instance.MasterLifters[myPlayerID])
@@ -290,11 +291,17 @@ namespace WW2NavalAssembly
                         {
                             if (!lifter.Value.operating && !lifter.Value.destroyed)
                             {
+                                stillnotsolvable = false;
                                 lifter.Value.operating = true;
                                 StartCoroutine(LiftCoroutine(lifter.Value));
                                 break;
                             }
                         }
+                    }
+                    if (stillnotsolvable)
+                    {
+                        MyLogger.Instance.Log("No available lifter for the transfer of aircrafts");
+                        MyLogger.Instance.Log("- Please add lifters (embeded in scaling block)");
                     }
                 }
 
@@ -319,6 +326,7 @@ namespace WW2NavalAssembly
                         
                     }
                 }
+                bool stillnotsolvable = true;
                 if (!solvable)
                 {
                     foreach (var lifter in FlightDataBase.Instance.MasterLifters[myPlayerID])
@@ -327,12 +335,18 @@ namespace WW2NavalAssembly
                         {
                             if (!lifter.Value.operating && !lifter.Value.destroyed)
                             {
+                                stillnotsolvable = false;
                                 lifter.Value.operating = true;
                                 StartCoroutine(DropCoroutine(lifter.Value));
                                 break;
                             }
                         }
                     }
+                }
+                if (stillnotsolvable)
+                {
+                    MyLogger.Instance.Log("No available lifter for the transfer of aircrafts");
+                    MyLogger.Instance.Log("- Please add lifters (embeded in scaling block)");
                 }
 
             }

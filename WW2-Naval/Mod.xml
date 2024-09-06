@@ -5,12 +5,12 @@
 	<Name>WW2Naval</Name>
 	<Author>Chen, Yulin</Author> <!-- FIX: Insert your name here. -->
 	<!-- Major.Minor.Build -->
-	<Version>0.9.32</Version>
+	<Version>0.10.0</Version>
 
 	<Description>
-    Version 0.9.32
-        Add Aircraft Lifter (scaling block). Denser Hangar.
-	</Description>
+    Version 0.10.0
+    Add Seaplane.
+    </Description>
 
 	<Icon name="icon"/>
 	<Debug>True</Debug>
