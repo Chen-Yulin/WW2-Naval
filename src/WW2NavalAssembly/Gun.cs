@@ -348,6 +348,8 @@ namespace WW2NavalAssembly
             get { return timeFaze != 20f; }
         }
 
+        public bool uselight = false;
+
 
         public void AddFireSound(Transform t)
         {
@@ -1140,7 +1142,13 @@ namespace WW2NavalAssembly
             }
             
             decay = Mathf.Pow(0.5f, 1 / (Mathf.Sqrt(Caliber + 100) * 30f));
-            
+            if (uselight)
+            {
+                GameObject light = Instantiate(AssetManager.Instance.GunSmoke.cannonlight);
+                light.transform.parent = transform;
+                light.transform.localPosition = new Vector3(0, 0, 0);
+                light.transform.localScale = Vector3.one * Caliber / 1200f;
+            }
         }
 
         public void FixedUpdate()
@@ -1226,6 +1234,7 @@ namespace WW2NavalAssembly
         public MSlider Caliber;
         public MToggle TrackOn;
         public MToggle FireControl;
+        public MToggle Light;
         public MText GunGroup;
         public MMenu DefaultCannon;
         public bool triggeredByGunner;
@@ -1340,39 +1349,34 @@ namespace WW2NavalAssembly
         {
             Transform PrefabParent = BlockBehaviour.ParentMachine.transform.Find("Simulation Machine");
             string PrefabName = "NavalCannon [" + myPlayerID + "](" + Caliber.Value + ")";
-            if (PrefabParent.Find(PrefabName))
+            CannonPrefab = new GameObject(PrefabName);
+            CannonPrefab.transform.parent = PrefabParent;
+            BulletBehaviour BBtmp = CannonPrefab.AddComponent<BulletBehaviour>();
+            BBtmp.Caliber = Caliber.Value;
+            BBtmp.myPlayerID = myPlayerID;
+            BBtmp.uselight = !Light.isDefaultValue;
+                
+            Rigidbody RBtmp = CannonPrefab.AddComponent<Rigidbody>();
+            RBtmp.interpolation = RigidbodyInterpolation.Extrapolate;
+            RBtmp.mass = 0.2f;
+            RBtmp.drag = Caliber.Value > 100 ? 5000f / (Caliber.Value * Caliber.Value) : 1 - Caliber.Value / 200f;
+            RBtmp.useGravity = false;
+            if (Caliber.Value >= 100)
             {
-                CannonPrefab = PrefabParent.Find(PrefabName).gameObject;
+                GameObject CannonVis = new GameObject("CannonVis");
+                CannonVis.transform.SetParent(CannonPrefab.transform);
+                CannonVis.transform.localPosition = Vector3.zero;
+                CannonVis.transform.localRotation = Quaternion.Euler(90f, 0f, 0f);
+                CannonVis.transform.localScale = Vector3.one * Caliber.Value / 500f;
+                MeshFilter MFtmp = CannonVis.AddComponent<MeshFilter>();
+                MFtmp.sharedMesh = ModResource.GetMesh("Cannon Mesh").Mesh;
+                MeshRenderer MRtmp = CannonVis.AddComponent<MeshRenderer>();
+                MRtmp.material.mainTexture = ModResource.GetTexture("Cannon Texture").Texture;
             }
-            else
-            {
-                CannonPrefab = new GameObject(PrefabName);
-                CannonPrefab.transform.parent = PrefabParent;
-                BulletBehaviour BBtmp = CannonPrefab.AddComponent<BulletBehaviour>();
-                BBtmp.Caliber = Caliber.Value;
-                BBtmp.myPlayerID = myPlayerID;
-                Rigidbody RBtmp = CannonPrefab.AddComponent<Rigidbody>();
-                RBtmp.interpolation = RigidbodyInterpolation.Extrapolate;
-                RBtmp.mass = 0.2f;
-                RBtmp.drag = Caliber.Value > 100 ? 5000f / (Caliber.Value * Caliber.Value) : 1 - Caliber.Value / 200f;
-                RBtmp.useGravity = false;
-                if (Caliber.Value >= 100)
-                {
-                    GameObject CannonVis = new GameObject("CannonVis");
-                    CannonVis.transform.SetParent(CannonPrefab.transform);
-                    CannonVis.transform.localPosition = Vector3.zero;
-                    CannonVis.transform.localRotation = Quaternion.Euler(90f, 0f, 0f);
-                    CannonVis.transform.localScale = Vector3.one * Caliber.Value / 120;
-                    MeshFilter MFtmp = CannonVis.AddComponent<MeshFilter>();
-                    MFtmp.sharedMesh = ModResource.GetMesh("Cannon Mesh").Mesh;
-                    MeshRenderer MRtmp = CannonVis.AddComponent<MeshRenderer>();
-                    MRtmp.material.mainTexture = ModResource.GetTexture("Cannon Texture").Texture;
-                }
 
-                GravityModifier gm = CannonPrefab.AddComponent<GravityModifier>();
-                gm.gravityScale = Constants.BulletGravity/Constants.Gravity;
-                CannonPrefab.SetActive(false);
-            }
+            GravityModifier gm = CannonPrefab.AddComponent<GravityModifier>();
+            gm.gravityScale = Constants.BulletGravity/Constants.Gravity;
+            CannonPrefab.SetActive(false);
 
             
         }
@@ -1404,6 +1408,7 @@ namespace WW2NavalAssembly
             Caliber = AddSlider(LanguageManager.Instance.CurrentLanguage.Caliber, "Caliber", 406, 10, 510);
             TrackOn = AddToggle(LanguageManager.Instance.CurrentLanguage.AsTrackCannon, "TrackCannon", false);
             FireControl = AddToggle(LanguageManager.Instance.CurrentLanguage.FireControl, "FireControl", false);
+            Light = AddToggle("Light tracer", "Light", false);
             GunGroup = AddText(LanguageManager.Instance.CurrentLanguage.Group, "GunGroup", "g0");
             DefaultCannon = AddMenu("Default Cannon", 0, LanguageManager.Instance.CurrentLanguage.GunType);
             ReloadHEOut = ModResource.GetTexture("ReloadHEOut Texture").Texture;

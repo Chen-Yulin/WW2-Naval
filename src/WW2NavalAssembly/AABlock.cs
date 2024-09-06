@@ -293,7 +293,7 @@ namespace WW2NavalAssembly
         void InitCannon()
         {
             Transform PrefabParent = parent.BlockBehaviour.ParentMachine.transform.Find("Simulation Machine");
-            string PrefabName = "NavalCannon [" + parent.myPlayerID + "](" + caliber + ")";
+            string PrefabName = "AA NavalCannon [" + parent.myPlayerID + "](" + caliber + ")";
             if (PrefabParent.Find(PrefabName))
             {
                 CannonPrefab = PrefabParent.Find(PrefabName).gameObject;
@@ -315,7 +315,7 @@ namespace WW2NavalAssembly
                 CannonVis.transform.SetParent(CannonPrefab.transform);
                 CannonVis.transform.localPosition = Vector3.zero;
                 CannonVis.transform.localRotation = Quaternion.Euler(90f, 0f, 0f);
-                CannonVis.transform.localScale = Vector3.one * caliber / 120;
+                CannonVis.transform.localScale = Vector3.one * caliber / 500;
                 MeshFilter MFtmp = CannonVis.AddComponent<MeshFilter>();
                 MFtmp.sharedMesh = ModResource.GetMesh("Cannon Mesh").Mesh;
                 MeshRenderer MRtmp = CannonVis.AddComponent<MeshRenderer>();

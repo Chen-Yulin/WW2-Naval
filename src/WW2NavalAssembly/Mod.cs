@@ -46,6 +46,7 @@ namespace WW2NavalAssembly
 			myMod.GetComponent<ModCameraController>().enabled = true;
 			myMod.AddComponent<AircraftLifterMsgReceiver>();
 			myMod.AddComponent<HorizonManager>();
+			myMod.AddComponent<CatapultMsgReceiver>();
             Debug.Log("Hello, this is WW2 naval mod!");
 			Debug.logger.filterLogType = LogType.Error;
 		}

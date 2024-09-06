@@ -5,15 +5,15 @@
 	<Name>WW2Naval</Name>
 	<Author>Chen, Yulin</Author> <!-- FIX: Insert your name here. -->
 	<!-- Major.Minor.Build -->
-	<Version>0.9.32</Version>
+	<Version>0.10.0</Version>
 
 	<Description>
-    Version 0.9.32
-        Add Aircraft Lifter (scaling block). Denser Hangar.
-	</Description>
+    Version 0.10.0
+    Add Seaplane.
+    </Description>
 
 	<Icon name="icon"/>
-	<Debug>false</Debug>
+	<Debug>True</Debug>
 
 
 	<MultiplayerCompatible>true</MultiplayerCompatible>
@@ -35,6 +35,7 @@
 		<Block path="AircraftController.xml" />
 		<Block path="AAController.xml" />
 		<Block path="AABlock.xml" />
+		<Block path="Catapult.xml" />
 	</Blocks>
 
 	<!-- Any entities (level objects) your mod adds to the game.
@@ -76,6 +77,10 @@
 		<Texture name="pilot Texture" path="CentralController\captain.png"/>
 		<Mesh name="AircraftController Mesh" path="AircraftController\AircraftController.obj"/>
 		<Texture name="AircraftController Texture" path="AircraftController\AircraftController.png"/>
+		<Mesh name="Catapult Mesh" path="Catapult/catapult.obj"/>
+		<Mesh name="Catapult JY Mesh" path="Catapult/catapult_JY.obj"/>
+		<Mesh name="Catapult M Mesh" path="Catapult/catapult_M.obj"/>
+		<Texture name="Catapult Texture" path="Catapult\catapult.png"/>
 		<Texture name="ReloadHEOut Texture" path="Gun\loadCircleOut.png"/>
 		<Texture name="ReloadHEIn Texture" path="Gun\loadCircleIn.png"/>
 		<Texture name="ReloadAPOut Texture" path="Gun\loadCircleOut2.png"/>
@@ -138,6 +143,7 @@
 		<AssetBundle name="Aircraft AB" path="aircraft.ab"/>
 		<AssetBundle name="AA AB" path="aa.ab"/>
 		<AssetBundle name="waternew" path="advancewater.ab"/>
+		<AssetBundle name="Catapult AB" path="catapult.ab"/>
 
 		<!-- AirCraft -->
 		<Texture name="Aircraft Destroyed Texture" path="Aircraft\destroyed.png"/>
@@ -162,6 +168,15 @@
 		<Texture name="A-R99-0.5 Texture" path="Aircraft\R\99\99 0.5.png"/>
 		<Texture name="A-R99-1 Texture" path="Aircraft\R\99\99 1.png"/>
 		<Texture name="A-R99-2 Texture" path="Aircraft\R\99\99 2.png"/>
+
+		<Mesh name="A-E13A-0 Mesh" path="Aircraft\R\E13A\E13A 0.obj"/>
+		<Mesh name="A-E13A-0.5 Mesh" path="Aircraft\R\E13A\E13A 0.5.obj"/>
+		<Mesh name="A-E13A-1 Mesh" path="Aircraft\R\E13A\E13A 1.obj"/>
+		<Mesh name="A-E13A-2 Mesh" path="Aircraft\R\E13A\E13A 2.obj"/>
+		<Texture name="A-E13A-0 Texture" path="Aircraft\R\E13A\E13A 0.png"/>
+		<Texture name="A-E13A-0.5 Texture" path="Aircraft\R\E13A\E13A 0.5.png"/>
+		<Texture name="A-E13A-1 Texture" path="Aircraft\R\E13A\E13A 1.png"/>
+		<Texture name="A-E13A-2 Texture" path="Aircraft\R\E13A\E13A 2.png"/>
 
 		<Mesh name="A-B7A2-0 Mesh" path="Aircraft\R\B7A2\B7A2 0.obj"/>
 		<Mesh name="A-B7A2-0.5 Mesh" path="Aircraft\R\B7A2\B7A2 0.5.obj"/>
@@ -199,6 +214,15 @@
 		<Texture name="A-SBD-1 Texture" path="Aircraft\M\SBD\SBD 1.png"/>
 		<Texture name="A-SBD-2 Texture" path="Aircraft\M\SBD\SBD 2.png"/>
 
+		<Mesh name="A-SC1-0 Mesh" path="Aircraft\M\SC-1\SC-1 0.obj"/>
+		<Mesh name="A-SC1-0.5 Mesh" path="Aircraft\M\SC-1\SC-1 0.5.obj"/>
+		<Mesh name="A-SC1-1 Mesh" path="Aircraft\M\SC-1\SC-1 1.obj"/>
+		<Mesh name="A-SC1-2 Mesh" path="Aircraft\M\SC-1\SC-1 2.obj"/>
+		<Texture name="A-SC1-0 Texture" path="Aircraft\M\SC-1\SC-1 0.png"/>
+		<Texture name="A-SC1-0.5 Texture" path="Aircraft\M\SC-1\SC-1 0.5.png"/>
+		<Texture name="A-SC1-1 Texture" path="Aircraft\M\SC-1\SC-1 1.png"/>
+		<Texture name="A-SC1-2 Texture" path="Aircraft\M\SC-1\SC-1 2.png"/>
+
 		<Mesh name="A-Spitfire-0 Mesh" path="Aircraft\Y\Spitfire\Spitfire 0.obj"/>
 		<Mesh name="A-Spitfire-0.5 Mesh" path="Aircraft\Y\Spitfire\Spitfire 0.5.obj"/>
 		<Mesh name="A-Spitfire-1 Mesh" path="Aircraft\Y\Spitfire\Spitfire 1.obj"/>
@@ -207,6 +231,15 @@
 		<Texture name="A-Spitfire-0.5 Texture" path="Aircraft\Y\Spitfire\Spitfire 0.5.png"/>
 		<Texture name="A-Spitfire-1 Texture" path="Aircraft\Y\Spitfire\Spitfire 1.png"/>
 		<Texture name="A-Spitfire-2 Texture" path="Aircraft\Y\Spitfire\Spitfire 2.png"/>
+
+		<Mesh name="A-Spitfire_s-0 Mesh" path="Aircraft\Y\Spitfire_s\Spitfire_s 0.obj"/>
+		<Mesh name="A-Spitfire_s-0.5 Mesh" path="Aircraft\Y\Spitfire_s\Spitfire_s 0.5.obj"/>
+		<Mesh name="A-Spitfire_s-1 Mesh" path="Aircraft\Y\Spitfire_s\Spitfire_s 1.obj"/>
+		<Mesh name="A-Spitfire_s-2 Mesh" path="Aircraft\Y\Spitfire_s\Spitfire_s 2.obj"/>
+		<Texture name="A-Spitfire_s-0 Texture" path="Aircraft\Y\Spitfire_s\Spitfire_s 0.png"/>
+		<Texture name="A-Spitfire_s-0.5 Texture" path="Aircraft\Y\Spitfire_s\Spitfire_s 0.5.png"/>
+		<Texture name="A-Spitfire_s-1 Texture" path="Aircraft\Y\Spitfire_s\Spitfire_s 1.png"/>
+		<Texture name="A-Spitfire_s-2 Texture" path="Aircraft\Y\Spitfire_s\Spitfire_s 2.png"/>
 
 		<Mesh name="A-Fulmar-0 Mesh" path="Aircraft\Y\Fulmar\Fulmar 0.obj"/>
 		<Mesh name="A-Fulmar-0.5 Mesh" path="Aircraft\Y\Fulmar\Fulmar 0.5.obj"/>
