@@ -109,6 +109,10 @@ namespace WW2NavalAssembly
                 {
                     Aircraft aircraft = a.Value.Value;
                     float d = MathTool.Get2DDistance(me.position, aircraft.transform.position);
+                    if (aircraft.isSeaplane)
+                    {
+                        d = d / 2f;
+                    }
                     if (d < dist)
                     {
                         dist = d;

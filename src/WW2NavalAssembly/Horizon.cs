@@ -71,7 +71,7 @@ namespace WW2NavalAssembly
         public int watcherID;
         public int myseed;
 
-        float AircraftDist = 1000f;
+        float AircraftDist = 1500f;
 
         int frame = 0;
 
