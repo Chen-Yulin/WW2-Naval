@@ -435,6 +435,9 @@ namespace WW2NavalAssembly
                 a.transform.position = device.HookPos.position;
                 a.transform.rotation = device.transform.rotation;
                 a.SwitchToTakingOff();
+
+                ModNetworking.SendToAll(CatapultMsgReceiver.LaunchMsg.CreateMessage(device.myPlayerID, device.myGuid));
+
                 float speed = -35f;
                 while (device.energy > 0)
                 {
@@ -455,16 +458,6 @@ namespace WW2NavalAssembly
 
         public void Update()
         {
-            if (!StatMaster.isClient)
-            {
-                foreach (var catapult in catapults)
-                {
-                    if (!catapult.Ready && !catapult.operating)
-                    {
-                        catapult.energy += Time.deltaTime * 2;
-                    }
-                }
-            }
             Catapult available = null;
             foreach (var c in catapults)
             {

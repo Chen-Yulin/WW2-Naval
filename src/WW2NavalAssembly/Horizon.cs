@@ -9,6 +9,7 @@ using Modding.Blocks;
 using UnityEngine;
 using UnityEngine.Networking;
 using System.Collections;
+using System.Runtime.InteropServices;
 
 namespace WW2NavalAssembly
 {
@@ -77,6 +78,19 @@ namespace WW2NavalAssembly
         public bool isAircraft;
         public Aircraft aircraft;
 
+        public int _mystate = 0;
+        public int MyState
+        {
+            get { return _mystate; }
+            set
+            {
+                _mystate = value;
+                if (_mystate >= 40)
+                {
+                    _mystate = 0;
+                }
+            }
+        }
 
         public bool Show
         {
@@ -177,7 +191,7 @@ namespace WW2NavalAssembly
             {
                 watcherID = 0;
             }
-            myseed = (int)(UnityEngine.Random.value * 39);
+            myseed = (int)(UnityEngine.Random.value * 39f);
             _show = true;
             isAircraft = GetComponent<Aircraft>() != null;
             aircraft = GetComponent<Aircraft>();
@@ -198,7 +212,8 @@ namespace WW2NavalAssembly
         {
             if (Enabled)
             {
-                if (myseed == ModController.Instance.state)
+                MyState++;
+                if (myseed == MyState)
                 {
                     if (isAircraft && aircraft.isFlying)
                     {

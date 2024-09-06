@@ -52,7 +52,7 @@ namespace WW2NavalAssembly
             Destroyed[playerid].Add(guid);
         }
     }
-        public class AircraftLifter : MonoBehaviour
+    public class AircraftLifter : MonoBehaviour
     {
         public MToggle AsLifter;
         public MToggle EnableRaise;

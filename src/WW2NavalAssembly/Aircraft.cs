@@ -3661,6 +3661,13 @@ namespace WW2NavalAssembly
                     UndercartObject.SetActive(true);
                     Roll = 0;
                     break;
+                case Status.Floating:
+                    Thrust = 13;
+                    PropellerSpeed = 5;
+                    FoldWing = false;
+                    UndercartObject.SetActive(true);
+                    Roll = 0;
+                    break;
                 default:
                     Thrust = 0;
                     PropellerSpeed = 0;
