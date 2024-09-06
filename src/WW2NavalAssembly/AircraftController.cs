@@ -112,6 +112,7 @@ namespace WW2NavalAssembly
         public Queue<Aircraft> DownQueue = new Queue<Aircraft>();
 
 
+
         public int myPlayerID = 0;
 
         public void AddUpQueue(Aircraft aircraft) // return whether duplication exists
@@ -421,10 +422,11 @@ namespace WW2NavalAssembly
         public int myPlayerID;
         public List<Catapult> catapults = new List<Catapult>();
         public Queue<Aircraft> takeOffQueue = new Queue<Aircraft>();
+        public Queue<Aircraft> WaitingQueue = new Queue<Aircraft>();
         public float delayTime = 0.5f;
         public void AddAircraft(Aircraft aircraft)
         {
-            if (!takeOffQueue.Contains(aircraft) && aircraft.status == Aircraft.Status.OnBoard)
+            if (!takeOffQueue.Contains(aircraft) && !WaitingQueue.Contains(aircraft) && aircraft.status == Aircraft.Status.OnBoard)
             {
                 takeOffQueue.Enqueue(aircraft);
             }
@@ -437,6 +439,7 @@ namespace WW2NavalAssembly
         {
             device.operating = true;
             Aircraft a = takeOffQueue.Count > 0 ? takeOffQueue.Dequeue() : null;
+            WaitingQueue.Enqueue(a);
             if (a && a.status == Aircraft.Status.OnBoard)
             {
                 device.SwitchHook(a);
@@ -465,6 +468,11 @@ namespace WW2NavalAssembly
                 MyLogger.Instance.Log("\tFinish taking off", myPlayerID);
                 device.energy = 0;
             }
+            try
+            {
+                WaitingQueue.Dequeue();
+            }
+            catch { }
             device.operating = false;
             device.EmitSmoke();
             yield break;
