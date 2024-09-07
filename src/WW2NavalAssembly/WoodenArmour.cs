@@ -30,6 +30,8 @@ namespace WW2NavalAssembly
         public int frameCount = 0;
         public bool optimized = false;
 
+        public bool AsKeel = false;
+
         IEnumerator ChangeVis()
         {
             yield return new WaitForFixedUpdate();

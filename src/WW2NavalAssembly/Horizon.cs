@@ -104,7 +104,7 @@ namespace WW2NavalAssembly
                 }
             }
         }
-        public void ChangeBlockVisible2(BlockBehaviour BB)
+        public void ChangeBlockRenderer(BlockBehaviour BB)
         {
             foreach (var renderer in BB.GetComponentsInChildren<MeshRenderer>(true))
             {
@@ -163,7 +163,7 @@ namespace WW2NavalAssembly
             {
                 BB.GetComponent<DefaultArmour>().UpdateVis(ModController.Instance.ShowArmour);
             }
-            ChangeBlockVisible2(BB);
+            ChangeBlockRenderer(BB);
         }
 
         public GameObject controller;

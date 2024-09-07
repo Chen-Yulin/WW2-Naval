@@ -17,6 +17,8 @@ namespace WW2NavalAssembly
         public int myseed = 0;
         public int myGuid;
 
+        public bool AsKeel = false;
+
         public void UpdateVis(bool show)
         {
             if (GetComponent<Horizon>().Show)

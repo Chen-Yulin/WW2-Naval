@@ -1032,9 +1032,8 @@ namespace WW2NavalAssembly
                             else
                             {
                                 HorizonManager.Instance.VisibleToController[myPlayerID][i] = MathTool.DistFromWatcher(myPlayerID, controller.transform) < MathTool.GetHorizon(transform) + MathTool.GetHorizon(controller.transform);
-                                HorizonManager.Instance.VisibleToAircraft[myPlayerID][i] = MathTool.DistFromWatcherAircraft(myPlayerID, controller.transform) < 1500f;
                             }
-                            
+                            HorizonManager.Instance.VisibleToAircraft[myPlayerID][i] = MathTool.DistFromWatcherAircraft(myPlayerID, controller.transform) < 1500f;
                         }
                         else
                         {

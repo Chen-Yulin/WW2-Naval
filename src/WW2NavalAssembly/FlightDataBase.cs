@@ -120,8 +120,8 @@ namespace WW2NavalAssembly
                 this.height = height;
                 this.Anchor = Center - Forward * Length / 2 + right * width / 2;
 
-                this.Width_num = (int)((Width- 2*RightMargin) / AIRCRAFT_WIDTH) + ((Width - 2 * RightMargin>0)?1:0);
-                this.Length_num = (int)((Length-(isHangar?3:10)) / AIRCRAFT_LENGTH) + 1;
+                this.Width_num = (int)(Mathf.Clamp((Width- 2*RightMargin),0,1000) / AIRCRAFT_WIDTH) + 1;
+                this.Length_num = (int)(Mathf.Clamp((Length-3), 0, 1000) / AIRCRAFT_LENGTH) + 1;
                 this.Skip_num = skip_num;
                 this.Total_num = Width_num * Length_num - skip_num;
 
@@ -234,7 +234,7 @@ namespace WW2NavalAssembly
                 Vector3 right = Vector3.right;
                 Vector3 forward = Vector3.forward;
                 bool ForwardABit = (i % Decks[playerID].Width_num) % 2 == 1;
-                Vector3 spotPos = anchor - right * Decks[playerID].RightMargin + forward * 2f
+                Vector3 spotPos = anchor - right * Decks[playerID].RightMargin + forward * 1.2f
                                     - i % Decks[playerID].Width_num * AIRCRAFT_DECK_WIDTH * right
                                     + i / Decks[playerID].Width_num * AIRCRAFT_LENGTH_DECK * forward
                                     + (ForwardABit ? AIRCRAFT_LENGTH_DECK/2f : 0) * forward;
@@ -370,7 +370,7 @@ namespace WW2NavalAssembly
                     Vector3 right = Vector3.right;
                     Vector3 forward = Vector3.forward;
                     bool ForwardABit = (i % hangar.Value.Width_num) % 2 == 1;
-                    Vector3 spotPos = anchor - right * (hangar.Value.RightMargin - 0.2f) + forward * 2f
+                    Vector3 spotPos = anchor - right * (hangar.Value.RightMargin - 0.2f) + forward * 1.2f
                                         - i % hangar.Value.Width_num * AIRCRAFT_HANGAR_WIDTH * right
                                         + i / hangar.Value.Width_num * AIRCRAFT_LENGTH_HANGAR * forward;
 

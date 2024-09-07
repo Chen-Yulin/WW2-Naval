@@ -265,6 +265,7 @@ namespace WW2NavalAssembly
             Sleeve.transform.localScale = new Vector3(1, transform.lossyScale.y, 1);
 
             Sleeve2.transform.localPosition = new Vector3(AxlePosX.Value, AxleLength.Value, AxlePosY.Value);
+            Sleeve2.transform.localScale = new Vector3(PropellerSize.Value * 0.7f, 1, PropellerSize.Value * 0.7f);
 
             Axle.transform.localPosition = new Vector3(AxlePosX.Value, 0, AxlePosY.Value);
             Axle.transform.localScale = new Vector3(1, AxleLength.Value/5.8f, 1);
@@ -377,7 +378,17 @@ namespace WW2NavalAssembly
                 keel.GetComponent<Rigidbody>().mass += 4f;
             }
             catch { }
-            
+            try
+            {
+                keel.GetComponent<WoodenArmour>().AsKeel = true;
+            }
+            catch { }
+            try
+            {
+                keel.GetComponent<DefaultArmour>().AsKeel = true;
+            }
+            catch { }
+
 
             SoftJointLimitSpring SJLS = new SoftJointLimitSpring();
             SJLS.spring = stableForce;
@@ -588,12 +599,22 @@ namespace WW2NavalAssembly
             }
             else if(frameCount == 25)
             {
+                try
+                {
+
+                }
+                catch { }
                 InitStable();
                 frameCount++;
             }
             else
             {
-                KeepStable();
+                try
+                {
+                    KeepStable();
+                }
+                catch { }
+                
                 frameCount++;
             }
 
