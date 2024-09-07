@@ -236,7 +236,6 @@ namespace WW2NavalAssembly
             float PBSpeed = Mathf.Sign(ThrustPercentage*20) * Mathf.Sqrt(Mathf.Abs(ThrustPercentage *20 * HPPercent)) * 4;
             PropellerPB.Speed = (Mathf.Abs(PBSpeed)<1f?0:PBSpeed) * Vector3.up;
             myRigid.AddForceAtPosition(-MyVisAnchor.transform.up * ThrustPercentage*ThrustValue.Value*HPPercent*PropellerSize.Value, Sleeve.transform.position);
-            Debug.Log(-MyVisAnchor.transform.up * ThrustPercentage * ThrustValue.Value * HPPercent * PropellerSize.Value);
         }
         public void UpdateArmVis()
         {
