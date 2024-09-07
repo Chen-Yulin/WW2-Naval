@@ -48,7 +48,7 @@ namespace WW2NavalAssembly
 			myMod.AddComponent<HorizonManager>();
 			myMod.AddComponent<CatapultMsgReceiver>();
             Debug.Log("Hello, this is WW2 naval mod!");
-			Debug.logger.filterLogType = LogType.Error;
+			//Debug.logger.filterLogType = LogType.Error;
 		}
         public void OnEntityPrefabCreation(int entityId, GameObject prefab)
         {

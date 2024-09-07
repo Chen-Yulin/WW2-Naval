@@ -202,8 +202,26 @@ namespace WW2NavalAssembly
                         pericedBlock.Push(hit.collider.transform.parent.GetComponent<BlockBehaviour>().BuildingBlock.Guid.GetHashCode());
                     }
 
+                    bool hitkeel = false;
+                    try
+                    {
+                        if (hit.collider.attachedRigidbody.GetComponent<WoodenArmour>().AsKeel)
+                        {
+                            hitkeel = true;
+                        }
+                    }
+                    catch { }
+                    try
+                    {
+                        if (hit.collider.attachedRigidbody.GetComponent<DefaultArmour>().AsKeel)
+                        {
+                            hitkeel = true;
+                        }
+                    }
+                    catch { }
 
-                    if (hit.collider.transform.parent.name != "SpinningBlock")    // add waterIn behaviour
+
+                    if (hit.collider.transform.parent.name != "SpinningBlock" && !hitkeel)    // add waterIn behaviour
                     {
 
                         GameObject waterinhole = new GameObject("waterInHole");
