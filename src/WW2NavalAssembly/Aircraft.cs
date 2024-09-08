@@ -3168,7 +3168,7 @@ namespace WW2NavalAssembly
                         }
                         else if (Rank.Value == 1)
                         {
-                            if (Type.Value == 0 || hasAttacked)
+                            if (Type.Value == 0 || Type.Value == 4 || hasAttacked)
                             {
                                 Aircraft targetLeader = AlertOnCruise();
                                 if (targetLeader)
@@ -3181,7 +3181,7 @@ namespace WW2NavalAssembly
                             TurnToWayPoint();
 
                             float distFromWayPoint = (MathTool.Get2DCoordinate(transform.position) - WayPoint).magnitude;
-                            if (distFromWayPoint < 200f && WayPointType != 0 && !hasAttacked)
+                            if (distFromWayPoint < 200f && WayPointType != 0 && WayPointType != 4 && !hasAttacked)
                             {
                                 bool allInCruise = true;
                                 foreach (var item in myGroup)
@@ -3252,6 +3252,10 @@ namespace WW2NavalAssembly
                             {
                                 TurnToWayPoint();
                             }
+                        }
+                        if (Type.Value == 4)
+                        {
+                            TurnToWayPoint();
                         }
 
                         if (Type.Value == 1)
