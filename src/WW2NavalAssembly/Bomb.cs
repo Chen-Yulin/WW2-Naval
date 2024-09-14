@@ -259,7 +259,15 @@ namespace WW2NavalAssembly
                             PH.hittedCaliber = Weight;
                             PH.position = hit.collider.transform.parent.InverseTransformPoint(hit.point);
                             PH.forward = myRigid.velocity.normalized;
-
+                            try
+                            {
+                                WoodenArmour WA = hit.collider.attachedRigidbody.GetComponent<WoodenArmour>();
+                                if (WA)
+                                {
+                                    WA.CannonPerice(Weight);
+                                }
+                            }
+                            catch { }
                             if (StatMaster.isMP)
                             {
                                 ModNetworking.SendToAll(WeaponMsgReceiver.HitHoleMsg.CreateMessage((int)hit.collider.transform.parent.GetComponent<BlockBehaviour>().ParentMachine.PlayerID,
@@ -446,7 +454,7 @@ namespace WW2NavalAssembly
                 }
                 catch { }
 
-                ExploDestroyBalloon(hit.point, AP);
+                ExploDestroy(hit.point, AP);
                 ExploDamageAA(hit.point, AP);
             }
             catch { }
@@ -504,12 +512,12 @@ namespace WW2NavalAssembly
                 ModNetworking.SendToAll(WeaponMsgReceiver.ExploMsg.CreateMessage(myPlayerID, transform.position, Weight * (AP ? 1 : 2), 0));
             }
 
-            ExploDestroyBalloon(transform.position, AP);
+            ExploDestroy(transform.position, AP);
             ExploDamageAA(transform.position, AP);
             Destroy(gameObject);
         }
         
-        private void ExploDestroyBalloon(Vector3 pos, bool AP = true)
+        private void ExploDestroy(Vector3 pos, bool AP = true)
         {
             float exploPenetration = 35f;
             try
@@ -556,6 +564,41 @@ namespace WW2NavalAssembly
                                     }
                                 }
                                 
+                            }
+                        }
+                        catch { }
+                        try
+                        {
+                            WoodenArmour wa = hitedCollider.attachedRigidbody.GetComponent<WoodenArmour>();
+                            if (wa)
+                            {
+                                float ArmourBetween = 0;
+                                Ray Ray = new Ray(pos, hitedCollider.transform.position - pos);
+                                RaycastHit[] hitList = Physics.RaycastAll(Ray, (hitedCollider.transform.position - pos).magnitude);
+                                foreach (RaycastHit raycastHit in hitList)
+                                {
+                                    try
+                                    {
+                                        //Debug.Log(raycastHit.rigidbody.name);
+                                        if (!pericedBlock.Contains(raycastHit.collider.attachedRigidbody.GetComponent<BlockBehaviour>().BuildingBlock.Guid.GetHashCode())
+                                            && raycastHit.collider.attachedRigidbody.GetComponent<WoodenArmour>())
+                                        {
+                                            //Debug.Log(raycastHit.collider.transform.parent.GetComponent<WoodenArmour>().thickness);
+                                            ArmourBetween += raycastHit.collider.transform.parent.GetComponent<WoodenArmour>().thickness;
+                                        }
+                                    }
+                                    catch { }
+
+                                }
+                                //Debug.Log(ArmourBetween + " VS "+exploPenetration);
+                                if (ArmourBetween > exploPenetration)
+                                {
+                                }
+                                else
+                                {
+                                    wa.CannonExplo(Weight, (hitedCollider.transform.position - pos).magnitude, !AP);
+                                }
+
                             }
                         }
                         catch { }

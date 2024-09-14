@@ -178,8 +178,8 @@ namespace WW2NavalAssembly
 
         public GunOffsetData offsetData = new GunOffsetData();
 
-        public int TotalCrew;
-        public int CrewNum;
+        public int TotalCrew = 0;
+        public int CrewNum = 0;
 
 
         // for Gun
@@ -777,11 +777,13 @@ namespace WW2NavalAssembly
 
         public void UpdateInfoPanel()
         {
-            if (TotalCrew == 0)
+            if (TotalCrew <= 1) // origin
             {
-                TotalCrew = (int)(ShipSizeManager.Instance.size[myPlayerID].Volumn / 4f);
-                CrewNum = TotalCrew;
+                CrewManager.Instance.SetCrewNumOnStart(myPlayerID);
+                TotalCrew = (int)(CrewManager.Instance.CrewNum[myPlayerID]);
             }
+            CrewManager.Instance.GetResize(myPlayerID);
+            CrewNum = (int)(CrewManager.Instance.CrewNum[myPlayerID]);
             InfoPanel.text = "Position: " + MathTool.Get2DCoordinate(transform.position) * 10f / 1852f + " nmi\n" +
                              "Velocity: " + (myVelocity.magnitude / 0.5144f * 2).ToString("F1") + "Kts\n" +
                              "Target:   " + (ControllerDataManager.Instance.lockData[myPlayerID].valid ? (MathTool.Get2DDistance(transform.position, ControllerDataManager.Instance.lockData[myPlayerID].position) * 10f / 1852f).ToString("F1") + " nmi" : "None" + "\n") +

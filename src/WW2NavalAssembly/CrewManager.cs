@@ -84,4 +84,33 @@ namespace WW2NavalAssembly
 
 
     }
+
+    public class CrewManager : SingleInstance<CrewManager>
+    {
+        public override string Name { get; } = "Crew Manager";
+
+        public float[] CrewNum = new float[16];
+        public float[] OriginCrewNum = new float[16];
+
+        public float[] VirtualCrew = new float[16];
+        public float[] CrewResize  = new float[16];
+
+        public void SetCrewNumOnStart(int playerID)
+        {
+            CrewNum[playerID] = ShipSizeManager.Instance.size[playerID].Volumn / 4f;
+            //Debug.Log(CrewNum[playerID]);
+            OriginCrewNum[playerID] = CrewNum[playerID];
+        }
+
+        public void AddVirtualCrew(int playerID, float crew)
+        {
+            VirtualCrew[playerID] += crew;
+        }
+
+        public void GetResize(int playerID)
+        {
+            CrewResize[playerID] = OriginCrewNum[playerID] / VirtualCrew[playerID];
+        }
+
+    }
 }

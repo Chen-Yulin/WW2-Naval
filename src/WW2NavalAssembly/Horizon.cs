@@ -157,7 +157,7 @@ namespace WW2NavalAssembly
         {
             if (BB.GetComponent<WoodenArmour>())
             {
-                BB.GetComponent<WoodenArmour>().UpdateVis(ModController.Instance.ShowArmour);
+                BB.GetComponent<WoodenArmour>().UpdateVis(ModController.Instance.ShowArmour, ModController.Instance.ShowCrew);
             }
             else if (BB.GetComponent<DefaultArmour>())
             {

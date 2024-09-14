@@ -241,7 +241,7 @@ namespace WW2NavalAssembly
         {
             if (ModController.Instance.ShowChanged)
             {
-                if (ModController.Instance.ShowArmour)
+                if (ModController.Instance.ShowArmour || ModController.Instance.ShowCrew)
                 {
                     transform.Find("Vis").GetComponent<MeshRenderer>().material = ArmMat;
                 }

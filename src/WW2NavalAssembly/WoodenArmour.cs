@@ -10,10 +10,11 @@ using Modding.Blocks;
 using UnityEngine;
 using UnityEngine.Networking;
 using Modding.Blocks;
+using Modding.Common;
 
 namespace WW2NavalAssembly
 {
-    class WoodenArmour : MonoBehaviour
+    public class WoodenArmour : MonoBehaviour
     {
         public BlockBehaviour BB { get; internal set; }
         public MSlider Thickness;
@@ -32,15 +33,59 @@ namespace WW2NavalAssembly
 
         public bool AsKeel = false;
 
+        public float _virtualCrew = 0;
+        public float CrewRate = 1;
+
+        public float Crew
+        {
+            get
+            {
+                return _virtualCrew * CrewManager.Instance.CrewResize[myPlayerID] * CrewRate;
+            }
+            set
+            {
+                if (CrewRate != 0 && CrewManager.Instance.CrewResize[myPlayerID] != 0 && _virtualCrew != 0)
+                {
+                    CrewRate = value / (_virtualCrew * CrewManager.Instance.CrewResize[myPlayerID]);
+                }
+            }
+        }
+
         IEnumerator ChangeVis()
         {
             yield return new WaitForFixedUpdate();
             ModController.Instance.ShowChanged = false;
             yield return new WaitForSeconds(0.01f * myseed);
 
-            UpdateVis(ModController.Instance.ShowArmour);
+            UpdateVis(ModController.Instance.ShowArmour, ModController.Instance.ShowCrew);
 
             yield break;
+        }
+
+        public void CannonExplo(float Caliber, float dist, bool he)
+        {
+            if (Crew > 0)
+            {
+                float reduce = Caliber * Caliber * 0.0001f * Mathf.Clamp(CrewRate, 0.1f, 1f) / Mathf.Clamp(dist * 4, 1, 10f) * (he ? 2 : 1);
+                
+                reduce = Mathf.Min(reduce, Crew);
+                Debug.Log("Explo:" + Crew + "-" + reduce);
+                Crew -= reduce;
+                CrewManager.Instance.CrewNum[myPlayerID] -= reduce;
+                UpdateVis(ModController.Instance.ShowArmour, ModController.Instance.ShowCrew);
+            }
+        }
+        public void CannonPerice(float Caliber)
+        {
+            if (Crew > 0)
+            {
+                float reduce = Caliber * Caliber * 0.00002f * Mathf.Clamp(CrewRate, 0.1f, 1f);
+                reduce = Mathf.Min(reduce, Crew);
+                Debug.Log("Explo:" + Crew + "-" + reduce);
+                Crew -= reduce;
+                CrewManager.Instance.CrewNum[myPlayerID] -= reduce;
+                UpdateVis(ModController.Instance.ShowArmour, ModController.Instance.ShowCrew);
+            }
         }
         public void BreakForceOptimize()
         {
@@ -251,14 +296,19 @@ namespace WW2NavalAssembly
             WeaponMsgReceiver.Instance.BulletHoleInfo[myPlayerID][myGuid].Clear();
         }
 
-        public void UpdateVis(bool show)
+        public void UpdateVis(bool showArmour, bool showCrew)
         {
             if (GetComponent<Horizon>().Show)
             {
-                if (show)
+                if (showArmour)
                 {
                     transform.Find("Vis").gameObject.SetActive(false);
                     VisRender.material = AssetManager.Instance.ArmorMat[Mathf.Clamp((int)(thickness / 10f), 0, 65)];
+                }
+                else if (showCrew)
+                {
+                    transform.Find("Vis").gameObject.SetActive(false);
+                    VisRender.material = AssetManager.Instance.CrewMat[Mathf.Clamp((int)(CrewRate * 20f + 0.999f), 0, 19)];
                 }
                 else
                 {
@@ -348,12 +398,20 @@ namespace WW2NavalAssembly
             }
             if (frameCount > 4 && !optimized)
             {
+                optimized = true;
                 try
                 {
-                    optimized = true;
                     AddShipVolumn();
+                    CrewManager.Instance.VirtualCrew[myPlayerID] = 0f;
                 }
                 catch { }
+                frameCount++;
+            }
+            else if (frameCount == 6)
+            {
+                _virtualCrew = MathTool.GetArea(transform.localScale);
+                CrewManager.Instance.AddVirtualCrew(myPlayerID, _virtualCrew);
+                frameCount++;
             }
 
 
