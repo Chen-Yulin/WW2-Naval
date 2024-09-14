@@ -178,6 +178,9 @@ namespace WW2NavalAssembly
 
         public GunOffsetData offsetData = new GunOffsetData();
 
+        public int TotalCrew;
+        public int CrewNum;
+
 
         // for Gun
         public class Dist2PitchResult
@@ -774,10 +777,17 @@ namespace WW2NavalAssembly
 
         public void UpdateInfoPanel()
         {
+            if (TotalCrew == 0)
+            {
+                TotalCrew = (int)(ShipSizeManager.Instance.size[myPlayerID].Volumn / 4f);
+                CrewNum = TotalCrew;
+            }
             InfoPanel.text = "Position: " + MathTool.Get2DCoordinate(transform.position) * 10f / 1852f + " nmi\n" +
                              "Velocity: " + (myVelocity.magnitude / 0.5144f * 2).ToString("F1") + "Kts\n" +
-                             "Target:   " + (ControllerDataManager.Instance.lockData[myPlayerID].valid ? (MathTool.Get2DDistance(transform.position, ControllerDataManager.Instance.lockData[myPlayerID].position) * 10f / 1852f).ToString("F1") + " nmi" : "None");
+                             "Target:   " + (ControllerDataManager.Instance.lockData[myPlayerID].valid ? (MathTool.Get2DDistance(transform.position, ControllerDataManager.Instance.lockData[myPlayerID].position) * 10f / 1852f).ToString("F1") + " nmi" : "None" + "\n") +
+                             "Crew:     " + CrewNum + "/" + TotalCrew;
             FCOrien.transform.localEulerAngles = - new Vector3(0, 0, MathTool.SignedAngle(MathTool.Get2DCoordinate(-transform.up), new Vector2(0, 1)));
+            
         }
 
 
@@ -926,11 +936,16 @@ namespace WW2NavalAssembly
                 Locking = false;
                 ControllerDataManager.Instance.lockData[myPlayerID].valid = false;
             }
+            ShipSizeManager.Instance.size[myPlayerID].Reset();
+
         }
         public override void BuildingUpdate()
         {
             UploadForward();
             UploadRight();
+            ShipSizeManager.Instance.size[myPlayerID].Reset();
+            ShipSizeManager.Instance.size[myPlayerID].origin = transform.position;
+            ShipSizeManager.Instance.size[myPlayerID].forward = -transform.up;
         }
         public override void BuildingFixedUpdate()
         {

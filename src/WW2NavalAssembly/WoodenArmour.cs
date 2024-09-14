@@ -175,6 +175,46 @@ namespace WW2NavalAssembly
             VisRender.material = AssetManager.Instance.TransparentMat;
         }
 
+        public void AddShipVolumn()
+        {
+            ShipSizeManager.Instance.size[myPlayerID].AddDot(transform.position);
+            switch (BB.BlockID)
+            {
+                case (int)BlockType.SingleWoodenBlock:
+                    {
+                        ShipSizeManager.Instance.size[myPlayerID].AddDot(transform.position + transform.forward * transform.localScale.z);
+                        break;
+                    }
+                case (int)BlockType.DoubleWoodenBlock:
+                    {
+                        if (transform.Find("Vis").Find("HalfVis").GetComponent<MeshRenderer>().enabled)
+                        {
+                            ShipSizeManager.Instance.size[myPlayerID].AddDot(transform.position + transform.forward * transform.localScale.z);
+                        }
+                        else
+                        {
+                            ShipSizeManager.Instance.size[myPlayerID].AddDot(transform.position + transform.forward * transform.localScale.z * 2);
+                        }
+
+                        break;
+                    }
+                case (int)BlockType.Log:
+                    {
+                        if (transform.Find("Vis").Find("HalfVis").GetComponent<MeshRenderer>().enabled)
+                        {
+                            ShipSizeManager.Instance.size[myPlayerID].AddDot(transform.position + transform.forward * transform.localScale.z * 2);
+                        }
+                        else
+                        {
+                            ShipSizeManager.Instance.size[myPlayerID].AddDot(transform.position + transform.forward * transform.localScale.z * 3);
+                        }
+                        break;
+                    }
+                default:
+                    break;
+            }
+        }
+
         public void SyncBulletHole()
         {
             foreach (WeaponMsgReceiver.hitHoleInfo info in WeaponMsgReceiver.Instance.BulletHoleInfo[myPlayerID][myGuid])
@@ -311,7 +351,7 @@ namespace WW2NavalAssembly
                 try
                 {
                     optimized = true;
-                    //Optimize();
+                    AddShipVolumn();
                 }
                 catch { }
             }

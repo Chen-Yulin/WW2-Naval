@@ -72,6 +72,7 @@
     <Compile Include="Chimney.cs" />
     <Compile Include="Constants.cs" />
     <Compile Include="Controller.cs" />
+    <Compile Include="CrewManager.cs" />
     <Compile Include="CustomBlockController.cs" />
     <Compile Include="DefaultArmour.cs" />
     <Compile Include="Engine.cs" />
