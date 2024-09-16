@@ -790,10 +790,9 @@ namespace WW2NavalAssembly
         {
             InfoPanel.text = "Position: " + MathTool.Get2DCoordinate(transform.position) * 10f / 1852f + " nmi\n" +
                              "Velocity: " + (myVelocity.magnitude / 0.5144f * 2).ToString("F1") + "Kts\n" +
-                             "Target:   " + (ControllerDataManager.Instance.lockData[myPlayerID].valid ? (MathTool.Get2DDistance(transform.position, ControllerDataManager.Instance.lockData[myPlayerID].position) * 10f / 1852f).ToString("F1") + " nmi" : "None" + "\n") +
+                             "Target:   " + ((ControllerDataManager.Instance.lockData[myPlayerID].valid ? (MathTool.Get2DDistance(transform.position, ControllerDataManager.Instance.lockData[myPlayerID].position) * 10f / 1852f).ToString("F1") + " nmi" : "None") + "\n") +
                              "Crew:     " + CrewNum + "/" + TotalCrew;
             FCOrien.transform.localEulerAngles = - new Vector3(0, 0, MathTool.SignedAngle(MathTool.Get2DCoordinate(-transform.up), new Vector2(0, 1)));
-            
         }
 
 

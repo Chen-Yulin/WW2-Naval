@@ -106,6 +106,10 @@ namespace WW2NavalAssembly
         }
         public void ChangeBlockRenderer(BlockBehaviour BB)
         {
+            if (!BB.isSimulating)
+            {
+                return;
+            }
             foreach (var renderer in BB.GetComponentsInChildren<MeshRenderer>(true))
             {
                 if (renderer.name == "CubeColliders")
