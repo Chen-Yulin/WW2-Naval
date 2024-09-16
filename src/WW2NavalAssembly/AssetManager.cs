@@ -8,10 +8,12 @@ namespace WW2NavalAssembly
 {
     public class Asset_Catapult
     {
-        public GameObject Smoke;
+        public GameObject CatapultSmoke;
+        public GameObject WoodFire;
         public Asset_Catapult(ModAssetBundle modAssetBundle)
         {
-            Smoke = modAssetBundle.LoadAsset<GameObject>("CatapultSmoke");
+            CatapultSmoke = modAssetBundle.LoadAsset<GameObject>("CatapultSmoke");
+            WoodFire = modAssetBundle.LoadAsset<GameObject>("WoodFire");
         }
 
     }
@@ -147,6 +149,7 @@ namespace WW2NavalAssembly
         public GameObject explo;
         public GameObject exploWithSmoke;
         public GameObject exploSmall;
+        public GameObject WoodFire;
         public Asset_CannonHit(ModAssetBundle modAssetBundle)
         {
             explo = modAssetBundle.LoadAsset<GameObject>("CannonHit");

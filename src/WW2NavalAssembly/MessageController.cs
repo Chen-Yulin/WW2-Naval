@@ -49,6 +49,8 @@ namespace WW2NavalAssembly
             ModNetworking.Callbacks[CatapultMsgReceiver.LaunchMsg] += CatapultMsgReceiver.Instance.LaunchMsgReceiver;
             ModNetworking.Callbacks[CatapultMsgReceiver.MMsg] += CatapultMsgReceiver.Instance.MMsgReceiver;
             ModNetworking.Callbacks[CatapultMsgReceiver.JYMsg] += CatapultMsgReceiver.Instance.JYMsgReceiver;
+            ModNetworking.Callbacks[CrewManager.CrewUpdateMessage] += CrewManager.Instance.ReceiveCrewRate;
+            ModNetworking.Callbacks[CrewManager.OnFireMessage] += CrewManager.Instance.ReceiveOnfire;
         }
     }
 }

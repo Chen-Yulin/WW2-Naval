@@ -47,6 +47,68 @@ namespace WW2NavalAssembly
                 if (CrewRate != 0 && CrewManager.Instance.CrewResize[myPlayerID] != 0 && _virtualCrew != 0)
                 {
                     CrewRate = value / (_virtualCrew * CrewManager.Instance.CrewResize[myPlayerID]);
+
+                    if (StatMaster.isMP)
+                    {
+                        CrewManager.Instance.SendCrewRate(myPlayerID, myGuid, CrewRate);
+                    }
+                }
+            }
+        }
+
+        public float fuel = 1f;
+        public bool _torched = false;
+        public float HandleFire = 0f;
+
+        public bool Torched
+        {
+            get
+            { return _torched; }
+            set {
+                HandleFire /= 2f;
+                if (value != _torched)
+                {
+                    if (value)
+                    {
+                        if (transform.position.y < Constants.SeaHeight)
+                        {
+                            return;
+                        }
+                    }
+
+                    _torched = value;
+                    if (StatMaster.isMP && !StatMaster.isClient)
+                    {
+                        CrewManager.Instance.SendOnFire(myPlayerID, myGuid, _torched);
+                    }
+
+                    Transform smoke = transform.Find("FireSmoke");
+                    if (_torched)
+                    {
+                        if (smoke)
+                        {
+                            smoke.GetComponent<ParticleSystem>().Play();
+                        }
+                        else
+                        {
+                            smoke = ((GameObject)Instantiate(AssetManager.Instance.Catapult.WoodFire)).transform;
+                            smoke.name = "FireSmoke";
+                            smoke.gameObject.SetActive(false);
+                            smoke.rotation = transform.rotation;
+                            smoke.position = transform.position;
+                            smoke.parent = transform;
+                            smoke.transform.localScale = Vector3.one * Mathf.Sqrt(MathTool.GetArea(transform.localScale));
+                            smoke.transform.GetChild(0).localScale = smoke.transform.localScale;
+                            smoke.transform.GetChild(0).GetChild(0).localScale = smoke.transform.localScale;
+                            smoke.gameObject.SetActive(true);
+                            smoke.GetComponent<ParticleSystem>().Play();
+                        }
+                    }
+                    else
+                    {
+                        smoke.GetComponent<ParticleSystem>().Stop();
+                    }
+                    
                 }
             }
         }
@@ -66,25 +128,41 @@ namespace WW2NavalAssembly
         {
             if (Crew > 0)
             {
-                float reduce = Caliber * Caliber * 0.0001f * Mathf.Clamp(CrewRate, 0.1f, 1f) / Mathf.Clamp(dist * 4, 1, 10f) * (he ? 2 : 1);
-                
+                CrewManager.Instance.GetResize(myPlayerID);
+                float reduce = Caliber * 0.0401f * Mathf.Clamp(CrewRate, 0.1f, 1f) / Mathf.Clamp(dist * 4, 1, 10f) * (he ? 2 : 1);
                 reduce = Mathf.Min(reduce, Crew);
-                Debug.Log("Explo:" + Crew + "-" + reduce);
+                //Debug.Log(myPlayerID + "Explo:" + Crew + "-" + reduce);
                 Crew -= reduce;
                 CrewManager.Instance.CrewNum[myPlayerID] -= reduce;
                 UpdateVis(ModController.Instance.ShowArmour, ModController.Instance.ShowCrew);
+
+                float random = UnityEngine.Random.value;
+                //Debug.Log(random);
+                //if (random < (0.1f * (he?2f:1f)))
+                //{
+                //    Torched = true;
+                //}
+            }
+            else
+            {
+                //Debug.Log("No crew?"+ CrewRate+" "+ CrewManager.Instance.CrewResize[myPlayerID]+" "+ _virtualCrew);
             }
         }
         public void CannonPerice(float Caliber)
         {
             if (Crew > 0)
             {
-                float reduce = Caliber * Caliber * 0.00002f * Mathf.Clamp(CrewRate, 0.1f, 1f);
+                CrewManager.Instance.GetResize(myPlayerID);
+                float reduce = Caliber * 0.00802f * Mathf.Clamp(CrewRate, 0.1f, 1f);
                 reduce = Mathf.Min(reduce, Crew);
-                Debug.Log("Explo:" + Crew + "-" + reduce);
+                //Debug.Log(myPlayerID + "Perice:" + Crew + "-" + reduce);
                 Crew -= reduce;
                 CrewManager.Instance.CrewNum[myPlayerID] -= reduce;
                 UpdateVis(ModController.Instance.ShowArmour, ModController.Instance.ShowCrew);
+            }
+            else
+            {
+                //Debug.Log("No crew?" + CrewRate + " " + CrewManager.Instance.CrewResize[myPlayerID] + " " + _virtualCrew);
             }
         }
         public void BreakForceOptimize()
@@ -353,9 +431,34 @@ namespace WW2NavalAssembly
         {
             if (StatMaster.isClient)
             {
-                return;
+                if (CrewManager.Instance.CrewUpdateReceive[myPlayerID].ContainsKey(myGuid))
+                {
+                    CrewRate = CrewManager.Instance.CrewUpdateReceive[myPlayerID][myGuid];
+                    CrewManager.Instance.CrewUpdateReceive[myPlayerID].Remove(myGuid);
+                    UpdateVis(ModController.Instance.ShowArmour, ModController.Instance.ShowCrew);
+                }
+                if (CrewManager.Instance.OnFire[myPlayerID].ContainsKey(myGuid))
+                {
+                    Torched = CrewManager.Instance.OnFire[myPlayerID][myGuid];
+                    CrewManager.Instance.OnFire[myPlayerID].Remove(myGuid);
+                }
             }
-            
+            if ((StatMaster.isMP && !StatMaster.isClient) || !StatMaster.isMP)
+            {
+                if (Torched)
+                {
+                    if (HandleFire > 1 || fuel < 0)
+                    {
+                        Torched = false;
+                    }
+                    else
+                    {
+                        fuel -= 0.05f * Time.deltaTime;
+                        Crew = Mathf.Clamp(Crew - 0.5f * Time.deltaTime, 0f, 999f);
+                        HandleFire += 0.1f * Time.deltaTime * (CrewRate * 0.5f + CrewManager.Instance.GetEfficiency(myPlayerID) * 0.5f);
+                    }
+                }
+            }
         }
         public void FixedUpdate()
         {
@@ -389,12 +492,9 @@ namespace WW2NavalAssembly
                 StartCoroutine(ChangeVis());
             }
 
-            if (!StatMaster.isClient)
+            if (frameCount <= 4 && BB.isSimulating)
             {
-                if (frameCount <= 4 && BB.isSimulating)
-                {
-                    frameCount++;
-                }
+                frameCount++;
             }
             if (frameCount > 4 && !optimized)
             {
@@ -410,6 +510,7 @@ namespace WW2NavalAssembly
             else if (frameCount == 6)
             {
                 _virtualCrew = MathTool.GetArea(transform.localScale);
+                fuel = _virtualCrew;
                 CrewManager.Instance.AddVirtualCrew(myPlayerID, _virtualCrew);
                 frameCount++;
             }

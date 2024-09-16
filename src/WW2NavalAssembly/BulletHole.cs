@@ -20,6 +20,8 @@ namespace WW2NavalAssembly
         public float torpedoWaterIn;
         public Rigidbody body;
 
+        public WoodenArmour WA;
+
         private float _coeff = 50000;
         private float _drainRate = 0.999f;
 
@@ -38,7 +40,7 @@ namespace WW2NavalAssembly
         }
         private void RemoveCarbinWater()
         {
-            carbinWaterIn *= _drainRate;
+            carbinWaterIn *= 1 - (1-_drainRate) * WA.CrewRate * CrewManager.Instance.GetEfficiency(WA.myPlayerID);
         }
         private void ApplyFore()
         {
@@ -79,8 +81,8 @@ namespace WW2NavalAssembly
         public float hittedCaliber;
         public Vector3 position;
         public float waterIn = 0;
-        public int DCTime = 0;
-        public int DCTimeNeeded;
+        public float DCTime = 0;
+        public float DCTimeNeeded;
         public int type = 0; // 0 for cannon, 1 for torpedo
 
         public GameObject Hole;
@@ -114,9 +116,11 @@ namespace WW2NavalAssembly
                 }
                 // add waterCarbin component
                 wc = transform.parent.GetComponent<WaterCarbin>();
+
                 if (!wc)
                 {
                     wc = transform.parent.gameObject.AddComponent<WaterCarbin>();
+                    wc.WA = hittedArmour;
                 }
 
                 
@@ -136,7 +140,7 @@ namespace WW2NavalAssembly
                 }
                 if (DCTime < DCTimeNeeded && Hole.transform.position.y < 20 && Hole.transform.position.y > 15)
                 {
-                    DCTime++;
+                    DCTime += hittedArmour.CrewRate * 0.5f + CrewManager.Instance.GetEfficiency(hittedArmour.myPlayerID) * 0.5f;
                     if (holeType == 0)
                     {
                         wc.AddShellWater(sqrCaliber / 500f * (type == 0 ? 1 : 10));

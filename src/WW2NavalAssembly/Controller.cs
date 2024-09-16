@@ -775,7 +775,7 @@ namespace WW2NavalAssembly
             FlightDataBase.Instance.DeckRight[myPlayerID] = new Vector2(right.x, right.z).normalized;
         }
 
-        public void UpdateInfoPanel()
+        public void UpdateCrewInfo()
         {
             if (TotalCrew <= 1) // origin
             {
@@ -784,6 +784,10 @@ namespace WW2NavalAssembly
             }
             CrewManager.Instance.GetResize(myPlayerID);
             CrewNum = (int)(CrewManager.Instance.CrewNum[myPlayerID]);
+        }
+
+        public void UpdateInfoPanel()
+        {
             InfoPanel.text = "Position: " + MathTool.Get2DCoordinate(transform.position) * 10f / 1852f + " nmi\n" +
                              "Velocity: " + (myVelocity.magnitude / 0.5144f * 2).ToString("F1") + "Kts\n" +
                              "Target:   " + (ControllerDataManager.Instance.lockData[myPlayerID].valid ? (MathTool.Get2DDistance(transform.position, ControllerDataManager.Instance.lockData[myPlayerID].position) * 10f / 1852f).ToString("F1") + " nmi" : "None" + "\n") +
@@ -1003,6 +1007,7 @@ namespace WW2NavalAssembly
         {
             UploadForward();
             UploadRight();
+            UpdateCrewInfo();
             if (!StatMaster.isMP || PlayerData.localPlayer.networkId == myPlayerID)
             {
                 if (StatMaster.isMP)
