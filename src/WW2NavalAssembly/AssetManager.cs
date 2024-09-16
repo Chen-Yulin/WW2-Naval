@@ -8,10 +8,12 @@ namespace WW2NavalAssembly
 {
     public class Asset_Catapult
     {
-        public GameObject Smoke;
+        public GameObject CatapultSmoke;
+        public GameObject WoodFire;
         public Asset_Catapult(ModAssetBundle modAssetBundle)
         {
-            Smoke = modAssetBundle.LoadAsset<GameObject>("CatapultSmoke");
+            CatapultSmoke = modAssetBundle.LoadAsset<GameObject>("CatapultSmoke");
+            WoodFire = modAssetBundle.LoadAsset<GameObject>("WoodFire");
         }
 
     }
@@ -147,6 +149,7 @@ namespace WW2NavalAssembly
         public GameObject explo;
         public GameObject exploWithSmoke;
         public GameObject exploSmall;
+        public GameObject WoodFire;
         public Asset_CannonHit(ModAssetBundle modAssetBundle)
         {
             explo = modAssetBundle.LoadAsset<GameObject>("CannonHit");
@@ -176,6 +179,7 @@ namespace WW2NavalAssembly
         public Material TransparentMat;
         public Material[] TurrentMat = new Material[8];
         public Material[] ArmorMat = new Material[66];
+        public Material[] CrewMat = new Material[20];
         public Asset_CannonHit CannonHit { get; protected set; }
         public Asset_WaterHit WaterHit { get; protected set; }
 
@@ -230,6 +234,20 @@ namespace WW2NavalAssembly
                 float thickness = (i+0.5f) *10;
                 Color tmpColor = Color.HSVToRGB(Mathf.Clamp(0.5f - thickness / 1000, 0, 0.5f), 1, 1);
                 ArmorMat[i].color = new Color(tmpColor.r, tmpColor.g, tmpColor.b, 0.6f);
+            }
+            for (int i = 0; i < 20; i++)
+            {
+                if (i == 0)
+                {
+                    CrewMat[i] = new Material(ArmourVis.SingleArmour.GetComponent<MeshRenderer>().material);
+                }
+                else
+                {
+                    CrewMat[i] = new Material(CrewMat[i - 1]);
+                }
+                float rate = i/2;
+                Color tmpColor = Color.HSVToRGB(0.2f, 1, i/30f);
+                CrewMat[i].color = new Color(tmpColor.r, tmpColor.g, tmpColor.b, 0.4f);
             }
             TransparentMat = ArmorMat[0];
             TransparentMat.color = new Color(0, 0, 0, 0);

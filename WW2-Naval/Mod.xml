@@ -5,11 +5,11 @@
 	<Name>WW2Naval</Name>
 	<Author>Chen, Yulin</Author> <!-- FIX: Insert your name here. -->
 	<!-- Major.Minor.Build -->
-	<Version>0.10.3</Version>
+	<Version>0.11.1</Version>
 
 	<Description>
-    Version 0.10.3
-    Add Seaplane.
+    Version 0.11.1
+    Add Crew System
     </Description>
 
 	<Icon name="icon"/>

@@ -597,6 +597,15 @@ namespace WW2NavalAssembly
                             PH.hittedCaliber = Caliber;
                             PH.position = hit.collider.attachedRigidbody.transform.InverseTransformPoint(hit.point);
                             PH.forward = myRigid.velocity.normalized;
+                            try
+                            {
+                                WoodenArmour WA = hit.collider.attachedRigidbody.GetComponent<WoodenArmour>();
+                                if (WA)
+                                {
+                                    WA.CannonPerice(Caliber);
+                                }
+                            }
+                            catch { }
 
                             if (StatMaster.isMP)
                             {
@@ -604,6 +613,9 @@ namespace WW2NavalAssembly
                                                                                                     hit.collider.attachedRigidbody.transform.GetComponent<BlockBehaviour>().BuildingBlock.Guid.GetHashCode(),
                                                                                                     Caliber, PH.position, PH.forward, 0));
                             }
+                            
+                            
+
                         }
                     }
                     return true;
@@ -898,7 +910,7 @@ namespace WW2NavalAssembly
                 }
                 catch { }
 
-                ExploDestroyBalloon(hit.point, AP);
+                ExploDestroy(hit.point, AP);
             }
             catch { }
             if (transform.FindChild("CannonVis"))
@@ -942,7 +954,7 @@ namespace WW2NavalAssembly
                 }
             }
 
-            ExploDestroyBalloon(transform.position, AP);
+            ExploDestroy(transform.position, AP);
             if (transform.FindChild("CannonVis"))
             {
                 transform.FindChild("CannonVis").gameObject.SetActive(false);
@@ -1022,7 +1034,7 @@ namespace WW2NavalAssembly
                 ModNetworking.SendToAll(WeaponMsgReceiver.WaterHitMsg.CreateMessage(myPlayerID, new Vector3(transform.position.x, 20, transform.position.z), Caliber));
             }
         }
-        private void ExploDestroyBalloon(Vector3 pos, bool AP = true)
+        private void ExploDestroy(Vector3 pos, bool AP = true)
         {
             float exploPenetration = Caliber / 20f * (AP ? 1f : 1.5f);
             try
@@ -1072,6 +1084,41 @@ namespace WW2NavalAssembly
                             }
                         }
                         catch { }
+                        try
+                        {
+                            WoodenArmour wa = hitedCollider.attachedRigidbody.GetComponent<WoodenArmour>();
+                            if (wa)
+                            {
+                                float ArmourBetween = 0;
+                                Ray Ray = new Ray(pos, hitedCollider.transform.position - pos);
+                                RaycastHit[] hitList = Physics.RaycastAll(Ray, (hitedCollider.transform.position - pos).magnitude);
+                                foreach (RaycastHit raycastHit in hitList)
+                                {
+                                    try
+                                    {
+                                        //Debug.Log(raycastHit.rigidbody.name);
+                                        if (!pericedBlock.Contains(raycastHit.collider.attachedRigidbody.GetComponent<BlockBehaviour>().BuildingBlock.Guid.GetHashCode())
+                                            && raycastHit.collider.attachedRigidbody.GetComponent<WoodenArmour>())
+                                        {
+                                            //Debug.Log(raycastHit.collider.transform.parent.GetComponent<WoodenArmour>().thickness);
+                                            ArmourBetween += raycastHit.collider.transform.parent.GetComponent<WoodenArmour>().thickness;
+                                        }
+                                    }
+                                    catch { }
+
+                                }
+                                //Debug.Log(ArmourBetween + " VS "+exploPenetration);
+                                if (ArmourBetween > exploPenetration)
+                                {
+                                }
+                                else
+                                {
+                                    wa.CannonExplo(Caliber, (hitedCollider.transform.position - pos).magnitude, !AP);
+                                }
+
+                            }
+                        }
+                        catch { }
                         //Debug.Log(hitedCollider.transform.parent.name);
                         if ((hitedCollider.transform.parent.name == "Balloon" || hitedCollider.transform.parent.name == "SqrBalloon")
                             && damagedBallon.Count == 0)
@@ -1106,7 +1153,7 @@ namespace WW2NavalAssembly
                         {
                             if (!(hitedCollider.transform.parent.name == "Balloon" || hitedCollider.transform.parent.name == "SqrBalloon"))
                             {
-                                hitedCollider.transform.parent.GetComponent<Rigidbody>().AddExplosionForce((AP ? 2f : 3f) * Caliber, pos, Mathf.Sqrt(Caliber) / (AP ? 8f : 5f));
+                                hitedCollider.transform.parent.GetComponent<Rigidbody>().AddExplosionForce((AP ? 2f : 4f) * Caliber, pos, Mathf.Sqrt(Caliber) / (AP ? 8f : 5f));
                             }
                         }
                     }

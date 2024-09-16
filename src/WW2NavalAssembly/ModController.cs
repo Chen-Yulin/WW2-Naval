@@ -38,6 +38,7 @@ namespace WW2NavalAssembly
         private readonly int windowID = ModUtility.GetWindowId();
         public bool windowHidden = false;
         bool _showArmour = false;
+        bool _showCrew = false;
         public bool ShowChanged = false;
         public float seahigh = 20f;
         public bool newseaEffect = true;
@@ -53,10 +54,36 @@ namespace WW2NavalAssembly
                 if (_showArmour != value)
                 {
                     _showArmour = value;
+                    if (_showArmour)
+                    {
+                        _showCrew = false;
+                    }
                     ShowChanged = true;
                 }
             }
         }
+        public bool ShowCrew
+        {
+            get
+            {
+                return _showCrew;
+            }
+            set
+            {
+                if (_showCrew != value)
+                {
+                    _showCrew = value;
+                    if (_showCrew)
+                    {
+                        _showArmour = false;
+                    }
+                    ShowChanged = true;
+                }
+            }
+        }
+
+
+
         public bool showSea = false;
         public bool deleteFog = false;
         public bool useSkyBox = false;
@@ -245,6 +272,7 @@ namespace WW2NavalAssembly
             GUILayout.BeginVertical();
             {
                 ShowArmour = GUILayout.Toggle(ShowArmour, "Show Armour Layout");
+                ShowCrew = GUILayout.Toggle(ShowCrew, "Show Crew Layout");
                 showSea = GUILayout.Toggle(showSea, "Sea Toggle");
                 newseaEffect = GUILayout.Toggle(newseaEffect, "Advance Sea Toggle");
                 seaStrenght = GUILayout.HorizontalSlider( seaStrenght, 0.0f, 0.5f);

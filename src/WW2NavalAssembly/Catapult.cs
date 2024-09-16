@@ -131,7 +131,7 @@ namespace WW2NavalAssembly
         {
             if (!transform.Find("Smoke"))
             {
-                Smoke = Instantiate(AssetManager.Instance.Catapult.Smoke).GetComponent<ParticleSystem>();
+                Smoke = Instantiate(AssetManager.Instance.Catapult.CatapultSmoke).GetComponent<ParticleSystem>();
                 Smoke.name = "Smoke";
                 Smoke.Stop();
                 Smoke.transform.parent = transform;

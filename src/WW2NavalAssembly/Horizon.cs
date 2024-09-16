@@ -106,6 +106,10 @@ namespace WW2NavalAssembly
         }
         public void ChangeBlockRenderer(BlockBehaviour BB)
         {
+            if (!BB.isSimulating)
+            {
+                return;
+            }
             foreach (var renderer in BB.GetComponentsInChildren<MeshRenderer>(true))
             {
                 if (renderer.name == "CubeColliders")
@@ -157,7 +161,7 @@ namespace WW2NavalAssembly
         {
             if (BB.GetComponent<WoodenArmour>())
             {
-                BB.GetComponent<WoodenArmour>().UpdateVis(ModController.Instance.ShowArmour);
+                BB.GetComponent<WoodenArmour>().UpdateVis(ModController.Instance.ShowArmour, ModController.Instance.ShowCrew);
             }
             else if (BB.GetComponent<DefaultArmour>())
             {

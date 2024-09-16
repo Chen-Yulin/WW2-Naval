@@ -178,6 +178,9 @@ namespace WW2NavalAssembly
 
         public GunOffsetData offsetData = new GunOffsetData();
 
+        public int TotalCrew = 0;
+        public int CrewNum = 0;
+
 
         // for Gun
         public class Dist2PitchResult
@@ -772,11 +775,23 @@ namespace WW2NavalAssembly
             FlightDataBase.Instance.DeckRight[myPlayerID] = new Vector2(right.x, right.z).normalized;
         }
 
+        public void UpdateCrewInfo()
+        {
+            if (TotalCrew <= 1) // origin
+            {
+                CrewManager.Instance.SetCrewNumOnStart(myPlayerID);
+                TotalCrew = (int)(CrewManager.Instance.CrewNum[myPlayerID]);
+            }
+            CrewManager.Instance.GetResize(myPlayerID);
+            CrewNum = (int)(CrewManager.Instance.CrewNum[myPlayerID]);
+        }
+
         public void UpdateInfoPanel()
         {
             InfoPanel.text = "Position: " + MathTool.Get2DCoordinate(transform.position) * 10f / 1852f + " nmi\n" +
                              "Velocity: " + (myVelocity.magnitude / 0.5144f * 2).ToString("F1") + "Kts\n" +
-                             "Target:   " + (ControllerDataManager.Instance.lockData[myPlayerID].valid ? (MathTool.Get2DDistance(transform.position, ControllerDataManager.Instance.lockData[myPlayerID].position) * 10f / 1852f).ToString("F1") + " nmi" : "None");
+                             "Target:   " + ((ControllerDataManager.Instance.lockData[myPlayerID].valid ? (MathTool.Get2DDistance(transform.position, ControllerDataManager.Instance.lockData[myPlayerID].position) * 10f / 1852f).ToString("F1") + " nmi" : "None") + "\n") +
+                             "Crew:     " + CrewNum + "/" + TotalCrew;
             FCOrien.transform.localEulerAngles = - new Vector3(0, 0, MathTool.SignedAngle(MathTool.Get2DCoordinate(-transform.up), new Vector2(0, 1)));
         }
 
@@ -926,11 +941,16 @@ namespace WW2NavalAssembly
                 Locking = false;
                 ControllerDataManager.Instance.lockData[myPlayerID].valid = false;
             }
+            ShipSizeManager.Instance.size[myPlayerID].Reset();
+
         }
         public override void BuildingUpdate()
         {
             UploadForward();
             UploadRight();
+            ShipSizeManager.Instance.size[myPlayerID].Reset();
+            ShipSizeManager.Instance.size[myPlayerID].origin = transform.position;
+            ShipSizeManager.Instance.size[myPlayerID].forward = -transform.up;
         }
         public override void BuildingFixedUpdate()
         {
@@ -986,6 +1006,7 @@ namespace WW2NavalAssembly
         {
             UploadForward();
             UploadRight();
+            UpdateCrewInfo();
             if (!StatMaster.isMP || PlayerData.localPlayer.networkId == myPlayerID)
             {
                 if (StatMaster.isMP)

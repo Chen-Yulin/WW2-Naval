@@ -47,6 +47,7 @@ namespace WW2NavalAssembly
 			myMod.AddComponent<AircraftLifterMsgReceiver>();
 			myMod.AddComponent<HorizonManager>();
 			myMod.AddComponent<CatapultMsgReceiver>();
+			myMod.AddComponent<CrewManager>();
             Debug.Log("Hello, this is WW2 naval mod!");
 			Debug.logger.filterLogType = LogType.Error;
 		}

@@ -854,6 +854,9 @@ namespace WW2NavalAssembly
                 case 3:
                     height = Constants.BombAttackHeight + Constants.SeaHeight;
                     break;
+                case 4:
+                    height = Constants.BombAttackHeight + Constants.SeaHeight;
+                    break;
                 default:
                     height = Constants.CruiseHeight + Constants.SeaHeight;
                     break;
@@ -888,6 +891,9 @@ namespace WW2NavalAssembly
                         height = Constants.BombAttackHeight + Constants.SeaHeight;
                         break;
                     case 3:
+                        height = Constants.BombAttackHeight + Constants.SeaHeight;
+                        break;
+                    case 4:
                         height = Constants.BombAttackHeight + Constants.SeaHeight;
                         break;
                     default:

@@ -155,7 +155,7 @@ namespace WW2NavalAssembly
             ModController.Instance.ShowChanged = false;
             yield return new WaitForSeconds(0.01f * myseed);
 
-            UpdateVis(ModController.Instance.ShowArmour);
+            UpdateVis(ModController.Instance.ShowArmour || ModController.Instance.ShowCrew);
 
             yield break;
         }
