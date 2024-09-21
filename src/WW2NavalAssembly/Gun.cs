@@ -348,6 +348,8 @@ namespace WW2NavalAssembly
             get { return timeFaze != 20f; }
         }
 
+        public bool AAtoSea = false;
+
         public bool uselight = false;
 
 
@@ -1230,7 +1232,7 @@ namespace WW2NavalAssembly
                 } // add initial speed
                 transform.rotation = Quaternion.LookRotation(myRigid.velocity);
                 myRigid.AddForce(randomForce * 2f);
-                if (!AA)
+                if (!AA || AAtoSea)
                 {
                     if (!StatMaster.isClient)
                     {

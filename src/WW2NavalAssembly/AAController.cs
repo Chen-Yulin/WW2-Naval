@@ -54,7 +54,7 @@ namespace WW2NavalAssembly
         {
             get
             {
-                return CurrentTarget >= 0;
+                return CurrentTarget >= 0 || ControllerDataManager.Instance.lockData[myPlayerID].valid;
             }
         }
 
@@ -78,11 +78,11 @@ namespace WW2NavalAssembly
                 return new Vector2(-transform.up.x, -transform.up.z);
             }
         }
-        public Dist2PitchResult CalculateGunPitchFromDist(float dist, float caliber, float targetHeight = Constants.CruiseHeight + Constants.SeaHeight)
+        public Dist2PitchResult CalculateGunPitchFromDist(float dist, float caliber, float targetHeight = Constants.CruiseHeight + Constants.SeaHeight, bool AAtoSea = false)
         {
             float cannonDrag = caliber > 100 ? 5000f / (caliber * caliber) : 1 - caliber / 200f;
             //Debug.Log("Start Iterating");
-            float initialSpeed = MathTool.GetInitialVel(caliber, true);
+            float initialSpeed = MathTool.GetInitialVel(caliber, !AAtoSea);
             float g = Constants.BulletGravity;
             float vx;
             float vy;
@@ -109,14 +109,14 @@ namespace WW2NavalAssembly
             }
             return new Dist2PitchResult(esT, angle * 180 / Mathf.PI);
         }
-        public FCResult CalculateGunFCPara(Vector3 targetPosition, Vector3 velocity, float caliber)
+        public FCResult CalculateGunFCPara(Vector3 targetPosition, Vector3 velocity, float caliber, bool AAtoSea = false)
         {
             Vector3 myPosition = new Vector3(transform.position.x, 21f, transform.position.z);
 
             float targetHeight = targetPosition.y - 20f;
             Vector3 myTargetPosition = targetPosition;
             float dist2D = MathTool.Get2DDistance(myTargetPosition, myPosition);
-            Dist2PitchResult pitchRes = CalculateGunPitchFromDist(dist2D, caliber, targetHeight);
+            Dist2PitchResult pitchRes = CalculateGunPitchFromDist(dist2D, caliber, targetHeight, AAtoSea);
 
             for (int i = 0; i <= 3; i++)
             {
@@ -125,7 +125,7 @@ namespace WW2NavalAssembly
                     myTargetPosition = targetPosition + velocity * pitchRes.time;
                     targetHeight = myTargetPosition.y - 20f;
                     dist2D = MathTool.Get2DDistance(myTargetPosition, myPosition);
-                    pitchRes = CalculateGunPitchFromDist(dist2D, caliber, targetHeight);
+                    pitchRes = CalculateGunPitchFromDist(dist2D, caliber, targetHeight, AAtoSea);
                 }
                 else
                 {
@@ -261,11 +261,27 @@ namespace WW2NavalAssembly
             CurrentTarget = Mathf.Clamp(CurrentTarget, -999, DetectedAircraft.Count - 1);
             if (CurrentTarget < 0)
             {
-
+                
                 if (DetectedAircraft.Count != 0)
                 {
                     CurrentTarget = 0;
                 }
+                // use the target from central controller
+                if (ControllerDataManager.Instance.lockData[myPlayerID].valid)
+                {
+                    //Debug.LogError("Boat target");
+                    Vector3 targetPos = ControllerDataManager.Instance.lockData[myPlayerID].position;
+                    Vector3 targetVel = ControllerDataManager.Instance.lockData[myPlayerID].velocity;
+                    targetVel *= 1.45f - UnityEngine.Random.value * 0.8f;
+                    foreach (var fcRes in FCResults)
+                    {
+                        FCResult res = CalculateGunFCPara(targetPos, targetVel, fcRes.Key, fcRes.Key >= 76);
+                        fcRes.Value.Set(res.Orien, res.Pitch, res.hasRes, res.predPosition);
+                        //Debug.LogError(fcRes.Key + " " + res.hasRes + " " + res.Pitch);
+                    }
+                    ControllerDataManager.Instance.AAControllerFCResult[myPlayerID] = FCResults;
+                }
+                
             }
             else
             {
