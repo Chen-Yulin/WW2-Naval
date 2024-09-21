@@ -66,6 +66,7 @@
     <Compile Include="Bomb.cs" />
     <Compile Include="BraceOptimizer.cs" />
     <Compile Include="BulletHole.cs" />
+    <Compile Include="Bytank.cs" />
     <Compile Include="CannonTrackManager.cs" />
     <Compile Include="CannonWell.cs" />
     <Compile Include="Catapult.cs" />
