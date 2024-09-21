@@ -81,20 +81,31 @@ namespace WW2NavalAssembly
         {
             if (BB.isSimulating) // on simulate start
             {
-                rb = BB.Rigidbody;
-                MaxWater = Mathf.Clamp(transform.Find("WoodenArmourVis").localScale.magnitude * 100f, 1f, 99999f);
+                if (AsWaterTank.isDefaultValue)
+                {
+                    Destroy(gameObject.GetComponent<Bytank>());
+                }
+                else
+                {
+                    rb = BB.Rigidbody;
+                    MaxWater = Mathf.Clamp(transform.Find("WoodenArmourVis").localScale.magnitude * 100f, 1f, 99999f);
+                }
+                
             }
         }
 
         public void SimulateUpdateHost()
         {
-            if (FloodKey.IsHeld)
+            if (!AsWaterTank.isDefaultValue)
             {
-                WaterMass = Mathf.Clamp(WaterMass + Time.deltaTime * 0.5f * MaxWater, 0f, 99999f);
-            }
-            if (DrainKey.IsHeld)
-            {
-                WaterMass = Mathf.Clamp(WaterMass - Time.deltaTime * 0.2f * MaxWater, 0f, 99999f);
+                if (FloodKey.IsHeld)
+                {
+                    WaterMass = Mathf.Clamp(WaterMass + Time.deltaTime * 0.5f * MaxWater, 0f, 99999f);
+                }
+                if (DrainKey.IsHeld)
+                {
+                    WaterMass = Mathf.Clamp(WaterMass - Time.deltaTime * 0.2f * MaxWater, 0f, 99999f);
+                }
             }
         }
 
