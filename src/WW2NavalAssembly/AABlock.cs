@@ -225,8 +225,8 @@ namespace WW2NavalAssembly
             {
                 if (AA_active)
                 {
-                    Pitch += (_real_pitch + err.y * 0.3f - Pitch) * 0.2f;
-                    Yaw += (_real_yaw + err.x * 0.3f - Yaw) * 0.2f;
+                    Pitch += (_real_pitch + err.y * 0.4f - Pitch) * 0.2f;
+                    Yaw += (_real_yaw + err.x * 0.6f - Yaw) * 0.2f;
                 }
             }
         }
@@ -358,6 +358,26 @@ namespace WW2NavalAssembly
                 timeFaze = randomFaze;
 
                 Cannon.GetComponent<BulletBehaviour>().timeFaze = timeFaze;
+                Destroy(Cannon, timeFaze + 2f);
+            }
+            else // AAtoSea
+            {
+                currentGun = !currentGun;
+                CurrentReloadTime = 0;
+                Vector3 randomForce = GetRandomForce();
+
+                GameObject Cannon = (GameObject)Instantiate(CannonPrefab,
+                                                            Gun.transform.position + 1 * Gun.transform.forward + (currentGun ? -1 : 1) * width * Gun.transform.right,
+                                                            Gun.transform.rotation);
+                Cannon.name = "NavalCannon" + parent.myPlayerID.ToString();
+                Cannon.SetActive(true);
+                BulletBehaviour bullet = Cannon.GetComponent<BulletBehaviour>();
+                bullet.fire = true;
+                bullet.randomForce = randomForce;
+                bullet.CannonType = 1;
+                bullet.timeFaze = timeFaze;
+                bullet.AAtoSea = true;
+                bullet.uselight = true;
                 Destroy(Cannon, timeFaze + 2f);
             }
         }
