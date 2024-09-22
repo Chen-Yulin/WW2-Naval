@@ -1143,33 +1143,18 @@ namespace WW2NavalAssembly
             {
                 if (StatMaster.isMP)
                 {
-                    if (myPlayerID != 0)
+                    try
                     {
-                        try
-                        {
-                            ModNetworking.SendToAll(ControllerDataManager.LockMsg.CreateMessage(myPlayerID, lockingObject.transform.position, lockingObject.GetComponent<Rigidbody>().velocity, true));
-                            ControllerDataManager.Instance.lockData[myPlayerID].valid = true;
-                            ControllerDataManager.Instance.lockData[myPlayerID].position = lockingObject.transform.position;
-                            ControllerDataManager.Instance.lockData[myPlayerID].velocity = lockingObject.GetComponent<Rigidbody>().velocity;
-                        }
-                        catch
-                        {
-                            Locking = false;
-                            ModNetworking.SendToAll(ControllerDataManager.LockMsg.CreateMessage(myPlayerID, Vector3.zero, Vector3.zero, false));
-                        }
+                        ModNetworking.SendToAll(ControllerDataManager.LockMsg.CreateMessage(myPlayerID, lockingObject.transform.position, lockingObject.GetComponent<Rigidbody>().velocity, true));
+                        ControllerDataManager.Instance.lockData[myPlayerID].valid = true;
+                        ControllerDataManager.Instance.lockData[myPlayerID].position = lockingObject.transform.position;
+                        ControllerDataManager.Instance.lockData[myPlayerID].velocity = lockingObject.GetComponent<Rigidbody>().velocity;
                     }
-                    else
+                    catch
                     {
-                        try
-                        {
-                            ControllerDataManager.Instance.lockData[myPlayerID].valid = true;
-                            ControllerDataManager.Instance.lockData[myPlayerID].position = lockingObject.transform.position;
-                            ControllerDataManager.Instance.lockData[myPlayerID].velocity = lockingObject.GetComponent<Rigidbody>().velocity;
-                        }
-                        catch {
-                            Locking = false;
-                            ControllerDataManager.Instance.lockData[myPlayerID].valid = false;
-                        }
+                        Locking = false;
+                        ControllerDataManager.Instance.lockData[myPlayerID].valid = false;
+                        ModNetworking.SendToAll(ControllerDataManager.LockMsg.CreateMessage(myPlayerID, Vector3.zero, Vector3.zero, false));
                     }
                 }
                 else
@@ -1190,10 +1175,7 @@ namespace WW2NavalAssembly
             }
             else
             {
-                if (myPlayerID == 0)
-                {
-                    ControllerDataManager.Instance.lockData[0] = new LockData();
-                }
+                ControllerDataManager.Instance.lockData[myPlayerID] = new LockData();
                 ModNetworking.SendToAll(ControllerDataManager.LockMsg.CreateMessage(myPlayerID, Vector3.zero, Vector3.zero, false));
             }
         }
