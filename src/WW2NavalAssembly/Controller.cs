@@ -1148,6 +1148,9 @@ namespace WW2NavalAssembly
                         try
                         {
                             ModNetworking.SendToAll(ControllerDataManager.LockMsg.CreateMessage(myPlayerID, lockingObject.transform.position, lockingObject.GetComponent<Rigidbody>().velocity, true));
+                            ControllerDataManager.Instance.lockData[myPlayerID].valid = true;
+                            ControllerDataManager.Instance.lockData[myPlayerID].position = lockingObject.transform.position;
+                            ControllerDataManager.Instance.lockData[myPlayerID].velocity = lockingObject.GetComponent<Rigidbody>().velocity;
                         }
                         catch
                         {
