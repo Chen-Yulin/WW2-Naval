@@ -59,6 +59,7 @@ namespace WW2NavalAssembly
         public int myPlayerID;
         public int myGuid;
 
+        public MMenu Type;
         public MKey ForwardKey;
         public MKey BackKey;
         public MSlider AxlePosX;
@@ -468,6 +469,7 @@ namespace WW2NavalAssembly
 
         public override void SafeAwake()
         {
+            Type = AddMenu("Engine Type", 0, new List<string> { "Turbine", "Motor"});
             ForwardKey = AddKey(LanguageManager.Instance.CurrentLanguage.EngineUp, "Forward", KeyCode.UpArrow);
             BackKey = AddKey(LanguageManager.Instance.CurrentLanguage.EngineDown, "Backward", KeyCode.DownArrow);
             ThrustValue = AddSlider(LanguageManager.Instance.CurrentLanguage.EngineThrust, "EngineThrust", 1000f, 0f, 1000f);
