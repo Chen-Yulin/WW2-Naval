@@ -36,6 +36,8 @@
 		<Block path="AAController.xml" />
 		<Block path="AABlock.xml" />
 		<Block path="Catapult.xml" />
+		<Block path="Battery.xml" />
+		<Block path="Diesel-Generator.xml" />
 	</Blocks>
 
 	<!-- Any entities (level objects) your mod adds to the game.

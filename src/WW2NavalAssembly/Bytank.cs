@@ -41,6 +41,8 @@ namespace WW2NavalAssembly
             }
         }
 
+        public Transform Center;
+
         public float WaterScale
         {
             get
@@ -53,7 +55,7 @@ namespace WW2NavalAssembly
         {
             AsWaterTank = BB.AddToggle("As WaterTank", "AsWatertank", false);
             DrainKey = BB.AddKey("Drain", "Drain", KeyCode.Minus);
-            FloodKey = BB.AddKey("Flood", "Flood", KeyCode.Plus);
+            FloodKey = BB.AddKey("Flood", "Flood", KeyCode.Equals);
         }
 
         public void Awake()
@@ -88,9 +90,24 @@ namespace WW2NavalAssembly
                 else
                 {
                     rb = BB.Rigidbody;
-                    MaxWater = Mathf.Clamp(transform.Find("WoodenArmourVis").localScale.magnitude * 100f, 1f, 99999f);
+                    _initialMass = rb.mass;
+                    Center = transform.Find("WoodenArmourVis");
+                    MaxWater = Mathf.Clamp(Center.lossyScale.magnitude * 15f, 1f, 99999f);
                 }
                 
+            }
+        }
+
+        public void SimulateFixedUpdate()
+        {
+            rb.AddForce(Mathf.Pow(Mathf.Clamp((Constants.SeaHeight - Center.position.y), 0, 1f),2) * Vector3.up * MaxWater * 60f);
+        }
+
+        public void FixedUpdate()
+        {
+            if (BB.isSimulating)
+            {
+                SimulateFixedUpdate();
             }
         }
 
