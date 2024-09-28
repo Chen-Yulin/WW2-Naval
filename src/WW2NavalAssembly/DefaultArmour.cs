@@ -88,6 +88,14 @@ namespace WW2NavalAssembly
                         {
                             return;
                         }
+                        else if (gameObject.name == "Diesel")
+                        {
+                            return;
+                        }
+                        else if (gameObject.name == "Battery")
+                        {
+                            return;
+                        }
                         else if (gameObject.name == "FlyingBlock")
                         {
                             transform.Find("Rot").Find("Vis").gameObject.SetActive(false);

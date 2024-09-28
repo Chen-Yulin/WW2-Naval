@@ -13,7 +13,7 @@
     </Description>
 
 	<Icon name="icon"/>
-	<Debug>false</Debug>
+	<Debug>True</Debug>
 
 
 	<MultiplayerCompatible>true</MultiplayerCompatible>
@@ -37,7 +37,7 @@
 		<Block path="AABlock.xml" />
 		<Block path="Catapult.xml" />
 		<Block path="Battery.xml" />
-		<Block path="Diesel-Generator.xml" />
+		<Block path="Diesel.xml" />
 	</Blocks>
 
 	<!-- Any entities (level objects) your mod adds to the game.
@@ -123,6 +123,14 @@
 		<Texture name="Sunset2" path="Sky\Sunset2.png"/>
 		<Texture name="AA Lock Icon" path="AAController\AALock.png"/>
 		<Texture name="AA Mode Icon" path="AAController\AAMode.png"/>
+		<Mesh name="Battery Mesh" path="Battery\Battery.obj"/>
+		<Texture name="Battery Texture" path="Battery\Battery.png"/>
+		<Mesh name="Diesel Mesh" path="Diesel\Diesel.obj"/>
+		<Texture name="Diesel Texture" path="Engine\Engine.png"/>
+		<Mesh name="Motor Mesh" path="Motor\Motor.obj"/>
+		<Texture name="Motor Texture" path="Engine\Engine.png"/>
+		<Texture name="BatteryCapOut Texture" path="Battery\BatteryCapOut.png"/>
+		<Texture name="BatteryCapIn Texture" path="Battery\BatteryCapIn.png"/>
 
 
 
@@ -130,6 +138,7 @@
 		<AudioClip name="GunExplo Audio" path="Gun\explo.wav" />
 		<AudioClip name="GunPierce Audio" path="Gun\pierce.wav" />
 		<AudioClip name="GunWaterHit Audio" path="Gun\explo.wav" />
+		<AudioClip name="Diesel Audio" path="Diesel/Diesel.wav"/> 
 
 		<AssetBundle name="CannonHit AB" path="cannonhit.ab"/>
 		<AssetBundle name="WaterHit AB" path="waterhit.ab"/>
