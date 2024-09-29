@@ -129,10 +129,18 @@ namespace WW2NavalAssembly
 
         public override void SimulateUpdateHost()
         {
-            if (Enable.IsPressed)
+            if (transform.position.y > 18f)
             {
-                Enabled = ! Enabled;
+                if (Enable.IsPressed)
+                {
+                    Enabled = !Enabled;
+                }
             }
+            else
+            {
+                Enabled = false;
+            }
+            
         }
 
         public override void SimulateUpdateAlways()

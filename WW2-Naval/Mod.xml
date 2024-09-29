@@ -131,6 +131,8 @@
 		<Texture name="Motor Texture" path="Engine\Engine.png"/>
 		<Texture name="BatteryCapOut Texture" path="Battery\BatteryCapOut.png"/>
 		<Texture name="BatteryCapIn Texture" path="Battery\BatteryCapIn.png"/>
+		<Texture name="WaterTankOut Texture" path="WaterTank\WaterTankOut.png"/>
+		<Texture name="WaterTankIn Texture" path="WaterTank\WaterTankIn.png"/>
 
 
 

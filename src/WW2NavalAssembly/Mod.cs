@@ -50,6 +50,8 @@ namespace WW2NavalAssembly
 			myMod.AddComponent<CrewManager>();
 			myMod.AddComponent<PowerSystem>();
 			myMod.AddComponent<DieselMsgReceiver>();
+			myMod.AddComponent<BatteryMsgManager>();
+			myMod.AddComponent<ByTankMsgManager>();
             Debug.Log("Hello, this is WW2 naval mod!");
 			Debug.logger.filterLogType = LogType.Error;
 		}

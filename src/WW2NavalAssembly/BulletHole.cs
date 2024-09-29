@@ -92,6 +92,8 @@ namespace WW2NavalAssembly
         Rigidbody rigid;
         WoodenArmour hittedArmour;
         bool disabled = false;
+
+        Bytank bytank;
         public void Awake()
         {
             
@@ -123,7 +125,11 @@ namespace WW2NavalAssembly
                     wc.WA = hittedArmour;
                 }
 
-                
+                bytank = transform.parent.GetComponent<Bytank>();
+                if (bytank)
+                {
+                    bytank.BreakSpace += hittedCaliber * hittedCaliber * (Hole.transform.position.y < 20 ? 10 : 1);
+                }
             }
             catch {
                 disabled = true;

@@ -1,5 +1,6 @@
 ﻿using Microsoft.Win32;
 using Modding;
+using Modding.Common;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -75,6 +76,40 @@ namespace WW2NavalAssembly
 
     }
 
+    public class BatteryMsgManager : SingleInstance<BatteryMsgManager>
+    {
+        public override string Name { get; } = "Battery Message Manager";
+        public static MessageType PowerMsg = ModNetworking.CreateMessageType(DataType.Integer, DataType.Integer, DataType.Single);
+        public Dictionary<int, float>[] Power = new Dictionary<int, float>[16];
+
+        public BatteryMsgManager()
+        {
+            for (int i = 0; i < 16; i++)
+            {
+                Power[i] = new Dictionary<int, float>();
+            }
+        }
+        public void SendPowerMsg(int playerID, int guid, float power)
+        {
+            Player p = Player.From((ushort)playerID);
+            ModNetworking.SendTo(p, PowerMsg.CreateMessage(playerID, guid, power));
+        }
+        public void PowerMsgReceiver(Message msg)
+        {
+            int pid = (int)msg.GetData(0);
+            int guid = (int)msg.GetData(1);
+            float power = (float)msg.GetData(2);
+            if (Power[pid].ContainsKey(guid))
+            {
+                Power[pid][guid] = power;
+            }
+            else
+            {
+                Power[pid].Add(guid, power);
+            }
+        }
+    }
+
     public class Battery : BlockScript
     {
         public int myPlayerID;
@@ -96,7 +131,7 @@ namespace WW2NavalAssembly
                 {
                     _power = Mathf.Clamp(value, 0, MaxPower);
                     int currIconSize = (int)(iconSize * Power / MaxPower);
-                    CapInUI.size = currIconSize;
+                    CapInUI.size = Mathf.Sqrt(currIconSize);
                 }
             }
         }
@@ -123,7 +158,7 @@ namespace WW2NavalAssembly
 
         public bool Discharge(float power)
         {
-            if (Power == 0)
+            if (Power < power)
             {
                 return false;
             }
@@ -159,7 +194,7 @@ namespace WW2NavalAssembly
         {
             gameObject.name = "Battery";
             myGuid = BlockBehaviour.BuildingBlock.Guid.GetHashCode();
-            MaxPower = Mathf.Abs(transform.lossyScale.x * transform.lossyScale.y * transform.lossyScale.z) * 10f;
+            MaxPower = Mathf.Abs(transform.lossyScale.x * transform.lossyScale.y * transform.lossyScale.z) * 20f;
             if (isSelf)
             {
                 CapOutTex = ModResource.GetTexture("BatteryCapOut Texture").Texture;
@@ -169,6 +204,7 @@ namespace WW2NavalAssembly
                 CapInUI.size = 0;
             }
             PowerSystem.Instance.AddSupplier(myPlayerID, this);
+            BatteryMsgManager.Instance.Power[myPlayerID].Clear();
         }
 
         public override void OnSimulateStop()
@@ -183,5 +219,29 @@ namespace WW2NavalAssembly
                 UpdateUI();
             }
         }
+
+        public override void SimulateFixedUpdateHost()
+        {
+            if (myseed == ModController.Instance.longerState)
+            {
+                if (StatMaster.isMP)
+                {
+                    BatteryMsgManager.Instance.SendPowerMsg(myPlayerID, myGuid, Power);
+                }
+            }
+        }
+
+        public override void SimulateUpdateClient()
+        {
+            if (isSelf)
+            {
+                if (BatteryMsgManager.Instance.Power[myPlayerID].ContainsKey(myGuid))
+                {
+                    Power = BatteryMsgManager.Instance.Power[myPlayerID][myGuid];
+                    BatteryMsgManager.Instance.Power[myPlayerID].Remove(myGuid);
+                }
+            }
+        }
+
     }
 }
