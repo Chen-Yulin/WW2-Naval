@@ -32,6 +32,7 @@ namespace WW2NavalAssembly
 
         public bool ReleasePower(int playerID, float power)
         {
+            power = Mathf.Abs(power);
             if (suppliers[playerID].Count > 0)
             {
                 useWhich[playerID]++;
@@ -130,8 +131,11 @@ namespace WW2NavalAssembly
                 if (value != _power)
                 {
                     _power = Mathf.Clamp(value, 0, MaxPower);
-                    int currIconSize = (int)(iconSize * Power / MaxPower);
-                    CapInUI.size = Mathf.Sqrt(currIconSize);
+                    if (isSelf)
+                    {
+                        int currIconSize = (int)(iconSize * Power / MaxPower);
+                        CapInUI.size = Mathf.Sqrt(currIconSize);
+                    }
                 }
             }
         }

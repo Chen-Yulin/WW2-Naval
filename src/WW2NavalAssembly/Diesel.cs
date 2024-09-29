@@ -125,6 +125,7 @@ namespace WW2NavalAssembly
             RunningSound.SetActive(true);
             Vis = transform.Find("Vis");
             Power = Mathf.Abs(transform.lossyScale.x * transform.lossyScale.y * transform.lossyScale.z);
+            DieselMsgReceiver.Instance.enabled[myPlayerID].Clear();
         }
 
         public override void SimulateUpdateHost()
@@ -141,6 +142,11 @@ namespace WW2NavalAssembly
                 Enabled = false;
             }
             
+        }
+
+        public override void SimulateUpdateClient()
+        {
+            Enabled = DieselMsgReceiver.Instance.IsEnabled(myPlayerID, myGuid);
         }
 
         public override void SimulateUpdateAlways()

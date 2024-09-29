@@ -529,7 +529,7 @@ namespace WW2NavalAssembly
                 else
                 {
                     SeaPlane = (GameObject)Instantiate(AssetManager.Instance.Sea.Sea);
-                    SeaPlane.transform.position = new Vector3(0, 20, 0);
+                    SeaPlane.transform.position = new Vector3(0, Constants.SeaHeight, 0);
                     SeaPlane.transform.localScale = new Vector3(8000, 1, 8000);
                     SeaPlane.AddComponent<Water>().waterMode = Water.WaterMode.Refractive;
                     SeaPlane.SetActive(true);
@@ -538,7 +538,7 @@ namespace WW2NavalAssembly
 
             if (preShowSea)
             {
-                if (Camera.main.transform.position.y < 20)
+                if (Camera.main.transform.position.y < Constants.SeaHeight)
                 {
                     if (SeaPlane)
                     {

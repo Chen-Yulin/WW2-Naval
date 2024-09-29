@@ -1213,7 +1213,7 @@ namespace WW2NavalAssembly
                 try
                 {
                     if (TargetCannon &&
-                    !(TargetCannon.transform.position.y < 20) &&
+                    !(TargetCannon.transform.position.y < Constants.SeaHeight) &&
                     !TargetCannon.GetComponent<BulletBehaviour>().exploded)
                     {
                         ModCameraController.Instance.EnableModCameraMO(this.gameObject, TargetCannon.transform, BlockBehaviour.ParentMachine);

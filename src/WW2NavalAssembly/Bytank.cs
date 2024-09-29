@@ -72,7 +72,10 @@ namespace WW2NavalAssembly
             set
             {
                 _byScale = Mathf.Clamp01(value);
-                WaterInUI.size = Mathf.Sqrt((1 -_byScale)) * iconSize;
+                if (isSelf)
+                {
+                    WaterInUI.size = Mathf.Sqrt((1 - _byScale)) * iconSize;
+                }
             }
         }
 
@@ -164,7 +167,10 @@ namespace WW2NavalAssembly
 
         public void SimulateFixedUpdateHost()
         {
-            rb.AddForce(Mathf.Pow(Mathf.Clamp((Constants.SeaHeight - Center.position.y), 0, 1f),2) * Vector3.up * 60f * ByScale * MaxBy);
+            if (ModController.Instance.showSea)
+            {
+                rb.AddForce(Mathf.Pow(Mathf.Clamp((Constants.SeaHeight - Center.position.y), 0, 1f), 2) * Vector3.up * 60f * ByScale * MaxBy);
+            }
             if (StatMaster.isMP && !StatMaster.isClient && breakNeedUpdate && myseed == ModController.Instance.state)
             {
                 breakNeedUpdate = false;
@@ -191,7 +197,7 @@ namespace WW2NavalAssembly
             }
         }
 
-        public void SimulateUpdateHost()
+        public void SimulateUpdateAlways()
         {
             ByScale -= BreakSpace * Time.deltaTime * 0.00001f;
             if (!AsWaterTank.isDefaultValue)
@@ -231,12 +237,13 @@ namespace WW2NavalAssembly
                     }
                     else
                     {
-                        SimulateUpdateHost();
+                        
                     }
+                    SimulateUpdateAlways();
                 }
                 else
                 {
-                    SimulateUpdateHost();
+                    SimulateUpdateAlways();
                 }
             }
             else // build update
