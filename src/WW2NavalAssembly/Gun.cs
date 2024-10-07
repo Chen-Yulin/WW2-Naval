@@ -788,7 +788,7 @@ namespace WW2NavalAssembly
         }
         public void CannonDetectWaterHost()
         {
-            if (transform.position.y < 20f)
+            if (transform.position.y < Constants.SeaHeight)
             {
                 if (!spotted)
                 {
@@ -809,7 +809,7 @@ namespace WW2NavalAssembly
                     }
                 }
             }
-            if (transform.position.y < 20f && pericedBlock.Count == 0)
+            if (transform.position.y < Constants.SeaHeight && pericedBlock.Count == 0)
             {
                 if (!hasHitWater)
                 {
@@ -823,26 +823,26 @@ namespace WW2NavalAssembly
                     Destroy(gameObject);
                 }
             }
-            if (transform.position.y < 20f && !hasHitWater && myRigid.velocity.y< 0 && pericedBlock.Count == 0)
+            if (transform.position.y < Constants.SeaHeight && !hasHitWater && myRigid.velocity.y< 0 && pericedBlock.Count == 0)
             {
                 
                 myRigid.drag = 11f/Mathf.Sqrt(Caliber)*20;
                 GameObject waterhit;
                 if (Caliber >= 283)
                 {
-                    waterhit = (GameObject)Instantiate(AssetManager.Instance.WaterHit.waterhit1, new Vector3(transform.position.x, 20, transform.position.z), Quaternion.identity);
+                    waterhit = (GameObject)Instantiate(AssetManager.Instance.WaterHit.waterhit1, new Vector3(transform.position.x, Constants.SeaHeight, transform.position.z), Quaternion.identity);
                     waterhit.transform.localScale = Caliber / 381 * Vector3.one;
                     Destroy(waterhit, 3);
                 }
                 else if (Caliber >= 100)
                 {
-                    waterhit = (GameObject)Instantiate(AssetManager.Instance.WaterHit.waterhit2, new Vector3(transform.position.x, 20, transform.position.z), Quaternion.identity);
+                    waterhit = (GameObject)Instantiate(AssetManager.Instance.WaterHit.waterhit2, new Vector3(transform.position.x, Constants.SeaHeight, transform.position.z), Quaternion.identity);
                     waterhit.transform.localScale = Caliber / 381 * Vector3.one;
                     Destroy(waterhit, 3);
                 }
                 else
                 {
-                    waterhit = (GameObject)Instantiate(AssetManager.Instance.WaterHit.waterhit3, new Vector3(transform.position.x, 20, transform.position.z), Quaternion.identity);
+                    waterhit = (GameObject)Instantiate(AssetManager.Instance.WaterHit.waterhit3, new Vector3(transform.position.x, Constants.SeaHeight, transform.position.z), Quaternion.identity);
                     waterhit.transform.localScale = Caliber / 381 * Vector3.one;
                     Destroy(waterhit, 3);
                 }
@@ -851,12 +851,12 @@ namespace WW2NavalAssembly
 
                 AddWaterHitSound(waterhit.transform);
                 hasHitWater = true;
-                ModNetworking.SendToAll(WeaponMsgReceiver.WaterHitMsg.CreateMessage(myPlayerID, new Vector3(transform.position.x, 20, transform.position.z), Caliber));
+                ModNetworking.SendToAll(WeaponMsgReceiver.WaterHitMsg.CreateMessage(myPlayerID, new Vector3(transform.position.x, Constants.SeaHeight, transform.position.z), Caliber));
             }
         }
         public void CannonDetectWaterClient()
         {
-            if (transform.position.y < 20f)
+            if (transform.position.y < Constants.SeaHeight)
             {
                 if (!spotted)
                 {
@@ -993,7 +993,7 @@ namespace WW2NavalAssembly
         }
         public void HEDetectWaterHost()
         {
-            if (transform.position.y < 20f)
+            if (transform.position.y < Constants.SeaHeight)
             {
                 if (!spotted)
                 {
@@ -1014,18 +1014,18 @@ namespace WW2NavalAssembly
                     }
                 }
             }
-            if (transform.position.y < 20f && !hasHitWater && myRigid.velocity.y < 0)
+            if (transform.position.y < Constants.SeaHeight && !hasHitWater && myRigid.velocity.y < 0)
             {
                 
                 GameObject waterhit;
                 if (Caliber >= 283)
                 {
-                    waterhit = (GameObject)Instantiate(AssetManager.Instance.WaterHit.waterhit1, new Vector3(transform.position.x, 20, transform.position.z), Quaternion.identity);
+                    waterhit = (GameObject)Instantiate(AssetManager.Instance.WaterHit.waterhit1, new Vector3(transform.position.x, Constants.SeaHeight, transform.position.z), Quaternion.identity);
                     waterhit.transform.localScale = Caliber / 381 * Vector3.one;
                 }
                 else
                 {
-                    waterhit = (GameObject)Instantiate(AssetManager.Instance.WaterHit.waterhit2, new Vector3(transform.position.x, 20, transform.position.z), Quaternion.identity);
+                    waterhit = (GameObject)Instantiate(AssetManager.Instance.WaterHit.waterhit2, new Vector3(transform.position.x, Constants.SeaHeight, transform.position.z), Quaternion.identity);
                     waterhit.transform.localScale = Caliber / 381 * Vector3.one;
                 }
                 Destroy(waterhit, 3);
@@ -1033,7 +1033,7 @@ namespace WW2NavalAssembly
                 hasHitWater = true;
                 PlayExploInAir(false);
                 Destroy(gameObject,0.1f);
-                ModNetworking.SendToAll(WeaponMsgReceiver.WaterHitMsg.CreateMessage(myPlayerID, new Vector3(transform.position.x, 20, transform.position.z), Caliber));
+                ModNetworking.SendToAll(WeaponMsgReceiver.WaterHitMsg.CreateMessage(myPlayerID, new Vector3(transform.position.x, Constants.SeaHeight, transform.position.z), Caliber));
             }
         }
         private void ExploDestroy(Vector3 pos, bool AP = true)

@@ -5,10 +5,10 @@
 	<Name>WW2Naval</Name>
 	<Author>Chen, Yulin</Author> <!-- FIX: Insert your name here. -->
 	<!-- Major.Minor.Build -->
-	<Version>0.11.3</Version>
+	<Version>0.11.4</Version>
 
 	<Description>
-    Version 0.11.3
+    Version 0.11.4
     Add Crew System; AA to ship
     </Description>
 
@@ -36,6 +36,8 @@
 		<Block path="AAController.xml" />
 		<Block path="AABlock.xml" />
 		<Block path="Catapult.xml" />
+		<Block path="Battery.xml" />
+		<Block path="Diesel.xml" />
 	</Blocks>
 
 	<!-- Any entities (level objects) your mod adds to the game.
@@ -121,6 +123,16 @@
 		<Texture name="Sunset2" path="Sky\Sunset2.png"/>
 		<Texture name="AA Lock Icon" path="AAController\AALock.png"/>
 		<Texture name="AA Mode Icon" path="AAController\AAMode.png"/>
+		<Mesh name="Battery Mesh" path="Battery\Battery.obj"/>
+		<Texture name="Battery Texture" path="Battery\Battery.png"/>
+		<Mesh name="Diesel Mesh" path="Diesel\Diesel.obj"/>
+		<Texture name="Diesel Texture" path="Engine\Engine.png"/>
+		<Mesh name="Motor Mesh" path="Motor\Motor.obj"/>
+		<Texture name="Motor Texture" path="Engine\Engine.png"/>
+		<Texture name="BatteryCapOut Texture" path="Battery\BatteryCapOut.png"/>
+		<Texture name="BatteryCapIn Texture" path="Battery\BatteryCapIn.png"/>
+		<Texture name="WaterTankOut Texture" path="WaterTank\WaterTankOut.png"/>
+		<Texture name="WaterTankIn Texture" path="WaterTank\WaterTankIn.png"/>
 
 
 
@@ -128,6 +140,7 @@
 		<AudioClip name="GunExplo Audio" path="Gun\explo.wav" />
 		<AudioClip name="GunPierce Audio" path="Gun\pierce.wav" />
 		<AudioClip name="GunWaterHit Audio" path="Gun\explo.wav" />
+		<AudioClip name="Diesel Audio" path="Diesel/Diesel.wav"/> 
 
 		<AssetBundle name="CannonHit AB" path="cannonhit.ab"/>
 		<AssetBundle name="WaterHit AB" path="waterhit.ab"/>

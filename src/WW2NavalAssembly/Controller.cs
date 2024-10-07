@@ -10,6 +10,7 @@ using Modding.Blocks;
 using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.UI;
+using CodeAnimo.UnityExtensionMethods;
 
 namespace WW2NavalAssembly
 {
@@ -156,6 +157,8 @@ namespace WW2NavalAssembly
         public Dictionary<float, FCResult> FCResults = new Dictionary<float, FCResult>();
         public GameObject OffsetIcon;
         public Text InfoPanel;
+
+        public UILineRenderer SoundTrack;
 
         public ModLogger logger;
 
@@ -326,6 +329,12 @@ namespace WW2NavalAssembly
             FCOffset = FireControlPanel.transform.Find("Offset").gameObject;
             OffsetIcon = FCOffset.transform.Find("AimPrefab").Find("GunIcon").gameObject;
             InfoPanel = FCCanvas.transform.Find("Info").gameObject.GetComponent<Text>();
+            SoundTrack = FCOrien.transform.Find("Sound").gameObject.AddComponent<UILineRenderer>();
+            SoundTrack.transform.localEulerAngles = new Vector3 (0f, 0f, 90f);
+            SoundTrack.thickness = 0.01f;
+            SoundTrack.center = false;
+            SoundTrack.color = new Color(0.4f, 0.5f, 1f, 0.7f);
+            SoundTrack.points = new Vector2[] { new Vector2(1, 0), new Vector2(0, 1), new Vector2(-1, 0), new Vector2(0, -1) };
         }
         public void InitModLoggerPanel()// after init FC panel
         {
@@ -795,6 +804,12 @@ namespace WW2NavalAssembly
             FCOrien.transform.localEulerAngles = - new Vector3(0, 0, MathTool.SignedAngle(MathTool.Get2DCoordinate(-transform.up), new Vector2(0, 1)));
         }
 
+        public void UpdateSound()
+        {
+            //Debug.Log("UpdateSound");
+            SoundTrack.points = MathTool.PolarToCartesian(SoundSystem.Instance.SoundTrackResult, 1);
+            SoundTrack.SetVerticesDirty();
+        }
 
         public override void SafeAwake()
         {
@@ -895,7 +910,7 @@ namespace WW2NavalAssembly
                 Locking = false;
                 ControllerDataManager.Instance.lockData[myPlayerID].valid = false;
             }
-            
+
         }
         public void OnDestroy()
         {
@@ -942,7 +957,6 @@ namespace WW2NavalAssembly
                 ControllerDataManager.Instance.lockData[myPlayerID].valid = false;
             }
             ShipSizeManager.Instance.size[myPlayerID].Reset();
-
         }
         public override void BuildingUpdate()
         {
@@ -1033,6 +1047,7 @@ namespace WW2NavalAssembly
                        UpdateInfoPanel();
                     }
                     catch { }
+                    UpdateSound();
                 }
                 // for horizon
                 for (int i = 0; i < 16; i++)
@@ -1213,7 +1228,7 @@ namespace WW2NavalAssembly
                 try
                 {
                     if (TargetCannon &&
-                    !(TargetCannon.transform.position.y < 20) &&
+                    !(TargetCannon.transform.position.y < Constants.SeaHeight) &&
                     !TargetCannon.GetComponent<BulletBehaviour>().exploded)
                     {
                         ModCameraController.Instance.EnableModCameraMO(this.gameObject, TargetCannon.transform, BlockBehaviour.ParentMachine);

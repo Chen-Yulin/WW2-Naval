@@ -59,6 +59,7 @@ namespace WW2NavalAssembly
         public int myPlayerID;
         public int myGuid;
 
+        public MMenu Type;
         public MKey ForwardKey;
         public MKey BackKey;
         public MSlider AxlePosX;
@@ -67,6 +68,14 @@ namespace WW2NavalAssembly
         public MSlider AxlePitch;
         public MSlider ThrustValue;
         public MSlider PropellerSize;
+
+        public bool isMotor
+        {
+            get
+            {
+                return Type.Value == 1;
+            }
+        }
 
         public Rigidbody myRigid;
         public float Mass;
@@ -111,6 +120,11 @@ namespace WW2NavalAssembly
         public Stack<Chimney> Chimneys = new Stack<Chimney>();
 
         public Horizon horizon;
+
+        public Mesh MotorMesh;
+        public Mesh TurbineMesh;
+
+        public int PreType;
 
         public void FindChimneys()
         {
@@ -205,37 +219,85 @@ namespace WW2NavalAssembly
         }
         public void CalculateThrustPercentage()
         {
-            if (ThrustPercentage >= TapPosition / 4 + 0.008f)
+            if (isMotor)
             {
-                if (frameCount>500)
+                if (ThrustPercentage >= TapPosition / 4 + 0.008f)
                 {
-                    ThrustPercentage -= 0.0005f / PropellerSize.Value;
+                    if (frameCount > 500)
+                    {
+                        ThrustPercentage -= 0.01f / PropellerSize.Value;
+                    }
+                    else
+                    {
+                        ThrustPercentage = TapPosition / 4;
+                    }
+
                 }
-                else
+                else if (ThrustPercentage <= TapPosition / 4 - 0.005f)
                 {
-                    ThrustPercentage = TapPosition / 4;
+                    if (frameCount > 500)
+                    {
+                        ThrustPercentage += 0.01f / PropellerSize.Value;
+                    }
+                    else
+                    {
+                        ThrustPercentage = TapPosition / 4;
+                    }
                 }
-                
             }
-            else if (ThrustPercentage <= TapPosition / 4 - 0.005f)
+            else
             {
-                if (frameCount > 500)
+                if (ThrustPercentage >= TapPosition / 4 + 0.008f)
                 {
-                    ThrustPercentage += 0.0004f / PropellerSize.Value;
+                    if (frameCount > 500)
+                    {
+                        ThrustPercentage -= 0.0005f / PropellerSize.Value;
+                    }
+                    else
+                    {
+                        ThrustPercentage = TapPosition / 4;
+                    }
+
                 }
-                else
+                else if (ThrustPercentage <= TapPosition / 4 - 0.005f)
                 {
-                    ThrustPercentage = TapPosition / 4;
+                    if (frameCount > 500)
+                    {
+                        ThrustPercentage += 0.0004f / PropellerSize.Value;
+                    }
+                    else
+                    {
+                        ThrustPercentage = TapPosition / 4;
+                    }
                 }
             }
         }
         public void Thrust()
         {
-            CalculateThrustPercentage();
+            float force = ThrustPercentage * ThrustValue.Value * HPPercent * PropellerSize.Value * (isMotor?5f:1f);
+            if (isMotor)
+            {
+                if (PowerSystem.Instance.ReleasePower(myPlayerID, force * 0.00001f))
+                {
+                    CalculateThrustPercentage();
+                }
+                else
+                {
+                    ThrustPercentage = Mathf.Lerp(ThrustPercentage, 0, 0.05f);
+                }
+            }
+            else
+            {
+                CalculateThrustPercentage();
+            }
+            
+            
 
             float PBSpeed = Mathf.Sign(ThrustPercentage*20) * Mathf.Sqrt(Mathf.Abs(ThrustPercentage *20 * HPPercent)) * 4;
             PropellerPB.Speed = (Mathf.Abs(PBSpeed)<1f?0:PBSpeed) * Vector3.up;
-            myRigid.AddForceAtPosition(-MyVisAnchor.transform.up * ThrustPercentage*ThrustValue.Value*HPPercent*PropellerSize.Value, Sleeve.transform.position);
+            
+            myRigid.AddForceAtPosition(-MyVisAnchor.transform.up * force, Sleeve.transform.position);
+            
         }
         public void UpdateArmVis()
         {
@@ -268,7 +330,7 @@ namespace WW2NavalAssembly
             Sleeve2.transform.localScale = new Vector3(PropellerSize.Value * 0.7f, 1, PropellerSize.Value * 0.7f);
 
             Axle.transform.localPosition = new Vector3(AxlePosX.Value, 0, AxlePosY.Value);
-            Axle.transform.localScale = new Vector3(1, AxleLength.Value/5.8f, 1);
+            Axle.transform.localScale = new Vector3(PropellerSize.Value, AxleLength.Value/5.8f, PropellerSize.Value);
 
             Propeller.transform.localPosition = new Vector3(AxlePosX.Value, AxleLength.Value, AxlePosY.Value);
             Propeller.transform.localScale = Vector3.one * PropellerSize.Value;
@@ -405,7 +467,14 @@ namespace WW2NavalAssembly
             CJ0.yMotion = ConfigurableJointMotion.Free;
             CJ0.zMotion = ConfigurableJointMotion.Free;
             CJ0.angularXMotion = ConfigurableJointMotion.Limited;
-            CJ0.angularYMotion = ConfigurableJointMotion.Locked;
+            if (isMotor)
+            {
+                CJ0.angularYMotion = ConfigurableJointMotion.Limited;
+            }
+            else
+            {
+                CJ0.angularYMotion = ConfigurableJointMotion.Locked;
+            }
             CJ0.angularZMotion = ConfigurableJointMotion.Free;
 
             CJ0.highAngularXLimit = HigherSJL;
@@ -466,8 +535,25 @@ namespace WW2NavalAssembly
             ModNetworking.SendToAll(EngineMsgReceiver.EngineStateMsg.CreateMessage(myPlayerID, myGuid, HPPercent, TapPosition, ThrustPercentage));
         }
 
+        public void UpdateEngineVis()
+        {
+            if (PreType != Type.Value)
+            {
+                PreType = Type.Value;
+                if (PreType == 0)
+                {
+                    transform.Find("Vis").GetComponent<MeshFilter>().mesh = TurbineMesh;
+                }
+                else if (PreType == 1)
+                {
+                    transform.Find("Vis").GetComponent<MeshFilter>().mesh = MotorMesh;
+                }
+            }
+        }
+
         public override void SafeAwake()
         {
+            Type = AddMenu("Engine Type", 0, new List<string> { "Steam", "Electric"});
             ForwardKey = AddKey(LanguageManager.Instance.CurrentLanguage.EngineUp, "Forward", KeyCode.UpArrow);
             BackKey = AddKey(LanguageManager.Instance.CurrentLanguage.EngineDown, "Backward", KeyCode.DownArrow);
             ThrustValue = AddSlider(LanguageManager.Instance.CurrentLanguage.EngineThrust, "EngineThrust", 1000f, 0f, 1000f);
@@ -482,17 +568,21 @@ namespace WW2NavalAssembly
             Meter = ModResource.GetTexture("Engine-Meter Texture").Texture;
             Indicator = ModResource.GetTexture("Engine-Indicator Texture").Texture;
             Speed = ModResource.GetTexture("Engine-Speed Texture").Texture;
+            TurbineMesh = ModResource.GetMesh("Engine Mesh").Mesh;
+            MotorMesh = ModResource.GetMesh("Motor Mesh").Mesh;
+            
         }
         public void Start()
         {
             gameObject.name = "Engine";
+            PreType = -1;
         }
 
         public override void BuildingUpdate()
         {
             UpdateAxlePosition();
             UpdateThrustRange();
-            
+            UpdateEngineVis();
         }
         public void Update()
         {
@@ -599,11 +689,14 @@ namespace WW2NavalAssembly
             }
             else if(frameCount == 25)
             {
-                try
+                if (isMotor)
                 {
-
+                    stableForce = 20000f;
                 }
-                catch { }
+                else
+                {
+                    stableForce = 200000f;
+                }
                 InitStable();
                 frameCount++;
             }
@@ -623,9 +716,25 @@ namespace WW2NavalAssembly
         public void MySimulateFixedUpdateClient()
         {
             frameCount++;
-            CalculateThrustPercentage();
+            float force = ThrustPercentage * ThrustValue.Value * HPPercent * PropellerSize.Value * (isMotor ? 5f : 1f);
+            if (isMotor)
+            {
+                if (PowerSystem.Instance.ReleasePower(myPlayerID, force * 0.00001f))
+                {
+                    CalculateThrustPercentage();
+                }
+                else
+                {
+                    ThrustPercentage = Mathf.Lerp(ThrustPercentage, 0, 0.05f);
+                }
+            }
+            else
+            {
+                CalculateThrustPercentage();
+            }
             float PBSpeed = Mathf.Sign(ThrustPercentage * 20) * Mathf.Sqrt(Mathf.Abs(ThrustPercentage * 20 * HPPercent)) * 4;
-            PropellerPB.Speed = (Mathf.Abs(PBSpeed) < 1f ? 0 : PBSpeed) * Vector3.up;
+            PropellerPB.Speed = (Mathf.Abs(PBSpeed) < 2f ? 0 : PBSpeed) * Vector3.up;
+
         }
         public void OnGUI()
         {
