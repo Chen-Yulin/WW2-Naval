@@ -161,10 +161,12 @@
     <Compile Include="skpCustomModule\WaterProjectileBehaviour.cs" />
     <Compile Include="skpCustomModule\WingDragBehavour.cs" />
     <Compile Include="skpCustomModule\WingDragBehavour2.cs" />
+    <Compile Include="SoundSystem.cs" />
     <Compile Include="SpiderFucker.cs" />
     <Compile Include="TacCamera.cs" />
     <Compile Include="TorpedoBehaviour.cs" />
     <Compile Include="TorpedoLauncher.cs" />
+    <Compile Include="UILineRender.cs" />
     <Compile Include="WaveMaker.cs" />
     <Compile Include="WoodenArmour.cs" />
     <Compile Include="WW2Hinge.cs" />

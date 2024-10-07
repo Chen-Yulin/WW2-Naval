@@ -136,5 +136,29 @@ namespace WW2NavalAssembly
             //Debug.Log(horizonDist);
             return horizonDist;
         }
+
+        public static Vector2[] PolarToCartesian(float[] radii, float offset = 0)
+        {
+            // Ensure the input array has exactly 360 elements
+            if (radii.Length != 360)
+            {
+                Debug.LogError("Input array must have exactly 360 elements.");
+                return null;
+            }
+
+            // Create an array to hold the resulting Vector2 elements
+            Vector2[] cartesianCoordinates = new Vector2[361];
+
+            // Convert each radius and corresponding angle to Cartesian coordinates
+            for (int i = 0; i < 360; i++)
+            {
+                float angleInRadians = i * Mathf.Deg2Rad;  // Convert angle from degrees to radians
+                float x = (radii[i] + offset) * Mathf.Cos(angleInRadians);
+                float y = (radii[i] + offset) * Mathf.Sin(angleInRadians);
+                cartesianCoordinates[i] = new Vector2(x, y);
+            }
+            cartesianCoordinates[360] = cartesianCoordinates[0];
+            return cartesianCoordinates;
+        }
     }
 }

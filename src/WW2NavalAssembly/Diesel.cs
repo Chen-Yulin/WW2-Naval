@@ -68,6 +68,8 @@ namespace WW2NavalAssembly
 
         public Transform Vis;
 
+        public float count = 0;
+
         public bool _enable = false;
         public bool Enabled
         {
@@ -151,16 +153,39 @@ namespace WW2NavalAssembly
 
         public override void SimulateUpdateAlways()
         {
+            count += Time.deltaTime;
             RunningAS.volume = Mathf.Lerp(RunningAS.volume, Enabled ? 1 : 0, 0.2f);
             if (Enabled)
             {
                 PowerSystem.Instance.SupplyPower(myPlayerID, Power * Time.deltaTime);
                 Vis.localPosition = new Vector3(0, 0, Mathf.Sin(Time.time * 300f) * 0.02f);
+                
+                if (count > 0.15f)
+                {
+                    count = 0;
+                    int listenid = StatMaster.isMP ? PlayerData.localPlayer.networkId : 0;
+                    GameObject controller = ControllerDataManager.Instance.ControllerObject[listenid];
+                    if (controller)
+                    {
+                        Vector2 arrow = MathTool.Get2DCoordinate(transform.position - controller.transform.position);
+                        float signedAngle = MathTool.SignedAngle(MathTool.Get2DCoordinate(-controller.transform.up), arrow);
+                        if (signedAngle < 0)
+                        {
+                            signedAngle += 360;
+                        }
+                        //Debug.Log(signedAngle);
+                        SoundSystem.Instance.AddSound(myPlayerID, (int)signedAngle, 0.1f, 10);
+                    }
+
+                }
             }
             else
             {
                 Vis.localPosition = Vector3.zero;
             }
+
+            
+
         }
 
 
