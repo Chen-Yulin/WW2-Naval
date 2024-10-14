@@ -99,6 +99,8 @@ namespace WW2NavalAssembly
         public bool launchedByAircraft = false;
 
         GameObject Trail;
+
+        public float count = 0;
         public void UpdateVis()
         {
             if (StatMaster.isMP)
@@ -119,7 +121,7 @@ namespace WW2NavalAssembly
                     }
                 }
             }
-            
+
         }
         public void AddExploSound(Transform t)
         {
@@ -137,7 +139,7 @@ namespace WW2NavalAssembly
             exploAS.SetSpatializerFloat(4, 1000f);
             exploAS.SetSpatializerFloat(5, 1f);
 
-            
+
         }
         public void AddWaterHitSound(Transform t)
         {
@@ -159,7 +161,7 @@ namespace WW2NavalAssembly
             Trail = (GameObject)Instantiate(AssetManager.Instance.TorpedoTrail.TorpedoTrail, transform);
             Trail.name = "Trail";
             Trail.transform.localPosition = Vector3.zero;
-            Trail.transform.localScale = new Vector3(1,1,1f);
+            Trail.transform.localScale = new Vector3(1, 1, 1f);
             Trail.SetActive(false);
         }
         public void BreakBallon(Vector3 position)
@@ -171,7 +173,7 @@ namespace WW2NavalAssembly
             damager.AddComponent<Rigidbody>().velocity = new Vector3(0, 20, 0);
             Destroy(damager, 0.01f);
         }
-        
+
         public void TorpedoExploHost(RaycastHit hit)
         {
             Debug.Log("Torpedo hit");
@@ -258,7 +260,7 @@ namespace WW2NavalAssembly
                     catch
                     {
                     }
-                    
+
 
                     TorpedoExploHost(hit);
 
@@ -276,7 +278,7 @@ namespace WW2NavalAssembly
                         Vector3 centerPos = GetEnginesCenter(FlightDataBase.Instance.engines[playerid]);
                         Vector3 planeNormal = GetEnginesMirrorNormal(FlightDataBase.Instance.engines[playerid]);
                         float distance = Mathf.Abs(Vector3.Dot(planeNormal, hit.point - centerPos));
-                        exploScale = Mathf.Clamp(1f / Mathf.Pow(distance,0.5f),0f,1f);
+                        exploScale = Mathf.Clamp(1f / Mathf.Pow(distance, 0.5f), 0f, 1f);
                     }
                     catch
                     {
@@ -288,7 +290,7 @@ namespace WW2NavalAssembly
                     WH.hittedCaliber = Caliber;
                     WH.position = hit.collider.transform.parent.InverseTransformPoint(hit.point);
                     WH.type = 1;
-                    
+
                     GameObject piercedhole = new GameObject("TorpedoHole");
                     piercedhole.transform.SetParent(hit.collider.transform.parent);
                     piercedhole.transform.localPosition = Vector3.zero;
@@ -301,7 +303,7 @@ namespace WW2NavalAssembly
                     PH.forward = myRigid.velocity.normalized;
                     PH.type = 1;
 
-                    
+
 
                     if (StatMaster.isMP)
                     {
@@ -318,7 +320,7 @@ namespace WW2NavalAssembly
         public void Start()
         {
             mySeed = (int)(UnityEngine.Random.value * 400);
-            
+
             InitTrail();
             myRigid = GetComponent<Rigidbody>();
 
@@ -344,13 +346,13 @@ namespace WW2NavalAssembly
                 {
                     myRigid.AddForce(-transform.up * LaunchForce);
                 }
-                
+
                 myRigid.angularDrag = 100;
-                
+
             }
             if (launched)
             {
-                
+
                 if (transform.position.y < 20)
                 {
                     UpdateVis();
@@ -359,7 +361,7 @@ namespace WW2NavalAssembly
                         Trail.SetActive(true);
                         Trail.transform.position = new Vector3(Trail.transform.position.x, 20f, Trail.transform.position.z);
                     }
-                    
+
                     myRigid.drag = 5;
                     transform.rotation = Quaternion.LookRotation(Vector3.up, transform.up);
 
@@ -370,7 +372,7 @@ namespace WW2NavalAssembly
                     else if (mode == 1)
                     {
                         myRigid.AddForce(-transform.up * 19f + new Vector3(0, 20 - depth - transform.position.y + 6.5f, 0));
-                    }else if (mode == 2)
+                    } else if (mode == 2)
                     {
                         myRigid.AddForce(-transform.up * 10f + new Vector3(0, (20 - depth - transform.position.y) * 0.5f + 6.5f, 0));
                     }
@@ -384,7 +386,7 @@ namespace WW2NavalAssembly
                                 ModNetworking.SendToAll(TorpedoMsgReceiver.TorpedoDataMsg.CreateMessage(myPlayerID, parentGuid, transform.position, transform.eulerAngles, true));
                                 Destroy(gameObject);
                             }
-                            else if(mySeed == ModController.Instance.longerState) 
+                            else if (mySeed == ModController.Instance.longerState)
                             {
                                 ModNetworking.SendToAll(TorpedoMsgReceiver.TorpedoDataMsg.CreateMessage(myPlayerID, parentGuid, transform.position, transform.eulerAngles, false));
                             }
@@ -417,6 +419,36 @@ namespace WW2NavalAssembly
                 }
             }
 
+        }
+
+        public void Update()
+        {
+            count += Time.deltaTime;
+            if (launched)
+            {
+                if (count > 0.03f)
+                {
+                    if (transform.position.y < 20)
+                    {
+                        count = 0;
+                        int listenid = StatMaster.isMP ? PlayerData.localPlayer.networkId : 0;
+                        GameObject controller = ControllerDataManager.Instance.ControllerObject[listenid];
+                        if (controller)
+                        {
+                            Vector2 arrow = MathTool.Get2DCoordinate(transform.position - controller.transform.position);
+                            float signedAngle = MathTool.SignedAngle(MathTool.Get2DCoordinate(-controller.transform.up), arrow);
+                            if (signedAngle < 0)
+                            {
+                                signedAngle += 360;
+                            }
+                            //Debug.Log(signedAngle);
+                            float mag = 1 / Mathf.Pow(arrow.magnitude, 2) * 100f;
+                            float error = Mathf.Clamp(Mathf.Sqrt(arrow.magnitude), 0, 90);
+                            SoundSystem.Instance.AddSound(myPlayerID, (int)signedAngle, mag, error);
+                        }
+                    }
+                }
+            }
         }
         public void OnGUI()
         {
