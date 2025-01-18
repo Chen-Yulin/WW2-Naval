@@ -221,7 +221,7 @@ namespace WW2NavalAssembly
                     Yaw += (_real_yaw + err.x - Yaw) * 0.2f;
                 }
             }
-            else
+            else // large AA
             {
                 if (AA_active)
                 {
@@ -873,7 +873,15 @@ namespace WW2NavalAssembly
                         float yaw = MathTool.SignedAngle(targetPos - MathTool.Get2DCoordinate(transform.position),
                                                         MathTool.Get2DCoordinate(-transform.up));
                         AAVC.TargetYaw = yaw;
-                        AAVC.TargetPitch = targetPitch;
+
+                        // make up for roll
+
+                        Vector3 proj = Vector3.ProjectOnPlane(new Vector3(targetPos.x - transform.position.x, 0, targetPos.y - transform.position.z), transform.forward);
+
+                        float makeup = Vector3.Angle(Vector3.up, proj) - 90f;
+                        
+
+                        AAVC.TargetPitch = Mathf.Clamp(targetPitch + makeup, 0, 90);
                     }
                     AAVC.AA_active = hasTarget;
                 }
