@@ -160,7 +160,7 @@ namespace WW2NavalAssembly
                 PowerSystem.Instance.SupplyPower(myPlayerID, Power * Time.deltaTime);
                 Vis.localPosition = new Vector3(0, 0, Mathf.Sin(Time.time * 300f) * 0.02f);
                 
-                if (count > 0.15f)
+                if (count > 0.05f)
                 {
                     count = 0;
                     int listenid = StatMaster.isMP ? PlayerData.localPlayer.networkId : 0;
@@ -174,7 +174,9 @@ namespace WW2NavalAssembly
                             signedAngle += 360;
                         }
                         //Debug.Log(signedAngle);
-                        SoundSystem.Instance.AddSound(myPlayerID, (int)signedAngle, 0.1f, 10);
+                        float mag = 1f / Mathf.Sqrt(arrow.magnitude) * Power * 0.2f;
+                        float error = Mathf.Clamp(Mathf.Sqrt(arrow.magnitude), 0, 90);
+                        SoundSystem.Instance.AddSound(myPlayerID, (int)signedAngle, mag, error);
                     }
 
                 }
