@@ -25,22 +25,9 @@ namespace WW2NavalAssembly
 
         public void AddSound(int playerID , int angle, float magnitude, float error) // 0-360, ~, 0-10
         {
-            if (StatMaster.isMP)
+            for (int i = 0; i < 360; i++)
             {
-                if (PlayerData.localPlayer.networkId != playerID)
-                {
-                    for (int i = 0; i < 360; i++)
-                    {
-                        SoundTrackResult[i] += magnitude / (0.5f + 1f / (0.2f + error) * Mathf.Pow(AngleDiff(i, angle), 2));
-                    }
-                }
-            }
-            else
-            {
-                for (int i = 0; i < 360; i++)
-                {
-                    SoundTrackResult[i] += magnitude / (0.5f + 1f / (0.2f + error) * Mathf.Pow(AngleDiff(i, angle), 2));
-                }
+                SoundTrackResult[i] += magnitude / (0.5f + 1f / (0.2f + error) * Mathf.Pow(AngleDiff(i, angle), 2));
             }
         }
 

@@ -5,11 +5,11 @@
 	<Name>WW2Naval</Name>
 	<Author>Chen, Yulin</Author> <!-- FIX: Insert your name here. -->
 	<!-- Major.Minor.Build -->
-	<Version>0.11.5</Version>
+	<Version>0.11.6</Version>
 
 	<Description>
-    Version 0.11.5
-    Compatible to Besiege 1.65
+    Version 0.11.6
+    Fix battery UI
     </Description>
 
 	<Icon name="icon"/>
@@ -140,7 +140,7 @@
 		<AudioClip name="GunExplo Audio" path="Gun\explo.wav" />
 		<AudioClip name="GunPierce Audio" path="Gun\pierce.wav" />
 		<AudioClip name="GunWaterHit Audio" path="Gun\explo.wav" />
-		<AudioClip name="Diesel Audio" path="Diesel/Diesel.wav"/> 
+		<AudioClip name="Diesel Audio" path="Diesel/Diesel.wav"/>
 
 		<AssetBundle name="CannonHit AB" path="cannonhit.ab"/>
 		<AssetBundle name="WaterHit AB" path="waterhit.ab"/>

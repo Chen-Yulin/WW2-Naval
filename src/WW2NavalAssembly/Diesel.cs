@@ -132,7 +132,7 @@ namespace WW2NavalAssembly
 
         public override void SimulateUpdateHost()
         {
-            if (transform.position.y > 18f)
+            if (transform.position.y > 18.5f || !ModController.Instance.showSea)
             {
                 if (Enable.IsPressed)
                 {

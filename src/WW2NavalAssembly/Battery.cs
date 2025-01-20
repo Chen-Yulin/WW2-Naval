@@ -133,8 +133,8 @@ namespace WW2NavalAssembly
                     _power = Mathf.Clamp(value, 0, MaxPower);
                     if (isSelf)
                     {
-                        int currIconSize = (int)(iconSize * Power / MaxPower);
-                        CapInUI.size = Mathf.Sqrt(currIconSize);
+                        float currIconSize = (Power / MaxPower);
+                        CapInUI.size = Mathf.Sqrt(currIconSize) * iconSize;
                     }
                 }
             }
