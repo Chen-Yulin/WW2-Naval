@@ -126,6 +126,9 @@ namespace WW2NavalAssembly
 
         public int PreType;
 
+        //sound
+        public float count;
+
         public void FindChimneys()
         {
             foreach(var chimney in transform.parent.GetComponentsInChildren<Chimney>())
@@ -735,6 +738,32 @@ namespace WW2NavalAssembly
             float PBSpeed = Mathf.Sign(ThrustPercentage * 20) * Mathf.Sqrt(Mathf.Abs(ThrustPercentage * 20 * HPPercent)) * 4;
             PropellerPB.Speed = (Mathf.Abs(PBSpeed) < 2f ? 0 : PBSpeed) * Vector3.up;
 
+        }
+
+        // sound
+        public override void SimulateUpdateAlways()
+        {
+            count += Time.deltaTime;
+            if (count > 0.05f)
+            {
+                count = 0;
+                int listenid = StatMaster.isMP ? PlayerData.localPlayer.networkId : 0;
+                GameObject controller = ControllerDataManager.Instance.ControllerObject[listenid];
+                if (controller)
+                {
+                    Vector2 arrow = MathTool.Get2DCoordinate(transform.position - controller.transform.position);
+                    float signedAngle = MathTool.SignedAngle(MathTool.Get2DCoordinate(-controller.transform.up), arrow);
+                    if (signedAngle < 0)
+                    {
+                        signedAngle += 360;
+                    }
+                    //Debug.Log(signedAngle);
+                    float mag = 1f / arrow.magnitude * Mathf.Abs(ThrustPercentage) * 5f;
+                    float error = Mathf.Clamp(Mathf.Sqrt(arrow.magnitude), 0, 90);
+                    SoundSystem.Instance.AddSound(myPlayerID, (int)signedAngle, mag, error);
+
+                }
+            }
         }
         public void OnGUI()
         {

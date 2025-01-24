@@ -27,6 +27,7 @@ namespace WW2NavalAssembly
         {
             for (int i = 0; i < 360; i++)
             {
+                magnitude = Mathf.Clamp(magnitude, 0, 0.1f);
                 SoundTrackResult[i] += magnitude / (0.5f + 1f / (0.2f + error) * Mathf.Pow(AngleDiff(i, angle), 2));
             }
         }

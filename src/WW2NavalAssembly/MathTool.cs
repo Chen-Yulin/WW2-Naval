@@ -137,7 +137,7 @@ namespace WW2NavalAssembly
             return horizonDist;
         }
 
-        public static Vector2[] PolarToCartesian(float[] radii, float offset = 0)
+        public static Vector2[] PolarToCartesian(float[] radii, float offset = 0, float noise = 0)
         {
             // Ensure the input array has exactly 360 elements
             if (radii.Length != 360)
@@ -153,8 +153,9 @@ namespace WW2NavalAssembly
             for (int i = 0; i < 360; i++)
             {
                 float angleInRadians = i * Mathf.Deg2Rad;  // Convert angle from degrees to radians
-                float x = (radii[i] + offset) * Mathf.Cos(angleInRadians);
-                float y = (radii[i] + offset) * Mathf.Sin(angleInRadians);
+                float n = UnityEngine.Random.value * noise;
+                float x = (radii[i] + offset + n) * Mathf.Cos(angleInRadians);
+                float y = (radii[i] + offset + n) * Mathf.Sin(angleInRadians);
                 cartesianCoordinates[i] = new Vector2(x, y);
             }
             cartesianCoordinates[360] = cartesianCoordinates[0];

@@ -809,7 +809,8 @@ namespace WW2NavalAssembly
         public void UpdateSound()
         {
             //Debug.Log("UpdateSound");
-            SoundTrack.points = MathTool.PolarToCartesian(SoundSystem.Instance.SoundTrackResult, 1);
+            Vector2[] res = MathTool.PolarToCartesian(SoundSystem.Instance.SoundTrackResult, 1, myVelocity.sqrMagnitude * 0.001f);
+            SoundTrack.points = res;
             SoundTrack.SetVerticesDirty();
         }
 
