@@ -184,6 +184,8 @@ namespace WW2NavalAssembly
         public int TotalCrew = 0;
         public int CrewNum = 0;
 
+        // force light
+        public float forcelight = 20f;
 
         // for Gun
         public class Dist2PitchResult
@@ -1021,6 +1023,34 @@ namespace WW2NavalAssembly
             UploadForward();
             UploadRight();
             UpdateCrewInfo();
+            // for horizon
+            for (int i = 0; i < 16; i++)
+            {
+                if (i == myPlayerID)
+                {
+                    HorizonManager.Instance.VisibleToController[myPlayerID][i] = true;
+                }
+                else
+                {
+                    GameObject controller = ControllerDataManager.Instance.ControllerObject[i];
+                    if (controller)
+                    {
+                        if (controller.transform.position.y < Constants.SeaHeight || transform.transform.position.y < Constants.SeaHeight)
+                        {
+                            HorizonManager.Instance.VisibleToController[myPlayerID][i] = MathTool.DistFromWatcher(myPlayerID, controller.transform) < forcelight;
+                        }
+                        else
+                        {
+                            HorizonManager.Instance.VisibleToController[myPlayerID][i] = MathTool.DistFromWatcher(myPlayerID, controller.transform) < MathTool.GetHorizon(transform) + MathTool.GetHorizon(controller.transform);
+                        }
+                        HorizonManager.Instance.VisibleToAircraft[myPlayerID][i] = MathTool.DistFromWatcherAircraft(myPlayerID, controller.transform) < 1500f;
+                    }
+                    else
+                    {
+                        HorizonManager.Instance.VisibleToController[myPlayerID][i] = true;
+                    }
+                }
+            }
             if (!StatMaster.isMP || PlayerData.localPlayer.networkId == myPlayerID)
             {
                 if (StatMaster.isMP)
@@ -1049,34 +1079,7 @@ namespace WW2NavalAssembly
                     catch { }
                     UpdateSound();
                 }
-                // for horizon
-                for (int i = 0; i < 16; i++)
-                {
-                    if (i == myPlayerID)
-                    {
-                        HorizonManager.Instance.VisibleToController[myPlayerID][i] = true;
-                    }
-                    else
-                    {
-                        GameObject controller = ControllerDataManager.Instance.ControllerObject[i];
-                        if (controller)
-                        {
-                            if (controller.transform.position.y < Constants.SeaHeight || transform.transform.position.y < Constants.SeaHeight)
-                            {
-                                HorizonManager.Instance.VisibleToController[myPlayerID][i] = MathTool.DistFromWatcher(myPlayerID, controller.transform) < 200f;
-                            }
-                            else
-                            {
-                                HorizonManager.Instance.VisibleToController[myPlayerID][i] = MathTool.DistFromWatcher(myPlayerID, controller.transform) < MathTool.GetHorizon(transform) + MathTool.GetHorizon(controller.transform);
-                            }
-                            HorizonManager.Instance.VisibleToAircraft[myPlayerID][i] = MathTool.DistFromWatcherAircraft(myPlayerID, controller.transform) < 1500f;
-                        }
-                        else
-                        {
-                            HorizonManager.Instance.VisibleToController[myPlayerID][i] = true;
-                        }
-                    }
-                }
+
             }
         }
         public override void SimulateUpdateHost()
@@ -1160,10 +1163,19 @@ namespace WW2NavalAssembly
                 {
                     try
                     {
-                        ModNetworking.SendToAll(ControllerDataManager.LockMsg.CreateMessage(myPlayerID, lockingObject.transform.position, lockingObject.GetComponent<Rigidbody>().velocity, true));
-                        ControllerDataManager.Instance.lockData[myPlayerID].valid = true;
-                        ControllerDataManager.Instance.lockData[myPlayerID].position = lockingObject.transform.position;
-                        ControllerDataManager.Instance.lockData[myPlayerID].velocity = lockingObject.GetComponent<Rigidbody>().velocity;
+                        if (HorizonManager.Instance.isVisble(myPlayerID, lockingObject.GetComponent<Horizon>().myPlayerID))
+                        {
+                            ModNetworking.SendToAll(ControllerDataManager.LockMsg.CreateMessage(myPlayerID, lockingObject.transform.position, lockingObject.GetComponent<Rigidbody>().velocity, true));
+                            ControllerDataManager.Instance.lockData[myPlayerID].valid = true;
+                            ControllerDataManager.Instance.lockData[myPlayerID].position = lockingObject.transform.position;
+                            ControllerDataManager.Instance.lockData[myPlayerID].velocity = lockingObject.GetComponent<Rigidbody>().velocity;
+                        }
+                        else
+                        {
+                            Locking = false;
+                            ControllerDataManager.Instance.lockData[myPlayerID].valid = false;
+                            ModNetworking.SendToAll(ControllerDataManager.LockMsg.CreateMessage(myPlayerID, Vector3.zero, Vector3.zero, false));
+                        }
                     }
                     catch
                     {
