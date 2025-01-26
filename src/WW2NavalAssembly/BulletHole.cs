@@ -128,7 +128,7 @@ namespace WW2NavalAssembly
                 bytank = transform.parent.GetComponent<Bytank>();
                 if (bytank)
                 {
-                    bytank.BreakSpace += hittedCaliber * hittedCaliber * (Hole.transform.position.y < 20 ? 10 : 1);
+                    bytank.BreakSpace += hittedCaliber * hittedCaliber * (Hole.transform.position.y < 20 ? 20 : 5);
                 }
             }
             catch {

@@ -53,6 +53,7 @@ namespace WW2NavalAssembly
 			myMod.AddComponent<BatteryMsgManager>();
 			myMod.AddComponent<ByTankMsgManager>();
 			myMod.AddComponent<SoundSystem>();
+			myMod.AddComponent<DepthChargeMsgManager>();
             Debug.Log("Hello, this is WW2 naval mod!");
 			//Debug.logger.filterLogType = LogType.Error;
 		}

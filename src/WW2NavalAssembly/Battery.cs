@@ -1,5 +1,4 @@
-﻿using Microsoft.Win32;
-using Modding;
+﻿using Modding;
 using Modding.Common;
 using System;
 using System.Collections.Generic;
@@ -35,12 +34,21 @@ namespace WW2NavalAssembly
             power = Mathf.Abs(power);
             if (suppliers[playerID].Count > 0)
             {
-                useWhich[playerID]++;
-                if (useWhich[playerID] >= suppliers[playerID].Count)
+                bool res = false;
+                for (int i = 0;i < suppliers[playerID].Count; i++)
                 {
-                    useWhich[playerID] = 0;
+                    useWhich[playerID]++;
+                    if (useWhich[playerID] >= suppliers[playerID].Count)
+                    {
+                        useWhich[playerID] = 0;
+                    }
+                    res = suppliers[playerID][useWhich[playerID]].Discharge(power);
+                    if (res)
+                    {
+                        return true;
+                    }
                 }
-                return suppliers[playerID][useWhich[playerID]].Discharge(power);
+                return false;
             }
             else
             {

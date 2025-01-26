@@ -54,6 +54,7 @@ namespace WW2NavalAssembly
             ModNetworking.Callbacks[DieselMsgReceiver.EnableDieselMsg] += DieselMsgReceiver.Instance.ReceiveEnableMsg;
             ModNetworking.Callbacks[BatteryMsgManager.PowerMsg] += BatteryMsgManager.Instance.PowerMsgReceiver;
             ModNetworking.Callbacks[ByTankMsgManager.BreakAreaMsg] += ByTankMsgManager.Instance.BreakMsgReceiver;
+            ModNetworking.Callbacks[DepthChargeMsgManager.DepthMsg] += DepthChargeMsgManager.Instance.DepthMsgReceiver;
         }
     }
 }

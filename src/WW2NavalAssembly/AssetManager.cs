@@ -150,11 +150,14 @@ namespace WW2NavalAssembly
         public GameObject exploWithSmoke;
         public GameObject exploSmall;
         public GameObject WoodFire;
+        public GameObject UnderWaterExplo;
         public Asset_CannonHit(ModAssetBundle modAssetBundle)
         {
             explo = modAssetBundle.LoadAsset<GameObject>("CannonHit");
             exploWithSmoke = modAssetBundle.LoadAsset<GameObject>("CannonHitWithSmoke");
             exploSmall = modAssetBundle.LoadAsset<GameObject>("CannonHitSmall");
+            UnderWaterExplo = modAssetBundle.LoadAsset<GameObject>("CannonHit");
+            UnderWaterExplo.transform.Find("smoke").gameObject.SetActive(false);
         }
     }
     public class Asset_WaterHit

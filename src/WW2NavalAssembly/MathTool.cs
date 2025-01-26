@@ -161,5 +161,10 @@ namespace WW2NavalAssembly
             cartesianCoordinates[360] = cartesianCoordinates[0];
             return cartesianCoordinates;
         }
+
+        public static float MinAxis(Vector3 vec)
+        {
+            return Mathf.Min(Mathf.Min(vec.x, vec.y), vec.z);
+        }
     }
 }
