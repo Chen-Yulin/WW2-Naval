@@ -180,7 +180,7 @@ namespace WW2NavalAssembly
                 }
             }
 
-            if (Propeller.transform.position.y > 21 || Propeller.transform.position.y < 15f)
+            if (Propeller.transform.position.y > 20.5f || Propeller.transform.position.y < 17.5f)
             {
                 if (TrailParticle.isPlaying)
                 {

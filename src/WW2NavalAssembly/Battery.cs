@@ -206,7 +206,7 @@ namespace WW2NavalAssembly
         {
             gameObject.name = "Battery";
             myGuid = BlockBehaviour.BuildingBlock.Guid.GetHashCode();
-            MaxPower = Mathf.Abs(transform.lossyScale.x * transform.lossyScale.y * transform.lossyScale.z) * 20f;
+            MaxPower = Mathf.Abs(transform.lossyScale.x * transform.lossyScale.y * transform.lossyScale.z) * 40f;
             if (isSelf)
             {
                 CapOutTex = ModResource.GetTexture("BatteryCapOut Texture").Texture;
@@ -217,6 +217,7 @@ namespace WW2NavalAssembly
             }
             PowerSystem.Instance.AddSupplier(myPlayerID, this);
             BatteryMsgManager.Instance.Power[myPlayerID].Clear();
+            Power = MaxPower / 2f;
         }
 
         public override void OnSimulateStop()

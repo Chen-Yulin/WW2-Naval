@@ -353,7 +353,7 @@ namespace WW2NavalAssembly
 
         public void FixedUpdate()
         {
-            if (ModController.Instance.showSea)
+            if (ModController.Instance.showSea && storer == null)
             {
                 if (DetectHitWater())
                 {

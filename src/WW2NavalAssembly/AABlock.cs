@@ -1,19 +1,6 @@
-﻿using System;
+﻿using Modding;
 using System.Collections.Generic;
-using System.Text;
-using System.Xml.Serialization;
-using System.Collections;
-
-using Modding.Modules;
-using Modding;
-using Modding.Blocks;
-using Modding.Common;
 using UnityEngine;
-using UnityEngine.UI;
-using UnityEngine.Networking;
-using System.Linq;
-using System.Runtime.InteropServices;
-using System.Text.RegularExpressions;
 
 namespace WW2NavalAssembly
 {
@@ -54,7 +41,7 @@ namespace WW2NavalAssembly
         public float affected = 0;
         public bool AA_active;
         public float TargetPitch;
-        public float TargetYaw;
+        public Vector2 TargetPos;
 
         public float caliber = 20;
         public float gunWidth = 1;
@@ -76,6 +63,30 @@ namespace WW2NavalAssembly
         private float _real_pitch;
         private float _real_yaw;
 
+        public float GunPitch
+        {
+            get
+            {
+                return 90 - Vector3.Angle(Vector3.up, Gun.transform.forward);
+            }
+        }
+        public float GunYaw
+        {
+            get
+            {
+                return MathTool.SignedAngle(MathTool.Get2DCoordinate(Gun.transform.forward), MathTool.Get2DCoordinate(-transform.up));
+            }
+        }
+
+        public float TargetYaw
+        {
+            get
+            {
+                return MathTool.SignedAngle(TargetPos - MathTool.Get2DCoordinate(transform.position),
+                                                        MathTool.Get2DCoordinate(-transform.up));
+            }
+        }
+
         // random error
         public float angle = 0;
         public float dist = 0;
@@ -89,7 +100,7 @@ namespace WW2NavalAssembly
             get { return _pitch; }
             set 
             { 
-                _pitch = value;
+                _pitch = Mathf.Clamp(value, -5, 90);
                 Gun.transform.localEulerAngles = new Vector3(-value, 0, 0);
             }
         }
@@ -249,28 +260,28 @@ namespace WW2NavalAssembly
             if (AA_active && affected <= 0)
             {
                 UpdateRandomError();
-                if (Mathf.Abs(Yaw - TargetYaw) < equv_speed * 8)
+                if (Mathf.Abs(GunYaw - TargetYaw) < equv_speed * 8)
                 {
-                    _real_yaw += (TargetYaw - _real_yaw) * 0.2f;
+                    _real_yaw += (TargetYaw - GunYaw) * 0.2f;
                 }
                 else
                 {
-                    _real_yaw += (_real_yaw > TargetYaw ? -1 : 1) * equv_speed;
+                    _real_yaw += (GunYaw > TargetYaw ? -1 : 1) * equv_speed;
                 }
-                if (Mathf.Abs(Pitch - TargetPitch) < equv_speed * 8)
+                if (Mathf.Abs(GunPitch - TargetPitch) < equv_speed * 8)
                 {
-                    _real_pitch += (TargetPitch - _real_pitch) * 0.2f;
+                    _real_pitch += (TargetPitch - GunPitch) * 0.2f;
                 }
                 else
                 {
-                    _real_pitch += (_real_pitch > TargetPitch ? -1 : 1) * equv_speed;
+                    _real_pitch += (GunPitch > TargetPitch ? -1 : 1) * equv_speed;
                 }
                 if (hasLimit)
                 {
                     _real_yaw = Mathf.Clamp(_real_yaw, -MinLimit, MaxLimit);
                     _real_pitch = Mathf.Clamp(_real_pitch, -5, 90);
                 }
-                ok = Mathf.Abs(_real_yaw - TargetYaw) + Mathf.Abs(_real_pitch - TargetPitch) < 10;
+                ok = Mathf.Abs(_real_yaw - TargetYaw) + Mathf.Abs(GunPitch - TargetPitch) < 10;
             }
             Shoot = ok;
         }
@@ -870,18 +881,18 @@ namespace WW2NavalAssembly
                     GetFCPara();
                     if (hasTarget)
                     {
-                        float yaw = MathTool.SignedAngle(targetPos - MathTool.Get2DCoordinate(transform.position),
-                                                        MathTool.Get2DCoordinate(-transform.up));
-                        AAVC.TargetYaw = yaw;
+                        //float yaw = MathTool.SignedAngle(targetPos - MathTool.Get2DCoordinate(transform.position),
+                        //                                MathTool.Get2DCoordinate(-transform.up));
+                        AAVC.TargetPos = targetPos;
 
                         // make up for roll
 
-                        Vector3 proj = Vector3.ProjectOnPlane(new Vector3(targetPos.x - transform.position.x, 0, targetPos.y - transform.position.z), transform.forward);
+                        //Vector3 proj = Vector3.ProjectOnPlane(new Vector3(targetPos.x - transform.position.x, 0, targetPos.y - transform.position.z), transform.forward);
 
-                        float makeup = Vector3.Angle(Vector3.up, proj) - 90f;
-                        
+                        //float makeup = Vector3.Angle(Vector3.up, proj) - 90f;
 
-                        AAVC.TargetPitch = Mathf.Clamp(targetPitch + makeup, 0, 90);
+
+                        AAVC.TargetPitch = Mathf.Clamp(targetPitch, -5, 90);
                     }
                     AAVC.AA_active = hasTarget;
                 }

@@ -271,6 +271,7 @@ namespace WW2NavalAssembly
                 {
                     //Debug.LogError("Boat target");
                     Vector3 targetPos = ControllerDataManager.Instance.lockData[myPlayerID].position;
+                    targetPos.y = Constants.SeaHeight;
                     Vector3 targetVel = ControllerDataManager.Instance.lockData[myPlayerID].velocity;
                     targetVel *= 1.45f - UnityEngine.Random.value * 0.8f;
                     foreach (var fcRes in FCResults)
