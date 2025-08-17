@@ -132,7 +132,7 @@ namespace WW2NavalAssembly
 
         public override void SimulateUpdateHost()
         {
-            if (transform.position.y > 18f)
+            if (transform.position.y > 18.5f || !ModController.Instance.showSea)
             {
                 if (Enable.IsPressed)
                 {
@@ -174,7 +174,7 @@ namespace WW2NavalAssembly
                             signedAngle += 360;
                         }
                         //Debug.Log(signedAngle);
-                        float mag = 1f / Mathf.Sqrt(arrow.magnitude) * Power * 0.2f;
+                        float mag = 1f / arrow.magnitude * Power * 5f;
                         float error = Mathf.Clamp(Mathf.Sqrt(arrow.magnitude), 0, 90);
                         SoundSystem.Instance.AddSound(myPlayerID, (int)signedAngle, mag, error);
                     }

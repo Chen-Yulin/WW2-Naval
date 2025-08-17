@@ -184,6 +184,8 @@ namespace WW2NavalAssembly
         public int TotalCrew = 0;
         public int CrewNum = 0;
 
+        // force light
+        public float forcelight = 20f;
 
         // for Gun
         public class Dist2PitchResult
@@ -237,6 +239,26 @@ namespace WW2NavalAssembly
             }
 
         }
+
+        // for DepthCharge
+        public UnityEngine.UI.Slider DepthUpperSlider;
+        public UnityEngine.UI.Slider DepthLowerSlider;
+
+        public float GetDepth()
+        {
+            try
+            {
+                float upperDepth = 20 - DepthUpperSlider.value * 20;
+                float lowerDepth = DepthLowerSlider.value * 20;
+                return UnityEngine.Random.Range(upperDepth, lowerDepth);
+            }
+            catch
+            {
+                return 10f;
+            }
+            
+        }
+
         public float GetCurrentSpeed()
         {
             return Vector3.Dot(GetComponent<Rigidbody>().velocity, -transform.up);
@@ -322,6 +344,7 @@ namespace WW2NavalAssembly
             catch{}
             FCCanvas = (GameObject)Instantiate(AssetManager.Instance.FireControl.FireControl);
             FCCanvas.name = "FCCanvas";
+            FCCanvas.GetComponent<Canvas>().sortingOrder = -999;
             FireControlPanel = FCCanvas.transform.Find("Panel").gameObject;
             FireControlPanel.SetActive(false);
             FCPitch = FireControlPanel.transform.Find("PitchController").gameObject;
@@ -331,10 +354,12 @@ namespace WW2NavalAssembly
             InfoPanel = FCCanvas.transform.Find("Info").gameObject.GetComponent<Text>();
             SoundTrack = FCOrien.transform.Find("Sound").gameObject.AddComponent<UILineRenderer>();
             SoundTrack.transform.localEulerAngles = new Vector3 (0f, 0f, 90f);
-            SoundTrack.thickness = 0.01f;
+            SoundTrack.thickness = 0.02f;
             SoundTrack.center = false;
-            SoundTrack.color = new Color(0.4f, 0.5f, 1f, 0.7f);
+            SoundTrack.color = new Color(0.6f, 0.7f, 1f, 0.9f);
             SoundTrack.points = new Vector2[] { new Vector2(1, 0), new Vector2(0, 1), new Vector2(-1, 0), new Vector2(0, -1) };
+            DepthUpperSlider = FireControlPanel.transform.Find("DepthCharge").Find("Upper").GetComponent<UnityEngine.UI.Slider>();
+            DepthLowerSlider = FireControlPanel.transform.Find("DepthCharge").Find("Lower").GetComponent<UnityEngine.UI.Slider>();
         }
         public void InitModLoggerPanel()// after init FC panel
         {
@@ -807,7 +832,8 @@ namespace WW2NavalAssembly
         public void UpdateSound()
         {
             //Debug.Log("UpdateSound");
-            SoundTrack.points = MathTool.PolarToCartesian(SoundSystem.Instance.SoundTrackResult, 1);
+            Vector2[] res = MathTool.PolarToCartesian(SoundSystem.Instance.SoundTrackResult, 1, myVelocity.sqrMagnitude * 0.001f);
+            SoundTrack.points = res;
             SoundTrack.SetVerticesDirty();
         }
 
@@ -1021,6 +1047,34 @@ namespace WW2NavalAssembly
             UploadForward();
             UploadRight();
             UpdateCrewInfo();
+            // for horizon
+            for (int i = 0; i < 16; i++)
+            {
+                if (i == myPlayerID)
+                {
+                    HorizonManager.Instance.VisibleToController[myPlayerID][i] = true;
+                }
+                else
+                {
+                    GameObject controller = ControllerDataManager.Instance.ControllerObject[i];
+                    if (controller)
+                    {
+                        if (controller.transform.position.y < Constants.SeaHeight || transform.transform.position.y < Constants.SeaHeight)
+                        {
+                            HorizonManager.Instance.VisibleToController[myPlayerID][i] = MathTool.DistFromWatcher(myPlayerID, controller.transform) < forcelight;
+                        }
+                        else
+                        {
+                            HorizonManager.Instance.VisibleToController[myPlayerID][i] = MathTool.DistFromWatcher(myPlayerID, controller.transform) < MathTool.GetHorizon(transform) + MathTool.GetHorizon(controller.transform);
+                        }
+                        HorizonManager.Instance.VisibleToAircraft[myPlayerID][i] = MathTool.DistFromWatcherAircraft(myPlayerID, controller.transform) < 1500f;
+                    }
+                    else
+                    {
+                        HorizonManager.Instance.VisibleToController[myPlayerID][i] = true;
+                    }
+                }
+            }
             if (!StatMaster.isMP || PlayerData.localPlayer.networkId == myPlayerID)
             {
                 if (StatMaster.isMP)
@@ -1049,34 +1103,7 @@ namespace WW2NavalAssembly
                     catch { }
                     UpdateSound();
                 }
-                // for horizon
-                for (int i = 0; i < 16; i++)
-                {
-                    if (i == myPlayerID)
-                    {
-                        HorizonManager.Instance.VisibleToController[myPlayerID][i] = true;
-                    }
-                    else
-                    {
-                        GameObject controller = ControllerDataManager.Instance.ControllerObject[i];
-                        if (controller)
-                        {
-                            if (controller.transform.position.y < Constants.SeaHeight || transform.transform.position.y < Constants.SeaHeight)
-                            {
-                                HorizonManager.Instance.VisibleToController[myPlayerID][i] = MathTool.DistFromWatcher(myPlayerID, controller.transform) < 200f;
-                            }
-                            else
-                            {
-                                HorizonManager.Instance.VisibleToController[myPlayerID][i] = MathTool.DistFromWatcher(myPlayerID, controller.transform) < MathTool.GetHorizon(transform) + MathTool.GetHorizon(controller.transform);
-                            }
-                            HorizonManager.Instance.VisibleToAircraft[myPlayerID][i] = MathTool.DistFromWatcherAircraft(myPlayerID, controller.transform) < 1500f;
-                        }
-                        else
-                        {
-                            HorizonManager.Instance.VisibleToController[myPlayerID][i] = true;
-                        }
-                    }
-                }
+
             }
         }
         public override void SimulateUpdateHost()
@@ -1132,7 +1159,6 @@ namespace WW2NavalAssembly
             }
             if (ControllerDataManager.Instance.cameraData[myPlayerID].valid)
             {
-                
                 ControllerDataManager.Instance.cameraData[myPlayerID].valid = false;
                 Ray cameraRay = new Ray(ControllerDataManager.Instance.cameraData[myPlayerID].position, ControllerDataManager.Instance.cameraData[myPlayerID].forward);
                 RaycastHit hit;
@@ -1160,10 +1186,19 @@ namespace WW2NavalAssembly
                 {
                     try
                     {
-                        ModNetworking.SendToAll(ControllerDataManager.LockMsg.CreateMessage(myPlayerID, lockingObject.transform.position, lockingObject.GetComponent<Rigidbody>().velocity, true));
-                        ControllerDataManager.Instance.lockData[myPlayerID].valid = true;
-                        ControllerDataManager.Instance.lockData[myPlayerID].position = lockingObject.transform.position;
-                        ControllerDataManager.Instance.lockData[myPlayerID].velocity = lockingObject.GetComponent<Rigidbody>().velocity;
+                        if (HorizonManager.Instance.isVisble(myPlayerID, lockingObject.GetComponent<Horizon>().myPlayerID))
+                        {
+                            ModNetworking.SendToAll(ControllerDataManager.LockMsg.CreateMessage(myPlayerID, lockingObject.transform.position, lockingObject.GetComponent<Rigidbody>().velocity, true));
+                            ControllerDataManager.Instance.lockData[myPlayerID].valid = true;
+                            ControllerDataManager.Instance.lockData[myPlayerID].position = lockingObject.transform.position;
+                            ControllerDataManager.Instance.lockData[myPlayerID].velocity = lockingObject.GetComponent<Rigidbody>().velocity;
+                        }
+                        else
+                        {
+                            Locking = false;
+                            ControllerDataManager.Instance.lockData[myPlayerID].valid = false;
+                            ModNetworking.SendToAll(ControllerDataManager.LockMsg.CreateMessage(myPlayerID, Vector3.zero, Vector3.zero, false));
+                        }
                     }
                     catch
                     {
@@ -1186,7 +1221,6 @@ namespace WW2NavalAssembly
                         ControllerDataManager.Instance.lockData[myPlayerID].valid = false;
                     }
                 }
-                
             }
             else
             {

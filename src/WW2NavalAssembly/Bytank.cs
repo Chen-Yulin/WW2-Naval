@@ -110,6 +110,19 @@ namespace WW2NavalAssembly
             }
         }
 
+        public void UpdateUI()
+        {
+            if (StatMaster.hudHidden)
+            {
+                WaterInUI.show = false;
+                WaterOutUI.show = false;
+            }
+            else
+            {
+                WaterInUI.show = true;
+                WaterOutUI.show = true;
+            }
+        }
         public void SafeAwake()
         {
             AsWaterTank = BB.AddToggle("As WaterTank", "AsWatertank", false);
@@ -199,6 +212,10 @@ namespace WW2NavalAssembly
 
         public void SimulateUpdateAlways()
         {
+            if (isSelf)
+            {
+                UpdateUI();
+            }
             ByScale -= BreakSpace * Time.deltaTime * 0.00001f;
             if (!AsWaterTank.isDefaultValue)
             {

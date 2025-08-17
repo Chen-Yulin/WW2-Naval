@@ -1047,6 +1047,7 @@ namespace WW2NavalAssembly
                 {
                     try
                     {
+                        // aircraft
                         try
                         {
                             Aircraft a = hitedCollider.attachedRigidbody.GetComponent<Aircraft>();
@@ -1086,6 +1087,7 @@ namespace WW2NavalAssembly
                             }
                         }
                         catch { }
+                        // armour
                         try
                         {
                             WoodenArmour wa = hitedCollider.attachedRigidbody.GetComponent<WoodenArmour>();
@@ -1121,7 +1123,16 @@ namespace WW2NavalAssembly
                             }
                         }
                         catch { }
-                        //Debug.Log(hitedCollider.transform.parent.name);
+                        try
+                        {
+                            Bytank bt = hitedCollider.attachedRigidbody.GetComponent<Bytank>();
+                            if (bt)
+                            {
+                                bt.BreakSpace = Caliber * Caliber * (bt.transform.position.y < 20 ? 10 : 2);
+                            }
+                        }
+                        catch { }
+                        // balloon
                         if ((hitedCollider.transform.parent.name == "Balloon" || hitedCollider.transform.parent.name == "SqrBalloon")
                             && damagedBallon.Count == 0)
                         {
@@ -1319,27 +1330,27 @@ namespace WW2NavalAssembly
         public int CannonType;
         public int NextCannonType;
 
-        GameObject CannonPrefab;
+        protected GameObject CannonPrefab;
 
-        Transform VisTransform;
+        protected Transform VisTransform;
 
-        int muzzleStage = 100;
+        protected int muzzleStage = 100;
 
         public float reloadTime;
         public float currentReloadTime = 0;
         public float reloadefficiency = 0;
 
-        Texture ReloadHEOut;
-        Texture ReloadHEIn;
-        Texture ReloadAPOut;
-        Texture ReloadAPIn;
-        int iconSize = 30;
+        protected Texture ReloadHEOut;
+        protected Texture ReloadHEIn;
+        protected Texture ReloadAPOut;
+        protected Texture ReloadAPIn;
+        protected int iconSize = 30;
 
         //UGUI
-        FollowerUI ReloadHEOutUI;
-        FollowerUI ReloadHEInUI;
-        FollowerUI ReloadAPOutUI;
-        FollowerUI ReloadAPInUI;
+        protected FollowerUI ReloadHEOutUI;
+        protected FollowerUI ReloadHEInUI;
+        protected FollowerUI ReloadAPOutUI;
+        protected FollowerUI ReloadAPInUI;
 
         public Vector3 GetRandomForce()
         {
@@ -1347,7 +1358,7 @@ namespace WW2NavalAssembly
             randomForce += new Vector3(0, UnityEngine.Random.value - 0.5f, 0) * 6 / Mathf.Sqrt(Caliber.Value);
             return randomForce * Mathf.Pow(UnityEngine.Random.value, 2);
         }
-        public void UpdateUI()
+        public virtual void UpdateUI()
         {
             if (StatMaster.hudHidden)
             {
@@ -1413,7 +1424,7 @@ namespace WW2NavalAssembly
                 return new Vector2(transform.forward.x, transform.forward.z);
             }
         }
-        void InitCannon()
+        public virtual void InitCannon()
         {
             Transform PrefabParent = BlockBehaviour.ParentMachine.transform.Find("Simulation Machine");
             string PrefabName = "NavalCannon [" + myPlayerID + "](" + Caliber.Value + ")";
@@ -1779,7 +1790,7 @@ namespace WW2NavalAssembly
                 }
             }
         }
-        public void MySimulateFixedUpdateClient()
+        public virtual void MySimulateFixedUpdateClient()
         {
             if (muzzleStage < 7)
             {

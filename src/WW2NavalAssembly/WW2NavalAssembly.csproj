@@ -77,6 +77,7 @@
     <Compile Include="CrewManager.cs" />
     <Compile Include="CustomBlockController.cs" />
     <Compile Include="DefaultArmour.cs" />
+    <Compile Include="DepthCharge.cs" />
     <Compile Include="Diesel.cs" />
     <Compile Include="Engine.cs" />
     <Compile Include="FireControlManager.cs" />

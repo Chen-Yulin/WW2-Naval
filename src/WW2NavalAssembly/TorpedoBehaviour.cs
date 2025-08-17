@@ -367,14 +367,14 @@ namespace WW2NavalAssembly
 
                     if (mode == 0)
                     {
-                        myRigid.AddForce(-transform.up * 12f + new Vector3(0, 20 - depth - transform.position.y + 6.5f, 0));
+                        myRigid.AddForce(-transform.up * 12f + new Vector3(0, Mathf.Clamp(20 - depth - transform.position.y, 0, 1f) + 6.5f, 0));
                     }
                     else if (mode == 1)
                     {
-                        myRigid.AddForce(-transform.up * 19f + new Vector3(0, 20 - depth - transform.position.y + 6.5f, 0));
+                        myRigid.AddForce(-transform.up * 19f + new Vector3(0, Mathf.Clamp(20 - depth - transform.position.y, 0, 1f) + 6.5f, 0));
                     } else if (mode == 2)
                     {
-                        myRigid.AddForce(-transform.up * 10f + new Vector3(0, (20 - depth - transform.position.y) * 0.5f + 6.5f, 0));
+                        myRigid.AddForce(-transform.up * 10f + new Vector3(0, Mathf.Clamp(20 - depth - transform.position.y, 0, 3f) + 6.5f, 0));
                     }
 
                     if (StatMaster.isMP)

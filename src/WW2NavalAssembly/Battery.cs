@@ -1,5 +1,4 @@
-﻿using Microsoft.Win32;
-using Modding;
+﻿using Modding;
 using Modding.Common;
 using System;
 using System.Collections.Generic;
@@ -35,12 +34,21 @@ namespace WW2NavalAssembly
             power = Mathf.Abs(power);
             if (suppliers[playerID].Count > 0)
             {
-                useWhich[playerID]++;
-                if (useWhich[playerID] >= suppliers[playerID].Count)
+                bool res = false;
+                for (int i = 0;i < suppliers[playerID].Count; i++)
                 {
-                    useWhich[playerID] = 0;
+                    useWhich[playerID]++;
+                    if (useWhich[playerID] >= suppliers[playerID].Count)
+                    {
+                        useWhich[playerID] = 0;
+                    }
+                    res = suppliers[playerID][useWhich[playerID]].Discharge(power);
+                    if (res)
+                    {
+                        return true;
+                    }
                 }
-                return suppliers[playerID][useWhich[playerID]].Discharge(power);
+                return false;
             }
             else
             {
@@ -133,8 +141,8 @@ namespace WW2NavalAssembly
                     _power = Mathf.Clamp(value, 0, MaxPower);
                     if (isSelf)
                     {
-                        int currIconSize = (int)(iconSize * Power / MaxPower);
-                        CapInUI.size = Mathf.Sqrt(currIconSize);
+                        float currIconSize = (Power / MaxPower);
+                        CapInUI.size = Mathf.Sqrt(currIconSize) * iconSize;
                     }
                 }
             }
@@ -198,7 +206,7 @@ namespace WW2NavalAssembly
         {
             gameObject.name = "Battery";
             myGuid = BlockBehaviour.BuildingBlock.Guid.GetHashCode();
-            MaxPower = Mathf.Abs(transform.lossyScale.x * transform.lossyScale.y * transform.lossyScale.z) * 20f;
+            MaxPower = Mathf.Abs(transform.lossyScale.x * transform.lossyScale.y * transform.lossyScale.z) * 40f;
             if (isSelf)
             {
                 CapOutTex = ModResource.GetTexture("BatteryCapOut Texture").Texture;
@@ -209,6 +217,7 @@ namespace WW2NavalAssembly
             }
             PowerSystem.Instance.AddSupplier(myPlayerID, this);
             BatteryMsgManager.Instance.Power[myPlayerID].Clear();
+            Power = MaxPower / 2f;
         }
 
         public override void OnSimulateStop()
