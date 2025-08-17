@@ -3339,7 +3339,7 @@ namespace WW2NavalAssembly
 
                         if (!onboard)
                         {
-                            if ((dist < 2f && dist > -5f && Vector2.Dot(forward, WayDirection) > 0) || (transform.position.y < Constants.SeaHeight && isSeaplane))
+                            if ((dist < 2f && Vector2.Dot(forward, WayDirection) > 0) || (transform.position.y < Constants.SeaHeight && isSeaplane))
                             {
                                 if (isSeaplane)
                                 {
